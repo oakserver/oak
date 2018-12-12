@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "baseUrl": ".",
+    "checkJs": true,
+    "module": "amd",
+    "moduleResolution": "node",
+    "noEmit": true,
+    "noLib": true,
+    "pretty": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "esnext",
+    "paths": {
+      "http://*": ["../../.deno/deps/http/*"],
+      "https://*": ["../../.deno/deps/https/*"]
+    }
+  },
+  "include": [
+    "./**/*.ts"
+  ]
+}
