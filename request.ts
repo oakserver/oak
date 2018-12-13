@@ -18,6 +18,10 @@ export class Request {
     return this._serverRequest.url;
   }
 
+  get headers(): Headers {
+    return this._serverRequest.headers;
+  }
+
   constructor(serverRequest: ServerRequest) {
     this._serverRequest = serverRequest;
   }
