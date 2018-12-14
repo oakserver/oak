@@ -30,4 +30,6 @@ import { Application } from "../main";
   console.log(color.bold("Start..."));
   await app.listen("127.0.0.1:8000");
   console.log(color.bold("Finished."));
-})();
+})().catch(err => {
+  console.log(`app error: ${err.stack}`);
+};;
