@@ -8,6 +8,6 @@ export class Context {
 
   constructor(serverRequest: ServerRequest) {
     this.request = new Request(serverRequest);
-    this.response.status = Status.NotFound;
+    this.response.status = Status.OK;
   }
 }
