@@ -18,7 +18,7 @@ export class Response {
   toServerResponse(): ServerResponse {
     const body = this.body && typeof this.body === "string" ? this.body : "";
     return {
-      status: Status.OK,
+      status: this.status,
       body: new TextEncoder().encode(body),
       headers: this.headers
     };
