@@ -73,7 +73,8 @@ import { Application } from "https://deno.land/x/oak/main.ts";
 
 ## Router
 
-_TBC_
+The `Router` class produces middleware which can be used with an `Application`
+to enable routing based on the pathname of the request.
 
 ---
 

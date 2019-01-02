@@ -1,6 +1,12 @@
+/*
+ * This is a basic example of a test server which provides a logger middleware,
+ * a response time middleware, and a basic "Hello World!" middleware.
+ */
+
+// Importing some console colors
 import { color } from "https://deno.land/x/colors/main.ts";
 
-import { Application } from "../main";
+import { Application } from "../mod.ts";
 
 (async () => {
   const app = new Application();
@@ -24,10 +30,11 @@ import { Application } from "../main";
   });
 
   app.use(ctx => {
-    ctx.response.body = "Awesome!";
+    ctx.response.body = "Hello World!";
   });
 
-  console.log(color.bold("Start..."));
-  await app.listen("127.0.0.1:8000");
+  const address = "127.0.0.1:8000";
+  console.log(color.bold("Start listening on ") + color.yellow(address));
+  await app.listen(address);
   console.log(color.bold("Finished."));
 })();

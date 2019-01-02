@@ -1,6 +1,5 @@
-import { Status } from "./deps";
-import { Request, ServerRequest } from "./request";
-import { Response } from "./response";
+import { Request, ServerRequest } from "./request.ts";
+import { Response } from "./response.ts";
 
 export class Context {
   request: Request;
@@ -8,6 +7,5 @@ export class Context {
 
   constructor(serverRequest: ServerRequest) {
     this.request = new Request(serverRequest);
-    this.response.status = Status.NotFound;
   }
 }

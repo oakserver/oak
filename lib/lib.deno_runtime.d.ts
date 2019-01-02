@@ -143,7 +143,30 @@ declare module "deno" {
   export const stdout: File;
   /** An instance of `File` for stderr. */
   export const stderr: File;
-  type OpenMode = "r" | "w" | "w+" | "x";
+  export type OpenMode =
+    | "r"
+    /** Read-write. Start at beginning of file. */
+    | "r+"
+    /** Write-only. Opens and truncates existing file or creates new one for
+     * writing only.
+     */
+    | "w"
+    /** Read-write. Opens and truncates existing file or creates new one for
+     * writing and reading.
+     */
+    | "w+"
+    /** Write-only. Opens existing file or creates new one. Each write appends
+     * content to the end of file.
+     */
+    | "a"
+    /** Read-write. Behaves like "a" and allows to read from file. */
+    | "a+"
+    /** Write-only. Exclusive create - creates new file only if one doesn't exist
+     * already.
+     */
+    | "x"
+    /** Read-write. Behaves like `x` and allows to read from file. */
+    | "x+";
   /** A factory function for creating instances of `File` associated with the
    * supplied file name.
    */
@@ -609,7 +632,9 @@ declare module "deno" {
     HttpClosed = 32,
     HttpCanceled = 33,
     HttpParse = 34,
-    HttpOther = 35
+    HttpOther = 35,
+    TooLarge = 36,
+    InvalidUri = 37
   }
 
   // @url js/errors.d.ts
@@ -621,7 +646,7 @@ declare module "deno" {
    *     try {
    *       somethingThatMightThrow();
    *     } catch (e) {
-   *       if (e instanceof DenoError && e.kind === DenoError.Overflow) {
+   *       if (e instanceof DenoError && e.kind === ErrorKind.Overflow) {
    *         console.error("Overflow error!");
    *       }
    *     }
@@ -633,11 +658,37 @@ declare module "deno" {
 
   // @url js/libdeno.d.ts
 
+  type MessageCallback = (msg: Uint8Array) => void;
   type PromiseRejectEvent =
     | "RejectWithNoHandler"
     | "HandlerAddedAfterReject"
     | "ResolveAfterResolved"
     | "RejectAfterResolved";
+  interface Libdeno {
+    recv(cb: MessageCallback): void;
+    send(control: ArrayBufferView, data?: ArrayBufferView): null | Uint8Array;
+    print(x: string, isErr?: boolean): void;
+    shared: ArrayBuffer;
+    setGlobalErrorHandler: (
+      handler: (
+        message: string,
+        source: string,
+        line: number,
+        col: number,
+        error: Error
+      ) => void
+    ) => void;
+    setPromiseRejectHandler: (
+      handler: (
+        error: Error | string,
+        event: PromiseRejectEvent,
+        promise: Promise<any>
+      ) => void
+    ) => void;
+    setPromiseErrorExaminer: (handler: () => boolean) => void;
+  }
+  export const libdeno: Libdeno;
+  export {};
 
   // @url js/platform.d.ts
 
@@ -810,67 +861,80 @@ declare module "deno" {
   }
   export function run(opt: RunOptions): Process;
 
-  // @url js/deno.d.ts
+  // @url js/console.d.ts
 
-  export const args: string[];
-}
+  type ConsoleOptions = Partial<{
+    showHidden: boolean;
+    depth: number;
+    colors: boolean;
+  }>;
+  /** TODO Do not expose this from "deno" namespace. */
+  export function stringifyArgs(args: any[], options?: ConsoleOptions): string;
+  type PrintFunc = (x: string, isErr?: boolean) => void;
+  /** TODO Do not expose this from "deno". */
+  export class Console {
+    private printFunc;
+    constructor(printFunc: PrintFunc);
+    /** Writes the arguments to stdout */
+    log: (...args: any[]) => void;
+    /** Writes the arguments to stdout */
+    debug: (...args: any[]) => void;
+    /** Writes the arguments to stdout */
+    info: (...args: any[]) => void;
+    /** Writes the properties of the supplied `obj` to stdout */
+    dir: (
+      obj: any,
+      options?: Partial<{
+        showHidden: boolean;
+        depth: number;
+        colors: boolean;
+      }>
+    ) => void;
+    /** Writes the arguments to stdout */
+    warn: (...args: any[]) => void;
+    /** Writes the arguments to stdout */
+    error: (...args: any[]) => void;
+    /** Writes an error message to stdout if the assertion is `false`. If the
+     * assertion is `true`, nothing happens.
+     *
+     * ref: https://console.spec.whatwg.org/#assert
+     */
+    assert: (condition?: boolean, ...args: any[]) => void;
+    count: (label?: string) => void;
+    countReset: (label?: string) => void;
+    time: (label?: string) => void;
+    timeLog: (label?: string, ...args: any[]) => void;
+    timeEnd: (label?: string) => void;
+  }
+  /**
+   * inspect() converts input into string that has the same format
+   * as printed by console.log(...);
+   */
+  export function inspect(
+    value: any, // tslint:disable-line:no-any
+    options?: ConsoleOptions
+  ): string;
+  export {};
 
-declare interface Window {
-  window: Window;
-  atob: typeof textEncoding.atob;
-  btoa: typeof textEncoding.btoa;
-  fetch: typeof fetchTypes.fetch;
-  clearTimeout: typeof timers.clearTimer;
-  clearInterval: typeof timers.clearTimer;
-  console: consoleTypes.Console;
-  setTimeout: typeof timers.setTimeout;
-  setInterval: typeof timers.setInterval;
-  Blob: typeof blob.DenoBlob;
-  File: typeof file.DenoFile;
-  URLSearchParams: typeof urlSearchParams.URLSearchParams;
-  Headers: domTypes.HeadersConstructor;
-  FormData: domTypes.FormDataConstructor;
-  TextEncoder: typeof textEncoding.TextEncoder;
-  TextDecoder: typeof textEncoding.TextDecoder;
-}
-
-declare const window: Window;
-declare const atob: typeof textEncoding.atob;
-declare const btoa: typeof textEncoding.btoa;
-declare const fetch: typeof fetchTypes.fetch;
-declare const clearTimeout: typeof timers.clearTimer;
-declare const clearInterval: typeof timers.clearTimer;
-declare const console: consoleTypes.Console;
-declare const setTimeout: typeof timers.setTimeout;
-declare const setInterval: typeof timers.setInterval;
-declare const Blob: typeof blob.DenoBlob;
-declare const File: typeof file.DenoFile;
-declare const URLSearchParams: typeof urlSearchParams.URLSearchParams;
-declare const Headers: domTypes.HeadersConstructor;
-declare const FormData: domTypes.FormDataConstructor;
-declare const TextEncoder: typeof textEncoding.TextEncoder;
-declare const TextDecoder: typeof textEncoding.TextDecoder;
-
-declare type Blob = blob.DenoBlob;
-declare type File = file.DenoFile;
-declare type URLSearchParams = urlSearchParams.URLSearchParams;
-declare type Headers = domTypes.Headers;
-declare type FormData = domTypes.FormData;
-declare type TextEncoder = textEncoding.TextEncoder;
-declare type TextDecoder = textEncoding.TextDecoder;
-
-declare namespace domTypes {
   // @url js/dom_types.d.ts
 
-  export type BufferSource = ArrayBufferView | ArrayBuffer;
-  export type HeadersInit =
-    | Headers
-    | Array<[string, string]>
-    | Record<string, string>;
-  export type URLSearchParamsInit =
-    | string
-    | string[][]
-    | Record<string, string>;
+  /*! ****************************************************************************
+    Copyright (c) Microsoft Corporation. All rights reserved.
+    Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain a copy of the
+    License at http://www.apache.org/licenses/LICENSE-2.0
+
+    THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+    ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+    WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+    MERCHANTABLITY OR NON-INFRINGEMENT.
+
+    See the Apache Version 2.0 License for specific language governing permissions
+    and limitations under the License.
+    *******************************************************************************/
+  type BufferSource = ArrayBufferView | ArrayBuffer;
+  type HeadersInit = Headers | Array<[string, string]> | Record<string, string>;
+  type URLSearchParamsInit = string | string[][] | Record<string, string>;
   type BodyInit =
     | Blob
     | BufferSource
@@ -878,7 +942,7 @@ declare namespace domTypes {
     | URLSearchParams
     | ReadableStream
     | string;
-  export type RequestInfo = Request | string;
+  type RequestInfo = Request | string;
   type ReferrerPolicy =
     | ""
     | "no-referrer"
@@ -886,12 +950,10 @@ declare namespace domTypes {
     | "origin-only"
     | "origin-when-cross-origin"
     | "unsafe-url";
-  export type BlobPart = BufferSource | Blob | string;
-  export type FormDataEntryValue = File | string;
-  export type EventListenerOrEventListenerObject =
-    | EventListener
-    | EventListenerObject;
-  export interface DomIterable<K, V> {
+  type BlobPart = BufferSource | Blob | string;
+  type FormDataEntryValue = DomFile | string;
+  type EventListenerOrEventListenerObject = EventListener | EventListenerObject;
+  interface DomIterable<K, V> {
     keys(): IterableIterator<K>;
     values(): IterableIterator<V>;
     entries(): IterableIterator<[K, V]>;
@@ -902,9 +964,9 @@ declare namespace domTypes {
     ): void;
   }
   interface Element {}
-  export interface HTMLFormElement {}
+  interface HTMLFormElement {}
   type EndingType = "transparent" | "native";
-  export interface BlobPropertyBag {
+  interface BlobPropertyBag {
     type?: string;
     ending?: EndingType;
   }
@@ -924,12 +986,12 @@ declare namespace domTypes {
       options?: EventListenerOptions | boolean
     ): void;
   }
-  export interface ProgressEventInit extends EventInit {
+  interface ProgressEventInit extends EventInit {
     lengthComputable?: boolean;
     loaded?: number;
     total?: number;
   }
-  export interface URLSearchParams {
+  interface URLSearchParams {
     /**
      * Appends a specified key/value pair as a new search parameter.
      */
@@ -1007,11 +1069,11 @@ declare namespace domTypes {
     readonly CAPTURING_PHASE: number;
     readonly NONE: number;
   }
-  export interface File extends Blob {
+  interface DomFile extends Blob {
     readonly lastModified: number;
     readonly name: string;
   }
-  export interface FilePropertyBag extends BlobPropertyBag {
+  interface FilePropertyBag extends BlobPropertyBag {
     lastModified?: number;
   }
   interface ProgressEvent extends Event {
@@ -1050,7 +1112,7 @@ declare namespace domTypes {
       options?: boolean | EventListenerOptions
     ): void;
   }
-  export interface ReadableStream {
+  interface ReadableStream {
     readonly locked: boolean;
     cancel(): Promise<void>;
     getReader(): ReadableStreamReader;
@@ -1058,12 +1120,12 @@ declare namespace domTypes {
   interface EventListenerObject {
     handleEvent(evt: Event): void;
   }
-  export interface ReadableStreamReader {
+  interface ReadableStreamReader {
     cancel(): Promise<void>;
     read(): Promise<any>;
     releaseLock(): void;
   }
-  export interface FormData extends DomIterable<string, FormDataEntryValue> {
+  interface FormData extends DomIterable<string, FormDataEntryValue> {
     append(name: string, value: string | Blob, fileName?: string): void;
     delete(name: string): void;
     get(name: string): FormDataEntryValue | null;
@@ -1071,12 +1133,12 @@ declare namespace domTypes {
     has(name: string): boolean;
     set(name: string, value: string | Blob, fileName?: string): void;
   }
-  export interface FormDataConstructor {
+  interface FormDataConstructor {
     new (): FormData;
     prototype: FormData;
   }
   /** A blob object represents a file-like object of immutable, raw data. */
-  export interface Blob {
+  interface Blob {
     /** The size, in bytes, of the data contained in the `Blob` object. */
     readonly size: number;
     /** A string indicating the media type of the data contained in the `Blob`.
@@ -1088,7 +1150,7 @@ declare namespace domTypes {
      */
     slice(start?: number, end?: number, contentType?: string): Blob;
   }
-  export interface Body {
+  interface Body {
     /** A simple getter used to expose a `ReadableStream` of the body contents. */
     readonly body: ReadableStream | null;
     /** Stores a `Boolean` that declares whether the body has been used in a
@@ -1116,7 +1178,7 @@ declare namespace domTypes {
      */
     text(): Promise<string>;
   }
-  export interface Headers extends DomIterable<string, string> {
+  interface Headers extends DomIterable<string, string> {
     /** Appends a new value onto an existing header inside a `Headers` object, or
      * adds the header if it does not already exist.
      */
@@ -1157,7 +1219,7 @@ declare namespace domTypes {
      */
     [Symbol.iterator](): IterableIterator<[string, string]>;
   }
-  export interface HeadersConstructor {
+  interface HeadersConstructor {
     new (init?: HeadersInit): Headers;
     prototype: Headers;
   }
@@ -1197,7 +1259,7 @@ declare namespace domTypes {
     | "error"
     | "opaque"
     | "opaqueredirect";
-  export interface RequestInit {
+  interface RequestInit {
     body?: BodyInit | null;
     cache?: RequestCache;
     credentials?: RequestCredentials;
@@ -1212,12 +1274,12 @@ declare namespace domTypes {
     signal?: AbortSignal | null;
     window?: any;
   }
-  export interface ResponseInit {
+  interface ResponseInit {
     headers?: HeadersInit;
     status?: number;
     statusText?: string;
   }
-  export interface Request extends Body {
+  interface Request extends Body {
     /** Returns the cache mode associated with request, which is a string
      * indicating how the the request will interact with the browser's cache when
      * fetching.
@@ -1290,7 +1352,604 @@ declare namespace domTypes {
     readonly url: string;
     clone(): Request;
   }
-  export interface Response extends Body {
+  interface Response extends Body {
+    /** Contains the `Headers` object associated with the response. */
+    readonly headers: Headers;
+    /** Contains a boolean stating whether the response was successful (status in
+     * the range 200-299) or not.
+     */
+    readonly ok: boolean;
+    /** Indicates whether or not the response is the result of a redirect; that
+     * is, its URL list has more than one entry.
+     */
+    readonly redirected: boolean;
+    /** Contains the status code of the response (e.g., `200` for a success). */
+    readonly status: number;
+    /** Contains the status message corresponding to the status code (e.g., `OK`
+     * for `200`).
+     */
+    readonly statusText: string;
+    readonly trailer: Promise<Headers>;
+    /** Contains the type of the response (e.g., `basic`, `cors`). */
+    readonly type: ResponseType;
+    /** Contains the URL of the response. */
+    readonly url: string;
+    /** Creates a clone of a `Response` object. */
+    clone(): Response;
+  }
+  export {};
+
+  // @url js/mixins/dom_iterable.d.ts
+
+  type Constructor<T = {}> = new (...args: any[]) => T;
+  /** Mixes in a DOM iterable methods into a base class, assumes that there is
+   * a private data iterable that is part of the base class, located at
+   * `[dataSymbol]`.
+   * TODO Don't expose DomIterableMixin from "deno" namespace.
+   */
+  export function DomIterableMixin<K, V, TBase extends Constructor>(
+    Base: TBase,
+    dataSymbol: symbol
+  ): TBase & Constructor<DomIterable<K, V>>;
+  export {};
+
+  // @url js/types.d.ts
+
+  type TypedArray = Uint8Array | Float32Array | Int32Array;
+  interface CallSite {
+    /** Value of `this` */
+    getThis(): any;
+    /** Type of `this` as a string.
+     *
+     * This is the name of the function stored in the constructor field of
+     * `this`, if available.  Otherwise the object's `[[Class]]` internal
+     * property.
+     */
+    getTypeName(): string | null;
+    /** Current function. */
+    getFunction(): Function | undefined;
+    /** Name of the current function, typically its name property.
+     *
+     * If a name property is not available an attempt will be made to try
+     * to infer a name from the function's context.
+     */
+    getFunctionName(): string | null;
+    /** Name of the property (of `this` or one of its prototypes) that holds
+     * the current function.
+     */
+    getMethodName(): string | null;
+    /** Name of the script (if this function was defined in a script). */
+    getFileName(): string | null;
+    /** Get the script name or source URL for the source map. */
+    getScriptNameOrSourceURL(): string;
+    /** Current line number (if this function was defined in a script). */
+    getLineNumber(): number | null;
+    /** Current column number (if this function was defined in a script). */
+    getColumnNumber(): number | null;
+    /** A call site object representing the location where eval was called (if
+     * this function was created using a call to `eval`)
+     */
+    getEvalOrigin(): string | undefined;
+    /** Is this a top level invocation, that is, is `this` the global object? */
+    isToplevel(): boolean;
+    /** Does this call take place in code defined by a call to `eval`? */
+    isEval(): boolean;
+    /** Is this call in native V8 code? */
+    isNative(): boolean;
+    /** Is this a constructor call? */
+    isConstructor(): boolean;
+  }
+  interface StartOfSourceMap {
+    file?: string;
+    sourceRoot?: string;
+  }
+  interface RawSourceMap extends StartOfSourceMap {
+    version: string;
+    sources: string[];
+    names: string[];
+    sourcesContent?: string[];
+    mappings: string;
+  }
+  global {
+    interface ErrorConstructor {
+      /** Create `.stack` property on a target object */
+      captureStackTrace(targetObject: object, constructorOpt?: Function): void;
+      /**
+       * Optional override for formatting stack traces
+       *
+       * @see https://github.com/v8/v8/wiki/Stack%20Trace%20API#customizing-stack-traces
+       */
+      prepareStackTrace?: (err: Error, stackTraces: CallSite[]) => any;
+      stackTraceLimit: number;
+    }
+  }
+
+  // @url js/util.d.ts
+
+  interface Deferred {
+    promise: Promise<void>;
+    resolve: Function;
+    reject: Function;
+  }
+  /** Create a wrapper around a promise that could be resolved externally.
+   * TODO Do not expose this from "deno" namespace.
+   */
+  export function deferred(): Deferred;
+  function isTypedArray(x: unknown): x is TypedArray;
+
+  // @url js/deno.d.ts
+
+  export const args: string[];
+}
+
+declare interface Window {
+  window: Window;
+  atob: typeof textEncoding.atob;
+  btoa: typeof textEncoding.btoa;
+  fetch: typeof fetchTypes.fetch;
+  clearTimeout: typeof timers.clearTimer;
+  clearInterval: typeof timers.clearTimer;
+  console: consoleTypes.Console;
+  setTimeout: typeof timers.setTimeout;
+  setInterval: typeof timers.setInterval;
+  Blob: typeof blob.DenoBlob;
+  URL: typeof url.URL;
+  URLSearchParams: typeof urlSearchParams.URLSearchParams;
+  Headers: domTypes.HeadersConstructor;
+  FormData: domTypes.FormDataConstructor;
+  TextEncoder: typeof textEncoding.TextEncoder;
+  TextDecoder: typeof textEncoding.TextDecoder;
+}
+
+declare const window: Window;
+declare const atob: typeof textEncoding.atob;
+declare const btoa: typeof textEncoding.btoa;
+declare const fetch: typeof fetchTypes.fetch;
+declare const clearTimeout: typeof timers.clearTimer;
+declare const clearInterval: typeof timers.clearTimer;
+declare const console: consoleTypes.Console;
+declare const setTimeout: typeof timers.setTimeout;
+declare const setInterval: typeof timers.setInterval;
+declare const Blob: typeof blob.DenoBlob;
+declare const URL: typeof url.URL;
+declare const URLSearchParams: typeof urlSearchParams.URLSearchParams;
+declare const Headers: domTypes.HeadersConstructor;
+declare const FormData: domTypes.FormDataConstructor;
+declare const TextEncoder: typeof textEncoding.TextEncoder;
+declare const TextDecoder: typeof textEncoding.TextDecoder;
+
+declare type Blob = blob.DenoBlob;
+declare type URL = url.URL;
+declare type URLSearchParams = urlSearchParams.URLSearchParams;
+declare type Headers = domTypes.Headers;
+declare type FormData = domTypes.FormData;
+declare type TextEncoder = textEncoding.TextEncoder;
+declare type TextDecoder = textEncoding.TextDecoder;
+
+declare namespace domTypes {
+  // @url js/dom_types.d.ts
+
+  type BufferSource = ArrayBufferView | ArrayBuffer;
+  type HeadersInit = Headers | Array<[string, string]> | Record<string, string>;
+  type URLSearchParamsInit = string | string[][] | Record<string, string>;
+  type BodyInit =
+    | Blob
+    | BufferSource
+    | FormData
+    | URLSearchParams
+    | ReadableStream
+    | string;
+  type RequestInfo = Request | string;
+  type ReferrerPolicy =
+    | ""
+    | "no-referrer"
+    | "no-referrer-when-downgrade"
+    | "origin-only"
+    | "origin-when-cross-origin"
+    | "unsafe-url";
+  type BlobPart = BufferSource | Blob | string;
+  type FormDataEntryValue = DomFile | string;
+  type EventListenerOrEventListenerObject = EventListener | EventListenerObject;
+  interface DomIterable<K, V> {
+    keys(): IterableIterator<K>;
+    values(): IterableIterator<V>;
+    entries(): IterableIterator<[K, V]>;
+    [Symbol.iterator](): IterableIterator<[K, V]>;
+    forEach(
+      callback: (value: V, key: K, parent: this) => void,
+      thisArg?: any
+    ): void;
+  }
+  interface Element {}
+  interface HTMLFormElement {}
+  type EndingType = "transparent" | "native";
+  interface BlobPropertyBag {
+    type?: string;
+    ending?: EndingType;
+  }
+  interface AbortSignalEventMap {
+    abort: ProgressEvent;
+  }
+  interface EventTarget {
+    addEventListener(
+      type: string,
+      listener: EventListenerOrEventListenerObject | null,
+      options?: boolean | AddEventListenerOptions
+    ): void;
+    dispatchEvent(evt: Event): boolean;
+    removeEventListener(
+      type: string,
+      listener?: EventListenerOrEventListenerObject | null,
+      options?: EventListenerOptions | boolean
+    ): void;
+  }
+  interface ProgressEventInit extends EventInit {
+    lengthComputable?: boolean;
+    loaded?: number;
+    total?: number;
+  }
+  interface URLSearchParams {
+    /**
+     * Appends a specified key/value pair as a new search parameter.
+     */
+    append(name: string, value: string): void;
+    /**
+     * Deletes the given search parameter, and its associated value,
+     * from the list of all search parameters.
+     */
+    delete(name: string): void;
+    /**
+     * Returns the first value associated to the given search parameter.
+     */
+    get(name: string): string | null;
+    /**
+     * Returns all the values association with a given search parameter.
+     */
+    getAll(name: string): string[];
+    /**
+     * Returns a Boolean indicating if such a search parameter exists.
+     */
+    has(name: string): boolean;
+    /**
+     * Sets the value associated to a given search parameter to the given value.
+     * If there were several values, delete the others.
+     */
+    set(name: string, value: string): void;
+    /**
+     * Sort all key/value pairs contained in this object in place
+     * and return undefined. The sort order is according to Unicode
+     * code points of the keys.
+     */
+    sort(): void;
+    /**
+     * Returns a query string suitable for use in a URL.
+     */
+    toString(): string;
+    /**
+     * Iterates over each name-value pair in the query
+     * and invokes the given function.
+     */
+    forEach(
+      callbackfn: (value: string, key: string, parent: URLSearchParams) => void,
+      thisArg?: any
+    ): void;
+  }
+  interface EventListener {
+    (evt: Event): void;
+  }
+  interface EventInit {
+    bubbles?: boolean;
+    cancelable?: boolean;
+    composed?: boolean;
+  }
+  interface Event {
+    readonly bubbles: boolean;
+    cancelBubble: boolean;
+    readonly cancelable: boolean;
+    readonly composed: boolean;
+    readonly currentTarget: EventTarget | null;
+    readonly defaultPrevented: boolean;
+    readonly eventPhase: number;
+    readonly isTrusted: boolean;
+    returnValue: boolean;
+    readonly srcElement: Element | null;
+    readonly target: EventTarget | null;
+    readonly timeStamp: number;
+    readonly type: string;
+    deepPath(): EventTarget[];
+    initEvent(type: string, bubbles?: boolean, cancelable?: boolean): void;
+    preventDefault(): void;
+    stopImmediatePropagation(): void;
+    stopPropagation(): void;
+    readonly AT_TARGET: number;
+    readonly BUBBLING_PHASE: number;
+    readonly CAPTURING_PHASE: number;
+    readonly NONE: number;
+  }
+  interface DomFile extends Blob {
+    readonly lastModified: number;
+    readonly name: string;
+  }
+  interface FilePropertyBag extends BlobPropertyBag {
+    lastModified?: number;
+  }
+  interface ProgressEvent extends Event {
+    readonly lengthComputable: boolean;
+    readonly loaded: number;
+    readonly total: number;
+  }
+  interface EventListenerOptions {
+    capture?: boolean;
+  }
+  interface AddEventListenerOptions extends EventListenerOptions {
+    once?: boolean;
+    passive?: boolean;
+  }
+  interface AbortSignal extends EventTarget {
+    readonly aborted: boolean;
+    onabort: ((this: AbortSignal, ev: ProgressEvent) => any) | null;
+    addEventListener<K extends keyof AbortSignalEventMap>(
+      type: K,
+      listener: (this: AbortSignal, ev: AbortSignalEventMap[K]) => any,
+      options?: boolean | AddEventListenerOptions
+    ): void;
+    addEventListener(
+      type: string,
+      listener: EventListenerOrEventListenerObject,
+      options?: boolean | AddEventListenerOptions
+    ): void;
+    removeEventListener<K extends keyof AbortSignalEventMap>(
+      type: K,
+      listener: (this: AbortSignal, ev: AbortSignalEventMap[K]) => any,
+      options?: boolean | EventListenerOptions
+    ): void;
+    removeEventListener(
+      type: string,
+      listener: EventListenerOrEventListenerObject,
+      options?: boolean | EventListenerOptions
+    ): void;
+  }
+  interface ReadableStream {
+    readonly locked: boolean;
+    cancel(): Promise<void>;
+    getReader(): ReadableStreamReader;
+  }
+  interface EventListenerObject {
+    handleEvent(evt: Event): void;
+  }
+  interface ReadableStreamReader {
+    cancel(): Promise<void>;
+    read(): Promise<any>;
+    releaseLock(): void;
+  }
+  interface FormData extends DomIterable<string, FormDataEntryValue> {
+    append(name: string, value: string | Blob, fileName?: string): void;
+    delete(name: string): void;
+    get(name: string): FormDataEntryValue | null;
+    getAll(name: string): FormDataEntryValue[];
+    has(name: string): boolean;
+    set(name: string, value: string | Blob, fileName?: string): void;
+  }
+  interface FormDataConstructor {
+    new (): FormData;
+    prototype: FormData;
+  }
+  /** A blob object represents a file-like object of immutable, raw data. */
+  interface Blob {
+    /** The size, in bytes, of the data contained in the `Blob` object. */
+    readonly size: number;
+    /** A string indicating the media type of the data contained in the `Blob`.
+     * If the type is unknown, this string is empty.
+     */
+    readonly type: string;
+    /** Returns a new `Blob` object containing the data in the specified range of
+     * bytes of the source `Blob`.
+     */
+    slice(start?: number, end?: number, contentType?: string): Blob;
+  }
+  interface Body {
+    /** A simple getter used to expose a `ReadableStream` of the body contents. */
+    readonly body: ReadableStream | null;
+    /** Stores a `Boolean` that declares whether the body has been used in a
+     * response yet.
+     */
+    readonly bodyUsed: boolean;
+    /** Takes a `Response` stream and reads it to completion. It returns a promise
+     * that resolves with an `ArrayBuffer`.
+     */
+    arrayBuffer(): Promise<ArrayBuffer>;
+    /** Takes a `Response` stream and reads it to completion. It returns a promise
+     * that resolves with a `Blob`.
+     */
+    blob(): Promise<Blob>;
+    /** Takes a `Response` stream and reads it to completion. It returns a promise
+     * that resolves with a `FormData` object.
+     */
+    formData(): Promise<FormData>;
+    /** Takes a `Response` stream and reads it to completion. It returns a promise
+     * that resolves with the result of parsing the body text as JSON.
+     */
+    json(): Promise<any>;
+    /** Takes a `Response` stream and reads it to completion. It returns a promise
+     * that resolves with a `USVString` (text).
+     */
+    text(): Promise<string>;
+  }
+  interface Headers extends DomIterable<string, string> {
+    /** Appends a new value onto an existing header inside a `Headers` object, or
+     * adds the header if it does not already exist.
+     */
+    append(name: string, value: string): void;
+    /** Deletes a header from a `Headers` object. */
+    delete(name: string): void;
+    /** Returns an iterator allowing to go through all key/value pairs
+     * contained in this Headers object. The both the key and value of each pairs
+     * are ByteString objects.
+     */
+    entries(): IterableIterator<[string, string]>;
+    /** Returns a `ByteString` sequence of all the values of a header within a
+     * `Headers` object with a given name.
+     */
+    get(name: string): string | null;
+    /** Returns a boolean stating whether a `Headers` object contains a certain
+     * header.
+     */
+    has(name: string): boolean;
+    /** Returns an iterator allowing to go through all keys contained in
+     * this Headers object. The keys are ByteString objects.
+     */
+    keys(): IterableIterator<string>;
+    /** Sets a new value for an existing header inside a Headers object, or adds
+     * the header if it does not already exist.
+     */
+    set(name: string, value: string): void;
+    /** Returns an iterator allowing to go through all values contained in
+     * this Headers object. The values are ByteString objects.
+     */
+    values(): IterableIterator<string>;
+    forEach(
+      callbackfn: (value: string, key: string, parent: this) => void,
+      thisArg?: any
+    ): void;
+    /** The Symbol.iterator well-known symbol specifies the default
+     * iterator for this Headers object
+     */
+    [Symbol.iterator](): IterableIterator<[string, string]>;
+  }
+  interface HeadersConstructor {
+    new (init?: HeadersInit): Headers;
+    prototype: Headers;
+  }
+  type RequestCache =
+    | "default"
+    | "no-store"
+    | "reload"
+    | "no-cache"
+    | "force-cache"
+    | "only-if-cached";
+  type RequestCredentials = "omit" | "same-origin" | "include";
+  type RequestDestination =
+    | ""
+    | "audio"
+    | "audioworklet"
+    | "document"
+    | "embed"
+    | "font"
+    | "image"
+    | "manifest"
+    | "object"
+    | "paintworklet"
+    | "report"
+    | "script"
+    | "sharedworker"
+    | "style"
+    | "track"
+    | "video"
+    | "worker"
+    | "xslt";
+  type RequestMode = "navigate" | "same-origin" | "no-cors" | "cors";
+  type RequestRedirect = "follow" | "error" | "manual";
+  type ResponseType =
+    | "basic"
+    | "cors"
+    | "default"
+    | "error"
+    | "opaque"
+    | "opaqueredirect";
+  interface RequestInit {
+    body?: BodyInit | null;
+    cache?: RequestCache;
+    credentials?: RequestCredentials;
+    headers?: HeadersInit;
+    integrity?: string;
+    keepalive?: boolean;
+    method?: string;
+    mode?: RequestMode;
+    redirect?: RequestRedirect;
+    referrer?: string;
+    referrerPolicy?: ReferrerPolicy;
+    signal?: AbortSignal | null;
+    window?: any;
+  }
+  interface ResponseInit {
+    headers?: HeadersInit;
+    status?: number;
+    statusText?: string;
+  }
+  interface Request extends Body {
+    /** Returns the cache mode associated with request, which is a string
+     * indicating how the the request will interact with the browser's cache when
+     * fetching.
+     */
+    readonly cache: RequestCache;
+    /** Returns the credentials mode associated with request, which is a string
+     * indicating whether credentials will be sent with the request always, never,
+     * or only when sent to a same-origin URL.
+     */
+    readonly credentials: RequestCredentials;
+    /** Returns the kind of resource requested by request, (e.g., `document` or
+     * `script`).
+     */
+    readonly destination: RequestDestination;
+    /** Returns a Headers object consisting of the headers associated with
+     * request.
+     *
+     * Note that headers added in the network layer by the user agent
+     * will not be accounted for in this object, (e.g., the `Host` header).
+     */
+    readonly headers: Headers;
+    /** Returns request's subresource integrity metadata, which is a cryptographic
+     * hash of the resource being fetched. Its value consists of multiple hashes
+     * separated by whitespace. [SRI]
+     */
+    readonly integrity: string;
+    /** Returns a boolean indicating whether or not request is for a history
+     * navigation (a.k.a. back-forward navigation).
+     */
+    readonly isHistoryNavigation: boolean;
+    /** Returns a boolean indicating whether or not request is for a reload
+     * navigation.
+     */
+    readonly isReloadNavigation: boolean;
+    /** Returns a boolean indicating whether or not request can outlive the global
+     * in which it was created.
+     */
+    readonly keepalive: boolean;
+    /** Returns request's HTTP method, which is `GET` by default. */
+    readonly method: string;
+    /** Returns the mode associated with request, which is a string indicating
+     * whether the request will use CORS, or will be restricted to same-origin
+     * URLs.
+     */
+    readonly mode: RequestMode;
+    /** Returns the redirect mode associated with request, which is a string
+     * indicating how redirects for the request will be handled during fetching.
+     *
+     * A request will follow redirects by default.
+     */
+    readonly redirect: RequestRedirect;
+    /** Returns the referrer of request. Its value can be a same-origin URL if
+     * explicitly set in init, the empty string to indicate no referrer, and
+     * `about:client` when defaulting to the global's default.
+     *
+     * This is used during fetching to determine the value of the `Referer`
+     * header of the request being made.
+     */
+    readonly referrer: string;
+    /** Returns the referrer policy associated with request. This is used during
+     * fetching to compute the value of the request's referrer.
+     */
+    readonly referrerPolicy: ReferrerPolicy;
+    /** Returns the signal associated with request, which is an AbortSignal object
+     * indicating whether or not request has been aborted, and its abort event
+     * handler.
+     */
+    readonly signal: AbortSignal;
+    /** Returns the URL of request as a string. */
+    readonly url: string;
+    clone(): Request;
+  }
+  interface Response extends Body {
     /** Contains the `Headers` object associated with the response. */
     readonly headers: Headers;
     /** Contains a boolean stating whether the response was successful (status in
@@ -1337,8 +1996,18 @@ declare namespace blob {
 declare namespace consoleTypes {
   // @url js/console.d.ts
 
+  type ConsoleOptions = Partial<{
+    showHidden: boolean;
+    depth: number;
+    colors: boolean;
+  }>;
+  /** TODO Do not expose this from "deno" namespace. */
+  export function stringifyArgs(args: any[], options?: ConsoleOptions): string;
+  type PrintFunc = (x: string, isErr?: boolean) => void;
+  /** TODO Do not expose this from "deno". */
   export class Console {
     private printFunc;
+    constructor(printFunc: PrintFunc);
     /** Writes the arguments to stdout */
     log: (...args: any[]) => void;
     /** Writes the arguments to stdout */
@@ -1360,23 +2029,24 @@ declare namespace consoleTypes {
     error: (...args: any[]) => void;
     /** Writes an error message to stdout if the assertion is `false`. If the
      * assertion is `true`, nothing happens.
+     *
+     * ref: https://console.spec.whatwg.org/#assert
      */
-    assert: (condition: boolean, ...args: any[]) => void;
+    assert: (condition?: boolean, ...args: any[]) => void;
+    count: (label?: string) => void;
+    countReset: (label?: string) => void;
+    time: (label?: string) => void;
+    timeLog: (label?: string, ...args: any[]) => void;
+    timeEnd: (label?: string) => void;
   }
-}
-
-declare namespace file {
-  // @url js/file.d.ts
-
-  export class DenoFile extends blob.DenoBlob implements domTypes.File {
-    lastModified: number;
-    name: string;
-    constructor(
-      fileBits: domTypes.BlobPart[],
-      fileName: string,
-      options?: domTypes.FilePropertyBag
-    );
-  }
+  /**
+   * inspect() converts input into string that has the same format
+   * as printed by console.log(...);
+   */
+  export function inspect(
+    value: any, // tslint:disable-line:no-any
+    options?: ConsoleOptions
+  ): string;
 }
 
 declare namespace io {
@@ -1672,6 +2342,31 @@ declare namespace urlSearchParams {
      *        searchParams.toString();
      */
     toString(): string;
+  }
+}
+
+declare namespace url {
+  // @url js/url.d.ts
+
+  export class URL {
+    private _parts;
+    private _searchParams;
+    private _updateSearchParams;
+    hash: string;
+    host: string;
+    hostname: string;
+    href: string;
+    readonly origin: string;
+    password: string;
+    pathname: string;
+    port: string;
+    protocol: string;
+    search: string;
+    username: string;
+    readonly searchParams: urlSearchParams.URLSearchParams;
+    constructor(url: string, base?: string | URL);
+    toString(): string;
+    toJSON(): string;
   }
 }
 

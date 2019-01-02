@@ -1,32 +1,6 @@
-import { Context } from "./context";
-import { serve } from "./deps";
-
-export interface Middleware {
-  (context: Context, next: () => Promise<void>): Promise<void> | void;
-}
-
-function compose(
-  middleware: Middleware[]
-): (context: Context) => Promise<void> {
-  return function(context: Context, next?: () => Promise<void>) {
-    let index = -1;
-    async function dispatch(i: number) {
-      if (i <= index) {
-        throw new Error("next() called multiple times.");
-      }
-      index = i;
-      let fn: Middleware | undefined = middleware[i];
-      if (i === middleware.length) {
-        fn = next;
-      }
-      if (!fn) {
-        return;
-      }
-      return fn(context, dispatch.bind(null, i + 1));
-    }
-    return dispatch(0);
-  };
-}
+import { Context } from "./context.ts";
+import { compose, Middleware } from "./middleware.ts";
+import { serve } from "./deps.ts";
 
 export class Application {
   private _middleware: Middleware[] = [];
@@ -41,8 +15,8 @@ export class Application {
     }
   }
 
-  use(middleware: Middleware): this {
-    this._middleware.push(middleware);
+  use(...middleware: Middleware[]): this {
+    this._middleware.push(...middleware);
     return this;
   }
 }
