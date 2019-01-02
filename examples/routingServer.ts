@@ -28,11 +28,11 @@ function notFound(context: Context) {
   router
     .get("/", (context, next) => {
       context.response.body = "Hello world!";
-      next();
+      return next();
     })
     .get("/book", async (context, next) => {
       context.response.body = Array.from(books.values());
-      await next();
+      return next();
     })
     .get<{ id: string }>("/book/:id", async (context, next) => {
       if (context.params && books.has(context.params.id)) {
