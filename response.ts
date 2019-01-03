@@ -19,7 +19,7 @@ export class Response {
 
   private _setContentType(contentType: string) {
     if (!this.headers.has("content-type")) {
-      this.headers.append("conent-type", contentType);
+      this.headers.append("content-type", contentType);
     }
   }
 
