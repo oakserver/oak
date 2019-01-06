@@ -7,14 +7,18 @@
     "moduleResolution": "node",
     "noEmit": true,
     "noLib": true,
-    "pretty": true,
-    "sourceMap": true,
-    "strict": true,
-    "target": "esnext",
     "paths": {
       "http://*": ["../../.deno/deps/http/*"],
       "https://*": ["../../.deno/deps/https/*"]
-    }
+    },
+    "plugins": [
+      { "name": "deno_ls_plugin" }
+    ],
+    "pretty": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "esnext",
   },
   "include": [
     "./**/*.ts"

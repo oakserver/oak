@@ -1,4 +1,9 @@
-import { color } from "https://deno.land/x/colors/main.ts";
+/*
+ * This is an example of a server that utilizes the router.
+ */
+
+// Importing some console colors
+import { color } from "https://deno.land/x/std@v0.2.4/colors/main.ts";
 
 import { Application, Context, Router, Status } from "../mod.ts";
 

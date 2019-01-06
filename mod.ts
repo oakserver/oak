@@ -1,5 +1,6 @@
 export { Application } from "./application.ts";
 export { Context } from "./context.ts";
+export { HttpError } from "./httpError.ts";
 export { compose as composeMiddleware, Middleware } from "./middleware.ts";
 export {
   RouteParams,
@@ -7,5 +8,8 @@ export {
   RouterContext,
   RouterMiddleware
 } from "./router.ts";
+export { send } from "./send.ts";
 export { HTTPMethods } from "./types.ts";
-export { Status } from "./deps.ts";
+
+// Re-exported from `net`
+export { Status, STATUS_TEXT } from "./deps.ts";

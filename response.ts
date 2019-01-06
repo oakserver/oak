@@ -1,10 +1,13 @@
 import { Status } from "./deps.ts";
+import { contentType } from "./media_types.ts";
 
 interface ServerResponse {
   status?: number;
   headers?: Headers;
   body?: Uint8Array;
 }
+
+const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
 
 function isHtml(value: string): boolean {
   return /^\s*<(?:!DOCTYPE|html|body)/i.test(value);
@@ -13,39 +16,52 @@ function isHtml(value: string): boolean {
 export class Response {
   private _encoder = new TextEncoder();
 
-  status?: Status;
+  private _getBody(): Uint8Array | undefined {
+    const typeofBody = typeof this.body;
+    let result: Uint8Array | undefined;
+    if (BODY_TYPES.includes(typeofBody)) {
+      const bodyText = String(this.body);
+      result = this._encoder.encode(bodyText);
+      this.type = this.type || isHtml(bodyText) ? "html" : "text/plain";
+    } else if (this.body instanceof Uint8Array) {
+      result = this.body;
+    } else if (typeofBody === "object" && this.body !== null) {
+      result = this._encoder.encode(JSON.stringify(this.body));
+      this.type = this.type || "json";
+    }
+    return result;
+  }
+
+  private _setContentType() {
+    if (this.type) {
+      const contentTypeString = contentType(this.type);
+      if (contentTypeString && !this.headers.has("Content-Type")) {
+        this.headers.append("Content-Type", contentTypeString);
+      }
+    }
+  }
+
+  /** The body of the response */
   body?: any;
+
+  /** Headers that will be returned in the response */
   headers = new Headers();
 
-  private _setContentType(contentType: string) {
-    if (!this.headers.has("content-type")) {
-      this.headers.append("content-type", contentType);
-    }
-  }
+  /** The HTTP status of the response */
+  status?: Status;
 
-  fromResponse(response: Response) {
-    Object.assign(this, response);
-  }
+  /** The media type, or extension of the response */
+  type?: string;
 
+  /** Take this response and convert it to the response used by the Deno net
+   * server. */
   toServerResponse(): ServerResponse {
-    let body: Uint8Array | undefined;
-    const typeofBody = typeof this.body;
-    if (
-      ["string", "number", "bigint", "boolean", "symbol"].includes(typeofBody)
-    ) {
-      const bodyText = String(this.body);
-      body = this._encoder.encode(bodyText);
-      this._setContentType(isHtml(bodyText) ? "text/html" : "text/plain");
-    } else if (
-      typeofBody === "object" &&
-      this.body !== null &&
-      !(this.body instanceof Uint8Array)
-    ) {
-      body = this._encoder.encode(JSON.stringify(this.body));
-      this._setContentType("application/json");
-    } else if (this.body instanceof Uint8Array) {
-      body = this.body;
-    }
+    // Process the body
+    const body = this._getBody();
+
+    // If there is a response type, set the content type header
+    this._setContentType();
+
     return {
       status: this.status || (body ? Status.OK : Status.NotFound),
       body,

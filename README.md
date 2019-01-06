@@ -1,16 +1,11 @@
 # oak
 
-[![][tci badge]][tci link]
-
 A middleware framework for Deno's [net](https://github.com/denoland/net)
 server, including a router middleware.
 
 This middleware framework is inspired by [Koa](https://github.com/koajs/koa)
 but it takes a more strict concept of not duplicating information in more than
 one location when it comes to requests and responses.
-
-**Note: This is currently a minimum viable framework, versus something that has
-a mature API**
 
 ## Application, middleware, and context
 
@@ -118,11 +113,38 @@ books.set("1", {
 })();
 ```
 
+## Static content
+
+The function `send()` is designed to serve static content as part of a
+middleware function. In the most straight forward usage, a root is provided
+and requests provided to the function are fulfilled with files from the local
+file system relative to the root from the requested path.
+
+A basic usage would look something like this:
+
+```ts
+import * as deno from "deno";
+import { Application, send } from "https://deno.land/x/oak/mod.ts";
+
+(async () => {
+  const app = new Application();
+
+  app.use(async context => {
+    await send(context, context.request.path, {
+      root: `${deno.cwd()}/examples/static`,
+      index: "index.html"
+    });
+  });
+
+  await app.listen("127.0.0.1:8000");
+})();
+```
+
 ---
 
-Licensed under the MIT License.
+There are several modules that are directly adapted from other modules. They
+have preserved their individual licenses and copyrights. All of the modules,
+included those directly adapted are licensed under the MIT License.
 
-Copyright 2018 - 2019 — Kitson P. Kelly — All right reserved.
-
-[tci badge]: https://travis-ci.com/kitsonk/colors.svg?branch=master
-[tci link]: https://travis-ci.com/kitsonk/colors
+All additional work is copyright 2018 - 2019 — Kitson P. Kelly — All rights
+reserved.

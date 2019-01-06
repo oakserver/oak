@@ -1,6 +1,6 @@
-/*
- * This was directly adapted from [path-to-regexp](https://github.com/pillarjs/path-to-regexp)
- * Which is licensed as:
+/*!
+ * Adapted from path-to-regexp at https://github.com/pillarjs/path-to-regexp
+ * which is licensed as:
  *
  * The MIT License (MIT)
  *
@@ -249,6 +249,9 @@ function stringToRegExp(
   return tokensToRegExp(parse(path, options), keys, options);
 }
 
+/** Take a path, with supported tokens, and generate a regular expression which
+ * will match and parse out the tokens.
+ */
 export function pathToRegExp(
   path: Path,
   keys?: Key[],

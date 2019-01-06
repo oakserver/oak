@@ -1,0 +1,11 @@
+{
+  "name": "oak",
+  "version": "1.0.0",
+  "main": "mod.ts",
+  "repository": "git@github.com:kitsonk/oak.git",
+  "author": "Kitson Kelly <me@kitsonkelly.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^3.2.2"
+  }
+}
