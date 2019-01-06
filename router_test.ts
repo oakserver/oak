@@ -1,4 +1,4 @@
-import { assertEqual, test } from "https://deno.land/x/testing/testing.ts";
+import { assertEqual, test } from "https://deno.land/x/std/testing/mod.ts";
 
 import { Status } from "./deps.ts";
 import { Router } from "./router.ts";

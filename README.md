@@ -1,5 +1,7 @@
 # oak
 
+[![][tci badge]][tci link]
+
 A middleware framework for Deno's [net](https://github.com/denoland/net)
 server, including a router middleware.
 
@@ -148,3 +150,6 @@ included those directly adapted are licensed under the MIT License.
 
 All additional work is copyright 2018 - 2019 — Kitson P. Kelly — All rights
 reserved.
+
+[tci badge]: https://travis-ci.com/kitsonk/oak.svg?branch=master
+[tci link]: https://travis-ci.com/kitsonk/oak

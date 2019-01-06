@@ -1,4 +1,4 @@
-import { assert, test } from "https://deno.land/x/testing/testing.ts";
+import { assert, test } from "https://deno.land/x/std/testing/mod.ts";
 
 import { send } from "./send.ts";
 
