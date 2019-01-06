@@ -2,8 +2,9 @@
 
 [![][tci badge]][tci link]
 
-A middleware framework for Deno's [net](https://github.com/denoland/net)
-server, including a router middleware.
+A middleware framework for Deno's
+[net](https://github.com/denoland/deno_std/tree/master/net#net) server,
+including a router middleware.
 
 This middleware framework is inspired by [Koa](https://github.com/koajs/koa)
 but it takes a more strict concept of not duplicating information in more than
