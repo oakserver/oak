@@ -55,7 +55,7 @@ export interface RouterContext<
   S extends object = { [key: string]: any }
 > extends Context<S> {
   /** Any parameters parsed from the route when matched. */
-  params?: P;
+  params: P;
 
   /** A reference to the router instance. */
   router: Router;
