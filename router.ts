@@ -27,11 +27,13 @@
 
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
-import { MethodNotAllowed, NotImplemented } from "./httpError.ts";
+import httpError from "./httpError.ts";
 import { Middleware, compose } from "./middleware.ts";
 import { Key, pathToRegExp } from "./pathToRegExp.ts";
 import { HTTPMethods } from "./types.ts";
 import { decodeComponent } from "./util.ts";
+
+const { MethodNotAllowed, NotImplemented } = httpError;
 
 interface AllowedMethodsOptions {
   /** A method to be called in lieu of throwing a `MethodNotAllowed` HTTP

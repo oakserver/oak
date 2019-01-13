@@ -1,10 +1,10 @@
 // This file contains the external dependencies that oak depends upon
 
-export { serve } from "https://deno.land/x/std@v0.2.4/net/http.ts";
+export { serve } from "https://deno.land/x/std/http/mod.ts";
 export {
   Status,
   STATUS_TEXT
-} from "https://deno.land/x/std@v0.2.4/net/http_status.ts";
+} from "https://deno.land/x/std/http/http_status.ts";
 export {
   basename,
   extname,
@@ -14,16 +14,5 @@ export {
   parse,
   resolve,
   sep
-} from "https://deno.land/x/std@v0.2.4/path/index.ts";
-
-interface MimeDB {
-  [mediaType: string]: {
-    source?: string;
-    compressible?: boolean;
-    charset?: string;
-    extensions?: string[];
-  };
-}
-
-import * as db from "https://raw.githubusercontent.com/jshttp/mime-db/v1.37.0/db.json";
-export const mimeDB: MimeDB = db;
+} from "https://deno.land/x/std/fs/path/mod.ts";
+export { contentType } from "https://deno.land/x/std/media_types/mod.ts";

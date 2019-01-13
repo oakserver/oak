@@ -70,7 +70,7 @@ errorStatusMap.set("LoopDetected", 508);
 errorStatusMap.set("NotExtended", 510);
 errorStatusMap.set("NetworkAuthenticationRequired", 511);
 
-class HttpError extends Error {
+export class HttpError extends Error {
   expose = false;
   status = ErrorStatus.InternalServerError;
 }
@@ -96,29 +96,22 @@ function createHttpErrorConstructor<E extends typeof HttpError>(
   return Ctor as E;
 }
 
-const httpErrors: { [key: string]: typeof HttpError } = {};
+const httpErrors: {
+  [P in keyof typeof ErrorStatus]: typeof HttpError
+} = {} as any;
 
 for (const [key, value] of errorStatusMap) {
-  httpErrors[key] = createHttpErrorConstructor(value);
+  httpErrors[key as any] = createHttpErrorConstructor(value);
 }
 
 /** Create a specific class of `HttpError` based on the status, which defaults
  * to _500 Internal Server Error_.
  */
-function createHttpError(
+export function createHttpError(
   status: ErrorStatus = 500,
   message?: string
 ): HttpError {
-  return new httpErrors[ErrorStatus[status]](message);
+  return new httpErrors[ErrorStatus[status] as any](message);
 }
 
-const exp: { [P in keyof typeof ErrorStatus]: typeof HttpError } & {
-  createHttpError: typeof createHttpError;
-  HttpError: typeof HttpError;
-} = {
-  ...httpErrors,
-  createHttpError,
-  HttpError
-} as any;
-
-export = exp;
+export default httpErrors;

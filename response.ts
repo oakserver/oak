@@ -1,5 +1,4 @@
-import { Status } from "./deps.ts";
-import { contentType } from "./media_types.ts";
+import { contentType, Status } from "./deps.ts";
 
 interface ServerResponse {
   status?: number;
