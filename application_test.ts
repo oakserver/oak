@@ -4,6 +4,7 @@ import {
   assertEqual
 } from "https://deno.land/x/std/testing/mod.ts";
 import { Application } from "./application.ts";
+import { Context } from "./context.ts";
 import { serve, ServerRequest } from "./deps.ts";
 
 let serverRequestStack: ServerRequest[] = [];
@@ -37,7 +38,9 @@ test(async function registerMiddleware() {
   serverRequestStack.push(createMockRequest());
   const app = new Application(mockServe);
   let called = 0;
-  app.use(() => {
+  app.use((context, next) => {
+    assert(context instanceof Context);
+    assert(typeof next === "function");
     called++;
   });
 
