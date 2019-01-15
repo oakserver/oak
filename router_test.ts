@@ -1,11 +1,12 @@
 import { assertEqual, test } from "https://deno.land/x/std/testing/mod.ts";
+import { Context } from "./context.ts";
 
 import { Status } from "./deps.ts";
 import { Router } from "./router.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 
-function createMockContext() {
+function createMockContext<S extends object = { [key: string]: any }>() {
   return {
     request: {
       headers: new Headers(),
@@ -20,7 +21,7 @@ function createMockContext() {
       body: undefined,
       headers: new Headers()
     } as Response
-  };
+  } as Context<S>;
 }
 
 function createMockNext() {
