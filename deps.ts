@@ -1,6 +1,10 @@
 // This file contains the external dependencies that oak depends upon
 
-export { serve } from "https://deno.land/x/std/http/mod.ts";
+export {
+  Response as ServerResponse,
+  serve,
+  ServerRequest
+} from "https://deno.land/x/std/http/mod.ts";
 export {
   Status,
   STATUS_TEXT

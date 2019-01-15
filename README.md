@@ -69,6 +69,29 @@ import { Application } from "https://deno.land/x/oak/mod.ts";
 })();
 ```
 
+### Context
+
+The context passed to middleware has several properties:
+
+| Property    | Description                                                                                                                    |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `.app`      | A reference to the `Application` that is invoking this middleware.                                                             |
+| `.request`  | The `Request` object which contains details about the request.                                                                 |
+| `.response` |
+| `.state`    | A "map" of application state, which can be strongly typed by specifying a generic argument when constructing and `Application` |
+
+The context passed to middleware has one method:
+
+| Method     | Description                                                                                                            |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `.throw()` | Throws an `HTTPError`, which subclass is identified by the first argument, with the message being passed as the second |
+
+Unlike other middleware frameworks, `context` does not have a significant amount of aliases. The information about the request is only located in `.request` and the information about the response is only located in `.response`.
+
+### Automatic response body handling
+
+When the response `Content-Type`
+
 ## Router
 
 The `Router` class produces middleware which can be used with an `Application`

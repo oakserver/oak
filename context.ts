@@ -1,3 +1,5 @@
+// Copyright 2018-2019 the Deno authors. All rights reserved. MIT license.
+
 import { Application } from "./application.ts";
 import { createHttpError } from "./httpError.ts";
 import { Request, ServerRequest } from "./request.ts";
@@ -21,10 +23,11 @@ export class Context<S extends object = { [key: string]: any }> {
    *       const app = new Application<{ foo: string }>();
    *
    */
-  state = {} as S;
+  state: S;
 
   constructor(app: Application<S>, serverRequest: ServerRequest) {
     this.app = app;
+    this.state = app.state;
     this.request = new Request(serverRequest);
   }
 

@@ -3,7 +3,8 @@
     "allowJs": true,
     "baseUrl": ".",
     "checkJs": true,
-    "module": "amd",
+    "esModuleInterop": true,
+    "module": "esnext",
     "moduleResolution": "node",
     "noEmit": true,
     "noLib": true,
@@ -11,16 +12,12 @@
       "http://*": ["../../.deno/deps/http/*"],
       "https://*": ["../../.deno/deps/https/*"]
     },
-    "plugins": [
-      { "name": "deno_ls_plugin" }
-    ],
+    "plugins": [{ "name": "deno_ls_plugin" }],
     "pretty": true,
     "resolveJsonModule": true,
     "sourceMap": true,
     "strict": true,
-    "target": "esnext",
+    "target": "esnext"
   },
-  "include": [
-    "./**/*.ts"
-  ]
+  "include": ["./**/*.ts"]
 }
