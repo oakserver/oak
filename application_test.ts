@@ -1,8 +1,4 @@
-import {
-  test,
-  assert,
-  assertEqual
-} from "https://deno.land/x/std/testing/mod.ts";
+import { test, assert } from "https://deno.land/x/std/testing/mod.ts";
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { serve, ServerRequest } from "./deps.ts";
@@ -40,12 +36,12 @@ test(async function registerMiddleware() {
   let called = 0;
   app.use((context, next) => {
     assert(context instanceof Context);
-    assert(typeof next === "function");
+    assert.equal(typeof next, "function");
     called++;
   });
 
   await app.listen("");
-  assertEqual(called, 1);
+  assert.equal(called, 1);
   teardown();
 });
 
@@ -62,7 +58,7 @@ test(async function middlewareExecutionOrder1() {
   });
 
   await app.listen("");
-  assertEqual(callStack, [1]);
+  assert.equal(callStack, [1]);
   teardown();
 });
 
@@ -80,7 +76,7 @@ test(async function middlewareExecutionOrder2() {
   });
 
   await app.listen("");
-  assertEqual(callStack, [1, 2]);
+  assert.equal(callStack, [1, 2]);
   teardown();
 });
 
@@ -101,7 +97,7 @@ test(async function middlewareExecutionOrder3() {
   });
 
   await app.listen("");
-  assertEqual(callStack, [1, 3, 2, 4]);
+  assert.equal(callStack, [1, 3, 2, 4]);
   teardown();
 });
 
@@ -122,14 +118,14 @@ test(async function middlewareExecutionOrder4() {
   });
 
   await app.listen("");
-  assertEqual(callStack, [1, 3, 4, 2]);
+  assert.equal(callStack, [1, 3, 4, 2]);
   teardown();
 });
 
 test(async function appListen() {
   const app = new Application(mockServe);
   await app.listen("127.0.0.1:8080");
-  assertEqual(addrStack, ["127.0.0.1:8080"]);
+  assert.equal(addrStack, ["127.0.0.1:8080"]);
   teardown();
 });
 
@@ -139,8 +135,8 @@ test(async function appState() {
   app.state.foo = "bar";
   let called = false;
   app.use(context => {
-    assertEqual(context.state, { foo: "bar" });
-    assert(app.state === context.state);
+    assert.equal(context.state, { foo: "bar" });
+    assert.strictEqual(app.state, context.state);
     called = true;
   });
   await app.listen("");

@@ -1,8 +1,4 @@
-import {
-  test,
-  assert,
-  assertEqual
-} from "https://deno.land/x/std/testing/mod.ts";
+import { test, assert } from "https://deno.land/x/std/testing/mod.ts";
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { ServerRequest } from "./deps.ts";
@@ -33,22 +29,19 @@ test(function context() {
   const serverRequest = createMockServerRequest();
   const context = new Context(app, serverRequest);
   assert(context instanceof Context);
-  assert(context.state === app.state);
-  assert(context.app === app);
+  assert.strictEqual(context.state, app.state);
+  assert.strictEqual(context.app, app);
   assert(context.request instanceof Request);
   assert(context.response instanceof Response);
 });
 
 test(function contextThrows() {
-  let didThrow = false;
   const context = new Context(createMockApp(), createMockServerRequest());
-  try {
-    context.throw(404, "foobar", { foo: "bar" });
-  } catch (e) {
-    assert(e instanceof httpError.NotFound);
-    assertEqual(e.message, "foobar");
-    assertEqual(e.foo, "bar");
-    didThrow = true;
-  }
-  assert(didThrow);
+  assert.throws(
+    () => {
+      context.throw(404, "foobar");
+    },
+    httpError.NotFound,
+    "foobar"
+  );
 });

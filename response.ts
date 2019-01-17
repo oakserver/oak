@@ -8,24 +8,24 @@ interface ServerResponse {
 
 const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
 
+const encoder = new TextEncoder();
+
 function isHtml(value: string): boolean {
   return /^\s*<(?:!DOCTYPE|html|body)/i.test(value);
 }
 
 export class Response {
-  private _encoder = new TextEncoder();
-
   private _getBody(): Uint8Array | undefined {
     const typeofBody = typeof this.body;
     let result: Uint8Array | undefined;
     if (BODY_TYPES.includes(typeofBody)) {
       const bodyText = String(this.body);
-      result = this._encoder.encode(bodyText);
-      this.type = this.type || isHtml(bodyText) ? "html" : "text/plain";
+      result = encoder.encode(bodyText);
+      this.type = this.type || (isHtml(bodyText) ? "html" : "text/plain");
     } else if (this.body instanceof Uint8Array) {
       result = this.body;
     } else if (typeofBody === "object" && this.body !== null) {
-      result = this._encoder.encode(JSON.stringify(this.body));
+      result = encoder.encode(JSON.stringify(this.body));
       this.type = this.type || "json";
     }
     return result;

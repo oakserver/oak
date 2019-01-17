@@ -33,16 +33,13 @@ function notFound(context: Context) {
   router
     .get("/", (context, next) => {
       context.response.body = "Hello world!";
-      return next();
     })
     .get("/book", async (context, next) => {
       context.response.body = Array.from(books.values());
-      return next();
     })
     .get<{ id: string }>("/book/:id", async (context, next) => {
       if (context.params && books.has(context.params.id)) {
         context.response.body = books.get(context.params.id);
-        return next();
       } else {
         return notFound(context);
       }

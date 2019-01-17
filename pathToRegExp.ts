@@ -35,14 +35,14 @@ export interface Key {
   partial: boolean;
 }
 
-interface ParseOptions {
+export interface ParseOptions {
   delimiter?: string;
   delimiters?: string | string[];
 }
 
-type Path = string | RegExp | Array<string | RegExp>;
+export type Path = string | RegExp | Array<string | RegExp>;
 
-interface RegExpOptions {
+export interface RegExpOptions {
   sensitive?: boolean;
   strict?: boolean;
   end?: boolean;
@@ -183,7 +183,7 @@ function tokensToRegExp(
   keys?: Key[],
   options: RegExpOptions & ParseOptions = {}
 ): RegExp {
-  const { strict, start, end } = options;
+  const { strict = false, start = true, end = true } = options;
   const delimiter = escapeString(options.delimiter || DEFAULT_DELIMITER);
   const delimiters = options.delimiters || DEFAULT_DELIMITERS;
   const endsWith = ([] as string[])

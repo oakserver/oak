@@ -1,4 +1,4 @@
-import { assertEqual, test } from "https://deno.land/x/std/testing/mod.ts";
+import { assert, test } from "https://deno.land/x/std/testing/mod.ts";
 import { Context } from "./context.ts";
 
 import { Status } from "./deps.ts";
@@ -33,5 +33,5 @@ test(async function basicRouter() {
   const context = createMockContext();
   const next = createMockNext();
   const mw = router.routes();
-  assertEqual(await mw(context, next), undefined);
+  assert.equal(await mw(context, next), undefined);
 });
