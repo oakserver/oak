@@ -3,7 +3,12 @@
  */
 
 // Importing some console colors
-import { color } from "https://deno.land/x/std@v0.2.4/colors/main.ts";
+import {
+  green,
+  cyan,
+  bold,
+  yellow
+} from "https://deno.land/x/std/colors/mod.ts";
 
 import { Application, Context, Router, Status } from "../mod.ts";
 
@@ -52,9 +57,9 @@ function notFound(context: Context) {
     await next();
     const rt = context.response.headers.get("X-Response-Time");
     console.log(
-      `${color.green(context.request.method)} ${color.blue(
-        context.request.url
-      )} - ${color.bold(String(rt))}`
+      `${green(context.request.method)} ${cyan(context.request.url)} - ${bold(
+        String(rt)
+      )}`
     );
   });
 
@@ -74,7 +79,7 @@ function notFound(context: Context) {
   app.use(notFound);
 
   const address = "127.0.0.1:8000";
-  console.log(color.bold("Start listening on ") + color.yellow(address));
+  console.log(bold("Start listening on ") + yellow(address));
   await app.listen(address);
-  console.log(color.bold("Finished."));
+  console.log(bold("Finished."));
 })();

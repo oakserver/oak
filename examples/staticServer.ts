@@ -1,4 +1,10 @@
-import { color } from "https://deno.land/x/std@v0.2.4/colors/main.ts";
+import {
+  green,
+  cyan,
+  bold,
+  yellow,
+  red
+} from "https://deno.land/x/std/colors/mod.ts";
 
 import * as deno from "deno";
 import { Application, HttpError, send, Status } from "../mod.ts";
@@ -36,7 +42,7 @@ import { Application, HttpError, send, Status } from "../mod.ts";
                 <h1>500 - Internal Server Error</h1>
               </body>
             </html>`;
-        console.log("Unhandled Error:", color.red.bold(e.message));
+        console.log("Unhandled Error:", red(bold(e.message)));
         console.log(e.stack);
       }
     }
@@ -47,9 +53,9 @@ import { Application, HttpError, send, Status } from "../mod.ts";
     await next();
     const rt = context.response.headers.get("X-Response-Time");
     console.log(
-      `${color.green(context.request.method)} ${color.blue(
-        context.request.url
-      )} - ${color.bold(String(rt))}`
+      `${green(context.request.method)} ${cyan(context.request.url)} - ${bold(
+        String(rt)
+      )}`
     );
   });
 
@@ -70,6 +76,6 @@ import { Application, HttpError, send, Status } from "../mod.ts";
   });
 
   const address = "127.0.0.1:8000";
-  console.log(color.bold("Start listening on ") + color.yellow(address));
+  console.log(bold("Start listening on ") + yellow(address));
   await app.listen(address);
 })();
