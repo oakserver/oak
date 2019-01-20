@@ -99,7 +99,7 @@ export async function send(
   if (!hidden && isHidden(root, path)) {
     return;
   }
-  Headers;
+
   let encodingExt = "";
   if (
     brotli &&
