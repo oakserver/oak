@@ -1,3 +1,5 @@
+// Copyright 2018-2019 the Deno authors. All rights reserved. MIT license.
+
 import { assert, test } from "https://deno.land/x/std/testing/mod.ts";
 
 import { Application } from "./application.ts";

@@ -1,3 +1,5 @@
+// Copyright 2018-2019 the Deno authors. All rights reserved. MIT license.
+
 import * as deno from "deno";
 import { join, isAbsolute, normalize, sep, resolve } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";

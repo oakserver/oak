@@ -1,3 +1,5 @@
+// Copyright 2018-2019 the Deno authors. All rights reserved. MIT license.
+
 import { Context } from "./context.ts";
 
 /** Middleware are functions which are chained together to deal with requests. */

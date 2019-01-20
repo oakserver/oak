@@ -1,3 +1,5 @@
+// Copyright 2018-2019 the Deno authors. All rights reserved. MIT license.
+
 import "./application_test.ts";
 import "./context_test.ts";
 import "./encoding_test.ts";

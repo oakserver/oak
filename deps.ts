@@ -1,3 +1,5 @@
+// Copyright 2018-2019 the Deno authors. All rights reserved. MIT license.
+
 // This file contains the external dependencies that oak depends upon
 
 export {
