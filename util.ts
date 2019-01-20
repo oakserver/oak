@@ -2,6 +2,9 @@ import * as deno from "deno";
 import { join, isAbsolute, normalize, sep, resolve } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
 
+/** Safely decode a URI component, where if it fails, instead of throwing,
+ * just returns the original string
+ */
 export function decodeComponent(text: string) {
   try {
     return decodeURIComponent(text);
