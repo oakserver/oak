@@ -197,7 +197,7 @@ There are several modules that are directly adapted from other modules. They
 have preserved their individual licenses and copyrights. All of the modules,
 including those directly adapted are licensed under the MIT License.
 
-All additional work is copyright 2018 - 2019 the Deno authors. All rights
+All additional work is copyright 2018 - 2019 the oak authors. All rights
 reserved.
 
 [tci badge]: https://travis-ci.com/kitsonk/oak.svg?branch=master

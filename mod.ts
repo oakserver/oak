@@ -1,4 +1,4 @@
-// Copyright 2018-2019 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
 export { Application } from "./application.ts";
 export { Context } from "./context.ts";

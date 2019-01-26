@@ -1,4 +1,4 @@
-// Copyright 2018-2019 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
 export enum ErrorStatus {
   BadRequest = 400, // RFC 7231, 6.5.1
