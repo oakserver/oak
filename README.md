@@ -20,7 +20,7 @@ processing requests with the registered middleware.
 A basic usage, responding to every request with _Hello World!_:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/main.ts";
+import { Application } from "https://deno.land/x/oak/mod.ts";
 
 (async () => {
   const app = new Application();
