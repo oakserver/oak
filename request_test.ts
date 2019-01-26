@@ -6,9 +6,13 @@ import { Request } from "./request.ts";
 
 function createMockServerRequest(
   url = "/",
+  accepts?: string,
   acceptsEncoding?: string
 ): ServerRequest {
   const headers = new Headers();
+  if (accepts) {
+    headers.set("Accept", accepts);
+  }
   if (acceptsEncoding) {
     headers.set("Accept-Encoding", acceptsEncoding);
   }
@@ -33,7 +37,35 @@ test(function requestSearch() {
 
 test(function requestAcceptEncoding() {
   const request = new Request(
-    createMockServerRequest("/", "gzip, compress;q=0.2, identity;q=0.5")
+    createMockServerRequest(
+      "/",
+      undefined,
+      "gzip, compress;q=0.2, identity;q=0.5"
+    )
   );
   assert.equal(request.acceptsEncodings("gzip", "identity"), "gzip");
+});
+
+test(function requestAccepts() {
+  const request = new Request(
+    createMockServerRequest("/", "application/json;q=0.2, text/html")
+  );
+  assert.equal(request.accepts("application/json", "text/html"), "text/html");
+});
+
+test(function requestAcceptsNoProvided() {
+  const request = new Request(
+    createMockServerRequest("/", "application/json;q=0.2, text/html")
+  );
+  assert.equal(request.accepts(), ["text/html", "application/json"]);
+});
+
+test(function requestNoAccepts() {
+  const request = new Request(createMockServerRequest("/"));
+  assert.equal(request.accepts("application/json"), undefined);
+});
+
+test(function requestNoAcceptsMatch() {
+  const request = new Request(createMockServerRequest("/", "text/html"));
+  assert.equal(request.accepts("application/json"), undefined);
 });

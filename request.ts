@@ -1,7 +1,8 @@
-// Copyright 2018-2019 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
 import { serve } from "./deps.ts";
 import { preferredEncodings } from "./encoding.ts";
+import { preferredMediaTypes } from "./mediaType.ts";
 import { HTTPMethods } from "./types.ts";
 
 type ReturnType<T> = T extends (...args: any[]) => infer R ? R : any;
@@ -55,8 +56,25 @@ export class Request {
     this._searchParams = new URLSearchParams(search);
   }
 
-  accepts(...types: string[]): string | undefined {
-    return;
+  /** Returns an array of media types, accepted by the requestor, in order of
+   * preference.  If there are no encodings supplied by the requestor,
+   * `undefined` is returned.
+   */
+  accepts(): string[];
+  /** For a given set of media types, return the best match accepted by the
+   * requestor.  If there are no encoding that match, then the method returns
+   * `undefined`.
+   */
+  accepts(...types: string[]): string | undefined;
+  accepts(...types: string[]): string | string[] | undefined {
+    const acceptValue = this._serverRequest.headers.get("Accept");
+    if (!acceptValue) {
+      return;
+    }
+    if (types.length) {
+      return preferredMediaTypes(acceptValue, types)[0];
+    }
+    return preferredMediaTypes(acceptValue);
   }
 
   /** Returns an array of encodings, accepted the the requestor, in order of
