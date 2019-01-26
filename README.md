@@ -200,5 +200,5 @@ including those directly adapted are licensed under the MIT License.
 All additional work is copyright 2018 - 2019 the oak authors. All rights
 reserved.
 
-[tci badge]: https://travis-ci.com/kitsonk/oak.svg?branch=master
-[tci link]: https://travis-ci.com/kitsonk/oak
+[tci badge]: https://travis-ci.com/oakserver/oak.svg?branch=master
+[tci link]: https://travis-ci.com/oakserver/oak
