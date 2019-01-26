@@ -6,11 +6,11 @@ export {
   Response as ServerResponse,
   serve,
   ServerRequest
-} from "https://deno.land/x/std/http/mod.ts";
+} from "https://deno.land/x/std@v0.2.7/http/mod.ts";
 export {
   Status,
   STATUS_TEXT
-} from "https://deno.land/x/std/http/http_status.ts";
+} from "https://deno.land/x/std@v0.2.7/http/http_status.ts";
 export {
   basename,
   extname,
@@ -20,5 +20,5 @@ export {
   parse,
   resolve,
   sep
-} from "https://deno.land/x/std/fs/path/mod.ts";
-export { contentType } from "https://deno.land/x/std/media_types/mod.ts";
+} from "https://deno.land/x/std@v0.2.7/fs/path/mod.ts";
+export { contentType } from "https://deno.land/x/std@v0.2.7/media_types/mod.ts";
