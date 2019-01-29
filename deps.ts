@@ -21,4 +21,7 @@ export {
   resolve,
   sep
 } from "https://deno.land/x/std@v0.2.7/fs/path/mod.ts";
-export { contentType } from "https://deno.land/x/std@v0.2.7/media_types/mod.ts";
+export {
+  contentType,
+  lookup
+} from "https://deno.land/x/std@v0.2.7/media_types/mod.ts";

@@ -4,6 +4,7 @@ import "./application_test.ts";
 import "./context_test.ts";
 import "./encoding_test.ts";
 import "./httpError_test.ts";
+import "./isMediaType_test.ts";
 import "./mediaType_test.ts";
 import "./mediaTyper_test.ts";
 import "./middleware_test.ts";

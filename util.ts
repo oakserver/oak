@@ -1,7 +1,7 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
 import * as deno from "deno";
-import { join, isAbsolute, normalize, sep, resolve } from "./deps.ts";
+import { isAbsolute, join, normalize, resolve, sep } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
 
 /** Safely decode a URI component, where if it fails, instead of throwing,
