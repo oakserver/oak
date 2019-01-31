@@ -13,12 +13,22 @@ const TYPE_REGEXP = /^ *([A-Za-z0-9][A-Za-z0-9!#$&^_-]{0,126})\/([A-Za-z0-9][A-Z
 
 class MediaType {
   constructor(
+    /** The type of the media type. */
     public type: string,
+    /** The subtype of the media type. */
     public subtype: string,
+    /** The optional suffix of the media type. */
     public suffix?: string
   ) {}
 }
 
+/** Given a media type object, return a media type string.
+ *
+ *       format({
+ *         type: "text",
+ *         subtype: "html"
+ *       }); // returns "text/html"
+ */
 export function format(obj: MediaType): string {
   const { subtype, suffix, type } = obj;
 
@@ -42,6 +52,15 @@ export function format(obj: MediaType): string {
   return str;
 }
 
+/** Given a media type string, return a media type object.
+ *
+ *       parse("application/json-patch+json");
+ *       // returns {
+ *       //   type: "application",
+ *       //   subtype: "json-patch",
+ *       //   suffix: "json"
+ *       // }
+ */
 export function parse(str: string): MediaType {
   const match = TYPE_REGEXP.exec(str.toLowerCase());
 
