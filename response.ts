@@ -1,6 +1,7 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
 import { contentType, Status } from "./deps.ts";
+import { isHtml } from "./util.ts";
 
 interface ServerResponse {
   status?: number;
@@ -11,10 +12,6 @@ interface ServerResponse {
 const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
 
 const encoder = new TextEncoder();
-
-function isHtml(value: string): boolean {
-  return /^\s*<(?:!DOCTYPE|html|body)/i.test(value);
-}
 
 export class Response {
   private _getBody(): Uint8Array | undefined {

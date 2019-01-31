@@ -15,6 +15,11 @@ export function decodeComponent(text: string) {
   }
 }
 
+/** Determines if a string "looks" like HTML */
+export function isHtml(value: string): boolean {
+  return /^\s*<(?:!DOCTYPE|html|body)/i.test(value);
+}
+
 /*!
  * Adapted directly from https://github.com/pillarjs/resolve-path
  * which is licensed as follows:
