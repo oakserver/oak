@@ -2,8 +2,23 @@
 
 import { serve } from "./deps.ts";
 import { preferredEncodings } from "./encoding.ts";
+import httpErrors from "./httpError.ts";
+import { isMediaType } from "./isMediaType.ts";
 import { preferredMediaTypes } from "./mediaType.ts";
 import { HTTPMethods } from "./types.ts";
+
+export enum BodyType {
+  JSON = "json",
+  Form = "form",
+  Text = "text",
+  Undefined = "undefined"
+}
+
+export type Body =
+  | { type: BodyType.JSON; value: any }
+  | { type: BodyType.Form; value: URLSearchParams }
+  | { type: BodyType.Text; value: string }
+  | { type: BodyType.Undefined; value: undefined };
 
 type ReturnType<T> = T extends (...args: any[]) => infer R ? R : any;
 type UnpackAsyncIterator<T> = T extends AsyncIterableIterator<infer U>
@@ -12,11 +27,27 @@ type UnpackAsyncIterator<T> = T extends AsyncIterableIterator<infer U>
 
 export type ServerRequest = UnpackAsyncIterator<ReturnType<typeof serve>>;
 
+const decoder = new TextDecoder();
+
+const jsonTypes = ["json", "application/*+json", "application/csp-report"];
+const formTypes = ["urlencoded"];
+const textTypes = ["text"];
+
 export class Request {
+  private _body?: Body;
   private _path: string;
+  private _rawBodyPromise?: Promise<Uint8Array>;
   private _search?: string;
   private _searchParams: URLSearchParams;
   private _serverRequest: ServerRequest;
+
+  /** Is `true` if the request has a body, otherwise `false`. */
+  get hasBody(): boolean {
+    return (
+      this.headers.get("transfer-encoding") !== null ||
+      !!parseInt(this.headers.get("content-length") || "")
+    );
+  }
 
   /** The `Headers` supplied in the request. */
   get headers(): Headers {
@@ -41,6 +72,11 @@ export class Request {
   /** The parsed `URLSearchParams` of the request. */
   get searchParams(): URLSearchParams {
     return this._searchParams;
+  }
+
+  /** Returns the _original_ Deno server request. */
+  get serverRequest(): ServerRequest {
+    return this._serverRequest;
   }
 
   /** The URL of the request. */
@@ -77,6 +113,12 @@ export class Request {
     return preferredMediaTypes(acceptValue);
   }
 
+  acceptsCharsets(): string[];
+  acceptsCharsets(...charsets: string[]): string | undefined;
+  acceptsCharsets(...charsets: string[]): string[] | string | undefined {
+    return undefined;
+  }
+
   /** Returns an array of encodings, accepted the the requestor, in order of
    * preference.  If there are no encodings supplied by the requestor,
    * `undefined` is returned.
@@ -104,15 +146,49 @@ export class Request {
     return preferredEncodings(acceptEncodingValue);
   }
 
-  acceptsCharsets(): string[];
-  acceptsCharsets(...charsets: string[]): string | undefined;
-  acceptsCharsets(...charsets: string[]): string[] | string | undefined {
-    return undefined;
-  }
-
   acceptsLanguages(): string[];
   acceptsLanguages(...langs: string[]): string | undefined;
   acceptsLanguages(...langs: string[]): string[] | string | undefined {
     return undefined;
+  }
+
+  /** If there is a body in the request, resolves with an object which
+   * describes the body.  The `type` provides what type the body is and `body`
+   * provides the actual body.
+   */
+  async body(): Promise<Body> {
+    if (this._body) {
+      return this._body;
+    }
+    const encoding = this.headers.get("content-encoding") || "identity";
+    if (encoding !== "identity") {
+      throw new httpErrors.UnsupportedMediaType(
+        `Unsupported content-encoding: ${encoding}`
+      );
+    }
+    if (!this.hasBody) {
+      return { type: BodyType.Undefined, value: undefined };
+    }
+    const contentType = this.headers.get("content-type");
+    if (contentType) {
+      const rawBody = await (this._rawBodyPromise ||
+        (this._rawBodyPromise = this._serverRequest.body()));
+      const str = decoder.decode(rawBody);
+      if (isMediaType(contentType, jsonTypes)) {
+        return (this._body = { type: BodyType.JSON, value: JSON.parse(str) });
+      } else if (isMediaType(contentType, formTypes)) {
+        return (this._body = {
+          type: BodyType.Form,
+          value: new URLSearchParams(str)
+        });
+      } else if (isMediaType(contentType, textTypes)) {
+        return (this._body = { type: BodyType.Text, value: str });
+      }
+    }
+    throw new httpErrors.UnsupportedMediaType(
+      contentType
+        ? `Unsupported content-type: ${contentType}`
+        : "Missing content-type"
+    );
   }
 }
