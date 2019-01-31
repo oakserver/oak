@@ -1,9 +1,3 @@
-/*
- * This is a basic example of a test server which provides a logger middleware,
- * a response time middleware, and a basic "Hello World!" middleware.
- */
-
-// Importing some console colors
 import {
   green,
   cyan,
@@ -34,8 +28,23 @@ import { Application } from "../mod.ts";
     ctx.response.headers.set("X-Response-Time", `${ms}ms`);
   });
 
-  app.use(ctx => {
-    ctx.response.body = "Hello World!";
+  app.use(async ctx => {
+    if (ctx.request.hasBody) {
+      const body = await ctx.request.body();
+      let requestText: string;
+      if (body) {
+        switch (body.type) {
+          case "json":
+          case "form":
+          case "text":
+        }
+        ctx.response.body = `<!DOCTYPE html><html><body><h1>Body type: "${
+          body.type
+        }"`;
+      }
+    } else {
+      ctx.response.body = `<!DOCTYPE html><html><body><h1>No Body</h1></body></html>`;
+    }
   });
 
   const address = "127.0.0.1:8000";
