@@ -8,10 +8,13 @@ test(function publicApi() {
   assert.equal(typeof mod.Application, "function");
   assert.equal(typeof mod.Context, "function");
   assert.equal(typeof mod.HttpError, "function");
+  assert.equal(typeof mod.composeMiddleware, "function");
+  assert.equal(typeof mod.BodyType, "object");
+  assert.equal(typeof mod.Request, "function");
+  assert.equal(typeof mod.Response, "function");
   assert.equal(typeof mod.Router, "function");
   assert.equal(typeof mod.STATUS_TEXT, "object");
   assert.equal(typeof mod.Status, "object");
-  assert.equal(typeof mod.composeMiddleware, "function");
   assert.equal(typeof mod.send, "function");
-  assert.equal(Object.keys(mod).length, 8);
+  assert.equal(Object.keys(mod).length, 11);
 });
