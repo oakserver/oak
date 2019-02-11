@@ -60,6 +60,18 @@ export class Response {
     // If there is a response type, set the content type header
     this._setContentType();
 
+    // If there is no body and no content type and no set length, then set the
+    // content length to 0
+    if (
+      !(
+        body ||
+        this.headers.has("Content-Type") ||
+        this.headers.has("Content-Length")
+      )
+    ) {
+      this.headers.append("Content-Length", "0");
+    }
+
     return {
       status: this.status || (body ? Status.OK : Status.NotFound),
       body,

@@ -10,7 +10,8 @@ test(function emptyResponse() {
   const serverResponse = response.toServerResponse();
   assert.equal(serverResponse.body, undefined);
   assert.equal(serverResponse.status, 404);
-  assert.equal(Array.from(serverResponse.headers!.entries()).length, 0);
+  assert.equal(Array.from(serverResponse.headers!.entries()).length, 1);
+  assert.equal(serverResponse.headers!.get("Content-Length"), "0");
 });
 
 test(function statusSet() {
@@ -19,7 +20,8 @@ test(function statusSet() {
   const serverResponse = response.toServerResponse();
   assert.equal(serverResponse.body, undefined);
   assert.equal(serverResponse.status, 302);
-  assert.equal(Array.from(serverResponse.headers!.entries()).length, 0);
+  assert.equal(Array.from(serverResponse.headers!.entries()).length, 1);
+  assert.equal(serverResponse.headers!.get("Content-Length"), "0");
 });
 
 test(function bodyText() {
@@ -116,4 +118,10 @@ test(function contentTypeDoesNotOverwrite() {
   assert.equal(serverResponse.status, 200);
   assert.equal(serverResponse.headers!.get("Content-Type"), "text/plain");
   assert.equal(Array.from(serverResponse.headers!.entries()).length, 1);
+});
+
+test(function contentLengthSetsTo0() {
+  const response = new Response();
+  const serverResponse = response.toServerResponse();
+  assert.equal(serverResponse.headers!.get("Content-Length"), "0");
 });
