@@ -1,8 +1,8 @@
 language: python
 
 install:
-  - curl -L https://deno.land/x/install/install.py | python - v0.2.10
+  - curl -L https://deno.land/x/install/install.py | python - v0.2.11
   - export PATH="$HOME/.deno/bin:$PATH"
 
 script:
-  - deno test.ts
+  - deno test.ts --allow-read
