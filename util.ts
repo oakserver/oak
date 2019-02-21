@@ -1,6 +1,5 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
-import * as deno from "deno";
 import { isAbsolute, join, normalize, resolve, sep } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
 
@@ -60,7 +59,7 @@ export function resolvePath(rootPath: string, relativePath?: string): string {
   // root is optional, similar to root.resolve
   if (arguments.length === 1) {
     path = rootPath;
-    root = deno.cwd();
+    root = Deno.cwd();
   }
 
   if (path == null) {

@@ -3,7 +3,6 @@
  * with the MIT license.
  */
 
-import * as deno from "deno";
 import { Context } from "./context.ts";
 import { createHttpError } from "./httpError.ts";
 import { basename, extname, parse, sep } from "./deps.ts";
@@ -60,7 +59,7 @@ function isHidden(root: string, path: string) {
 
 async function exists(path: string): Promise<boolean> {
   try {
-    return (await deno.stat(path)).isFile();
+    return (await Deno.stat(path)).isFile();
   } catch {
     return false;
   }
@@ -133,21 +132,21 @@ export async function send(
     }
   }
 
-  let stats: deno.FileInfo;
+  let stats: Deno.FileInfo;
   try {
-    stats = await deno.stat(path);
+    stats = await Deno.stat(path);
 
     if (stats.isDirectory()) {
       if (format && index) {
         path += `/${index}`;
-        stats = await deno.stat(path);
+        stats = await Deno.stat(path);
       } else {
         return;
       }
     }
   } catch (err) {
-    if (err instanceof deno.DenoError) {
-      if (err.kind === deno.ErrorKind.NotFound) {
+    if (err instanceof Deno.DenoError) {
+      if (err.kind === Deno.ErrorKind.NotFound) {
         throw createHttpError(404, err.message);
       }
     }
@@ -169,7 +168,7 @@ export async function send(
     response.type =
       encodingExt !== "" ? extname(basename(path, encodingExt)) : extname(path);
   }
-  response.body = await deno.readFile(path);
+  response.body = await Deno.readFile(path);
 
   return path;
 }

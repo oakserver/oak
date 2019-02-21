@@ -1,6 +1,6 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
-import { serve } from "./deps.ts";
+import { ServerRequest } from "./deps.ts";
 import { preferredEncodings } from "./encoding.ts";
 import httpErrors from "./httpError.ts";
 import { isMediaType } from "./isMediaType.ts";
@@ -19,13 +19,6 @@ export type Body =
   | { type: BodyType.Form; value: URLSearchParams }
   | { type: BodyType.Text; value: string }
   | { type: BodyType.Undefined; value: undefined };
-
-type ReturnType<T> = T extends (...args: any[]) => infer R ? R : any;
-type UnpackAsyncIterator<T> = T extends AsyncIterableIterator<infer U>
-  ? U
-  : any;
-
-export type ServerRequest = UnpackAsyncIterator<ReturnType<typeof serve>>;
 
 const decoder = new TextDecoder();
 

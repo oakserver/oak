@@ -1,8 +1,9 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
 import { Application } from "./application.ts";
+import { ServerRequest } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
-import { Request, ServerRequest } from "./request.ts";
+import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { ErrorStatus } from "./types.ts";
 

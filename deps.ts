@@ -3,14 +3,14 @@
 // This file contains the external dependencies that oak depends upon
 
 export {
-  Response as ServerResponse,
+  Response,
   serve,
   ServerRequest
-} from "https://deno.land/x/std@v0.2.7/http/mod.ts";
+} from "https://deno.land/std@v0.2.10/http/server.ts";
 export {
   Status,
   STATUS_TEXT
-} from "https://deno.land/x/std@v0.2.7/http/http_status.ts";
+} from "https://deno.land/std@v0.2.10/http/http_status.ts";
 export {
   basename,
   extname,
@@ -20,8 +20,8 @@ export {
   parse,
   resolve,
   sep
-} from "https://deno.land/x/std@v0.2.7/fs/path/mod.ts";
+} from "https://deno.land/std@v0.2.10/fs/path/mod.ts";
 export {
   contentType,
   lookup
-} from "https://deno.land/x/std@v0.2.7/media_types/mod.ts";
+} from "https://deno.land/std@v0.2.10/media_types/mod.ts";
