@@ -1,20 +1,21 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
-import { assert, test } from "https://deno.land/x/std/testing/mod.ts";
+import { assertEquals, assertStrictEq, assertThrows } from "https://deno.land/x/std/testing/asserts.ts";
+import { test } from "https://deno.land/x/std/testing/mod.ts";
 import { format, parse } from "./mediaTyper.ts";
 
 test(function formatBasicType() {
   const actual = format({ type: "text", subtype: "html" });
-  assert.strictEqual(actual, "text/html");
+  assertStrictEq(actual, "text/html");
 });
 
 test(function formatWithSuffix() {
   const actual = format({ type: "image", subtype: "svg", suffix: "xml" });
-  assert.strictEqual(actual, "image/svg+xml");
+  assertStrictEq(actual, "image/svg+xml");
 });
 
 test(function invalidType() {
-  assert.throws(
+  assertThrows(
     () => {
       format({ type: "text/", subtype: "html" });
     },
@@ -24,7 +25,7 @@ test(function invalidType() {
 });
 
 test(function invalidSubType() {
-  assert.throws(
+  assertThrows(
     () => {
       format({ type: "text", subtype: "html/" });
     },
@@ -34,7 +35,7 @@ test(function invalidSubType() {
 });
 
 test(function invalidSubType() {
-  assert.throws(
+  assertThrows(
     () => {
       format({ type: "image", subtype: "svg", suffix: "xml\\" });
     },
@@ -45,17 +46,17 @@ test(function invalidSubType() {
 
 test(function parseBasicType() {
   const actual = parse("text/html");
-  assert.equal(actual, { type: "text", subtype: "html", suffix: undefined });
+  assertEquals(actual, { type: "text", subtype: "html", suffix: undefined });
 });
 
 test(function parseWithSuffix() {
   const actual = parse("image/svg+xml");
-  assert.equal(actual, { type: "image", subtype: "svg", suffix: "xml" });
+  assertEquals(actual, { type: "image", subtype: "svg", suffix: "xml" });
 });
 
 test(function parseLowerCase() {
   const actual = parse("IMAGE/SVG+XML");
-  assert.equal(actual, { type: "image", subtype: "svg", suffix: "xml" });
+  assertEquals(actual, { type: "image", subtype: "svg", suffix: "xml" });
 });
 
 const invalidTypes = [
@@ -75,7 +76,7 @@ for (const type of invalidTypes) {
   test({
     name: `invalidType: "${type}"`,
     fn() {
-      assert.throws(
+      assertThrows(
         () => {
           parse(type);
         },

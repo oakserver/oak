@@ -1,13 +1,8 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
-import { test, assert } from "https://deno.land/x/std/testing/mod.ts";
-import {
-  Key,
-  ParseOptions,
-  Path,
-  pathToRegExp,
-  RegExpOptions
-} from "./pathToRegExp.ts";
+import { assertEquals, assertStrictEq } from "https://deno.land/x/std/testing/asserts.ts";
+import { test } from "https://deno.land/x/std/testing/mod.ts";
+import { Key, ParseOptions, Path, pathToRegExp, RegExpOptions } from "./pathToRegExp.ts";
 
 interface TestFixture {
   name: string;
@@ -304,16 +299,16 @@ for (const { name, source, fixtures, keys, options } of testFixtures) {
       const actualKeys: Key[] = [];
       const re = pathToRegExp(source, actualKeys, options);
       if (keys) {
-        assert.equal(actualKeys, keys);
+        assertEquals(actualKeys, keys);
       } else {
-        assert.equal(actualKeys.length, 0);
+        assertEquals(actualKeys.length, 0);
       }
       for (const [fixture, expected] of Object.entries(fixtures)) {
         const actual = re.exec(fixture);
         if (!actual) {
-          assert.strictEqual(expected, null, "Expected a match.");
+          assertStrictEq(expected, null, "Expected a match.");
         } else {
-          assert.equal([...actual], expected);
+          assertEquals([...actual], expected);
         }
       }
     }

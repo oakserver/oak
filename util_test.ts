@@ -1,33 +1,34 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
-import { assert, test } from "https://deno.land/x/std/testing/mod.ts";
 import * as deno from "deno";
+import { assertEquals, assertThrows } from "https://deno.land/x/std/testing/asserts.ts";
+import { test } from "https://deno.land/x/std/testing/mod.ts";
 import httpErrors from "./httpError.ts";
 import { decodeComponent, resolvePath } from "./util.ts";
 
 test(function testDecodeComponent() {
   // with decodeURIComponent, this would throw:
-  assert.equal(decodeComponent("%"), "%");
+  assertEquals(decodeComponent("%"), "%");
 });
 
 test(function testResolvePath() {
-  assert.equal(resolvePath("./foo/bar"), `${deno.cwd()}/foo/bar`);
+  assertEquals(resolvePath("./foo/bar"), `${deno.cwd()}/foo/bar`);
 });
 
 test(function testResolvePathOutsideOfRoot() {
-  assert.throws(() => {
+  assertThrows(() => {
     resolvePath("../foo/bar");
   }, httpErrors.Forbidden);
 });
 
 test(function testResolvePathOutsideOfRootDevious() {
-  assert.throws(() => {
+  assertThrows(() => {
     resolvePath("foo/../../bar");
   }, httpErrors.Forbidden);
 });
 
 test(function testResolvePathAbsolute() {
-  assert.throws(
+  assertThrows(
     () => {
       resolvePath("/dev/null");
     },
@@ -37,7 +38,7 @@ test(function testResolvePathAbsolute() {
 });
 
 test(function testResolvePathContainsNull() {
-  assert.throws(
+  assertThrows(
     () => {
       resolvePath("./foo/bar\0baz");
     },
@@ -47,5 +48,5 @@ test(function testResolvePathContainsNull() {
 });
 
 test(function testResolvePathRoot() {
-  assert.equal(resolvePath("/public", "./foo/bar"), "/public/foo/bar");
+  assertEquals(resolvePath("/public", "./foo/bar"), "/public/foo/bar");
 });

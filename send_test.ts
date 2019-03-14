@@ -1,15 +1,16 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
-import { assert, test } from "https://deno.land/x/std/testing/mod.ts";
-
+import * as deno from "deno";
+import { assert, assertEquals, assertStrictEq } from "https://deno.land/x/std/testing/asserts.ts";
+import { test } from "https://deno.land/x/std/testing/mod.ts";
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
-import * as deno from "deno";
 import { Status } from "./deps.ts";
 import httpErrors from "./httpError.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send } from "./send.ts";
+
 
 let encodingsAccepted = "identity";
 
@@ -67,14 +68,14 @@ test(async function sendHtml() {
   await send(context, context.request.path, {
     root: "./fixtures"
   });
-  assert.equal(context.response.body, fixture);
-  assert.equal(context.response.type, ".html");
-  assert.equal(
+  assertEquals(context.response.body, fixture);
+  assertEquals(context.response.type, ".html");
+  assertEquals(
     context.response.headers.get("content-length"),
     String(fixture.length)
   );
   assert(context.response.headers.get("last-modified") != null);
-  assert.equal(context.response.headers.get("cache-control"), "max-age=0");
+  assertEquals(context.response.headers.get("cache-control"), "max-age=0");
 });
 
 test(async function sendGzip() {
@@ -84,10 +85,10 @@ test(async function sendGzip() {
   await send(context, context.request.path, {
     root: "./fixtures"
   });
-  assert.equal(context.response.body, fixture);
-  assert.equal(context.response.type, ".json");
-  assert.equal(context.response.headers.get("content-encoding"), "gzip");
-  assert.equal(
+  assertEquals(context.response.body, fixture);
+  assertEquals(context.response.type, ".json");
+  assertEquals(context.response.headers.get("content-encoding"), "gzip");
+  assertEquals(
     context.response.headers.get("content-length"),
     String(fixture.length)
   );
@@ -100,10 +101,10 @@ test(async function sendBrotli() {
   await send(context, context.request.path, {
     root: "./fixtures"
   });
-  assert.equal(context.response.body, fixture);
-  assert.equal(context.response.type, ".json");
-  assert.equal(context.response.headers.get("content-encoding"), "br");
-  assert.equal(
+  assertEquals(context.response.body, fixture);
+  assertEquals(context.response.type, ".json");
+  assertEquals(context.response.headers.get("content-encoding"), "br");
+  assertEquals(
     context.response.headers.get("content-length"),
     String(fixture.length)
   );
@@ -115,10 +116,10 @@ test(async function sendIdentity() {
   await send(context, context.request.path, {
     root: "./fixtures"
   });
-  assert.equal(context.response.body, fixture);
-  assert.equal(context.response.type, ".json");
-  assert.strictEqual(context.response.headers.get("content-encoding"), null);
-  assert.equal(
+  assertEquals(context.response.body, fixture);
+  assertEquals(context.response.type, ".json");
+  assertStrictEq(context.response.headers.get("content-encoding"), null);
+  assertEquals(
     context.response.headers.get("content-length"),
     String(fixture.length)
   );

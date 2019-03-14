@@ -1,9 +1,10 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
-import { test, assert } from "https://deno.land/x/std/testing/mod.ts";
+import { assertEquals, assertStrictEq, assertThrowsAsync } from "https://deno.land/x/std/testing/asserts.ts";
+import { test } from "https://deno.land/x/std/testing/mod.ts";
 import { ServerRequest } from "./deps.ts";
 import httpErrors from "./httpError.ts";
-import { Request, BodyType } from "./request.ts";
+import { BodyType, Request } from "./request.ts";
 
 const encoder = new TextEncoder();
 
@@ -32,10 +33,10 @@ function createMockServerRequest(
 
 test(function requestSearch() {
   const request = new Request(createMockServerRequest("/foo?bar=baz&qat=qux"));
-  assert.equal(request.path, "/foo");
-  assert.equal(request.search, "?bar=baz&qat=qux");
-  assert.equal(request.method, "GET");
-  assert.equal(Array.from(request.searchParams.entries()), [
+  assertEquals(request.path, "/foo");
+  assertEquals(request.search, "?bar=baz&qat=qux");
+  assertEquals(request.method, "GET");
+  assertEquals(Array.from(request.searchParams.entries()), [
     ["bar", "baz"],
     ["qat", "qux"]
   ]);
@@ -44,7 +45,7 @@ test(function requestSearch() {
 test(function serverRequestAvail() {
   const mockServerRequest = createMockServerRequest();
   const request = new Request(mockServerRequest);
-  assert.strictEqual(request.serverRequest, mockServerRequest);
+  assertStrictEq(request.serverRequest, mockServerRequest);
 });
 
 test(function requestAcceptEncoding() {
@@ -53,7 +54,7 @@ test(function requestAcceptEncoding() {
       "Accept-Encoding": "gzip, compress;q=0.2, identity;q=0.5"
     })
   );
-  assert.equal(request.acceptsEncodings("gzip", "identity"), "gzip");
+  assertEquals(request.acceptsEncodings("gzip", "identity"), "gzip");
 });
 
 test(function requestAccepts() {
@@ -62,7 +63,7 @@ test(function requestAccepts() {
       Accept: "application/json;q=0.2, text/html"
     })
   );
-  assert.equal(request.accepts("application/json", "text/html"), "text/html");
+  assertEquals(request.accepts("application/json", "text/html"), "text/html");
 });
 
 test(function requestAcceptsNoProvided() {
@@ -71,19 +72,19 @@ test(function requestAcceptsNoProvided() {
       Accept: "application/json;q=0.2, text/html"
     })
   );
-  assert.equal(request.accepts(), ["text/html", "application/json"]);
+  assertEquals(request.accepts(), ["text/html", "application/json"]);
 });
 
 test(function requestNoAccepts() {
   const request = new Request(createMockServerRequest("/"));
-  assert.equal(request.accepts("application/json"), undefined);
+  assertEquals(request.accepts("application/json"), undefined);
 });
 
 test(function requestNoAcceptsMatch() {
   const request = new Request(
     createMockServerRequest("/", "", { Accept: "text/html" })
   );
-  assert.equal(request.accepts("application/json"), undefined);
+  assertEquals(request.accepts("application/json"), undefined);
 });
 
 test(async function requestBodyJson() {
@@ -92,7 +93,7 @@ test(async function requestBodyJson() {
       "Content-Type": "application/json"
     })
   );
-  assert.equal(await request.body(), {
+  assertEquals(await request.body(), {
     type: BodyType.JSON,
     value: { foo: "bar" }
   });
@@ -105,9 +106,9 @@ test(async function requestBodyForm() {
     })
   );
   const actual = await request.body();
-  assert.equal(actual!.type, BodyType.Form);
+  assertEquals(actual!.type, BodyType.Form);
   if (actual && actual.type === "form") {
-    assert.equal(Array.from(actual.value.entries()), [
+    assertEquals(Array.from(actual.value.entries()), [
       ["foo", "bar"],
       ["bar", "1"]
     ]);
@@ -122,7 +123,7 @@ test(async function requestBodyText() {
       "Content-Type": "text/plain"
     })
   );
-  assert.equal(await request.body(), {
+  assertEquals(await request.body(), {
     type: BodyType.Text,
     value: "hello world!"
   });
@@ -130,7 +131,7 @@ test(async function requestBodyText() {
 
 test(async function noBodyResolvesUndefined() {
   const request = new Request(createMockServerRequest());
-  assert.equal(await request.body(), {
+  assertEquals(await request.body(), {
     type: BodyType.Undefined,
     value: undefined
   });
@@ -142,7 +143,7 @@ test(async function unsupportedMediaTypeBody() {
       "Content-Type": "multipart/form-data"
     })
   );
-  await assert.throwsAsync(async () => {
+  await assertThrowsAsync(async () => {
     await request.body();
   }, httpErrors.UnsupportedMediaType);
 });
