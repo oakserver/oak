@@ -28,7 +28,7 @@
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import httpError from "./httpError.ts";
-import { Middleware, compose } from "./middleware.ts";
+import { compose, Middleware } from "./middleware.ts";
 import { Key, pathToRegExp } from "./pathToRegExp.ts";
 import { HTTPMethods } from "./types.ts";
 import { decodeComponent } from "./util.ts";
@@ -159,6 +159,7 @@ const contextRouteMatches = new WeakMap<RouterContext, Layer[]>();
  * path name of the request.
  */
 export class Router {
+  private _prefix?: string;
   private _methods: HTTPMethods[];
   private _stack: Layer[] = [];
 
@@ -174,7 +175,12 @@ export class Router {
       return this;
     }
 
-    this._stack.push(new Layer(path, methods, middleware));
+    const layer = new Layer(path, methods, middleware);
+    if (this._prefix !== undefined) {
+      layer.setPrefix(this._prefix);
+    }
+    this._stack.push(layer);
+    
     return this;
   }
 
@@ -196,6 +202,7 @@ export class Router {
   }
 
   constructor(options: RouterOptions = {}) {
+    this._prefix = options.prefix;
     this._methods = options.methods || [
       "DELETE",
       "GET",
