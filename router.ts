@@ -145,6 +145,9 @@ class Layer {
 
   setPrefix(prefix: string): this {
     if (this.path) {
+      if (this.path === "/") {
+        this.path = "";
+      }
       this.path = `${prefix}${this.path}`;
       this.paramNames = [];
       this.regexp = pathToRegExp(this.path, this.paramNames, this.options);
