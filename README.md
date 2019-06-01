@@ -3,7 +3,7 @@
 [![][tci badge]][tci link]
 
 A middleware framework for Deno's
-[net](https://github.com/denoland/deno_std/tree/master/net#net) server,
+[http](https://github.com/denoland/deno_std/tree/master/http#http) server,
 including a router middleware.
 
 This middleware framework is inspired by [Koa](https://github.com/koajs/koa)
@@ -12,7 +12,7 @@ and middleware router inspired by
 
 ## Application, middleware, and context
 
-The `Application` class wraps the `serve()` function from the `net` package. It
+The `Application` class wraps the `serve()` function from the `http` package. It
 has two methods: `.use()` and `.listen()`. Middleware is added via the
 `.use()` method and the `.listen()` method will start the server and start
 processing requests with the registered middleware.
@@ -29,7 +29,7 @@ import { Application } from "https://deno.land/x/oak/mod.ts";
     ctx.response.body = "Hello World!";
   });
 
-  await app.listen("0.0.0.0:8000");
+  await app.listen("127.0.0.1:8000");
 })();
 ```
 
@@ -256,7 +256,6 @@ file system relative to the root from the requested path.
 A basic usage would look something like this:
 
 ```ts
-import * as deno from "deno";
 import { Application, send } from "https://deno.land/x/oak/mod.ts";
 
 (async () => {
@@ -264,7 +263,7 @@ import { Application, send } from "https://deno.land/x/oak/mod.ts";
 
   app.use(async context => {
     await send(context, context.request.path, {
-      root: `${deno.cwd()}/examples/static`,
+      root: `${Deno.cwd()}/examples/static`,
       index: "index.html"
     });
   });
