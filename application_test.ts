@@ -1,9 +1,9 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
-import { test, assert } from "https://deno.land/x/std/testing/mod.ts";
+import { test, assert, assertEquals, assertStrictEq } from "./test_deps.ts";
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
-import { serve, ServerRequest } from "./deps.ts";
+import { serve, Server, ServerRequest } from "./deps.ts";
 
 let serverRequestStack: ServerRequest[] = [];
 let addrStack: string[] = [];
@@ -13,11 +13,19 @@ function teardown() {
   addrStack = [];
 }
 
-const mockServe: typeof serve = async function*(addr: string) {
-  addrStack.push(addr);
-  for (const request of serverRequestStack) {
-    yield request;
+class MockServer {
+  close(): void {}
+
+  async *[Symbol.asyncIterator]() {
+    for await (const request of serverRequestStack) {
+      yield request;
+    }
   }
+}
+
+const mockServe: typeof serve = function(addr: string): Server {
+  addrStack.push(addr);
+  return new MockServer() as Server;
 };
 
 function createMockRequest(url = "https://example.com/"): ServerRequest {
@@ -38,12 +46,12 @@ test(async function registerMiddleware() {
   let called = 0;
   app.use((context, next) => {
     assert(context instanceof Context);
-    assert.equal(typeof next, "function");
+    assertEquals(typeof next, "function");
     called++;
   });
 
   await app.listen("");
-  assert.equal(called, 1);
+  assertEquals(called, 1);
   teardown();
 });
 
@@ -60,7 +68,7 @@ test(async function middlewareExecutionOrder1() {
   });
 
   await app.listen("");
-  assert.equal(callStack, [1]);
+  assertEquals(callStack, [1]);
   teardown();
 });
 
@@ -78,7 +86,7 @@ test(async function middlewareExecutionOrder2() {
   });
 
   await app.listen("");
-  assert.equal(callStack, [1, 2]);
+  assertEquals(callStack, [1, 2]);
   teardown();
 });
 
@@ -99,7 +107,7 @@ test(async function middlewareExecutionOrder3() {
   });
 
   await app.listen("");
-  assert.equal(callStack, [1, 3, 2, 4]);
+  assertEquals(callStack, [1, 3, 2, 4]);
   teardown();
 });
 
@@ -120,14 +128,14 @@ test(async function middlewareExecutionOrder4() {
   });
 
   await app.listen("");
-  assert.equal(callStack, [1, 3, 4, 2]);
+  assertEquals(callStack, [1, 3, 4, 2]);
   teardown();
 });
 
 test(async function appListen() {
   const app = new Application(mockServe);
   await app.listen("127.0.0.1:8080");
-  assert.equal(addrStack, ["127.0.0.1:8080"]);
+  assertEquals(addrStack, ["127.0.0.1:8080"]);
   teardown();
 });
 
@@ -137,8 +145,8 @@ test(async function appState() {
   app.state.foo = "bar";
   let called = false;
   app.use(context => {
-    assert.equal(context.state, { foo: "bar" });
-    assert.strictEqual(app.state, context.state);
+    assertEquals(context.state, { foo: "bar" });
+    assertStrictEq(app.state, context.state);
     called = true;
   });
   await app.listen("");

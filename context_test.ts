@@ -1,6 +1,6 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
-import { test, assert } from "https://deno.land/x/std/testing/mod.ts";
+import { test, assert, assertStrictEq, assertThrows } from "./test_deps.ts";
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { ServerRequest } from "./deps.ts";
@@ -31,15 +31,15 @@ test(function context() {
   const serverRequest = createMockServerRequest();
   const context = new Context(app, serverRequest);
   assert(context instanceof Context);
-  assert.strictEqual(context.state, app.state);
-  assert.strictEqual(context.app, app);
+  assertStrictEq(context.state, app.state);
+  assertStrictEq(context.app, app);
   assert(context.request instanceof Request);
   assert(context.response instanceof Response);
 });
 
 test(function contextThrows() {
   const context = new Context(createMockApp(), createMockServerRequest());
-  assert.throws(
+  assertThrows(
     () => {
       context.throw(404, "foobar");
     },

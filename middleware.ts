@@ -4,17 +4,17 @@ import { Context } from "./context.ts";
 
 /** Middleware are functions which are chained together to deal with requests. */
 export interface Middleware<
-  T extends Context = Context<S>,
-  S extends object = { [key: string]: any }
+  S extends object = { [key: string]: any },
+  T extends Context = Context<S>
 > {
   (context: T, next: () => Promise<void>): Promise<void> | void;
 }
 
 /** Compose multiple middleware functions into a single middleware function. */
 export function compose<
-  T extends Context = Context<S>,
-  S extends object = { [key: string]: any }
->(middleware: Middleware<T>[]): (context: T) => Promise<void> {
+  S extends object = { [key: string]: any },
+  T extends Context = Context<S>
+>(middleware: Middleware<S, T>[]): (context: T) => Promise<void> {
   return function composedMiddleware(context: T, next?: () => Promise<void>) {
     let index = -1;
     async function dispatch(i: number): Promise<void> {
@@ -22,7 +22,7 @@ export function compose<
         throw new Error("next() called multiple times.");
       }
       index = i;
-      let fn: Middleware<T> | undefined = middleware[i];
+      let fn: Middleware<S, T> | undefined = middleware[i];
       if (i === middleware.length) {
         fn = next;
       }

@@ -16,6 +16,6 @@ import "./router_test.ts";
 import "./send_test.ts";
 import "./util_test.ts";
 
-import { runTests } from "https://deno.land/x/std/testing/mod.ts";
+import { runTests } from "./test_deps.ts";
 
 runTests();

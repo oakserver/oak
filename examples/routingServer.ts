@@ -8,7 +8,7 @@ import {
   cyan,
   bold,
   yellow
-} from "https://deno.land/x/std@v0.2.7/colors/mod.ts";
+} from "https://deno.land/std@v0.7.0/colors/mod.ts";
 
 import { Application, Context, Router, Status } from "../mod.ts";
 

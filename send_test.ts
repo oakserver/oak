@@ -1,10 +1,9 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
-import { assert, test } from "https://deno.land/x/std/testing/mod.ts";
+import { assert, assertEquals, assertStrictEq, test } from "./test_deps.ts";
 
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
-import * as deno from "deno";
 import { Status } from "./deps.ts";
 import httpErrors from "./httpError.ts";
 import { Request } from "./request.ts";
@@ -63,31 +62,31 @@ function setup<S extends object = { [key: string]: any }>(
 
 test(async function sendHtml() {
   const { context } = setup("/test.html");
-  const fixture = await deno.readFile("./fixtures/test.html");
+  const fixture = await Deno.readFile("./fixtures/test.html");
   await send(context, context.request.path, {
     root: "./fixtures"
   });
-  assert.equal(context.response.body, fixture);
-  assert.equal(context.response.type, ".html");
-  assert.equal(
+  assertEquals(context.response.body, fixture);
+  assertEquals(context.response.type, ".html");
+  assertEquals(
     context.response.headers.get("content-length"),
     String(fixture.length)
   );
   assert(context.response.headers.get("last-modified") != null);
-  assert.equal(context.response.headers.get("cache-control"), "max-age=0");
+  assertEquals(context.response.headers.get("cache-control"), "max-age=0");
 });
 
 test(async function sendGzip() {
   const { context } = setup("/test.json");
-  const fixture = await deno.readFile("./fixtures/test.json.gz");
+  const fixture = await Deno.readFile("./fixtures/test.json.gz");
   encodingsAccepted = "gzip";
   await send(context, context.request.path, {
     root: "./fixtures"
   });
-  assert.equal(context.response.body, fixture);
-  assert.equal(context.response.type, ".json");
-  assert.equal(context.response.headers.get("content-encoding"), "gzip");
-  assert.equal(
+  assertEquals(context.response.body, fixture);
+  assertEquals(context.response.type, ".json");
+  assertEquals(context.response.headers.get("content-encoding"), "gzip");
+  assertEquals(
     context.response.headers.get("content-length"),
     String(fixture.length)
   );
@@ -95,15 +94,15 @@ test(async function sendGzip() {
 
 test(async function sendBrotli() {
   const { context } = setup("/test.json");
-  const fixture = await deno.readFile("./fixtures/test.json.br");
+  const fixture = await Deno.readFile("./fixtures/test.json.br");
   encodingsAccepted = "br";
   await send(context, context.request.path, {
     root: "./fixtures"
   });
-  assert.equal(context.response.body, fixture);
-  assert.equal(context.response.type, ".json");
-  assert.equal(context.response.headers.get("content-encoding"), "br");
-  assert.equal(
+  assertEquals(context.response.body, fixture);
+  assertEquals(context.response.type, ".json");
+  assertEquals(context.response.headers.get("content-encoding"), "br");
+  assertEquals(
     context.response.headers.get("content-length"),
     String(fixture.length)
   );
@@ -111,14 +110,14 @@ test(async function sendBrotli() {
 
 test(async function sendIdentity() {
   const { context } = setup("/test.json");
-  const fixture = await deno.readFile("./fixtures/test.json");
+  const fixture = await Deno.readFile("./fixtures/test.json");
   await send(context, context.request.path, {
     root: "./fixtures"
   });
-  assert.equal(context.response.body, fixture);
-  assert.equal(context.response.type, ".json");
-  assert.strictEqual(context.response.headers.get("content-encoding"), null);
-  assert.equal(
+  assertEquals(context.response.body, fixture);
+  assertEquals(context.response.type, ".json");
+  assertStrictEq(context.response.headers.get("content-encoding"), null);
+  assertEquals(
     context.response.headers.get("content-length"),
     String(fixture.length)
   );
