@@ -4,8 +4,6 @@
 /// <reference lib="esnext" />
 
 declare namespace Deno {
-  // @url js/os.d.ts
-
   /** The current process id of the runtime. */
   export let pid: number;
   /** Reflects the NO_COLOR environment variable: https://no-color.org/ */
@@ -37,9 +35,11 @@ declare namespace Deno {
   export function env(): {
     [index: string]: string;
   };
-
-  // @url js/dir.d.ts
-
+  /**
+   * Returns the current user's home directory.
+   * Does not require elevated privileges.
+   */
+  export function homeDir(): string;
   /**
    * `cwd()` Return a string representing the current working directory.
    * If the current directory can be reached via multiple paths
@@ -53,13 +53,8 @@ declare namespace Deno {
    * throws `NotFound` exception if directory not available
    */
   export function chdir(directory: string): void;
-
-  // @url js/io.d.ts
-
-  export interface ReadResult {
-    nread: number;
-    eof: boolean;
-  }
+  export const EOF: null;
+  export type EOF = null;
   export enum SeekMode {
     SEEK_START = 0,
     SEEK_CURRENT = 1,
@@ -67,35 +62,26 @@ declare namespace Deno {
   }
   export interface Reader {
     /** Reads up to p.byteLength bytes into `p`. It resolves to the number
-     * of bytes read (`0` <= `n` <= `p.byteLength`) and any error encountered.
+     * of bytes read (`0` < `n` <= `p.byteLength`) and rejects if any error encountered.
      * Even if `read()` returns `n` < `p.byteLength`, it may use all of `p` as
      * scratch space during the call. If some data is available but not
      * `p.byteLength` bytes, `read()` conventionally returns what is available
      * instead of waiting for more.
      *
-     * When `read()` encounters an error or end-of-file condition after
-     * successfully reading `n` > `0` bytes, it returns the number of bytes read.
-     * It may return the (non-nil) error from the same call or return the error
-     * (and `n` == `0`) from a subsequent call. An instance of this general case
-     * is that a `Reader` returning a non-zero number of bytes at the end of the
-     * input stream may return either `err` == `EOF` or `err` == `null`. The next
-     * `read()` should return `0`, `EOF`.
+     * When `read()` encounters end-of-file condition, it returns EOF symbol.
+     *
+     * When `read()` encounters an error, it rejects with an error.
      *
      * Callers should always process the `n` > `0` bytes returned before
-     * considering the `EOF`. Doing so correctly handles I/O errors that happen
-     * after reading some bytes and also both of the allowed `EOF` behaviors.
-     *
-     * Implementations of `read()` are discouraged from returning a zero byte
-     * count with a `null` error, except when `p.byteLength` == `0`. Callers
-     * should treat a return of `0` and `null` as indicating that nothing
-     * happened; in particular it does not indicate `EOF`.
+     * considering the EOF. Doing so correctly handles I/O errors that happen
+     * after reading some bytes and also both of the allowed EOF behaviors.
      *
      * Implementations must not retain `p`.
      */
-    read(p: Uint8Array): Promise<ReadResult>;
+    read(p: Uint8Array): Promise<number | EOF>;
   }
   export interface SyncReader {
-    readSync(p: Uint8Array): ReadResult;
+    readSync(p: Uint8Array): number | EOF;
   }
   export interface Writer {
     /** Writes `p.byteLength` bytes from `p` to the underlying data
@@ -151,9 +137,6 @@ declare namespace Deno {
    *      }
    */
   export function toAsyncIterator(r: Reader): AsyncIterableIterator<Uint8Array>;
-
-  // @url js/files.d.ts
-
   /** Open a file and return an instance of the `File` object
    *  synchronously.
    *
@@ -169,27 +152,27 @@ declare namespace Deno {
   export function open(filename: string, mode?: OpenMode): Promise<File>;
   /** Read synchronously from a file ID into an array buffer.
    *
-   * Return `ReadResult` for the operation.
+   * Return `number | EOF` for the operation.
    *
    *      const file = Deno.openSync("/foo/bar.txt");
    *      const buf = new Uint8Array(100);
-   *      const { nread, eof } = Deno.readSync(file.rid, buf);
+   *      const nread = Deno.readSync(file.rid, buf);
    *      const text = new TextDecoder().decode(buf);
    *
    */
-  export function readSync(rid: number, p: Uint8Array): ReadResult;
+  export function readSync(rid: number, p: Uint8Array): number | EOF;
   /** Read from a file ID into an array buffer.
    *
-   * Resolves with the `ReadResult` for the operation.
+   * Resolves with the `number | EOF` for the operation.
    *
    *       (async () => {
    *         const file = await Deno.open("/foo/bar.txt");
    *         const buf = new Uint8Array(100);
-   *         const { nread, eof } = await Deno.read(file.rid, buf);
+   *         const nread = await Deno.read(file.rid, buf);
    *         const text = new TextDecoder().decode(buf);
    *       })();
    */
-  export function read(rid: number, p: Uint8Array): Promise<ReadResult>;
+  export function read(rid: number, p: Uint8Array): Promise<number | EOF>;
   /** Write synchronously to the file ID the contents of the array buffer.
    *
    * Resolves with the number of bytes written.
@@ -247,8 +230,8 @@ declare namespace Deno {
     constructor(rid: number);
     write(p: Uint8Array): Promise<number>;
     writeSync(p: Uint8Array): number;
-    read(p: Uint8Array): Promise<ReadResult>;
-    readSync(p: Uint8Array): ReadResult;
+    read(p: Uint8Array): Promise<number | EOF>;
+    readSync(p: Uint8Array): number | EOF;
     seek(offset: number, whence: SeekMode): Promise<void>;
     seekSync(offset: number, whence: SeekMode): void;
     close(): void;
@@ -283,9 +266,6 @@ declare namespace Deno {
     | "x"
     /** Read-write. Behaves like `x` and allows to read from file. */
     | "x+";
-
-  // @url js/buffer.d.ts
-
   /** A Buffer is a variable-sized buffer of bytes with read() and write()
    * methods. Based on https://golang.org/pkg/bytes/#Buffer
    */
@@ -337,8 +317,8 @@ declare namespace Deno {
      * is drained. The return value n is the number of bytes read. If the
      * buffer has no data to return, eof in the response will be true.
      */
-    readSync(p: Uint8Array): ReadResult;
-    read(p: Uint8Array): Promise<ReadResult>;
+    readSync(p: Uint8Array): number | EOF;
+    read(p: Uint8Array): Promise<number | EOF>;
     writeSync(p: Uint8Array): number;
     write(p: Uint8Array): Promise<number>;
     /** _grow() grows the buffer to guarantee space for n more bytes.
@@ -369,9 +349,6 @@ declare namespace Deno {
   /** Read synchronously `r` until EOF and return the content as `Uint8Array`.
    */
   export function readAllSync(r: SyncReader): Uint8Array;
-
-  // @url js/mkdir.d.ts
-
   /** Creates a new directory with the specified path synchronously.
    * If `recursive` is set to true, nested directories will be created (also known
    * as "mkdir -p").
@@ -400,9 +377,6 @@ declare namespace Deno {
     recursive?: boolean,
     mode?: number
   ): Promise<void>;
-
-  // @url js/make_temp_dir.d.ts
-
   export interface MakeTempDirOptions {
     dir?: string;
     prefix?: string;
@@ -426,9 +400,6 @@ declare namespace Deno {
    *       const tempDirName1 = await Deno.makeTempDir({ prefix: 'my_temp' });
    */
   export function makeTempDir(options?: MakeTempDirOptions): Promise<string>;
-
-  // @url js/chmod.d.ts
-
   /** Changes the permission of a specific file/directory of specified path
    * synchronously.
    *
@@ -440,9 +411,6 @@ declare namespace Deno {
    *       await Deno.chmod("/path/to/file", 0o666);
    */
   export function chmod(path: string, mode: number): Promise<void>;
-
-  // @url js/chown.d.ts
-
   /**
    * Change owner of a regular file or directory synchronously. Unix only at the moment.
    * @param path path to the file
@@ -457,9 +425,6 @@ declare namespace Deno {
    * @param gid group id of the new owner
    */
   export function chown(path: string, uid: number, gid: number): Promise<void>;
-
-  // @url js/utime.d.ts
-
   /** Synchronously changes the access and modification times of a file system
    * object referenced by `filename`. Given times are either in seconds
    * (Unix epoch time) or as `Date` objects.
@@ -482,9 +447,6 @@ declare namespace Deno {
     atime: number | Date,
     mtime: number | Date
   ): Promise<void>;
-
-  // @url js/remove.d.ts
-
   export interface RemoveOption {
     recursive?: boolean;
   }
@@ -504,9 +466,6 @@ declare namespace Deno {
    *       await Deno.remove("/path/to/dir/or/file", {recursive: false});
    */
   export function remove(path: string, options?: RemoveOption): Promise<void>;
-
-  // @url js/rename.d.ts
-
   /** Synchronously renames (moves) `oldpath` to `newpath`. If `newpath` already
    * exists and is not a directory, `renameSync()` replaces it. OS-specific
    * restrictions may apply when `oldpath` and `newpath` are in different
@@ -522,9 +481,6 @@ declare namespace Deno {
    *       await Deno.rename("old/path", "new/path");
    */
   export function rename(oldpath: string, newpath: string): Promise<void>;
-
-  // @url js/read_file.d.ts
-
   /** Read the entire contents of a file synchronously.
    *
    *       const decoder = new TextDecoder("utf-8");
@@ -539,9 +495,6 @@ declare namespace Deno {
    *       console.log(decoder.decode(data));
    */
   export function readFile(filename: string): Promise<Uint8Array>;
-
-  // @url js/file_info.d.ts
-
   /** A FileInfo describes a file and is returned by `stat`, `lstat`,
    * `statSync`, `lstatSync`.
    */
@@ -582,9 +535,6 @@ declare namespace Deno {
      */
     isSymlink(): boolean;
   }
-
-  // @url js/read_dir.d.ts
-
   /** Reads the directory given by path and returns a list of file info
    * synchronously.
    *
@@ -596,9 +546,6 @@ declare namespace Deno {
    *       const files = await Deno.readDir("/");
    */
   export function readDir(path: string): Promise<FileInfo[]>;
-
-  // @url js/copy_file.d.ts
-
   /** Copies the contents of a file to another by name synchronously.
    * Creates a new file if target does not exists, and if target exists,
    * overwrites original content of the target file.
@@ -620,9 +567,6 @@ declare namespace Deno {
    *       await Deno.copyFile("from.txt", "to.txt");
    */
   export function copyFile(from: string, to: string): Promise<void>;
-
-  // @url js/read_link.d.ts
-
   /** Returns the destination of the named symbolic link synchronously.
    *
    *       const targetPath = Deno.readlinkSync("symlink/path");
@@ -633,9 +577,6 @@ declare namespace Deno {
    *       const targetPath = await Deno.readlink("symlink/path");
    */
   export function readlink(name: string): Promise<string>;
-
-  // @url js/stat.d.ts
-
   /** Queries the file system for information on the path provided. If the given
    * path is a symlink information about the symlink will be returned.
    *
@@ -665,9 +606,6 @@ declare namespace Deno {
    *       assert(fileInfo.isFile());
    */
   export function statSync(filename: string): FileInfo;
-
-  // @url js/link.d.ts
-
   /** Synchronously creates `newname` as a hard link to `oldname`.
    *
    *       Deno.linkSync("old/name", "new/name");
@@ -678,9 +616,6 @@ declare namespace Deno {
    *       await Deno.link("old/name", "new/name");
    */
   export function link(oldname: string, newname: string): Promise<void>;
-
-  // @url js/symlink.d.ts
-
   /** Synchronously creates `newname` as a symbolic link to `oldname`. The type
    * argument can be set to `dir` or `file` and is only available on Windows
    * (ignored on other platforms).
@@ -703,9 +638,6 @@ declare namespace Deno {
     newname: string,
     type?: string
   ): Promise<void>;
-
-  // @url js/write_file.d.ts
-
   /** Options for writing to a file.
    * `perm` would change the file's permission if set.
    * `create` decides if the file should be created if not exists (default: true)
@@ -738,9 +670,6 @@ declare namespace Deno {
     data: Uint8Array,
     options?: WriteFileOptions
   ): Promise<void>;
-
-  // @url target/debug/gen/cli/msg_generated.ts
-
   export enum ErrorKind {
     NoError = 0,
     NotFound = 1,
@@ -781,13 +710,16 @@ declare namespace Deno {
     TooLarge = 36,
     InvalidUri = 37,
     InvalidSeekMode = 38,
-    OpNotAvaiable = 39,
+    OpNotAvailable = 39,
     WorkerInitFailed = 40,
-    UnixError = 41
+    UnixError = 41,
+    NoAsyncSupport = 42,
+    NoSyncSupport = 43,
+    ImportMapError = 44,
+    ImportPathPrefixMissing = 45,
+    Diagnostic = 46,
+    JSError = 47
   }
-
-  // @url js/errors.d.ts
-
   /** A Deno specific error.  The `kind` property is set to a specific error code
    * which can be used to in application logic.
    *
@@ -807,9 +739,6 @@ declare namespace Deno {
     readonly kind: T;
     constructor(kind: T, msg: string);
   }
-
-  // @url js/permissions.d.ts
-
   /** Permissions as granted by the caller */
   export interface Permissions {
     read: boolean;
@@ -837,9 +766,6 @@ declare namespace Deno {
    *       Deno.readFile("example.test"); // -> error or permission prompt
    */
   export function revokePermission(permission: Permission): void;
-
-  // @url js/truncate.d.ts
-
   /** Truncates or extends the specified file synchronously, updating the size of
    * this file to become size.
    *
@@ -853,9 +779,6 @@ declare namespace Deno {
    *       await Deno.truncate("hello.txt", 10);
    */
   export function truncate(name: string, len?: number): Promise<void>;
-
-  // @url js/net.d.ts
-
   type Network = "tcp";
   type Addr = string;
   /** A Listener is a generic network listener for stream-oriented protocols. */
@@ -932,9 +855,6 @@ declare namespace Deno {
   export function dial(network: Network, address: string): Promise<Conn>;
   /** **RESERVED** */
   export function connect(_network: Network, _address: string): Promise<Conn>;
-
-  // @url js/metrics.d.ts
-
   export interface Metrics {
     opsDispatched: number;
     opsCompleted: number;
@@ -956,9 +876,6 @@ declare namespace Deno {
    *      └──────────────────┴────────┘
    */
   export function metrics(): Metrics;
-
-  // @url js/resources.d.ts
-
   interface ResourceMap {
     [rid: number]: string;
   }
@@ -966,9 +883,6 @@ declare namespace Deno {
    * representation.
    */
   export function resources(): ResourceMap;
-
-  // @url js/process.d.ts
-
   /** How to handle subprocess stdio.
    *
    * "inherit" The default if unspecified. The child inherits from the
@@ -987,9 +901,9 @@ declare namespace Deno {
     env?: {
       [key: string]: string;
     };
-    stdout?: ProcessStdio;
-    stderr?: ProcessStdio;
-    stdin?: ProcessStdio;
+    stdout?: ProcessStdio | number;
+    stderr?: ProcessStdio | number;
+    stdin?: ProcessStdio | number;
   }
   /** Send a signal to process under given PID. Unix only at this moment.
    * If pid is negative, the signal will be sent to the process group identified
@@ -1031,7 +945,8 @@ declare namespace Deno {
    * mapping.
    *
    * By default subprocess inherits stdio of parent process. To change that
-   * `opt.stdout`, `opt.stderr` and `opt.stdin` can be specified independently.
+   * `opt.stdout`, `opt.stderr` and `opt.stdin` can be specified independently -
+   * they can be set to either `ProcessStdio` or `rid` of open file.
    */
   export function run(opt: RunOptions): Process;
   enum LinuxSignal {
@@ -1104,9 +1019,6 @@ declare namespace Deno {
    */
   export const Signal: typeof MacOSSignal | typeof LinuxSignal;
   export {};
-
-  // @url js/console.d.ts
-
   type ConsoleOptions = Partial<{
     showHidden: boolean;
     depth: number;
@@ -1168,9 +1080,6 @@ declare namespace Deno {
    * as printed by `console.log(...)`;
    */
   export function inspect(value: unknown, options?: ConsoleOptions): string;
-
-  // @url js/build.d.ts
-
   export type OperatingSystem = "mac" | "win" | "linux";
   export type Arch = "x64" | "arm64";
   /** Build related information */
@@ -1184,9 +1093,6 @@ declare namespace Deno {
   }
   export const build: BuildInfo;
   export const platform: BuildInfo;
-
-  // @url js/version.d.ts
-
   interface Version {
     deno: string;
     v8: string;
@@ -1194,21 +1100,16 @@ declare namespace Deno {
   }
   export const version: Version;
   export {};
-
-  // @url js/deno.d.ts
-
   export const args: string[];
 }
-
-// @url js/globals.ts
 
 declare interface Window {
   window: Window;
   atob: typeof textEncoding.atob;
   btoa: typeof textEncoding.btoa;
   fetch: typeof fetchTypes.fetch;
-  clearTimeout: typeof timers.clearTimer;
-  clearInterval: typeof timers.clearTimer;
+  clearTimeout: typeof timers.clearTimeout;
+  clearInterval: typeof timers.clearInterval;
   console: consoleTypes.Console;
   setTimeout: typeof timers.setTimeout;
   setInterval: typeof timers.setInterval;
@@ -1228,7 +1129,8 @@ declare interface Window {
   FormData: domTypes.FormDataConstructor;
   TextEncoder: typeof textEncoding.TextEncoder;
   TextDecoder: typeof textEncoding.TextDecoder;
-  Request: typeof request.Request;
+  Request: domTypes.RequestConstructor;
+  Response: typeof fetchTypes.Response;
   performance: performanceUtil.Performance;
   onmessage: (e: { data: any }) => void;
   workerMain: typeof workers.workerMain;
@@ -1242,8 +1144,8 @@ declare const window: Window;
 declare const atob: typeof textEncoding.atob;
 declare const btoa: typeof textEncoding.btoa;
 declare const fetch: typeof fetchTypes.fetch;
-declare const clearTimeout: typeof timers.clearTimer;
-declare const clearInterval: typeof timers.clearTimer;
+declare const clearTimeout: typeof timers.clearTimeout;
+declare const clearInterval: typeof timers.clearInterval;
 declare const console: consoleTypes.Console;
 declare const setTimeout: typeof timers.setTimeout;
 declare const setInterval: typeof timers.setInterval;
@@ -1263,7 +1165,8 @@ declare const Headers: domTypes.HeadersConstructor;
 declare const FormData: domTypes.FormDataConstructor;
 declare const TextEncoder: typeof textEncoding.TextEncoder;
 declare const TextDecoder: typeof textEncoding.TextDecoder;
-declare const Request: typeof request.Request;
+declare const Request: domTypes.RequestConstructor;
+declare const Response: typeof fetchTypes.Response;
 declare const performance: performanceUtil.Performance;
 declare let onmessage: (e: { data: any }) => void;
 declare const workerMain: typeof workers.workerMain;
@@ -1285,7 +1188,8 @@ declare type Headers = domTypes.Headers;
 declare type FormData = domTypes.FormData;
 declare type TextEncoder = textEncoding.TextEncoder;
 declare type TextDecoder = textEncoding.TextDecoder;
-declare type Request = request.Request;
+declare type Request = domTypes.Request;
+declare type Response = domTypes.Response;
 declare type Worker = workers.Worker;
 
 declare interface ImportMeta {
@@ -1310,8 +1214,6 @@ declare interface Crypto {
 }
 
 declare namespace domTypes {
-  // @url js/dom_types.d.ts
-
   export type BufferSource = ArrayBufferView | ArrayBuffer;
   export type HeadersInit =
     | Headers
@@ -1705,6 +1607,10 @@ declare namespace domTypes {
     status?: number;
     statusText?: string;
   }
+  export interface RequestConstructor {
+    new (input: RequestInfo, init?: RequestInit): Request;
+    prototype: Request;
+  }
   export interface Request extends Body {
     /** Returns the cache mode associated with request, which is a string
      * indicating how the the request will interact with the browser's cache when
@@ -1875,8 +1781,6 @@ declare namespace domTypes {
 }
 
 declare namespace blob {
-  // @url js/blob.d.ts
-
   export const bytesSymbol: unique symbol;
   export class DenoBlob implements domTypes.Blob {
     private readonly [bytesSymbol];
@@ -1892,8 +1796,6 @@ declare namespace blob {
 }
 
 declare namespace consoleTypes {
-  // @url js/console.d.ts
-
   type ConsoleOptions = Partial<{
     showHidden: boolean;
     depth: number;
@@ -1958,8 +1860,6 @@ declare namespace consoleTypes {
 }
 
 declare namespace event {
-  // @url js/event.d.ts
-
   export const eventAttributes: WeakMap<object, any>;
   export class EventInit implements domTypes.EventInit {
     bubbles: boolean;
@@ -1976,6 +1876,7 @@ declare namespace event {
     });
   }
   export class Event implements domTypes.Event {
+    isTrusted: boolean;
     private _canceledFlag;
     private _dispatchedFlag;
     private _initializedFlag;
@@ -1995,7 +1896,6 @@ declare namespace event {
     eventPhase: number;
     readonly initialized: boolean;
     inPassiveListener: boolean;
-    isTrusted: boolean;
     path: domTypes.EventPath[];
     relatedTarget: domTypes.EventTarget;
     target: domTypes.EventTarget;
@@ -2031,8 +1931,6 @@ declare namespace event {
 }
 
 declare namespace customEvent {
-  // @url js/custom_event.d.ts
-
   export const customEventAttributes: WeakMap<object, any>;
   export class CustomEventInit extends event.EventInit
     implements domTypes.CustomEventInit {
@@ -2058,8 +1956,6 @@ declare namespace customEvent {
 }
 
 declare namespace eventTarget {
-  // @url js/event_target.d.ts
-
   export class EventListenerOptions implements domTypes.EventListenerOptions {
     _capture: boolean;
     constructor({ capture }?: { capture?: boolean | undefined });
@@ -2145,12 +2041,8 @@ declare namespace eventTarget {
 }
 
 declare namespace io {
-  // @url js/io.d.ts
-
-  export interface ReadResult {
-    nread: number;
-    eof: boolean;
-  }
+  export const EOF: null;
+  export type EOF = null;
   export enum SeekMode {
     SEEK_START = 0,
     SEEK_CURRENT = 1,
@@ -2158,35 +2050,26 @@ declare namespace io {
   }
   export interface Reader {
     /** Reads up to p.byteLength bytes into `p`. It resolves to the number
-     * of bytes read (`0` <= `n` <= `p.byteLength`) and any error encountered.
+     * of bytes read (`0` < `n` <= `p.byteLength`) and rejects if any error encountered.
      * Even if `read()` returns `n` < `p.byteLength`, it may use all of `p` as
      * scratch space during the call. If some data is available but not
      * `p.byteLength` bytes, `read()` conventionally returns what is available
      * instead of waiting for more.
      *
-     * When `read()` encounters an error or end-of-file condition after
-     * successfully reading `n` > `0` bytes, it returns the number of bytes read.
-     * It may return the (non-nil) error from the same call or return the error
-     * (and `n` == `0`) from a subsequent call. An instance of this general case
-     * is that a `Reader` returning a non-zero number of bytes at the end of the
-     * input stream may return either `err` == `EOF` or `err` == `null`. The next
-     * `read()` should return `0`, `EOF`.
+     * When `read()` encounters end-of-file condition, it returns EOF symbol.
+     *
+     * When `read()` encounters an error, it rejects with an error.
      *
      * Callers should always process the `n` > `0` bytes returned before
-     * considering the `EOF`. Doing so correctly handles I/O errors that happen
-     * after reading some bytes and also both of the allowed `EOF` behaviors.
-     *
-     * Implementations of `read()` are discouraged from returning a zero byte
-     * count with a `null` error, except when `p.byteLength` == `0`. Callers
-     * should treat a return of `0` and `null` as indicating that nothing
-     * happened; in particular it does not indicate `EOF`.
+     * considering the EOF. Doing so correctly handles I/O errors that happen
+     * after reading some bytes and also both of the allowed EOF behaviors.
      *
      * Implementations must not retain `p`.
      */
-    read(p: Uint8Array): Promise<ReadResult>;
+    read(p: Uint8Array): Promise<number | EOF>;
   }
   export interface SyncReader {
-    readSync(p: Uint8Array): ReadResult;
+    readSync(p: Uint8Array): number | EOF;
   }
   export interface Writer {
     /** Writes `p.byteLength` bytes from `p` to the underlying data
@@ -2245,8 +2128,6 @@ declare namespace io {
 }
 
 declare namespace fetchTypes {
-  // @url js/fetch.d.ts
-
   class Body implements domTypes.Body, domTypes.ReadableStream, io.ReadCloser {
     private rid;
     readonly contentType: string;
@@ -2262,18 +2143,19 @@ declare namespace fetchTypes {
     formData(): Promise<domTypes.FormData>;
     json(): Promise<any>;
     text(): Promise<string>;
-    read(p: Uint8Array): Promise<io.ReadResult>;
+    read(p: Uint8Array): Promise<number | io.EOF>;
     close(): void;
     cancel(): Promise<void>;
     getReader(): domTypes.ReadableStreamReader;
     tee(): [domTypes.ReadableStream, domTypes.ReadableStream];
+    [Symbol.asyncIterator](): AsyncIterableIterator<Uint8Array>;
   }
-  class Response implements domTypes.Response {
+  export class Response implements domTypes.Response {
     readonly status: number;
     readonly url: string;
     statusText: string;
     readonly type = "basic";
-    redirected: boolean;
+    readonly redirected: boolean;
     headers: domTypes.Headers;
     readonly trailer: Promise<domTypes.Headers>;
     bodyUsed: boolean;
@@ -2282,6 +2164,7 @@ declare namespace fetchTypes {
       status: number,
       headersList: Array<[string, string]>,
       rid: number,
+      redirected_: boolean,
       body_?: null | Body
     );
     arrayBuffer(): Promise<ArrayBuffer>;
@@ -2300,8 +2183,6 @@ declare namespace fetchTypes {
 }
 
 declare namespace textEncoding {
-  // @url js/text_encoding.d.ts
-
   export function atob(s: string): string;
   /** Creates a base-64 ASCII string from the input string. */
   export function btoa(s: string): string;
@@ -2325,18 +2206,21 @@ declare namespace textEncoding {
     decode(input?: domTypes.BufferSource, options?: TextDecodeOptions): string;
     readonly [Symbol.toStringTag]: string;
   }
+  interface TextEncoderEncodeIntoResult {
+    read: number;
+    written: number;
+  }
   export class TextEncoder {
     /** Returns "utf-8". */
     readonly encoding = "utf-8";
     /** Returns the result of running UTF-8's encoder. */
     encode(input?: string): Uint8Array;
+    encodeInto(input: string, dest: Uint8Array): TextEncoderEncodeIntoResult;
     readonly [Symbol.toStringTag]: string;
   }
 }
 
 declare namespace timers {
-  // @url js/timers.d.ts
-
   export type Args = unknown[];
   /** Sets a timer which executes a function once after the timer expires. */
   export function setTimeout(
@@ -2350,13 +2234,11 @@ declare namespace timers {
     delay: number,
     ...args: Args
   ): number;
-  /** Clears a previously set timer by id. AKA clearTimeout and clearInterval. */
-  export function clearTimer(id: number): void;
+  export function clearTimeout(id: number): void;
+  export function clearInterval(id: number): void;
 }
 
 declare namespace urlSearchParams {
-  // @url js/url_search_params.d.ts
-
   export class URLSearchParams {
     private params;
     private url;
@@ -2462,8 +2344,6 @@ declare namespace urlSearchParams {
 }
 
 declare namespace url {
-  // @url js/url.d.ts
-
   export class URL {
     private _parts;
     private _searchParams;
@@ -2487,8 +2367,6 @@ declare namespace url {
 }
 
 declare namespace workers {
-  // @url js/workers.d.ts
-
   export function encodeMessage(data: any): Uint8Array;
   export function decodeMessage(dataIntArray: Uint8Array): any;
   export let onmessage: (e: { data: any }) => void;
@@ -2519,8 +2397,6 @@ declare namespace workers {
 }
 
 declare namespace performanceUtil {
-  // @url js/performance.d.ts
-
   export class Performance {
     /** Returns a current time from Deno's start in milliseconds.
      *
@@ -2532,48 +2408,6 @@ declare namespace performanceUtil {
     now(): number;
   }
 }
-
-declare namespace body {
-  // @url js/body.d.ts
-
-  export type BodySource =
-    | domTypes.Blob
-    | domTypes.BufferSource
-    | domTypes.FormData
-    | domTypes.URLSearchParams
-    | domTypes.ReadableStream
-    | string;
-  export const BodyUsedError =
-    "Failed to execute 'clone' on 'Body': body is already used";
-  export class Body implements domTypes.Body {
-    protected _bodySource: BodySource;
-    readonly contentType: string;
-    protected _stream: domTypes.ReadableStream | null;
-    constructor(_bodySource: BodySource, contentType: string);
-    readonly body: domTypes.ReadableStream | null;
-    readonly bodyUsed: boolean;
-    blob(): Promise<domTypes.Blob>;
-    formData(): Promise<domTypes.FormData>;
-    text(): Promise<string>;
-    json(): Promise<any>;
-    arrayBuffer(): Promise<ArrayBuffer>;
-  }
-}
-
-declare namespace request {
-  // @url js/request.d.ts
-
-  export class Request extends body.Body implements domTypes.Request {
-    method: string;
-    url: string;
-    credentials?: "omit" | "same-origin" | "include";
-    headers: domTypes.Headers;
-    constructor(input: domTypes.RequestInfo, init?: domTypes.RequestInit);
-    clone(): domTypes.Request;
-  }
-}
-
-// @url js/lib.web_assembly.d.ts
 
 // This follows the WebIDL at: https://webassembly.github.io/spec/js-api/
 // And follow on WebIDL at: https://webassembly.github.io/spec/web-api/
