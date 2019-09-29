@@ -368,3 +368,15 @@ test(async function matchPut() {
   await mw(context, next);
   assertEquals(callStack, [0, 7]);
 });
+
+test(async function matchPrefix() {
+  const { context, next } = setup("/route1/action1", "GET");
+  const callStack: number[] = [];
+  const router = new Router({ prefix: "/route1" });
+  router.get("/action1", () => {
+    callStack.push(0);
+  });
+  const mw = router.routes();
+  await mw(context, next);
+  assertEquals(callStack, [0]);
+});

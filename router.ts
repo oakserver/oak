@@ -161,6 +161,7 @@ const contextRouteMatches = new WeakMap<RouterContext, Layer[]>();
 export class Router {
   private _methods: HTTPMethods[];
   private _stack: Layer[] = [];
+  private _prefix = "";
 
   private _addRoute(
     path: string | string[],
@@ -173,8 +174,9 @@ export class Router {
       }
       return this;
     }
-
-    this._stack.push(new Layer(path, methods, middleware));
+    const layer = new Layer(path, methods, middleware);
+    layer.setPrefix(this._prefix);
+    this._stack.push(layer);
     return this;
   }
 
@@ -205,6 +207,7 @@ export class Router {
       "POST",
       "PUT"
     ];
+    if (options.prefix) this._prefix = options.prefix;
   }
 
   /** Register middleware for the specified routes and the `DELETE`, `GET`,
