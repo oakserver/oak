@@ -60,7 +60,7 @@ export interface RouterContext<
   params: P;
 
   /** A reference to the router instance. */
-  router: Router;
+  router: Router<S>;
 }
 
 export interface RouterMiddleware<
@@ -107,7 +107,7 @@ class Layer {
   constructor(
     public path: string,
     public methods: HTTPMethods[],
-    middleware: RouterMiddleware | RouterMiddleware[],
+    middleware: RouterMiddleware<any, any> | RouterMiddleware[],
     public options: LayerOptions = {}
   ) {
     this.name = options.name || null;
@@ -158,14 +158,14 @@ const contextRouteMatches = new WeakMap<RouterContext, Layer[]>();
 /** A class that routes requests to middleware based on the method and the
  * path name of the request.
  */
-export class Router {
+export class Router<S extends {} = { [key: string]: any }> {
   private _methods: HTTPMethods[];
   private _stack: Layer[] = [];
   private _prefix = "";
 
   private _addRoute(
     path: string | string[],
-    middleware: RouterMiddleware[],
+    middleware: RouterMiddleware,
     ...methods: HTTPMethods[]
   ): this {
     if (Array.isArray(path)) {
@@ -215,16 +215,9 @@ export class Router {
    */
   all<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    middleware: RouterMiddleware<P>
   ): this {
-    return this._addRoute(
-      route,
-      middleware as RouterMiddleware[],
-      "DELETE",
-      "GET",
-      "POST",
-      "PUT"
-    );
+    return this._addRoute(route, middleware, "DELETE", "GET", "POST", "PUT");
   }
 
   /** Middleware that automatically handles dealing with responding with
@@ -287,76 +280,6 @@ export class Router {
     };
   }
 
-  /** Register middleware for the specified routes when the `DELETE` method is
-   * requested.
-   */
-  delete<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "DELETE");
-  }
-
-  /** Register middleware for the specified routes when the `GET` method is
-   * requested.
-   */
-  get<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "GET");
-  }
-
-  /** Register middleware for the specified routes when the `HEAD` method is
-   * requested.
-   */
-  head<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "HEAD");
-  }
-
-  /** Register middleware for the specified routes when the `OPTIONS` method is
-   * requested.
-   */
-  options<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "OPTIONS");
-  }
-
-  /** Register middleware for the specified routes when the `PATCH` method is
-   * requested.
-   */
-  patch<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "PATCH");
-  }
-
-  /** Register middleware for the specified routes when the `POST` method is
-   * requested.
-   */
-  post<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "POST");
-  }
-
-  /** Register middleware for the specified routes when the `PUT` method is
-   * requested.
-   */
-  put<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "PUT");
-  }
-
   /** Return middleware that represents all the currently registered routes. */
   routes(): Middleware {
     const dispatch = async (
@@ -396,3 +319,33 @@ export class Router {
     return dispatch as Middleware;
   }
 }
+
+export interface Router<S extends {} = { [key: string]: any }>
+  extends RouterHandle<S> {}
+const HTTP_METHODS = {
+  head: "head" as const,
+  options: "options" as const,
+  get: "get" as const,
+  post: "post" as const,
+  put: "put" as const,
+  patch: "patch" as const,
+  delete: "delete" as const
+};
+for (let method of Object.keys(HTTP_METHODS) as (keyof typeof HTTP_METHODS)[]) {
+  /** Register middleware for the specified routes when the specified method is
+   * requested.
+   */
+  Router.prototype[method] = function<P extends RouteParams = RouteParams>(
+    route: string | string[],
+    middleware: RouterMiddleware<P>
+  ): Router {
+    return this._addRoute(route, middleware, method.toUpperCase());
+  };
+}
+
+type RouterHandle<S extends {}> = {
+  [M in keyof typeof HTTP_METHODS]: <P extends RouteParams = RouteParams>(
+    route: string | string[],
+    middleware: RouterMiddleware<P, S>
+  ) => Router<S>;
+};

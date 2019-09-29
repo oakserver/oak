@@ -210,7 +210,7 @@ The following example serves up a _RESTful_ service of a map of books, where
 `http://localhost:8000/book/1` would return the book with ID `"1"`:
 
 ```ts
-import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "https://deno.land/x/oak/mod.ts";
 
 const books = new Map<string, any>();
 books.set("1", {
@@ -219,7 +219,8 @@ books.set("1", {
   author: "Conan Doyle, Author"
 });
 
-const router = new Router();
+const app = new Application();
+const router = app.createRouter();
 router
   .get("/", context => {
     context.response.body = "Hello world!";
@@ -233,7 +234,37 @@ router
     }
   });
 
-const app = new Application();
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+await app.listen("127.0.0.1:8000");
+```
+
+### Safely extend Application context type
+
+```ts
+import { Application, Context } from "https://deno.land/x/oak/mod.ts";
+
+const Users = new Map<string, string>();
+Users.set("1", "Jack");
+
+const app = new Application()
+  .use((ctx: Context<{ user: { id: string } }>, next) => {
+    ctx.state.user.id = ctx.request.headers.get("uid");
+    return next();
+  })
+  .use((ctx: Context<{ user: { name: string } }>, next) => {
+    // safe to access ctx.state.user.id now
+    ctx.state.user.name = Users.get(ctx.state.user.id);
+    return next();
+  });
+
+const router = app.createRouter();
+router.get("/logout", context => {
+  // ctx's type generated from all previous application middlewares
+  ctx.response.body = `user ${ctx.state.user.name}(${ctx.state.user.id}) logged out`;
+});
+
 app.use(router.routes());
 app.use(router.allowedMethods());
 
