@@ -12,7 +12,7 @@ import { Router, RouterOptions } from "./router.ts";
  * constructing an instance of `Application`.
  */
 export class Application<S extends object = { [key: string]: any }> {
-  private _middleware: Middleware<any, Context<any>>[] = [];
+  private _middleware: Middleware[] = [];
   private _serve: typeof serve;
 
   /** Generic state of the application, which can be specified by passing the
@@ -42,8 +42,10 @@ export class Application<S extends object = { [key: string]: any }> {
   }
 
   /** Register middleware to be used with the application. */
-  use<NS extends {} = S>(middleware: Middleware<NS, Context<NS>>) {
+  use<NS extends {} = S>(
+    middleware: Middleware<NS, Context<NS>>
+  ): Application<NS extends S ? NS : (S & NS)> {
     this._middleware.push(middleware);
-    return (this as unknown) as Application<NS extends S ? NS : (S & NS)>;
+    return this as any;
   }
 }

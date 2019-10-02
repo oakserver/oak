@@ -107,7 +107,7 @@ class Layer {
   constructor(
     public path: string,
     public methods: HTTPMethods[],
-    middleware: RouterMiddleware<any, any> | RouterMiddleware[],
+    middleware: RouterMiddleware | RouterMiddleware[],
     public options: LayerOptions = {}
   ) {
     this.name = options.name || null;
