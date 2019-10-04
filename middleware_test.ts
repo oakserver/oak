@@ -8,7 +8,7 @@ import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 
 function createMockContext<S extends object = { [key: string]: any }>() {
-  return {
+  return ({
     request: {
       headers: new Headers(),
       method: "GET",
@@ -16,13 +16,13 @@ function createMockContext<S extends object = { [key: string]: any }>() {
       search: undefined,
       searchParams: new URLSearchParams(),
       url: "/"
-    } as Request,
+    },
     response: {
       status: Status.OK,
       body: undefined,
       headers: new Headers()
-    } as Response
-  } as Context<S>;
+    }
+  } as unknown) as Context<S>;
 }
 
 test(async function testCompose() {

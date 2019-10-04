@@ -25,7 +25,7 @@ function createMockContext<S extends object = { [key: string]: any }>(
   path = "/",
   method = "GET"
 ) {
-  return {
+  return ({
     app,
     request: {
       acceptsEncodings() {
@@ -37,14 +37,14 @@ function createMockContext<S extends object = { [key: string]: any }>(
       search: undefined,
       searchParams: new URLSearchParams(),
       url: path
-    } as Request,
+    },
     response: {
       status: Status.OK,
       body: undefined,
       headers: new Headers()
-    } as Response,
+    },
     state: app.state
-  } as Context<S>;
+  } as unknown) as Context<S>;
 }
 
 function setup<S extends object = { [key: string]: any }>(
