@@ -22,15 +22,13 @@ A basic usage, responding to every request with _Hello World!_:
 ```ts
 import { Application } from "https://deno.land/x/oak/mod.ts";
 
-(async () => {
-  const app = new Application();
+const app = new Application();
 
-  app.use(ctx => {
-    ctx.response.body = "Hello World!";
-  });
+app.use(ctx => {
+  ctx.response.body = "Hello World!";
+});
 
-  await app.listen("127.0.0.1:8000");
-})();
+await app.listen("127.0.0.1:8000");
 ```
 
 The middleware is processed as a stack, where each middleware function can
@@ -42,31 +40,29 @@ A more complex example:
 ```ts
 import { Application } from "https://deno.land/x/oak/mod.ts";
 
-(async () => {
-  const app = new Application();
+const app = new Application();
 
-  // Logger
-  app.use(async (ctx, next) => {
-    await next();
-    const rt = ctx.response.headers.get("X-Response-Time");
-    console.log(`${ctx.request.method} ${ctx.request.url} - ${rt}`);
-  });
+// Logger
+app.use(async (ctx, next) => {
+  await next();
+  const rt = ctx.response.headers.get("X-Response-Time");
+  console.log(`${ctx.request.method} ${ctx.request.url} - ${rt}`);
+});
 
-  // Timing
-  app.use(async (ctx, next) => {
-    const start = Date.now();
-    await next();
-    const ms = Date.now() - start;
-    ctx.response.headers.set("X-Response-Time", `${ms}ms`);
-  });
+// Timing
+app.use(async (ctx, next) => {
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+  ctx.response.headers.set("X-Response-Time", `${ms}ms`);
+});
 
-  // Hello World!
-  app.use(ctx => {
-    ctx.response.body = "Hello World!";
-  });
+// Hello World!
+app.use(ctx => {
+  ctx.response.body = "Hello World!";
+});
 
-  await app.listen("127.0.0.1:8000");
-})();
+await app.listen("127.0.0.1:8000");
 ```
 
 ### Context
@@ -223,27 +219,25 @@ books.set("1", {
   author: "Conan Doyle, Author"
 });
 
-(async () => {
-  const router = new Router();
-  router
-    .get("/", context => {
-      context.response.body = "Hello world!";
-    })
-    .get("/book", context => {
-      context.response.body = Array.from(books.values());
-    })
-    .get("/book/:id", context => {
-      if (context.params && books.has(context.params.id)) {
-        context.response.body = books.get(context.params.id);
-      }
-    });
+const router = new Router();
+router
+  .get("/", context => {
+    context.response.body = "Hello world!";
+  })
+  .get("/book", context => {
+    context.response.body = Array.from(books.values());
+  })
+  .get("/book/:id", context => {
+    if (context.params && books.has(context.params.id)) {
+      context.response.body = books.get(context.params.id);
+    }
+  });
 
-  const app = new Application();
-  app.use(router.routes());
-  app.use(router.allowedMethods());
+const app = new Application();
+app.use(router.routes());
+app.use(router.allowedMethods());
 
-  await app.listen("127.0.0.1:8000");
-})();
+await app.listen("127.0.0.1:8000");
 ```
 
 ## Static content
