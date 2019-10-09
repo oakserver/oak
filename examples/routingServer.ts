@@ -8,7 +8,7 @@ import {
   cyan,
   bold,
   yellow
-} from "https://deno.land/std@v0.19.0/fmt/colors.ts";
+} from "https://deno.land/std@v0.20.0/fmt/colors.ts";
 
 import { Application, Context, Router, Status } from "../mod.ts";
 
@@ -28,58 +28,54 @@ books.set("1234", {
 
 function notFound(context: Context) {
   context.response.status = Status.NotFound;
-  context.response.body = `<html><body><h1>404 - Not Found</h1><p>Path <code>${
-    context.request.url
-  }</code> not found.`;
+  context.response.body = `<html><body><h1>404 - Not Found</h1><p>Path <code>${context.request.url}</code> not found.`;
 }
 
-(async () => {
-  const router = new Router();
-  router
-    .get("/", (context, next) => {
-      context.response.body = "Hello world!";
-    })
-    .get("/book", async (context, next) => {
-      context.response.body = Array.from(books.values());
-    })
-    .get<{ id: string }>("/book/:id", async (context, next) => {
-      if (context.params && books.has(context.params.id)) {
-        context.response.body = books.get(context.params.id);
-      } else {
-        return notFound(context);
-      }
-    });
-
-  const app = new Application();
-
-  // Logger
-  app.use(async (context, next) => {
-    await next();
-    const rt = context.response.headers.get("X-Response-Time");
-    console.log(
-      `${green(context.request.method)} ${cyan(context.request.url)} - ${bold(
-        String(rt)
-      )}`
-    );
+const router = new Router();
+router
+  .get("/", (context, next) => {
+    context.response.body = "Hello world!";
+  })
+  .get("/book", async (context, next) => {
+    context.response.body = Array.from(books.values());
+  })
+  .get<{ id: string }>("/book/:id", async (context, next) => {
+    if (context.params && books.has(context.params.id)) {
+      context.response.body = books.get(context.params.id);
+    } else {
+      return notFound(context);
+    }
   });
 
-  // Response Time
-  app.use(async (context, next) => {
-    const start = Date.now();
-    await next();
-    const ms = Date.now() - start;
-    context.response.headers.set("X-Response-Time", `${ms}ms`);
-  });
+const app = new Application();
 
-  // Use the router
-  app.use(router.routes());
-  app.use(router.allowedMethods());
+// Logger
+app.use(async (context, next) => {
+  await next();
+  const rt = context.response.headers.get("X-Response-Time");
+  console.log(
+    `${green(context.request.method)} ${cyan(context.request.url)} - ${bold(
+      String(rt)
+    )}`
+  );
+});
 
-  // A basic 404 page
-  app.use(notFound);
+// Response Time
+app.use(async (context, next) => {
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+  context.response.headers.set("X-Response-Time", `${ms}ms`);
+});
 
-  const address = "127.0.0.1:8000";
-  console.log(bold("Start listening on ") + yellow(address));
-  await app.listen(address);
-  console.log(bold("Finished."));
-})();
+// Use the router
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+// A basic 404 page
+app.use(notFound);
+
+const address = "127.0.0.1:8000";
+console.log(bold("Start listening on ") + yellow(address));
+await app.listen(address);
+console.log(bold("Finished."));
