@@ -380,3 +380,18 @@ test(async function matchPrefix() {
   await mw(context, next);
   assertEquals(callStack, [0]);
 });
+
+test(async function matchStrict() {
+  const { context, next } = setup("/route", "GET");
+  const callStack: number[] = [];
+  const router = new Router();
+  router.get("/route", () => {
+    callStack.push(0);
+  });
+  router.get("/route/", () => {
+    callStack.push(1);
+  });
+  const mw = router.routes();
+  await mw(context, next);
+  assertEquals(callStack, [0]);
+});
