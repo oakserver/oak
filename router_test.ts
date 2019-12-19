@@ -384,7 +384,7 @@ test(async function matchPrefix() {
 test(async function matchStrict() {
   const { context, next } = setup("/route", "GET");
   const callStack: number[] = [];
-  const router = new Router();
+  const router = new Router({ strict: true });
   router.get("/route", () => {
     callStack.push(0);
   });
