@@ -165,7 +165,7 @@ export class Request {
     const contentType = this.headers.get("content-type");
     if (contentType) {
       const rawBody = await (this._rawBodyPromise ||
-        (this._rawBodyPromise = this._serverRequest.body()));
+        (this._rawBodyPromise = Deno.readAll(this._serverRequest.body)));
       const str = decoder.decode(rawBody);
       if (isMediaType(contentType, jsonTypes)) {
         return (this._body = { type: BodyType.JSON, value: JSON.parse(str) });

@@ -12,6 +12,22 @@ import { Request, BodyType } from "./request.ts";
 
 const encoder = new TextEncoder();
 
+function createMockBodyReader(body: string): Deno.Reader {
+  const buf = encoder.encode(body);
+  let offset = 0;
+  return {
+    async read(p: Uint8Array): Promise<number | Deno.EOF> {
+      if (offset >= buf.length) {
+        return Deno.EOF;
+      }
+      const chunkSize = Math.min(p.length, buf.length - offset);
+      p.set(buf);
+      offset += chunkSize;
+      return chunkSize;
+    }
+  };
+}
+
 function createMockServerRequest(
   url = "/",
   body = "",
@@ -28,9 +44,7 @@ function createMockServerRequest(
     headers,
     method: "GET",
     url,
-    body() {
-      return Promise.resolve(encoder.encode(body));
-    },
+    body: createMockBodyReader(body),
     async respond() {}
   } as any;
 }
