@@ -179,7 +179,7 @@ And several methods:
   `URLSearchParams`. For an undefined body, the value will be `undefined`.
 
   For more advanced use cases of the body, the original server request is
-  available and contains a `.body()` and `.bodyStream()` methods.
+  available and contains a `.body` reader.
 
 ### Automatic response body handling
 
