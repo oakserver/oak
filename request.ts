@@ -172,7 +172,7 @@ export class Request {
       } else if (isMediaType(contentType, formTypes)) {
         return (this._body = {
           type: BodyType.Form,
-          value: new URLSearchParams(str)
+          value: new URLSearchParams(str.replace(/\+/g, " "))
         });
       } else if (isMediaType(contentType, textTypes)) {
         return (this._body = { type: BodyType.Text, value: str });
