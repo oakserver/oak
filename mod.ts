@@ -16,4 +16,4 @@ export { send } from "./send.ts";
 export { HTTPMethods } from "./types.ts";
 
 // Re-exported from `net`
-export { Status, STATUS_TEXT } from "./deps.ts";
+export { HTTPSOptions, Status, STATUS_TEXT } from "./deps.ts";

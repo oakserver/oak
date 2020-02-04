@@ -3,14 +3,22 @@
 import { test, assert, assertEquals, assertStrictEq } from "./test_deps.ts";
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
-import { serve, Server, ServerRequest } from "./deps.ts";
+import {
+  HTTPSOptions,
+  serve,
+  serveTLS,
+  Server,
+  ServerRequest
+} from "./deps.ts";
 
 let serverRequestStack: ServerRequest[] = [];
 let addrStack: string[] = [];
+let httpsOptionsStack: HTTPSOptions[] = [];
 
 function teardown() {
   serverRequestStack = [];
   addrStack = [];
+  httpsOptionsStack = [];
 }
 
 class MockServer {
@@ -25,6 +33,11 @@ class MockServer {
 
 const mockServe: typeof serve = function(addr: string): Server {
   addrStack.push(addr);
+  return new MockServer() as Server;
+};
+
+const mockServeTLS: typeof serveTLS = function(options: HTTPSOptions): Server {
+  httpsOptionsStack.push(options);
   return new MockServer() as Server;
 };
 
@@ -136,6 +149,30 @@ test(async function appListen() {
   const app = new Application(mockServe);
   await app.listen("127.0.0.1:8080");
   assertEquals(addrStack, ["127.0.0.1:8080"]);
+  teardown();
+});
+
+test(async function appListenOptions() {
+  const app = new Application(mockServe);
+  await app.listen({ port: 8000 });
+  assertEquals(addrStack, [{ port: 8000 }]);
+  teardown();
+});
+
+test(async function appListenTLS() {
+  const app = new Application(mockServe, mockServeTLS);
+  await app.listenTLS({
+    port: 8000,
+    certFile: "",
+    keyFile: ""
+  });
+  assertEquals(httpsOptionsStack, [
+    {
+      port: 8000,
+      certFile: "",
+      keyFile: ""
+    }
+  ]);
   teardown();
 });
 

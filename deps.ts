@@ -3,10 +3,12 @@
 // This file contains the external dependencies that oak depends upon
 
 export {
+  HTTPSOptions,
   Response,
   serve,
   Server,
-  ServerRequest
+  ServerRequest,
+  serveTLS
 } from "https://deno.land/std@v0.32.0/http/server.ts";
 export {
   Status,
