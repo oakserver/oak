@@ -119,7 +119,7 @@ test(async function requestBodyJson() {
 
 test(async function requestBodyForm() {
   const request = new Request(
-    createMockServerRequest("/", `foo=bar&bar=1`, {
+    createMockServerRequest("/", `foo=bar&bar=1&baz=qux+%2B+quux`, {
       "Content-Type": "application/x-www-form-urlencoded"
     })
   );
@@ -128,7 +128,8 @@ test(async function requestBodyForm() {
   if (actual && actual.type === "form") {
     assertEquals(Array.from(actual.value.entries()), [
       ["foo", "bar"],
-      ["bar", "1"]
+      ["bar", "1"],
+      ["baz", "qux + quux"]
     ]);
   } else {
     throw Error("Unexpected response");
