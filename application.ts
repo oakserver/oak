@@ -2,7 +2,7 @@
 
 import { Context } from "./context.ts";
 import { compose, Middleware } from "./middleware.ts";
-import { serve, Server } from "./deps.ts";
+import { serve } from "./deps.ts";
 
 /** A class which registers middleware (via `.use()`) and then processes
  * inbound requests against that middleware (via `.listen()`).
@@ -28,7 +28,7 @@ export class Application<S extends object = { [key: string]: any }> {
   /** Start listening for requests, processing registered middleware on each
    * request.
    */
-  async listen(addr: string): Promise<void> {
+  async listen(addr: string | Deno.ListenOptions): Promise<void> {
     const middleware = compose<S, Context<S>>(this._middleware);
     const server = this._serve(addr);
     for await (const request of server) {

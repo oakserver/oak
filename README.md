@@ -28,7 +28,7 @@ app.use(ctx => {
   ctx.response.body = "Hello World!";
 });
 
-await app.listen("127.0.0.1:8000");
+await app.listen({ port: 8000 });
 ```
 
 The middleware is processed as a stack, where each middleware function can
@@ -62,7 +62,7 @@ app.use(ctx => {
   ctx.response.body = "Hello World!";
 });
 
-await app.listen("127.0.0.1:8000");
+await app.listen({ port: 8000 });
 ```
 
 ### Context
@@ -237,7 +237,7 @@ const app = new Application();
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-await app.listen("127.0.0.1:8000");
+await app.listen({ port: 8000 });
 ```
 
 ## Static content
@@ -262,7 +262,7 @@ import { Application, send } from "https://deno.land/x/oak/mod.ts";
     });
   });
 
-  await app.listen("127.0.0.1:8000");
+  await app.listen({ port: 8000 });
 })();
 ```
 
