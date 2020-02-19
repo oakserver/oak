@@ -7,6 +7,32 @@ import { isMediaType } from "./isMediaType.ts";
 import { preferredMediaTypes } from "./mediaType.ts";
 import { HTTPMethods } from "./types.ts";
 
+type SearchMap = {
+  [k: string]: string | string[];
+};
+
+class OakURLSearchParams extends URLSearchParams {
+  private _searchMap: SearchMap;
+
+  constructor(init?: string | string[][] | Record<string, string>) {
+    super(init);
+
+    this.initializeSearchMap();
+  }
+
+  private initializeSearchMap(): void {
+    const searchKeys = this.keys();
+
+    for (let searchKey of searchKeys) {
+      this._searchMap[searchKey] = this.getAll(searchKey);
+    }
+  }
+
+  get searchMap(): SearchMap {
+    return this._searchMap;
+  }
+}
+
 export enum BodyType {
   JSON = "json",
   Form = "form",
@@ -31,7 +57,7 @@ export class Request {
   private _path: string;
   private _rawBodyPromise?: Promise<Uint8Array>;
   private _search?: string;
-  private _searchParams: URLSearchParams;
+  private _searchParams: OakURLSearchParams;
   private _serverRequest: ServerRequest;
 
   /** Is `true` if the request has a body, otherwise `false`. */
@@ -62,8 +88,8 @@ export class Request {
     return this._search;
   }
 
-  /** The parsed `URLSearchParams` of the request. */
-  get searchParams(): URLSearchParams {
+  /** The parsed `OakURLSearchParams` of the request. */
+  get searchParams(): OakURLSearchParams {
     return this._searchParams;
   }
 
@@ -82,7 +108,7 @@ export class Request {
     const [path, search] = serverRequest.url.split("?");
     this._path = path;
     this._search = search ? `?${search}` : undefined;
-    this._searchParams = new URLSearchParams(search);
+    this._searchParams = new OakURLSearchParams(search);
   }
 
   /** Returns an array of media types, accepted by the requestor, in order of

@@ -9,6 +9,7 @@ import {
 import { ServerRequest } from "./deps.ts";
 import httpErrors from "./httpError.ts";
 import { Request, BodyType } from "./request.ts";
+import { assert } from "C:/Users/HP/AppData/Local/deno/deps/https/deno.land/std@v0.32.0/testing/asserts";
 
 const encoder = new TextEncoder();
 
@@ -58,6 +59,10 @@ test(function requestSearch() {
     ["bar", "baz"],
     ["qat", "qux"]
   ]);
+  assertEquals(request.searchParams.searchMap, {
+    bar: "baz",
+    qat: "qux"
+  })
 });
 
 test(function serverRequestAvail() {
