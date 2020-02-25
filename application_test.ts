@@ -4,6 +4,7 @@ import { test, assert, assertEquals, assertStrictEq } from "./test_deps.ts";
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import {
+  HTTPOptions,
   HTTPSOptions,
   serve,
   serveTLS,
@@ -12,7 +13,7 @@ import {
 } from "./deps.ts";
 
 let serverRequestStack: ServerRequest[] = [];
-let addrStack: string[] = [];
+let addrStack: Array<string | HTTPOptions> = [];
 let httpsOptionsStack: HTTPSOptions[] = [];
 
 function teardown() {
@@ -31,7 +32,7 @@ class MockServer {
   }
 }
 
-const mockServe: typeof serve = function(addr: string): Server {
+const mockServe: typeof serve = function(addr: string | HTTPOptions): Server {
   addrStack.push(addr);
   return new MockServer() as Server;
 };

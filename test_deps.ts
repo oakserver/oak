@@ -1,6 +1,6 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
-export { test, runTests } from "https://deno.land/std@v0.32.0/testing/mod.ts";
+export const test = Deno.test;
 
 export {
   assert,
@@ -8,4 +8,4 @@ export {
   assertStrictEq,
   assertThrows,
   assertThrowsAsync
-} from "https://deno.land/std@v0.32.0/testing/asserts.ts";
+} from "https://deno.land/std@v0.34.0/testing/asserts.ts";
