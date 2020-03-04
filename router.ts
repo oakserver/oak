@@ -380,17 +380,14 @@ export class Router {
         return next();
       }
 
-      const chain = matches.reduce(
-        (prev, layer) => {
-          prev.push((context: RouterContext, next: () => Promise<void>) => {
-            const captures = layer.captures(path);
-            context.params = layer.params(captures, context.params);
-            return next();
-          });
-          return [...prev, ...layer.stack];
-        },
-        [] as RouterMiddleware[]
-      );
+      const chain = matches.reduce((prev, layer) => {
+        prev.push((context: RouterContext, next: () => Promise<void>) => {
+          const captures = layer.captures(path);
+          context.params = layer.params(captures, context.params);
+          return next();
+        });
+        return [...prev, ...layer.stack];
+      }, [] as RouterMiddleware[]);
       return compose(chain)(context as RouterContext);
     };
     return dispatch as Middleware;
