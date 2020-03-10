@@ -43,8 +43,7 @@ export enum ErrorStatus {
   NetworkAuthenticationRequired = 511 // RFC 6585, 6
 }
 
-export type HTTPMethods =
-  | "HEAD"
+export type HTTPMethods = "HEAD"
   | "OPTIONS"
   | "GET"
   | "PUT"

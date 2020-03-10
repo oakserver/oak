@@ -199,13 +199,13 @@ function tokensToRegExp(
 
     if (typeof token === "string") {
       route += escapeString(token);
-      isEndDelimited =
-        i === tokens.length - 1 && delimiters.includes(token[token.length - 1]);
+      isEndDelimited = i === tokens.length - 1 &&
+        delimiters.includes(token[token.length - 1]);
     } else {
       const capture = token.repeat
-        ? `(?:${token.pattern})(?:${escapeString(token.delimiter || "")}(?:${
-            token.pattern
-          }))*`
+        ? `(?:${token.pattern})(?:${escapeString(
+          token.delimiter || ""
+        )}(?:${token.pattern}))*`
         : token.pattern;
 
       if (keys) {

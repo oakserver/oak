@@ -14,8 +14,7 @@ export enum BodyType {
   Undefined = "undefined"
 }
 
-export type Body =
-  | { type: BodyType.JSON; value: any }
+export type Body = { type: BodyType.JSON; value: any }
   | { type: BodyType.Form; value: URLSearchParams }
   | { type: BodyType.Text; value: string }
   | { type: BodyType.Undefined; value: undefined };

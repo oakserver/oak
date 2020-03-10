@@ -163,8 +163,9 @@ export async function send(
     response.headers.set("Cache-Control", directives.join(","));
   }
   if (!response.type) {
-    response.type =
-      encodingExt !== "" ? extname(basename(path, encodingExt)) : extname(path);
+    response.type = encodingExt !== ""
+      ? extname(basename(path, encodingExt))
+      : extname(path);
   }
   response.body = await Deno.readFile(path);
 

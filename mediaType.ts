@@ -106,10 +106,9 @@ function parseMediaType(str: string, i: number): Specification | undefined {
     const kvps = splitParameters(parameters).map(splitKeyValuePair);
 
     for (const [key, val] of kvps) {
-      const value =
-        val && val[0] === `"` && val[val.length - 1] === `"`
-          ? val.substr(1, val.length - 2)
-          : val;
+      const value = val && val[0] === `"` && val[val.length - 1] === `"`
+        ? val.substr(1, val.length - 2)
+        : val;
 
       if (key === "q" && value) {
         q = parseFloat(value);
@@ -186,9 +185,8 @@ function specify(
   const keys = Object.keys(spec.params);
   if (keys.length) {
     if (
-      keys.every(
-        key =>
-          (spec.params[key] || "").toLowerCase() ===
+      keys.every(key =>
+        (spec.params[key] || "").toLowerCase() ===
           (p.params[key] || "").toLowerCase()
       )
     ) {

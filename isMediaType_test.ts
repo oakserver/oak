@@ -53,8 +53,14 @@ test(function firstTypeOrFalse() {
   assertEquals(isMediaType("image/png", [".png"]), ".png");
   assertEquals(isMediaType("image/png", ["text/*", "image/*"]), "image/png");
   assertEquals(isMediaType("image/png", ["image/*", "text/*"]), "image/png");
-  assertEquals(isMediaType("image/png", ["image/*", "image/png"]), "image/png");
-  assertEquals(isMediaType("image/png", ["image/png", "image/*"]), "image/png");
+  assertEquals(
+    isMediaType("image/png", ["image/*", "image/png"]),
+    "image/png"
+  );
+  assertEquals(
+    isMediaType("image/png", ["image/png", "image/*"]),
+    "image/png"
+  );
 
   assertStrictEq(isMediaType("image/png", ["jpeg"]), false);
   assertStrictEq(isMediaType("image/png", [".jpeg"]), false);

@@ -97,7 +97,7 @@ function createHttpErrorConstructor<E extends typeof HttpError>(
 }
 
 const httpErrors: {
-  [P in keyof typeof ErrorStatus]: typeof HttpError
+  [P in keyof typeof ErrorStatus]: typeof HttpError;
 } = {} as any;
 
 for (const [key, value] of errorStatusMap) {

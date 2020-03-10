@@ -37,10 +37,12 @@ app.use(async ctx => {
         case "form":
         case "text":
       }
-      ctx.response.body = `<!DOCTYPE html><html><body><h1>Body type: "${body.type}"`;
+      ctx.response.body =
+        `<!DOCTYPE html><html><body><h1>Body type: "${body.type}"`;
     }
   } else {
-    ctx.response.body = `<!DOCTYPE html><html><body><h1>No Body</h1></body></html>`;
+    ctx.response.body =
+      `<!DOCTYPE html><html><body><h1>No Body</h1></body></html>`;
   }
 });
 
