@@ -2,8 +2,7 @@
 
 import { Context } from "./context.ts";
 import { compose, Middleware } from "./middleware.ts";
-import { HTTPSOptions, serve, serveTLS } from "./deps.ts";
-import { ServerRequest } from "https://deno.land/std@v0.36.0/http/server.ts";
+import { HTTPSOptions, serve, serveTLS, ServerRequest } from "./deps.ts";
 /** A class which registers middleware (via `.use()`) and then processes
  * inbound requests against that middleware (via `.listen()`).
  *
