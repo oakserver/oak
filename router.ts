@@ -230,8 +230,8 @@ export class Router<S extends {} = { [key: string]: any; }> {
    * allowed methods for the defined routes.
    */
   allowedMethods(options: AllowedMethodsOptions = {}): Middleware {
-    const _this = this;
-    const implemented = _this._methods;
+    const contextRouteMatches = this._contextRouteMatches;
+    const implemented = this._methods;
     return async function allowedMethods(context, next) {
       await next();
       const allowed = new Set<HTTPMethods>();
@@ -239,7 +239,7 @@ export class Router<S extends {} = { [key: string]: any; }> {
         !context.response.status ||
         context.response.status === Status.NotFound
       ) {
-        const contextRoutesMatched = _this._contextRouteMatches.get(
+        const contextRoutesMatched = contextRouteMatches.get(
           context as RouterContext<RouteParams, S>
         );
         if (contextRoutesMatched) {
