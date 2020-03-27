@@ -11,10 +11,11 @@ export enum BodyType {
   JSON = "json",
   Form = "form",
   Text = "text",
-  Undefined = "undefined"
+  Undefined = "undefined",
 }
 
-export type Body = { type: BodyType.JSON; value: any }
+export type Body =
+  | { type: BodyType.JSON; value: any }
   | { type: BodyType.Form; value: URLSearchParams }
   | { type: BodyType.Text; value: string }
   | { type: BodyType.Undefined; value: undefined };
@@ -127,7 +128,7 @@ export class Request {
   acceptsEncodings(...encodings: string[]): string | undefined;
   acceptsEncodings(...encodings: string[]): string[] | string | undefined {
     const acceptEncodingValue = this._serverRequest.headers.get(
-      "Accept-Encoding"
+      "Accept-Encoding",
     );
     if (!acceptEncodingValue) {
       return;
@@ -155,7 +156,7 @@ export class Request {
     const encoding = this.headers.get("content-encoding") || "identity";
     if (encoding !== "identity") {
       throw new httpErrors.UnsupportedMediaType(
-        `Unsupported content-encoding: ${encoding}`
+        `Unsupported content-encoding: ${encoding}`,
       );
     }
     if (!this.hasBody) {
@@ -171,7 +172,7 @@ export class Request {
       } else if (isMediaType(contentType, formTypes)) {
         return (this._body = {
           type: BodyType.Form,
-          value: new URLSearchParams(str.replace(/\+/g, " "))
+          value: new URLSearchParams(str.replace(/\+/g, " ")),
         });
       } else if (isMediaType(contentType, textTypes)) {
         return (this._body = { type: BodyType.Text, value: str });
@@ -180,7 +181,7 @@ export class Request {
     throw new httpErrors.UnsupportedMediaType(
       contentType
         ? `Unsupported content-type: ${contentType}`
-        : "Missing content-type"
+        : "Missing content-type",
     );
   }
 }

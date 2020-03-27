@@ -59,9 +59,9 @@ const DEFAULT_DELIMITERS = "./";
 const PATH_REGEXP = new RegExp(
   [
     "(\\\\.)",
-    "(?:\\:(\\w+)(?:\\(((?:\\\\.|[^\\\\()])+)\\))?|\\(((?:\\\\.|[^\\\\()])+)\\))([+*?])?"
+    "(?:\\:(\\w+)(?:\\(((?:\\\\.|[^\\\\()])+)\\))?|\\(((?:\\\\.|[^\\\\()])+)\\))([+*?])?",
   ].join("|"),
-  "g"
+  "g",
 );
 
 function escapeGroup(group: string) {
@@ -128,7 +128,7 @@ export function parse(str: string, options?: ParseOptions): Token[] {
       partial,
       pattern: pattern
         ? escapeGroup(pattern)
-        : `[^${escapeString(delimiter)}]+?`
+        : `[^${escapeString(delimiter)}]+?`,
     });
   }
 
@@ -146,7 +146,7 @@ function flags(options?: RegExpOptions & ParseOptions): string {
 function arrayToRegExp(
   path: Array<string | RegExp>,
   keys?: Key[],
-  options?: RegExpOptions & ParseOptions
+  options?: RegExpOptions & ParseOptions,
 ): RegExp {
   const parts: string[] = [];
 
@@ -170,7 +170,7 @@ function regExpToRegExp(path: RegExp, keys?: Key[]): RegExp {
           optional: false,
           repeat: false,
           partial: false,
-          pattern: null
+          pattern: null,
         });
       }
     }
@@ -181,7 +181,7 @@ function regExpToRegExp(path: RegExp, keys?: Key[]): RegExp {
 function tokensToRegExp(
   tokens: Token[],
   keys?: Key[],
-  options: RegExpOptions & ParseOptions = {}
+  options: RegExpOptions & ParseOptions = {},
 ): RegExp {
   const { strict = false, start = true, end = true } = options;
   const delimiter = escapeString(options.delimiter || DEFAULT_DELIMITER);
@@ -204,7 +204,7 @@ function tokensToRegExp(
     } else {
       const capture = token.repeat
         ? `(?:${token.pattern})(?:${escapeString(
-          token.delimiter || ""
+          token.delimiter || "",
         )}(?:${token.pattern}))*`
         : token.pattern;
 
@@ -244,7 +244,7 @@ function tokensToRegExp(
 function stringToRegExp(
   path: string,
   keys?: Key[],
-  options?: RegExpOptions & ParseOptions
+  options?: RegExpOptions & ParseOptions,
 ): RegExp {
   return tokensToRegExp(parse(path, options), keys, options);
 }
@@ -255,7 +255,7 @@ function stringToRegExp(
 export function pathToRegExp(
   path: Path,
   keys?: Key[],
-  options?: RegExpOptions & ParseOptions
+  options?: RegExpOptions & ParseOptions,
 ): RegExp {
   if (path instanceof RegExp) {
     return regExpToRegExp(path, keys);

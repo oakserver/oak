@@ -75,7 +75,7 @@ export class Response {
     return {
       status: this.status || (body ? Status.OK : Status.NotFound),
       body,
-      headers: this.headers
+      headers: this.headers,
     };
   }
 }

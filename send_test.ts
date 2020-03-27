@@ -13,17 +13,17 @@ import { send } from "./send.ts";
 let encodingsAccepted = "identity";
 
 function createMockApp<S extends object = { [key: string]: any }>(
-  state = {} as S
+  state = {} as S,
 ): Application<S> {
   return {
-    state
+    state,
   } as any;
 }
 
 function createMockContext<S extends object = { [key: string]: any }>(
   app: Application<S>,
   path = "/",
-  method = "GET"
+  method = "GET",
 ) {
   return ({
     app,
@@ -36,20 +36,20 @@ function createMockContext<S extends object = { [key: string]: any }>(
       path,
       search: undefined,
       searchParams: new URLSearchParams(),
-      url: path
+      url: path,
     },
     response: {
       status: Status.OK,
       body: undefined,
-      headers: new Headers()
+      headers: new Headers(),
     },
-    state: app.state
+    state: app.state,
   } as unknown) as Context<S>;
 }
 
 function setup<S extends object = { [key: string]: any }>(
   path = "/",
-  method = "GET"
+  method = "GET",
 ): {
   app: Application<S>;
   context: Context<S>;
@@ -64,13 +64,13 @@ test(async function sendHtml() {
   const { context } = setup("/test.html");
   const fixture = await Deno.readFile("./fixtures/test.html");
   await send(context, context.request.path, {
-    root: "./fixtures"
+    root: "./fixtures",
   });
   assertEquals(context.response.body, fixture);
   assertEquals(context.response.type, ".html");
   assertEquals(
     context.response.headers.get("content-length"),
-    String(fixture.length)
+    String(fixture.length),
   );
   assert(context.response.headers.get("last-modified") != null);
   assertEquals(context.response.headers.get("cache-control"), "max-age=0");
@@ -81,14 +81,14 @@ test(async function sendGzip() {
   const fixture = await Deno.readFile("./fixtures/test.json.gz");
   encodingsAccepted = "gzip";
   await send(context, context.request.path, {
-    root: "./fixtures"
+    root: "./fixtures",
   });
   assertEquals(context.response.body, fixture);
   assertEquals(context.response.type, ".json");
   assertEquals(context.response.headers.get("content-encoding"), "gzip");
   assertEquals(
     context.response.headers.get("content-length"),
-    String(fixture.length)
+    String(fixture.length),
   );
 });
 
@@ -97,14 +97,14 @@ test(async function sendBrotli() {
   const fixture = await Deno.readFile("./fixtures/test.json.br");
   encodingsAccepted = "br";
   await send(context, context.request.path, {
-    root: "./fixtures"
+    root: "./fixtures",
   });
   assertEquals(context.response.body, fixture);
   assertEquals(context.response.type, ".json");
   assertEquals(context.response.headers.get("content-encoding"), "br");
   assertEquals(
     context.response.headers.get("content-length"),
-    String(fixture.length)
+    String(fixture.length),
   );
 });
 
@@ -112,14 +112,14 @@ test(async function sendIdentity() {
   const { context } = setup("/test.json");
   const fixture = await Deno.readFile("./fixtures/test.json");
   await send(context, context.request.path, {
-    root: "./fixtures"
+    root: "./fixtures",
   });
   assertEquals(context.response.body, fixture);
   assertEquals(context.response.type, ".json");
   assertStrictEq(context.response.headers.get("content-encoding"), null);
   assertEquals(
     context.response.headers.get("content-length"),
-    String(fixture.length)
+    String(fixture.length),
   );
 });
 
@@ -129,7 +129,7 @@ test(async function send404() {
   let didThrow = false;
   try {
     await send(context, context.request.path, {
-      root: "./fixtures"
+      root: "./fixtures",
     });
   } catch (e) {
     assert(e instanceof httpErrors.NotFound);

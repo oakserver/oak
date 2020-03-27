@@ -32,7 +32,7 @@ test(function bodyText() {
   assertEquals(serverResponse.status, 200);
   assertEquals(
     serverResponse.headers!.get("content-type"),
-    "text/plain; charset=utf-8"
+    "text/plain; charset=utf-8",
   );
   assertEquals(Array.from(serverResponse.headers!.entries()).length, 1);
 });
@@ -43,12 +43,12 @@ test(function bodyHtml() {
   const serverResponse = response.toServerResponse();
   assertEquals(
     decoder.decode(serverResponse.body),
-    "<!DOCTYPE html><html><body>Hello world!</body></html>"
+    "<!DOCTYPE html><html><body>Hello world!</body></html>",
   );
   assertEquals(serverResponse.status, 200);
   assertEquals(
     serverResponse.headers!.get("content-type"),
-    "text/html; charset=utf-8"
+    "text/html; charset=utf-8",
   );
   assertEquals(Array.from(serverResponse.headers!.entries()).length, 1);
 });
@@ -61,7 +61,7 @@ test(function bodyJson() {
   assertEquals(serverResponse.status, 200);
   assertEquals(
     serverResponse.headers!.get("content-type"),
-    "application/json; charset=utf-8"
+    "application/json; charset=utf-8",
   );
   assertEquals(Array.from(serverResponse.headers!.entries()).length, 1);
 });
@@ -74,7 +74,7 @@ test(function bodySymbol() {
   assertEquals(serverResponse.status, 200);
   assertEquals(
     serverResponse.headers!.get("content-type"),
-    "text/plain; charset=utf-8"
+    "text/plain; charset=utf-8",
   );
   assertEquals(Array.from(serverResponse.headers!.entries()).length, 1);
 });
@@ -95,12 +95,12 @@ test(function typeDoesNotOverwrite() {
   const serverResponse = response.toServerResponse();
   assertEquals(
     decoder.decode(serverResponse.body),
-    "console.log('hello world');"
+    "console.log('hello world');",
   );
   assertEquals(serverResponse.status, 200);
   assertEquals(
     serverResponse.headers!.get("content-type"),
-    "application/javascript; charset=utf-8"
+    "application/javascript; charset=utf-8",
   );
   assertEquals(Array.from(serverResponse.headers!.entries()).length, 1);
 });
@@ -113,7 +113,7 @@ test(function contentTypeDoesNotOverwrite() {
   const serverResponse = response.toServerResponse();
   assertEquals(
     decoder.decode(serverResponse.body),
-    "console.log('hello world');"
+    "console.log('hello world');",
   );
   assertEquals(serverResponse.status, 200);
   assertEquals(serverResponse.headers!.get("Content-Type"), "text/plain");

@@ -25,8 +25,8 @@ const testFixtures: TestFixture[] = [
     source: "/",
     fixtures: {
       "/": ["/"],
-      "/route": null
-    }
+      "/route": null,
+    },
   },
   {
     name: "/test",
@@ -35,8 +35,8 @@ const testFixtures: TestFixture[] = [
       "/test": ["/test"],
       "/route": null,
       "/test/route": null,
-      "/test/": ["/test/"]
-    }
+      "/test/": ["/test/"],
+    },
   },
   {
     name: "/test/",
@@ -44,8 +44,8 @@ const testFixtures: TestFixture[] = [
     fixtures: {
       "/test": null,
       "/test/": ["/test/"],
-      "/test//": ["/test//"]
-    }
+      "/test//": ["/test//"],
+    },
   },
   {
     name: "/test sensitive",
@@ -53,8 +53,8 @@ const testFixtures: TestFixture[] = [
     options: { sensitive: true },
     fixtures: {
       "/test": ["/test"],
-      "/TEST": null
-    }
+      "/TEST": null,
+    },
   },
   {
     name: "/TEST sensitive",
@@ -62,64 +62,64 @@ const testFixtures: TestFixture[] = [
     options: { sensitive: true },
     fixtures: {
       "/test": null,
-      "/TEST": ["/TEST"]
-    }
+      "/TEST": ["/TEST"],
+    },
   },
   {
     name: "/test strict",
     source: "/test",
     options: {
-      strict: true
+      strict: true,
     },
     fixtures: {
       "/test": ["/test"],
       "/test/": null,
-      "/TEST": ["/TEST"]
-    }
+      "/TEST": ["/TEST"],
+    },
   },
   {
     name: "/test/ strict",
     source: "/test/",
     options: {
-      strict: true
+      strict: true,
     },
     fixtures: {
       "/test": null,
       "/test/": ["/test/"],
-      "/test//": null
-    }
+      "/test//": null,
+    },
   },
   {
     name: "/test non-ending",
     source: "/test",
     options: {
-      end: false
+      end: false,
     },
     fixtures: {
       "/test": ["/test"],
       "/test/": ["/test/"],
       "/test/route": ["/test"],
-      "/route": null
-    }
+      "/route": null,
+    },
   },
   {
     name: "/test/ non-ending",
     source: "/test/",
     options: {
-      end: false
+      end: false,
     },
     fixtures: {
       "/test": null,
       "/test/route": ["/test/"],
       "/test//": ["/test//"],
-      "/test//route": ["/test/"]
-    }
+      "/test//route": ["/test/"],
+    },
   },
   {
     name: "/:test non-ending",
     source: "/:test",
     options: {
-      end: false
+      end: false,
     },
     keys: [
       {
@@ -129,18 +129,18 @@ const testFixtures: TestFixture[] = [
         optional: false,
         repeat: false,
         pattern: "[^\\/]+?",
-        partial: false
-      }
+        partial: false,
+      },
     ],
     fixtures: {
-      "/route": ["/route", "route"]
-    }
+      "/route": ["/route", "route"],
+    },
   },
   {
     name: "/:test/ non-ending",
     source: "/:test/",
     options: {
-      end: false
+      end: false,
     },
     keys: [
       {
@@ -150,33 +150,33 @@ const testFixtures: TestFixture[] = [
         optional: false,
         repeat: false,
         pattern: "[^\\/]+?",
-        partial: false
-      }
+        partial: false,
+      },
     ],
     fixtures: {
       "/route": null,
-      "/route/": ["/route/", "route"]
-    }
+      "/route/": ["/route/", "route"],
+    },
   },
   {
     name: "empty non-ending",
     source: "",
     options: {
-      end: false
+      end: false,
     },
     fixtures: {
       "": [""],
       "/": ["/"],
       route: [""],
       "/route": [""],
-      "/route/": [""]
-    }
+      "/route/": [""],
+    },
   },
   {
     name: "/test non-starting",
     source: "/test",
     options: {
-      start: false
+      start: false,
     },
     fixtures: {
       "/test": ["/test"],
@@ -184,28 +184,28 @@ const testFixtures: TestFixture[] = [
       "/route/test": ["/test"],
       "/test/route": null,
       "/route/test/deep": null,
-      "/route": null
-    }
+      "/route": null,
+    },
   },
   {
     name: "/test/ non-starting",
     source: "/test/",
     options: {
-      start: false
+      start: false,
     },
     fixtures: {
       "/test": null,
       "/test/route": null,
       "/test//route": null,
       "/test//": ["/test//"],
-      "/route/test/": ["/test/"]
-    }
+      "/route/test/": ["/test/"],
+    },
   },
   {
     name: "/:test non-starting",
     source: "/:test",
     options: {
-      start: false
+      start: false,
     },
     keys: [
       {
@@ -215,18 +215,18 @@ const testFixtures: TestFixture[] = [
         optional: false,
         repeat: false,
         pattern: "[^\\/]+?",
-        partial: false
-      }
+        partial: false,
+      },
     ],
     fixtures: {
-      "/route": ["/route", "route"]
-    }
+      "/route": ["/route", "route"],
+    },
   },
   {
     name: "/:test/ non-starting",
     source: "/:test/",
     options: {
-      start: false
+      start: false,
     },
     keys: [
       {
@@ -236,27 +236,27 @@ const testFixtures: TestFixture[] = [
         optional: false,
         repeat: false,
         pattern: "[^\\/]+?",
-        partial: false
-      }
+        partial: false,
+      },
     ],
     fixtures: {
       "/route": null,
-      "/route/": ["/route/", "route"]
-    }
+      "/route/": ["/route/", "route"],
+    },
   },
   {
     name: "empty non-starting",
     source: "",
     options: {
-      start: false
+      start: false,
     },
     fixtures: {
       "": [""],
       "/": ["/"],
       route: [""],
       "/route": [""],
-      "/route/": ["/"]
-    }
+      "/route/": ["/"],
+    },
   },
   {
     name: "/one /two array",
@@ -265,8 +265,8 @@ const testFixtures: TestFixture[] = [
       "/one": ["/one"],
       "/two": ["/two"],
       "/three": null,
-      "/one/two": null
-    }
+      "/one/two": null,
+    },
   },
   {
     name: "/:test",
@@ -279,8 +279,8 @@ const testFixtures: TestFixture[] = [
         optional: false,
         repeat: false,
         pattern: "[^\\/]+?",
-        partial: false
-      }
+        partial: false,
+      },
     ],
     fixtures: {
       "/route": ["/route", "route"],
@@ -290,11 +290,11 @@ const testFixtures: TestFixture[] = [
       "/something%2Felse": ["/something%2Felse", "something%2Felse"],
       "/something%2Felse%2Fmore": [
         "/something%2Felse%2Fmore",
-        "something%2Felse%2Fmore"
+        "something%2Felse%2Fmore",
       ],
-      "/;,:@&=+$-_.!~*()": ["/;,:@&=+$-_.!~*()", ";,:@&=+$-_.!~*()"]
-    }
-  }
+      "/;,:@&=+$-_.!~*()": ["/;,:@&=+$-_.!~*()", ";,:@&=+$-_.!~*()"],
+    },
+  },
 ];
 
 for (const { name, source, fixtures, keys, options } of testFixtures) {
@@ -316,6 +316,6 @@ for (const { name, source, fixtures, keys, options } of testFixtures) {
           assertEquals([...actual], expected);
         }
       }
-    }
+    },
   });
 }

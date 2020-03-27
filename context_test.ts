@@ -9,10 +9,10 @@ import { Response } from "./response.ts";
 import httpError from "./httpError.ts";
 
 function createMockApp<S extends object = { [key: string]: any }>(
-  state = {} as S
+  state = {} as S,
 ): Application<S> {
   return {
-    state
+    state,
   } as any;
 }
 
@@ -22,7 +22,7 @@ function createMockServerRequest(url = "/"): ServerRequest {
     headers,
     method: "GET",
     url,
-    async respond() {}
+    async respond() {},
   } as any;
 }
 
@@ -44,6 +44,6 @@ test(function contextThrows() {
       context.throw(404, "foobar");
     },
     httpError.NotFound,
-    "foobar"
+    "foobar",
   );
 });

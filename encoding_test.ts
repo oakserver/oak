@@ -7,7 +7,7 @@ test(function encoding() {
   assertEquals(preferredEncodings("gzip, compress;q=0.2, identity;q=0.5"), [
     "gzip",
     "identity",
-    "compress"
+    "compress",
   ]);
 });
 
@@ -15,8 +15,8 @@ test(function availableEncoding() {
   assertEquals(
     preferredEncodings("gzip, compress;q=0.2, identity;q=0.5", [
       "identity",
-      "gzip"
+      "gzip",
     ]),
-    ["gzip", "identity"]
+    ["gzip", "identity"],
   );
 });

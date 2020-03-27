@@ -74,7 +74,7 @@ function toUTCString(value: number): string {
 export async function send(
   { request, response }: Context,
   path: string,
-  options: SendOptions = { root: "" }
+  options: SendOptions = { root: "" },
 ): Promise<string | undefined> {
   const {
     brotli = true,

@@ -31,7 +31,7 @@ test(function testResolvePathAbsolute() {
       resolvePath("/dev/null");
     },
     httpErrors.BadRequest,
-    "Malicious Path"
+    "Malicious Path",
   );
 });
 
@@ -41,7 +41,7 @@ test(function testResolvePathContainsNull() {
       resolvePath("./foo/bar\0baz");
     },
     httpErrors.BadRequest,
-    "Malicious Path"
+    "Malicious Path",
   );
 });
 

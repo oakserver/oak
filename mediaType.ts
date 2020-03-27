@@ -83,7 +83,7 @@ function splitParameters(str: string): string[] {
 
   parameters.length = j + 1;
 
-  return parameters.map(p => p.trim());
+  return parameters.map((p) => p.trim());
 }
 
 function splitKeyValuePair(str: string): [string, string | undefined] {
@@ -143,7 +143,7 @@ function isQuality(spec: Partial<Specification>): boolean {
 
 function compareSpecs(
   a: Partial<Specification>,
-  b: Partial<Specification>
+  b: Partial<Specification>,
 ): number {
   return (
     (b.q || 0) - (a.q || 0) ||
@@ -160,7 +160,7 @@ function getFullType(spec: Specification) {
 function specify(
   type: string,
   spec: Specification,
-  index: number
+  index: number,
 ): Partial<Specification> | undefined {
   const p = parseMediaType(type, index);
 
@@ -185,7 +185,7 @@ function specify(
   const keys = Object.keys(spec.params);
   if (keys.length) {
     if (
-      keys.every(key =>
+      keys.every((key) =>
         (spec.params[key] || "").toLowerCase() ===
           (p.params[key] || "").toLowerCase()
       )
@@ -200,14 +200,14 @@ function specify(
     i: index,
     o: spec.o,
     q: spec.q,
-    s
+    s,
   };
 }
 
 function getMediaTypePriority(
   type: string,
   accepted: Specification[],
-  index: number
+  index: number,
 ) {
   let priority: Partial<Specification> = { o: -1, q: 0, s: 0, i: index };
 
@@ -229,7 +229,7 @@ function getMediaTypePriority(
 
 export function preferredMediaTypes(
   accept?: string | null,
-  provided?: string[]
+  provided?: string[],
 ): string[] {
   const accepts = parseAccept(accept === undefined ? "*/*" : accept || "");
 
@@ -247,5 +247,5 @@ export function preferredMediaTypes(
   return priorities
     .filter(isQuality)
     .sort(compareSpecs)
-    .map(priority => provided[priorities.indexOf(priority)]);
+    .map((priority) => provided[priorities.indexOf(priority)]);
 }

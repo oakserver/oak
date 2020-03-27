@@ -24,14 +24,14 @@ function createMockBodyReader(body: string): Deno.Reader {
       p.set(buf);
       offset += chunkSize;
       return chunkSize;
-    }
+    },
   };
 }
 
 function createMockServerRequest(
   url = "/",
   body = "",
-  headerValues: { [header: string]: string } = {}
+  headerValues: { [header: string]: string } = {},
 ): ServerRequest {
   const headers = new Headers();
   for (const [key, value] of Object.entries(headerValues)) {
@@ -45,7 +45,7 @@ function createMockServerRequest(
     method: "GET",
     url,
     body: createMockBodyReader(body),
-    async respond() {}
+    async respond() {},
   } as any;
 }
 
@@ -56,7 +56,7 @@ test(function requestSearch() {
   assertEquals(request.method, "GET");
   assertEquals(Array.from(request.searchParams.entries()), [
     ["bar", "baz"],
-    ["qat", "qux"]
+    ["qat", "qux"],
   ]);
 });
 
@@ -69,8 +69,8 @@ test(function serverRequestAvail() {
 test(function requestAcceptEncoding() {
   const request = new Request(
     createMockServerRequest("/", "", {
-      "Accept-Encoding": "gzip, compress;q=0.2, identity;q=0.5"
-    })
+      "Accept-Encoding": "gzip, compress;q=0.2, identity;q=0.5",
+    }),
   );
   assertEquals(request.acceptsEncodings("gzip", "identity"), "gzip");
 });
@@ -78,8 +78,8 @@ test(function requestAcceptEncoding() {
 test(function requestAccepts() {
   const request = new Request(
     createMockServerRequest("/", "", {
-      Accept: "application/json;q=0.2, text/html"
-    })
+      Accept: "application/json;q=0.2, text/html",
+    }),
   );
   assertEquals(request.accepts("application/json", "text/html"), "text/html");
 });
@@ -87,8 +87,8 @@ test(function requestAccepts() {
 test(function requestAcceptsNoProvided() {
   const request = new Request(
     createMockServerRequest("/", "", {
-      Accept: "application/json;q=0.2, text/html"
-    })
+      Accept: "application/json;q=0.2, text/html",
+    }),
   );
   assertEquals(request.accepts(), ["text/html", "application/json"]);
 });
@@ -100,7 +100,7 @@ test(function requestNoAccepts() {
 
 test(function requestNoAcceptsMatch() {
   const request = new Request(
-    createMockServerRequest("/", "", { Accept: "text/html" })
+    createMockServerRequest("/", "", { Accept: "text/html" }),
   );
   assertEquals(request.accepts("application/json"), undefined);
 });
@@ -108,20 +108,20 @@ test(function requestNoAcceptsMatch() {
 test(async function requestBodyJson() {
   const request = new Request(
     createMockServerRequest("/", `{"foo":"bar"}`, {
-      "Content-Type": "application/json"
-    })
+      "Content-Type": "application/json",
+    }),
   );
   assertEquals(await request.body(), {
     type: BodyType.JSON,
-    value: { foo: "bar" }
+    value: { foo: "bar" },
   });
 });
 
 test(async function requestBodyForm() {
   const request = new Request(
     createMockServerRequest("/", `foo=bar&bar=1&baz=qux+%2B+quux`, {
-      "Content-Type": "application/x-www-form-urlencoded"
-    })
+      "Content-Type": "application/x-www-form-urlencoded",
+    }),
   );
   const actual = await request.body();
   assertEquals(actual!.type, BodyType.Form);
@@ -129,7 +129,7 @@ test(async function requestBodyForm() {
     assertEquals(Array.from(actual.value.entries()), [
       ["foo", "bar"],
       ["bar", "1"],
-      ["baz", "qux + quux"]
+      ["baz", "qux + quux"],
     ]);
   } else {
     throw Error("Unexpected response");
@@ -139,12 +139,12 @@ test(async function requestBodyForm() {
 test(async function requestBodyText() {
   const request = new Request(
     createMockServerRequest("/", "hello world!", {
-      "Content-Type": "text/plain"
-    })
+      "Content-Type": "text/plain",
+    }),
   );
   assertEquals(await request.body(), {
     type: BodyType.Text,
-    value: "hello world!"
+    value: "hello world!",
   });
 });
 
@@ -152,15 +152,15 @@ test(async function noBodyResolvesUndefined() {
   const request = new Request(createMockServerRequest());
   assertEquals(await request.body(), {
     type: BodyType.Undefined,
-    value: undefined
+    value: undefined,
   });
 });
 
 test(async function unsupportedMediaTypeBody() {
   const request = new Request(
     createMockServerRequest("/", "blah", {
-      "Content-Type": "multipart/form-data"
-    })
+      "Content-Type": "multipart/form-data",
+    }),
   );
   await assertThrowsAsync(async () => {
     await request.body();

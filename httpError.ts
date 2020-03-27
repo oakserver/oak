@@ -76,7 +76,7 @@ export class HttpError extends Error {
 }
 
 function createHttpErrorConstructor<E extends typeof HttpError>(
-  status: ErrorStatus
+  status: ErrorStatus,
 ): E {
   const name = `${ErrorStatus[status]}Error`;
   const Ctor = class extends HttpError {
@@ -89,7 +89,7 @@ function createHttpErrorConstructor<E extends typeof HttpError>(
         configurable: true,
         enumerable: false,
         value: name,
-        writable: true
+        writable: true,
       });
     }
   };
@@ -109,7 +109,7 @@ for (const [key, value] of errorStatusMap) {
  */
 export function createHttpError(
   status: ErrorStatus = 500,
-  message?: string
+  message?: string,
 ): HttpError {
   return new httpErrors[ErrorStatus[status] as any](message);
 }

@@ -19,7 +19,7 @@ class MediaType {
     /** The subtype of the media type. */
     public subtype: string,
     /** The optional suffix of the media type. */
-    public suffix?: string
+    public suffix?: string,
   ) {}
 }
 

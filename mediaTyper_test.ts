@@ -24,7 +24,7 @@ test(function invalidType() {
       format({ type: "text/", subtype: "html" });
     },
     TypeError,
-    "Invalid type"
+    "Invalid type",
   );
 });
 
@@ -34,7 +34,7 @@ test(function invalidSubType() {
       format({ type: "text", subtype: "html/" });
     },
     TypeError,
-    "Invalid subtype"
+    "Invalid subtype",
   );
 });
 
@@ -44,7 +44,7 @@ test(function invalidSubType() {
       format({ type: "image", subtype: "svg", suffix: "xml\\" });
     },
     TypeError,
-    "Invalid suffix"
+    "Invalid suffix",
   );
 });
 
@@ -73,7 +73,7 @@ const invalidTypes = [
   "text/p£ain",
   "text/(plain)",
   "text/@plain",
-  "text/plain,wrong"
+  "text/plain,wrong",
 ];
 
 for (const type of invalidTypes) {
@@ -85,8 +85,8 @@ for (const type of invalidTypes) {
           parse(type);
         },
         TypeError,
-        "Invalid media type"
+        "Invalid media type",
       );
-    }
+    },
   });
 }

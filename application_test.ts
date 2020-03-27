@@ -32,12 +32,12 @@ class MockServer {
   }
 }
 
-const mockServe: typeof serve = function(addr: string | HTTPOptions): Server {
+const mockServe: typeof serve = function (addr: string | HTTPOptions): Server {
   addrStack.push(addr);
   return new MockServer() as Server;
 };
 
-const mockServeTLS: typeof serveTLS = function(options: HTTPSOptions): Server {
+const mockServeTLS: typeof serveTLS = function (options: HTTPSOptions): Server {
   httpsOptionsStack.push(options);
   return new MockServer() as Server;
 };
@@ -45,7 +45,7 @@ const mockServeTLS: typeof serveTLS = function(options: HTTPSOptions): Server {
 function createMockRequest(url = "https://example.com/"): ServerRequest {
   return {
     url,
-    async respond() {}
+    async respond() {},
   } as any;
 }
 
@@ -165,14 +165,14 @@ test(async function appListenTLS() {
   await app.listenTLS({
     port: 8000,
     certFile: "",
-    keyFile: ""
+    keyFile: "",
   });
   assertEquals(httpsOptionsStack, [
     {
       port: 8000,
       certFile: "",
-      keyFile: ""
-    }
+      keyFile: "",
+    },
   ]);
   teardown();
 });
@@ -182,7 +182,7 @@ test(async function appState() {
   const app = new Application<{ foo?: string }>(mockServe);
   app.state.foo = "bar";
   let called = false;
-  app.use(context => {
+  app.use((context) => {
     assertEquals(context.state, { foo: "bar" });
     assertStrictEq(app.state, context.state);
     called = true;

@@ -63,7 +63,7 @@ function parseEncoding(str: string, i: number): Specificity | undefined {
 function specify(
   encoding: string,
   spec: Specificity,
-  i: number = -1
+  i: number = -1,
 ): Specificity | undefined {
   if (!spec.encoding) {
     return;
@@ -79,7 +79,7 @@ function specify(
     i,
     o: spec.i,
     q: spec.q,
-    s
+    s,
   };
 }
 
@@ -103,7 +103,7 @@ function parseAcceptEncoding(accept: string): Specificity[] {
     parsedAccepts.push({
       encoding: "identity",
       q: minQuality,
-      i: accepts.length - 1
+      i: accepts.length - 1,
     });
   }
 
@@ -127,7 +127,7 @@ function isQuality(spec: Specificity) {
 function getEncodingPriority(
   encoding: string,
   accepted: Specificity[],
-  index: number
+  index: number,
 ): Specificity {
   let priority: Specificity = { o: -1, q: 0, s: 0, i: 0 };
 
@@ -151,7 +151,7 @@ function getEncodingPriority(
  * prioritized array of encodings. */
 export function preferredEncodings(
   accept: string,
-  provided?: string[]
+  provided?: string[],
 ): string[] {
   const accepts = parseAcceptEncoding(accept);
 
@@ -159,7 +159,7 @@ export function preferredEncodings(
     return accepts
       .filter(isQuality)
       .sort(compareSpecs)
-      .map(spec => spec.encoding!);
+      .map((spec) => spec.encoding!);
   }
 
   const priorities = provided.map((type, index) =>
@@ -169,5 +169,5 @@ export function preferredEncodings(
   return priorities
     .filter(isQuality)
     .sort(compareSpecs)
-    .map(priority => provided[priorities.indexOf(priority)]);
+    .map((priority) => provided[priorities.indexOf(priority)]);
 }

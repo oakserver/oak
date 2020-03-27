@@ -9,17 +9,17 @@ import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 
 function createMockApp<S extends object = { [key: string]: any }>(
-  state = {} as S
+  state = {} as S,
 ): Application<S> {
   return {
-    state
+    state,
   } as any;
 }
 
 function createMockContext<S extends object = { [key: string]: any }>(
   app: Application<S>,
   path = "/",
-  method = "GET"
+  method = "GET",
 ) {
   return ({
     app,
@@ -29,14 +29,14 @@ function createMockContext<S extends object = { [key: string]: any }>(
       path,
       search: undefined,
       searchParams: new URLSearchParams(),
-      url: path
+      url: path,
     },
     response: {
       status: Status.OK,
       body: undefined,
-      headers: new Headers()
+      headers: new Headers(),
     },
-    state: app.state
+    state: app.state,
   } as unknown) as Context<S>;
 }
 
@@ -46,7 +46,7 @@ function createMockNext() {
 
 function setup<S extends object = { [key: string]: any }>(
   path = "/",
-  method = "GET"
+  method = "GET",
 ): {
   app: Application<S>;
   context: Context<S>;
@@ -71,7 +71,7 @@ test(async function getSingleMatch() {
 
   const callStack: number[] = [];
   const router = new Router();
-  router.get("/", context => {
+  router.get("/", (context) => {
     assertStrictEq(context.router, router);
     assertStrictEq(context.app, app);
     callStack.push(1);
@@ -86,13 +86,13 @@ test(async function matchSingleParam() {
 
   const callStack: number[] = [];
   const router = new Router();
-  router.get("/", context => {
+  router.get("/", (context) => {
     callStack.push(1);
   });
-  router.get("/foo", context => {
+  router.get("/foo", (context) => {
     callStack.push(2);
   });
-  router.get<{ id: string }>("/foo/:id", context => {
+  router.get<{ id: string }>("/foo/:id", (context) => {
     callStack.push(3);
     assertEquals(context.params.id, "bar");
   });
@@ -106,7 +106,7 @@ test(async function matchWithNext() {
 
   const callStack: number[] = [];
   const router = new Router();
-  router.get("/", _context => {
+  router.get("/", (_context) => {
     callStack.push(1);
   });
   router.get("/foo", async (_context, next) => {

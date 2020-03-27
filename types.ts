@@ -40,10 +40,11 @@ export enum ErrorStatus {
   InsufficientStorage = 507, // RFC 4918, 11.5
   LoopDetected = 508, // RFC 5842, 7.2
   NotExtended = 510, // RFC 2774, 7
-  NetworkAuthenticationRequired = 511 // RFC 6585, 6
+  NetworkAuthenticationRequired = 511, // RFC 6585, 6
 }
 
-export type HTTPMethods = "HEAD"
+export type HTTPMethods =
+  | "HEAD"
   | "OPTIONS"
   | "GET"
   | "PUT"

@@ -15,13 +15,13 @@ function createMockContext<S extends object = { [key: string]: any }>() {
       path: "/",
       search: undefined,
       searchParams: new URLSearchParams(),
-      url: "/"
+      url: "/",
     },
     response: {
       status: Status.OK,
       body: undefined,
-      headers: new Headers()
-    }
+      headers: new Headers(),
+    },
   } as unknown) as Context<S>;
 }
 

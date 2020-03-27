@@ -54,7 +54,7 @@ export interface RouteParams {
 /** The context passed router middleware.  */
 export interface RouterContext<
   P extends RouteParams = RouteParams,
-  S extends object = { [key: string]: any }
+  S extends object = { [key: string]: any },
 > extends Context<S> {
   /** Any parameters parsed from the route when matched. */
   params: P;
@@ -65,7 +65,7 @@ export interface RouterContext<
 
 export interface RouterMiddleware<
   P extends RouteParams = RouteParams,
-  S extends object = { [key: string]: any }
+  S extends object = { [key: string]: any },
 > {
   (context: RouterContext<P, S>, next: () => Promise<void>): Promise<
     void
@@ -108,7 +108,7 @@ class Layer {
     public path: string,
     public methods: HTTPMethods[],
     middleware: RouterMiddleware | RouterMiddleware[],
-    public options: LayerOptions = {}
+    public options: LayerOptions = {},
   ) {
     this.name = options.name || null;
     this.stack = Array.isArray(middleware) ? middleware : [middleware];
@@ -166,7 +166,7 @@ export class Router {
   private _addRoute(
     path: string | string[],
     middleware: RouterMiddleware[],
-    ...methods: HTTPMethods[]
+    ...methods: HTTPMethods[],
   ): this {
     if (Array.isArray(path)) {
       for (const r of path) {
@@ -182,7 +182,7 @@ export class Router {
 
   private _match(
     path: string,
-    method: HTTPMethods
+    method: HTTPMethods,
   ): { routesMatched: Layer[]; matches: Layer[] } {
     const routesMatched: Layer[] = [];
     const matches: Layer[] = [];
@@ -205,7 +205,7 @@ export class Router {
       "OPTIONS",
       "PATCH",
       "POST",
-      "PUT"
+      "PUT",
     ];
     if (options.prefix) this._prefix = options.prefix;
   }
@@ -215,7 +215,7 @@ export class Router {
    */
   all<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P>[],
   ): this {
     return this._addRoute(
       route,
@@ -223,7 +223,7 @@ export class Router {
       "DELETE",
       "GET",
       "POST",
-      "PUT"
+      "PUT",
     );
   }
 
@@ -240,7 +240,7 @@ export class Router {
         context.response.status === Status.NotFound
       ) {
         const contextRoutesMatched = contextRouteMatches.get(
-          context as RouterContext
+          context as RouterContext,
         );
         if (contextRoutesMatched) {
           for (const layer of contextRoutesMatched) {
@@ -292,7 +292,7 @@ export class Router {
    */
   delete<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P>[],
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "DELETE");
   }
@@ -302,7 +302,7 @@ export class Router {
    */
   get<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P>[],
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "GET");
   }
@@ -312,7 +312,7 @@ export class Router {
    */
   head<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P>[],
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "HEAD");
   }
@@ -322,7 +322,7 @@ export class Router {
    */
   options<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P>[],
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "OPTIONS");
   }
@@ -332,7 +332,7 @@ export class Router {
    */
   patch<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P>[],
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "PATCH");
   }
@@ -342,7 +342,7 @@ export class Router {
    */
   post<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P>[],
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "POST");
   }
@@ -352,7 +352,7 @@ export class Router {
    */
   put<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P>[],
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "PUT");
   }
@@ -361,7 +361,7 @@ export class Router {
   routes(): Middleware {
     const dispatch = async (
       context: RouterContext,
-      next: () => Promise<void>
+      next: () => Promise<void>,
     ): Promise<void> => {
       const { path, method } = context.request;
       const { routesMatched, matches } = this._match(path, method);
@@ -371,7 +371,7 @@ export class Router {
         context,
         contextRoutesMatched
           ? [...contextRoutesMatched, ...routesMatched]
-          : routesMatched
+          : routesMatched,
       );
 
       context.router = this;

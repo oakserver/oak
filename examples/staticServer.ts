@@ -52,8 +52,8 @@ app.use(async (context, next) => {
   const rt = context.response.headers.get("X-Response-Time");
   console.log(
     `${green(context.request.method)} ${cyan(context.request.url)} - ${bold(
-      String(rt)
-    )}`
+      String(rt),
+    )}`,
   );
 });
 
@@ -66,10 +66,10 @@ app.use(async (context, next) => {
 });
 
 // Send static content
-app.use(async context => {
+app.use(async (context) => {
   await send(context, context.request.path, {
     root: `${Deno.cwd()}/examples/static`,
-    index: "index.html"
+    index: "index.html",
   });
 });
 

@@ -23,7 +23,7 @@ const books = new Map<string, Book>();
 books.set("1234", {
   id: "1234",
   title: "The Hound of the Baskervilles",
-  author: "Conan Doyle, Author"
+  author: "Conan Doyle, Author",
 });
 
 function notFound(context: Context) {
@@ -56,8 +56,8 @@ app.use(async (context, next) => {
   const rt = context.response.headers.get("X-Response-Time");
   console.log(
     `${green(context.request.method)} ${cyan(context.request.url)} - ${bold(
-      String(rt)
-    )}`
+      String(rt),
+    )}`,
   );
 });
 

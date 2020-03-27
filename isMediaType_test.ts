@@ -55,11 +55,11 @@ test(function firstTypeOrFalse() {
   assertEquals(isMediaType("image/png", ["image/*", "text/*"]), "image/png");
   assertEquals(
     isMediaType("image/png", ["image/*", "image/png"]),
-    "image/png"
+    "image/png",
   );
   assertEquals(
     isMediaType("image/png", ["image/png", "image/*"]),
-    "image/png"
+    "image/png",
   );
 
   assertStrictEq(isMediaType("image/png", ["jpeg"]), false);
@@ -67,30 +67,30 @@ test(function firstTypeOrFalse() {
   assertStrictEq(isMediaType("image/png", ["text/*", "application/*"]), false);
   assertStrictEq(
     isMediaType("image/png", ["text/html", "text/plain", "application/json"]),
-    false
+    false,
   );
 });
 
 test(function matchSuffix() {
   assertEquals(
     isMediaType("application/vnd+json", ["+json"]),
-    "application/vnd+json"
+    "application/vnd+json",
   );
   assertEquals(
     isMediaType("application/vnd+json", ["application/vnd+json"]),
-    "application/vnd+json"
+    "application/vnd+json",
   );
   assertEquals(
     isMediaType("application/vnd+json", ["application/*+json"]),
-    "application/vnd+json"
+    "application/vnd+json",
   );
   assertEquals(
     isMediaType("application/vnd+json", ["*/vnd+json"]),
-    "application/vnd+json"
+    "application/vnd+json",
   );
   assertStrictEq(
     isMediaType("application/vnd+json", ["application/json"]),
-    false
+    false,
   );
   assertStrictEq(isMediaType("application/vnd+json", ["text/*+json"]), false);
 });
@@ -101,7 +101,7 @@ test(function starStarMatchesContentType() {
   assertEquals(isMediaType("application/json", ["*/*"]), "application/json");
   assertEquals(
     isMediaType("application/vnd+json", ["*/*"]),
-    "application/vnd+json"
+    "application/vnd+json",
   );
 });
 
@@ -112,22 +112,22 @@ test(function starStarInvalidMTReturnsFalse() {
 test(function matchUrlEncoded() {
   assertEquals(
     isMediaType("application/x-www-form-urlencoded", ["urlencoded"]),
-    "urlencoded"
+    "urlencoded",
   );
   assertEquals(
     isMediaType("application/x-www-form-urlencoded", ["json", "urlencoded"]),
-    "urlencoded"
+    "urlencoded",
   );
   assertEquals(
     isMediaType("application/x-www-form-urlencoded", ["urlencoded", "json"]),
-    "urlencoded"
+    "urlencoded",
   );
 });
 
 test(function matchMultipartStar() {
   assertEquals(
     isMediaType("multipart/form-data", ["multipart/*"]),
-    "multipart/form-data"
+    "multipart/form-data",
   );
 });
 
