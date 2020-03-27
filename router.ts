@@ -166,7 +166,7 @@ export class Router {
   private _addRoute(
     path: string | string[],
     middleware: RouterMiddleware[],
-    ...methods: HTTPMethods[],
+    ...methods: HTTPMethods[]
   ): this {
     if (Array.isArray(path)) {
       for (const r of path) {
@@ -215,7 +215,7 @@ export class Router {
    */
   all<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[],
+    ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(
       route,
@@ -292,7 +292,7 @@ export class Router {
    */
   delete<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[],
+    ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "DELETE");
   }
@@ -302,7 +302,7 @@ export class Router {
    */
   get<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[],
+    ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "GET");
   }
@@ -312,7 +312,7 @@ export class Router {
    */
   head<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[],
+    ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "HEAD");
   }
@@ -322,7 +322,7 @@ export class Router {
    */
   options<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[],
+    ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "OPTIONS");
   }
@@ -332,7 +332,7 @@ export class Router {
    */
   patch<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[],
+    ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "PATCH");
   }
@@ -342,7 +342,7 @@ export class Router {
    */
   post<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[],
+    ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "POST");
   }
@@ -352,7 +352,7 @@ export class Router {
    */
   put<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[],
+    ...middleware: RouterMiddleware<P>[]
   ): this {
     return this._addRoute(route, middleware as RouterMiddleware[], "PUT");
   }

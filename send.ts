@@ -151,7 +151,7 @@ export async function send(
     throw createHttpError(500, err.message);
   }
 
-  response.headers.set("Content-Length", String(stats.len));
+  response.headers.set("Content-Length", String(stats.size));
   if (!response.headers.has("Last-Modified") && stats.modified) {
     response.headers.set("Last-Modified", toUTCString(stats.modified));
   }
