@@ -85,7 +85,7 @@ export async function send(
     hidden = false,
     immutable = false,
     maxage = 0,
-    root
+    root,
   } = options;
   const trailingSlash = path[path.length - 1] === "/";
   path = decodeComponent(path.substr(parse(path).root.length));
