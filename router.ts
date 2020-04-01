@@ -54,18 +54,18 @@ export interface RouteParams {
 /** The context passed router middleware.  */
 export interface RouterContext<
   P extends RouteParams = RouteParams,
-  S extends object = { [key: string]: any },
+  S extends {} = { [key: string]: any; }
 > extends Context<S> {
   /** Any parameters parsed from the route when matched. */
   params: P;
 
   /** A reference to the router instance. */
-  router: Router;
+  router: Router<S>;
 }
 
 export interface RouterMiddleware<
   P extends RouteParams = RouteParams,
-  S extends object = { [key: string]: any },
+  S extends {} = { [key: string]: any }
 > {
   (context: RouterContext<P, S>, next: () => Promise<void>): Promise<
     void
@@ -98,17 +98,17 @@ interface LayerOptions {
   strict?: boolean;
 }
 
-class Layer {
+class Layer<P extends RouteParams = RouteParams, S extends {} = { [key: string]: any; }> {
   name: string | null;
   paramNames: Key[] = [];
   regexp: RegExp;
-  stack: RouterMiddleware[];
+  stack: RouterMiddleware<P, S>[];
 
   constructor(
     public path: string,
     public methods: HTTPMethods[],
-    middleware: RouterMiddleware | RouterMiddleware[],
-    public options: LayerOptions = {},
+    middleware: RouterMiddleware<P, S> | RouterMiddleware<P, S>[],
+    public options: LayerOptions = {}
   ) {
     this.name = options.name || null;
     this.stack = Array.isArray(middleware) ? middleware : [middleware];
@@ -153,19 +153,18 @@ class Layer {
   }
 }
 
-const contextRouteMatches = new WeakMap<RouterContext, Layer[]>();
-
 /** A class that routes requests to middleware based on the method and the
  * path name of the request.
  */
-export class Router {
+export class Router<S extends {} = { [key: string]: any; }> {
   private _methods: HTTPMethods[];
-  private _stack: Layer[] = [];
+  private _stack: Layer<RouteParams, S>[] = [];
   private _prefix = "";
+  private _contextRouteMatches = new WeakMap<RouterContext<RouteParams, S>, Layer<RouteParams, S>[]>();
 
-  private _addRoute(
+  private _addRoute<P extends RouteParams = RouteParams>(
     path: string | string[],
-    middleware: RouterMiddleware[],
+    middleware: RouterMiddleware<P, S>[],
     ...methods: HTTPMethods[]
   ): this {
     if (Array.isArray(path)) {
@@ -174,7 +173,7 @@ export class Router {
       }
       return this;
     }
-    const layer = new Layer(path, methods, middleware);
+    const layer = new Layer<P, S>(path, methods, middleware);
     layer.setPrefix(this._prefix);
     this._stack.push(layer);
     return this;
@@ -182,10 +181,10 @@ export class Router {
 
   private _match(
     path: string,
-    method: HTTPMethods,
-  ): { routesMatched: Layer[]; matches: Layer[] } {
-    const routesMatched: Layer[] = [];
-    const matches: Layer[] = [];
+    method: HTTPMethods
+  ): { routesMatched: Layer<RouteParams, S>[]; matches: Layer<RouteParams, S>[] } {
+    const routesMatched: Layer<RouteParams, S>[] = [];
+    const matches: Layer<RouteParams, S>[] = [];
     for (const layer of this._stack) {
       if (layer.matches(path)) {
         routesMatched.push(layer);
@@ -215,11 +214,11 @@ export class Router {
    */
   all<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P, S>[]
   ): this {
     return this._addRoute(
       route,
-      middleware as RouterMiddleware[],
+      middleware,
       "DELETE",
       "GET",
       "POST",
@@ -231,6 +230,7 @@ export class Router {
    * allowed methods for the defined routes.
    */
   allowedMethods(options: AllowedMethodsOptions = {}): Middleware {
+    const contextRouteMatches = this._contextRouteMatches;
     const implemented = this._methods;
     return async function allowedMethods(context, next) {
       await next();
@@ -240,7 +240,7 @@ export class Router {
         context.response.status === Status.NotFound
       ) {
         const contextRoutesMatched = contextRouteMatches.get(
-          context as RouterContext,
+          context as RouterContext<RouteParams, S>
         );
         if (contextRoutesMatched) {
           for (const layer of contextRoutesMatched) {
@@ -292,9 +292,9 @@ export class Router {
    */
   delete<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P, S>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "DELETE");
+    return this._addRoute(route, middleware, "DELETE");
   }
 
   /** Register middleware for the specified routes when the `GET` method is
@@ -302,9 +302,9 @@ export class Router {
    */
   get<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P, S>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "GET");
+    return this._addRoute(route, middleware, "GET");
   }
 
   /** Register middleware for the specified routes when the `HEAD` method is
@@ -312,9 +312,9 @@ export class Router {
    */
   head<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P, S>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "HEAD");
+    return this._addRoute(route, middleware, "HEAD");
   }
 
   /** Register middleware for the specified routes when the `OPTIONS` method is
@@ -322,9 +322,9 @@ export class Router {
    */
   options<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P, S>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "OPTIONS");
+    return this._addRoute(route, middleware, "OPTIONS");
   }
 
   /** Register middleware for the specified routes when the `PATCH` method is
@@ -332,9 +332,9 @@ export class Router {
    */
   patch<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P, S>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "PATCH");
+    return this._addRoute(route, middleware, "PATCH");
   }
 
   /** Register middleware for the specified routes when the `POST` method is
@@ -342,9 +342,9 @@ export class Router {
    */
   post<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P, S>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "POST");
+    return this._addRoute(route, middleware, "POST");
   }
 
   /** Register middleware for the specified routes when the `PUT` method is
@@ -352,22 +352,22 @@ export class Router {
    */
   put<P extends RouteParams = RouteParams>(
     route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
+    ...middleware: RouterMiddleware<P, S>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "PUT");
+    return this._addRoute(route, middleware, "PUT");
   }
 
   /** Return middleware that represents all the currently registered routes. */
-  routes(): Middleware {
+  routes(): Middleware<S> {
     const dispatch = async (
-      context: RouterContext,
-      next: () => Promise<void>,
+      context: RouterContext<RouteParams, S>,
+      next: () => Promise<void>
     ): Promise<void> => {
       const { path, method } = context.request;
       const { routesMatched, matches } = this._match(path, method);
 
-      const contextRoutesMatched = contextRouteMatches.get(context);
-      contextRouteMatches.set(
+      const contextRoutesMatched = this._contextRouteMatches.get(context);
+      this._contextRouteMatches.set(
         context,
         contextRoutesMatched
           ? [...contextRoutesMatched, ...routesMatched]
@@ -381,14 +381,14 @@ export class Router {
       }
 
       const chain = matches.reduce((prev, layer) => {
-        prev.push((context: RouterContext, next: () => Promise<void>) => {
+        prev.push((context: RouterContext<RouteParams, S>, next: () => Promise<void>) => {
           const captures = layer.captures(path);
           context.params = layer.params(captures, context.params);
           return next();
         });
         return [...prev, ...layer.stack];
-      }, [] as RouterMiddleware[]);
-      return compose(chain)(context as RouterContext);
+      }, [] as RouterMiddleware<RouteParams, S>[]);
+      return compose(chain)(context);
     };
     return dispatch as Middleware;
   }
