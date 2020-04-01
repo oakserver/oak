@@ -20,7 +20,7 @@ export {
   Cookie,
   setCookie,
   getCookies,
-  delCookie,
+  delCookie
 } from "https://deno.land/std@v0.38.0/http/cookie.ts";
 export {
   basename,
