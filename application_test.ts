@@ -45,6 +45,7 @@ const mockServeTLS: typeof serveTLS = function (options: HTTPSOptions): Server {
 function createMockRequest(url = "https://example.com/"): ServerRequest {
   return {
     url,
+    headers: new Headers(),
     async respond() {},
   } as any;
 }
