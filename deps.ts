@@ -28,4 +28,4 @@ export {
 export {
   contentType,
   lookup
-} from "https://deno.land/std@v0.38.0/media_types/mod.ts";
+} from "https://deno.land/x/media_types@v1.0.0/mod.ts";
