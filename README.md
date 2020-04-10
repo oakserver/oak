@@ -228,7 +228,7 @@ router
     context.response.body = Array.from(books.values());
   })
   .get("/book/:id", context => {
-    if (context.params && books.has(context.params.id)) {
+    if (context.params && context.params.id && books.has(context.params.id)) {
       context.response.body = books.get(context.params.id);
     }
   });
