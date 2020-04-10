@@ -1,4 +1,4 @@
-// Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
 import { isAbsolute, join, normalize, resolve, sep } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
