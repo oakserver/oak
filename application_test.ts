@@ -9,7 +9,7 @@ import {
   serve,
   serveTLS,
   Server,
-  ServerRequest
+  ServerRequest,
 } from "./deps.ts";
 
 let serverRequestStack: ServerRequest[] = [];

@@ -58,7 +58,7 @@ function isHidden(root: string, path: string) {
 }
 
 async function exists(path: string): Promise<boolean> {
-  return Deno.stat(path).then(x => x.isFile).catch(() => false);
+  return Deno.stat(path).then((x) => x.isFile).catch(() => false);
 }
 
 function toUTCString(value: number): string {

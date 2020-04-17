@@ -9,11 +9,11 @@ export {
   serve,
   Server,
   ServerRequest,
-  serveTLS
+  serveTLS,
 } from "https://deno.land/std@v0.41.0/http/server.ts";
 export {
   Status,
-  STATUS_TEXT
+  STATUS_TEXT,
 } from "https://deno.land/std@v0.41.0/http/http_status.ts";
 export {
   basename,
@@ -23,9 +23,9 @@ export {
   normalize,
   parse,
   resolve,
-  sep
+  sep,
 } from "https://deno.land/std@v0.41.0/path/mod.ts";
 export {
   contentType,
-  lookup
+  lookup,
 } from "https://deno.land/x/media_types@v1.0.0/mod.ts";

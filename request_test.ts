@@ -4,7 +4,7 @@ import {
   test,
   assertEquals,
   assertStrictEq,
-  assertThrowsAsync
+  assertThrowsAsync,
 } from "./test_deps.ts";
 import { ServerRequest } from "./deps.ts";
 import httpErrors from "./httpError.ts";

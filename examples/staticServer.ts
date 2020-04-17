@@ -3,7 +3,7 @@ import {
   cyan,
   bold,
   yellow,
-  red
+  red,
 } from "https://deno.land/std@v0.39.0/fmt/colors.ts";
 
 import { Application, HttpError, send, Status } from "../mod.ts";

@@ -4,7 +4,7 @@ import {
   assertEquals,
   assertStrictEq,
   assertThrows,
-  test
+  test,
 } from "./test_deps.ts";
 import { format, parse } from "./mediaTyper.ts";
 
