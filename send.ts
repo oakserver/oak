@@ -59,7 +59,7 @@ function isHidden(root: string, path: string) {
 
 async function exists(path: string): Promise<boolean> {
   try {
-    return (await Deno.stat(path)).isFile();
+    return Deno.stat(path).then(x => x.isFile);
   } catch {
     return false;
   }
@@ -136,7 +136,7 @@ export async function send(
   try {
     stats = await Deno.stat(path);
 
-    if (stats.isDirectory()) {
+    if (stats.isDirectory) {
       if (format && index) {
         path += `/${index}`;
         stats = await Deno.stat(path);
