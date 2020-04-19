@@ -10,11 +10,11 @@ export {
   Server,
   ServerRequest,
   serveTLS
-} from "https://deno.land/std@v0.39.0/http/server.ts";
+} from "https://deno.land/std@v0.41.0/http/server.ts";
 export {
   Status,
   STATUS_TEXT
-} from "https://deno.land/std@v0.39.0/http/http_status.ts";
+} from "https://deno.land/std@v0.41.0/http/http_status.ts";
 export {
   basename,
   extname,
@@ -24,7 +24,7 @@ export {
   parse,
   resolve,
   sep
-} from "https://deno.land/std@v0.39.0/path/mod.ts";
+} from "https://deno.land/std@v0.41.0/path/mod.ts";
 export {
   contentType,
   lookup
