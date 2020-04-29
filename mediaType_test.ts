@@ -3,34 +3,34 @@
 import { test, assertEquals } from "./test_deps.ts";
 import { preferredMediaTypes } from "./mediaType.ts";
 
-test(function testAcceptUndefined() {
+test("testAcceptUndefined", function () {
   assertEquals(preferredMediaTypes(), ["*/*"]);
 });
 
-test(function testAcceptStarStar() {
+test("testAcceptStarStar", function () {
   assertEquals(preferredMediaTypes("*/*"), ["*/*"]);
 });
 
-test(function testAcceptMediaType() {
+test("testAcceptMediaType", function () {
   assertEquals(preferredMediaTypes("application/json"), ["application/json"]);
 });
 
-test(function testAcceptMediaTypeQ0() {
+test("testAcceptMediaTypeQ0", function () {
   assertEquals(preferredMediaTypes("application/json;q=0"), []);
 });
 
-test(function testAcceptMediaTypeLowQ() {
+test("testAcceptMediaTypeLowQ", function () {
   assertEquals(preferredMediaTypes("application/json;q=0.2, text/html"), [
     "text/html",
     "application/json",
   ]);
 });
 
-test(function testAcceptTextStar() {
+test("testAcceptTextStar", function () {
   assertEquals(preferredMediaTypes("text/*"), ["text/*"]);
 });
 
-test(function testAcceptComplexQ() {
+test("testAcceptComplexQ", function () {
   assertEquals(
     preferredMediaTypes(
       "text/plain, application/json;q=0.5, text/html, */*;q=0.1",
@@ -39,7 +39,7 @@ test(function testAcceptComplexQ() {
   );
 });
 
-test(function testAcceptSuperLong() {
+test("testAcceptSuperLong", function () {
   assertEquals(
     preferredMediaTypes(
       "text/plain, application/json;q=0.5, text/html, text/xml, text/yaml, text/javascript, text/csv, text/css, text/rtf, text/markdown, application/octet-stream;q=0.2, */*;q=0.1",
@@ -61,7 +61,7 @@ test(function testAcceptSuperLong() {
   );
 });
 
-test(function testProvidedAcceptUndefined() {
+test("testProvidedAcceptUndefined", function () {
   assertEquals(preferredMediaTypes(undefined, ["text/html"]), ["text/html"]);
   assertEquals(
     preferredMediaTypes(undefined, ["text/html", "application/json"]),
@@ -73,7 +73,7 @@ test(function testProvidedAcceptUndefined() {
   );
 });
 
-test(function testProvidedAcceptStarStar() {
+test("testProvidedAcceptStarStar", function () {
   assertEquals(preferredMediaTypes("*/*", ["text/html"]), ["text/html"]);
   assertEquals(preferredMediaTypes("*/*", ["text/html", "application/json"]), [
     "text/html",
@@ -85,13 +85,13 @@ test(function testProvidedAcceptStarStar() {
   ]);
 });
 
-test(function testCaseInsensitive() {
+test("testCaseInsensitive", function () {
   assertEquals(preferredMediaTypes("application/json", ["application/JSON"]), [
     "application/JSON",
   ]);
 });
 
-test(function testOnlyReturnsValue() {
+test("testOnlyReturnsValue", function () {
   assertEquals(preferredMediaTypes("application/json", ["text/html"]), []);
   assertEquals(
     preferredMediaTypes("application/json", ["text/html", "application/json"]),
@@ -99,14 +99,14 @@ test(function testOnlyReturnsValue() {
   );
 });
 
-test(function testProvidedButQ0() {
+test("testProvidedButQ0", function () {
   assertEquals(
     preferredMediaTypes("application/json;q=0", ["application/json"]),
     [],
   );
 });
 
-test(function testProvidedAcceptsLowQ() {
+test("testProvidedAcceptsLowQ", function () {
   assertEquals(
     preferredMediaTypes("application/json;q=0.2, text/html", [
       "application/json",
@@ -129,7 +129,7 @@ test(function testProvidedAcceptsLowQ() {
   );
 });
 
-test(function testTextStar() {
+test("testTextStar", function () {
   assertEquals(preferredMediaTypes("text/*", ["application/json"]), []);
   assertEquals(
     preferredMediaTypes("text/*", ["application/json", "text/html"]),
@@ -141,7 +141,7 @@ test(function testTextStar() {
   );
 });
 
-test(function testProvidedPreferredOrder() {
+test("testProvidedPreferredOrder", function () {
   assertEquals(
     preferredMediaTypes(
       "text/plain, application/json;q=0.5, text/html, */*;q=0.1",
@@ -165,7 +165,7 @@ test(function testProvidedPreferredOrder() {
   );
 });
 
-test(function testClientPreferredOrder() {
+test("testClientPreferredOrder", function () {
   assertEquals(
     preferredMediaTypes(
       "text/plain, application/json;q=0.5, text/html, text/xml, text/yaml, text/javascript, text/csv, text/css, text/rtf, text/markdown, application/octet-stream;q=0.2, */*;q=0.1",
