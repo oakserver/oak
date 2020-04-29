@@ -5,8 +5,6 @@ import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { Router, RouterContext, RouteParams } from "./router.ts";
-import { Request } from "./request.ts";
-import { Response } from "./response.ts";
 
 function createMockApp<S extends object = { [key: string]: any }>(
   state = {} as S,
@@ -58,7 +56,7 @@ function setup<S extends object = { [key: string]: any }>(
   return { app, context, next };
 }
 
-test(async function emptyRoutes() {
+test("emptyRoutes", async function () {
   const { context, next } = setup();
 
   const router = new Router();
@@ -66,7 +64,7 @@ test(async function emptyRoutes() {
   assertEquals(await mw(context, next), undefined);
 });
 
-test(async function getSingleMatch() {
+test("getSingleMatch", async function () {
   const { app, context, next } = setup("/", "GET");
 
   const callStack: number[] = [];
@@ -81,7 +79,7 @@ test(async function getSingleMatch() {
   assertEquals(callStack, [1]);
 });
 
-test(async function matchSingleParam() {
+test("matchSingleParam", async function () {
   const { context, next } = setup("/foo/bar", "GET");
 
   const callStack: number[] = [];
@@ -101,7 +99,7 @@ test(async function matchSingleParam() {
   assertEquals(callStack, [3]);
 });
 
-test(async function matchWithNext() {
+test("matchWithNext", async function () {
   const { context, next } = setup("/foo", "GET");
 
   const callStack: number[] = [];
@@ -124,7 +122,7 @@ test(async function matchWithNext() {
   assertEquals(callStack, [2, 3]);
 });
 
-test(async function matchDelete() {
+test("matchDelete", async function () {
   const { context, next } = setup("/", "DELETE");
 
   const callStack: number[] = [];
@@ -159,7 +157,7 @@ test(async function matchDelete() {
   assertEquals(callStack, [0, 1]);
 });
 
-test(async function matchGet() {
+test("matchGet", async function () {
   const { context, next } = setup("/", "GET");
 
   const callStack: number[] = [];
@@ -194,7 +192,7 @@ test(async function matchGet() {
   assertEquals(callStack, [0, 2]);
 });
 
-test(async function matchHead() {
+test("matchHead", async function () {
   const { context, next } = setup("/", "HEAD");
 
   const callStack: number[] = [];
@@ -229,7 +227,7 @@ test(async function matchHead() {
   assertEquals(callStack, [0, 3]);
 });
 
-test(async function matchOptions() {
+test("matchOptions", async function () {
   const { context, next } = setup("/", "OPTIONS");
 
   const callStack: number[] = [];
@@ -264,7 +262,7 @@ test(async function matchOptions() {
   assertEquals(callStack, [4]);
 });
 
-test(async function matchPatch() {
+test("matchPatch", async function () {
   const { context, next } = setup("/", "PATCH");
 
   const callStack: number[] = [];
@@ -299,7 +297,7 @@ test(async function matchPatch() {
   assertEquals(callStack, [5]);
 });
 
-test(async function matchPost() {
+test("matchPost", async function () {
   const { context, next } = setup("/", "POST");
 
   const callStack: number[] = [];
@@ -334,7 +332,7 @@ test(async function matchPost() {
   assertEquals(callStack, [0, 6]);
 });
 
-test(async function matchPut() {
+test("matchPut", async function () {
   const { context, next } = setup("/", "PUT");
 
   const callStack: number[] = [];
@@ -369,7 +367,7 @@ test(async function matchPut() {
   assertEquals(callStack, [0, 7]);
 });
 
-test(async function matchPrefix() {
+test("matchPrefix", async function () {
   const { context, next } = setup("/route1/action1", "GET");
   const callStack: number[] = [];
   const router = new Router({ prefix: "/route1" });
