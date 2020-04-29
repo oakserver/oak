@@ -1,37 +1,37 @@
 // Copyright 2018-2019 the oak authors. All rights reserved. MIT license.
 
-import { test, assert, assertEquals, assertStrictEq } from "./test_deps.ts";
+import { test, assertEquals, assertStrictEq } from "./test_deps.ts";
 import { isMediaType } from "./isMediaType.ts";
 
-test(function shouldIgnoreParams() {
+test("shouldIgnoreParams", function () {
   const actual = isMediaType("text/html; charset=utf-8", ["text/*"]);
   assertEquals(actual, "text/html");
 });
 
-test(function shouldIgnoreParamsLWS() {
+test("shouldIgnoreParamsLWS", function () {
   const actual = isMediaType("text/html ; charset=utf-8", ["text/*"]);
   assertEquals(actual, "text/html");
 });
 
-test(function shouldIgnoreCasing() {
+test("shouldIgnoreCasing", function () {
   const actual = isMediaType("text/HTML", ["text/*"]);
   assertEquals(actual, "text/html");
 });
 
-test(function shouldFailWithInvalidType() {
+test("shouldFailWithInvalidType", function () {
   const actual = isMediaType("text/html**", ["text/*"]);
   assertEquals(actual, false);
 });
 
-test(function returnsFalseWithInvalidTypes() {
+test("returnsFalseWithInvalidTypes", function () {
   assertEquals(isMediaType("text/html", ["text/html/"]), false);
 });
 
-test(function noTypesGiven() {
+test("noTypesGiven", function () {
   assertEquals(isMediaType("image/png", []), "image/png");
 });
 
-test(function typeOrFalse() {
+test("typeOrFalse", function () {
   assertEquals(isMediaType("image/png", ["png"]), "png");
   assertEquals(isMediaType("image/png", [".png"]), ".png");
   assertEquals(isMediaType("image/png", ["image/png"]), "image/png");
@@ -48,7 +48,7 @@ test(function typeOrFalse() {
   assertEquals(isMediaType("image/png", ["something/bogus*"]), false);
 });
 
-test(function firstTypeOrFalse() {
+test("firstTypeOrFalse", function () {
   assertEquals(isMediaType("image/png", ["png"]), "png");
   assertEquals(isMediaType("image/png", [".png"]), ".png");
   assertEquals(isMediaType("image/png", ["text/*", "image/*"]), "image/png");
@@ -71,7 +71,7 @@ test(function firstTypeOrFalse() {
   );
 });
 
-test(function matchSuffix() {
+test("matchSuffix", function () {
   assertEquals(
     isMediaType("application/vnd+json", ["+json"]),
     "application/vnd+json",
@@ -95,7 +95,7 @@ test(function matchSuffix() {
   assertStrictEq(isMediaType("application/vnd+json", ["text/*+json"]), false);
 });
 
-test(function starStarMatchesContentType() {
+test("starStarMatchesContentType", function () {
   assertEquals(isMediaType("text/html", ["*/*"]), "text/html");
   assertEquals(isMediaType("text/xml", ["*/*"]), "text/xml");
   assertEquals(isMediaType("application/json", ["*/*"]), "application/json");
@@ -105,11 +105,11 @@ test(function starStarMatchesContentType() {
   );
 });
 
-test(function starStarInvalidMTReturnsFalse() {
+test("starStarInvalidMTReturnsFalse", function () {
   assertStrictEq(isMediaType("bogus", ["*/*"]), false);
 });
 
-test(function matchUrlEncoded() {
+test("matchUrlEncoded", function () {
   assertEquals(
     isMediaType("application/x-www-form-urlencoded", ["urlencoded"]),
     "urlencoded",
@@ -124,13 +124,13 @@ test(function matchUrlEncoded() {
   );
 });
 
-test(function matchMultipartStar() {
+test("matchMultipartStar", function () {
   assertEquals(
     isMediaType("multipart/form-data", ["multipart/*"]),
     "multipart/form-data",
   );
 });
 
-test(function matchMultipart() {
+test("matchMultipart", function () {
   assertEquals(isMediaType("multipart/form-data", ["multipart"]), "multipart");
 });
