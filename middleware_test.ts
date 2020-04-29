@@ -4,8 +4,6 @@ import { test, assertEquals, assertStrictEq } from "./test_deps.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { compose, Middleware } from "./middleware.ts";
-import { Request } from "./request.ts";
-import { Response } from "./response.ts";
 
 function createMockContext<S extends object = { [key: string]: any }>() {
   return ({
@@ -25,7 +23,7 @@ function createMockContext<S extends object = { [key: string]: any }>() {
   } as unknown) as Context<S>;
 }
 
-test(async function testCompose() {
+test("testCompose", async function () {
   const callStack: number[] = [];
   const mockContext = createMockContext();
   const mw1: Middleware = async (context, next) => {
