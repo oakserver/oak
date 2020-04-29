@@ -3,7 +3,7 @@
 import { assert, assertEquals, test } from "./test_deps.ts";
 import * as mod from "./mod.ts";
 
-test(function publicApi() {
+test("publicApi", function () {
   assert(mod != null);
   assertEquals(typeof mod.Application, "function");
   assertEquals(typeof mod.Context, "function");
