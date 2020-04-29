@@ -5,7 +5,7 @@ import { Response } from "./response.ts";
 
 const decoder = new TextDecoder();
 
-test(function emptyResponse() {
+test("emptyResponse", function () {
   const response = new Response();
   const serverResponse = response.toServerResponse();
   assertEquals(serverResponse.body, undefined);
@@ -14,7 +14,7 @@ test(function emptyResponse() {
   assertEquals(serverResponse.headers!.get("Content-Length"), "0");
 });
 
-test(function statusSet() {
+test("statusSet", function () {
   const response = new Response();
   response.status = 302;
   const serverResponse = response.toServerResponse();
@@ -24,7 +24,7 @@ test(function statusSet() {
   assertEquals(serverResponse.headers!.get("Content-Length"), "0");
 });
 
-test(function bodyText() {
+test("bodyText", function () {
   const response = new Response();
   response.body = "Hello world!";
   const serverResponse = response.toServerResponse();
@@ -37,7 +37,7 @@ test(function bodyText() {
   assertEquals(Array.from(serverResponse.headers!.entries()).length, 1);
 });
 
-test(function bodyHtml() {
+test("bodyHtml", function () {
   const response = new Response();
   response.body = "<!DOCTYPE html><html><body>Hello world!</body></html>";
   const serverResponse = response.toServerResponse();
@@ -53,7 +53,7 @@ test(function bodyHtml() {
   assertEquals(Array.from(serverResponse.headers!.entries()).length, 1);
 });
 
-test(function bodyJson() {
+test("bodyJson", function () {
   const response = new Response();
   response.body = { foo: "bar" };
   const serverResponse = response.toServerResponse();
@@ -66,7 +66,7 @@ test(function bodyJson() {
   assertEquals(Array.from(serverResponse.headers!.entries()).length, 1);
 });
 
-test(function bodySymbol() {
+test("bodySymbol", function () {
   const response = new Response();
   response.body = Symbol("foo");
   const serverResponse = response.toServerResponse();
@@ -79,7 +79,7 @@ test(function bodySymbol() {
   assertEquals(Array.from(serverResponse.headers!.entries()).length, 1);
 });
 
-test(function bodyUint8Array() {
+test("bodyUint8Array", function () {
   const response = new Response();
   response.body = new TextEncoder().encode("Hello world!");
   const serverResponse = response.toServerResponse();
@@ -88,7 +88,7 @@ test(function bodyUint8Array() {
   assertEquals(Array.from(serverResponse.headers!.entries()).length, 0);
 });
 
-test(function typeDoesNotOverwrite() {
+test("typeDoesNotOverwrite", function () {
   const response = new Response();
   response.type = "js";
   response.body = "console.log('hello world');";
@@ -105,7 +105,7 @@ test(function typeDoesNotOverwrite() {
   assertEquals(Array.from(serverResponse.headers!.entries()).length, 1);
 });
 
-test(function contentTypeDoesNotOverwrite() {
+test("contentTypeDoesNotOverwrite", function () {
   const response = new Response();
   response.type = "js";
   response.body = "console.log('hello world');";
@@ -120,7 +120,7 @@ test(function contentTypeDoesNotOverwrite() {
   assertEquals(Array.from(serverResponse.headers!.entries()).length, 1);
 });
 
-test(function contentLengthSetsTo0() {
+test("contentLengthSetsTo0", function () {
   const response = new Response();
   const serverResponse = response.toServerResponse();
   assertEquals(serverResponse.headers!.get("Content-Length"), "0");
