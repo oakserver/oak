@@ -4,28 +4,28 @@ import { assertEquals, assertThrows, test } from "./test_deps.ts";
 import httpErrors from "./httpError.ts";
 import { decodeComponent, resolvePath } from "./util.ts";
 
-test(function testDecodeComponent() {
+test("testDecodeComponent", function () {
   // with decodeURIComponent, this would throw:
   assertEquals(decodeComponent("%"), "%");
 });
 
-test(function testResolvePath() {
+test("testResolvePath", function () {
   assertEquals(resolvePath("./foo/bar"), `${Deno.cwd()}/foo/bar`);
 });
 
-test(function testResolvePathOutsideOfRoot() {
+test("testResolvePathOutsideOfRoot", function () {
   assertThrows(() => {
     resolvePath("../foo/bar");
   }, httpErrors.Forbidden);
 });
 
-test(function testResolvePathOutsideOfRootDevious() {
+test("testResolvePathOutsideOfRootDevious", function () {
   assertThrows(() => {
     resolvePath("foo/../../bar");
   }, httpErrors.Forbidden);
 });
 
-test(function testResolvePathAbsolute() {
+test("testResolvePathAbsolute", function () {
   assertThrows(
     () => {
       resolvePath("/dev/null");
@@ -35,7 +35,7 @@ test(function testResolvePathAbsolute() {
   );
 });
 
-test(function testResolvePathContainsNull() {
+test("testResolvePathContainsNull", function () {
   assertThrows(
     () => {
       resolvePath("./foo/bar\0baz");
@@ -45,6 +45,6 @@ test(function testResolvePathContainsNull() {
   );
 });
 
-test(function testResolvePathRoot() {
+test("testResolvePathRoot", function () {
   assertEquals(resolvePath("/public", "./foo/bar"), "/public/foo/bar");
 });
