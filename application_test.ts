@@ -49,12 +49,12 @@ function createMockRequest(url = "https://example.com/"): ServerRequest {
   } as any;
 }
 
-test(function constructApp() {
+test("constructApp", function () {
   const app = new Application();
   assert(app instanceof Application);
 });
 
-test(async function registerMiddleware() {
+test("registerMiddleware", async function () {
   serverRequestStack.push(createMockRequest());
   const app = new Application(mockServe);
   let called = 0;
@@ -69,7 +69,7 @@ test(async function registerMiddleware() {
   teardown();
 });
 
-test(async function middlewareExecutionOrder1() {
+test("middlewareExecutionOrder1", async function () {
   serverRequestStack.push(createMockRequest());
   const app = new Application(mockServe);
   const callStack: number[] = [];
@@ -86,7 +86,7 @@ test(async function middlewareExecutionOrder1() {
   teardown();
 });
 
-test(async function middlewareExecutionOrder2() {
+test("middlewareExecutionOrder2", async function () {
   serverRequestStack.push(createMockRequest());
   const app = new Application(mockServe);
   const callStack: number[] = [];
@@ -104,7 +104,7 @@ test(async function middlewareExecutionOrder2() {
   teardown();
 });
 
-test(async function middlewareExecutionOrder3() {
+test("middlewareExecutionOrder3", async function () {
   serverRequestStack.push(createMockRequest());
   const app = new Application(mockServe);
   const callStack: number[] = [];
@@ -125,7 +125,7 @@ test(async function middlewareExecutionOrder3() {
   teardown();
 });
 
-test(async function middlewareExecutionOrder4() {
+test("middlewareExecutionOrder4", async function () {
   serverRequestStack.push(createMockRequest());
   const app = new Application(mockServe);
   const callStack: number[] = [];
@@ -146,21 +146,21 @@ test(async function middlewareExecutionOrder4() {
   teardown();
 });
 
-test(async function appListen() {
+test("appListen", async function () {
   const app = new Application(mockServe);
   await app.listen("127.0.0.1:8080");
   assertEquals(addrStack, ["127.0.0.1:8080"]);
   teardown();
 });
 
-test(async function appListenOptions() {
+test("appListenOptions", async function () {
   const app = new Application(mockServe);
   await app.listen({ port: 8000 });
   assertEquals(addrStack, [{ port: 8000 }]);
   teardown();
 });
 
-test(async function appListenTLS() {
+test("appListenTLS", async function () {
   const app = new Application(mockServe, mockServeTLS);
   await app.listenTLS({
     port: 8000,
@@ -177,7 +177,7 @@ test(async function appListenTLS() {
   teardown();
 });
 
-test(async function appState() {
+test("appState", async function () {
   serverRequestStack.push(createMockRequest());
   const app = new Application<{ foo?: string }>(mockServe);
   app.state.foo = "bar";
