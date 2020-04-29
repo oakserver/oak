@@ -16,9 +16,9 @@ function createMockBodyReader(body: string): Deno.Reader {
   const buf = encoder.encode(body);
   let offset = 0;
   return {
-    async read(p: Uint8Array): Promise<number | Deno.EOF> {
+    async read(p: Uint8Array): Promise<number | null> {
       if (offset >= buf.length) {
-        return Deno.EOF;
+        return null;
       }
       const chunkSize = Math.min(p.length, buf.length - offset);
       p.set(buf);
@@ -49,7 +49,7 @@ function createMockServerRequest(
   } as any;
 }
 
-test(function requestSearch() {
+test("requestSearch", function () {
   const request = new Request(createMockServerRequest("/foo?bar=baz&qat=qux"));
   assertEquals(request.path, "/foo");
   assertEquals(request.search, "?bar=baz&qat=qux");
@@ -60,13 +60,13 @@ test(function requestSearch() {
   ]);
 });
 
-test(function serverRequestAvail() {
+test("serverRequestAvail", function () {
   const mockServerRequest = createMockServerRequest();
   const request = new Request(mockServerRequest);
   assertStrictEq(request.serverRequest, mockServerRequest);
 });
 
-test(function requestAcceptEncoding() {
+test("requestAcceptEncoding", function () {
   const request = new Request(
     createMockServerRequest("/", "", {
       "Accept-Encoding": "gzip, compress;q=0.2, identity;q=0.5",
@@ -75,7 +75,7 @@ test(function requestAcceptEncoding() {
   assertEquals(request.acceptsEncodings("gzip", "identity"), "gzip");
 });
 
-test(function requestAccepts() {
+test("requestAccepts", function () {
   const request = new Request(
     createMockServerRequest("/", "", {
       Accept: "application/json;q=0.2, text/html",
@@ -84,7 +84,7 @@ test(function requestAccepts() {
   assertEquals(request.accepts("application/json", "text/html"), "text/html");
 });
 
-test(function requestAcceptsNoProvided() {
+test("requestAcceptsNoProvided", function () {
   const request = new Request(
     createMockServerRequest("/", "", {
       Accept: "application/json;q=0.2, text/html",
@@ -93,19 +93,19 @@ test(function requestAcceptsNoProvided() {
   assertEquals(request.accepts(), ["text/html", "application/json"]);
 });
 
-test(function requestNoAccepts() {
+test("requestNoAccepts", function () {
   const request = new Request(createMockServerRequest("/"));
   assertEquals(request.accepts("application/json"), undefined);
 });
 
-test(function requestNoAcceptsMatch() {
+test("requestNoAcceptsMatch", function () {
   const request = new Request(
     createMockServerRequest("/", "", { Accept: "text/html" }),
   );
   assertEquals(request.accepts("application/json"), undefined);
 });
 
-test(async function requestBodyJson() {
+test("requestBodyJson", async function () {
   const request = new Request(
     createMockServerRequest("/", `{"foo":"bar"}`, {
       "Content-Type": "application/json",
@@ -117,7 +117,7 @@ test(async function requestBodyJson() {
   });
 });
 
-test(async function requestBodyForm() {
+test("requestBodyForm", async function () {
   const request = new Request(
     createMockServerRequest("/", `foo=bar&bar=1&baz=qux+%2B+quux`, {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -136,7 +136,7 @@ test(async function requestBodyForm() {
   }
 });
 
-test(async function requestBodyText() {
+test("requestBodyText", async function () {
   const request = new Request(
     createMockServerRequest("/", "hello world!", {
       "Content-Type": "text/plain",
@@ -148,7 +148,7 @@ test(async function requestBodyText() {
   });
 });
 
-test(async function noBodyResolvesUndefined() {
+test("noBodyResolvesUndefined", async function () {
   const request = new Request(createMockServerRequest());
   assertEquals(await request.body(), {
     type: BodyType.Undefined,
@@ -156,7 +156,7 @@ test(async function noBodyResolvesUndefined() {
   });
 });
 
-test(async function unsupportedMediaTypeBody() {
+test("unsupportedMediaTypeBody", async function () {
   const request = new Request(
     createMockServerRequest("/", "blah", {
       "Content-Type": "multipart/form-data",
