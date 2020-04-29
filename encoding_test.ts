@@ -3,7 +3,7 @@
 import { test, assertEquals } from "./test_deps.ts";
 import { preferredEncodings } from "./encoding.ts";
 
-test(function encoding() {
+test("encoding", function () {
   assertEquals(preferredEncodings("gzip, compress;q=0.2, identity;q=0.5"), [
     "gzip",
     "identity",
@@ -11,7 +11,7 @@ test(function encoding() {
   ]);
 });
 
-test(function availableEncoding() {
+test("availableEncoding", function () {
   assertEquals(
     preferredEncodings("gzip, compress;q=0.2, identity;q=0.5", [
       "identity",
