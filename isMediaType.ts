@@ -33,7 +33,7 @@ function mimeMatch(expected: string | undefined, actual: string): boolean {
     return (
       expectedSubtype.length <= actualSubtype.length + 1 &&
       expectedSubtype.substr(1) ===
-      actualSubtype.substr(1 - expectedSubtype.length)
+        actualSubtype.substr(1 - expectedSubtype.length)
     );
   }
 

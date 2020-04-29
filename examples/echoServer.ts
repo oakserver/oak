@@ -14,9 +14,11 @@ app.use(async (ctx, next) => {
   await next();
   const rt = ctx.response.headers.get("X-Response-Time");
   console.log(
-    `${green(ctx.request.method)} ${cyan(ctx.request.url)} - ${bold(
-      String(rt),
-    )}`,
+    `${green(ctx.request.method)} ${cyan(ctx.request.url)} - ${
+      bold(
+        String(rt),
+      )
+    }`,
   );
 });
 

@@ -187,7 +187,7 @@ function specify(
     if (
       keys.every((key) =>
         (spec.params[key] || "").toLowerCase() ===
-        (p.params[key] || "").toLowerCase()
+          (p.params[key] || "").toLowerCase()
       )
     ) {
       s |= 1;

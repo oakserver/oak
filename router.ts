@@ -67,9 +67,11 @@ export interface RouterMiddleware<
   P extends RouteParams = RouteParams,
   S extends object = { [key: string]: any },
 > {
-  (context: RouterContext<P, S>, next: () => Promise<void>): Promise<
-    void
-  > | void;
+  (context: RouterContext<P, S>, next: () => Promise<void>):
+    | Promise<
+      void
+    >
+    | void;
 }
 
 export interface RouterOptions {
