@@ -4,7 +4,7 @@ import { test, assert, assertEquals } from "./test_deps.ts";
 
 import httpError, { createHttpError } from "./httpError.ts";
 
-test(function createHttpErrorTest() {
+test("createHttpErrorTest", function () {
   const err = createHttpError(501);
   assert(err instanceof httpError.NotImplemented);
   assertEquals(err.status, 501);
@@ -12,7 +12,7 @@ test(function createHttpErrorTest() {
   assertEquals(err.message, "Not Implemented");
 });
 
-test(function notImplemented() {
+test("notImplemented", function () {
   const err = new httpError.NotImplemented();
   assertEquals(err.status, 501);
   assertEquals(err.name, "NotImplementedError");
