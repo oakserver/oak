@@ -6,8 +6,6 @@ import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import httpErrors from "./httpError.ts";
-import { Request } from "./request.ts";
-import { Response } from "./response.ts";
 import { send } from "./send.ts";
 
 let encodingsAccepted = "identity";
@@ -60,7 +58,7 @@ function setup<S extends object = { [key: string]: any }>(
   return { app, context };
 }
 
-test(async function sendHtml() {
+test("sendHtml", async function () {
   const { context } = setup("/test.html");
   const fixture = await Deno.readFile("./fixtures/test.html");
   await send(context, context.request.path, {
@@ -76,7 +74,7 @@ test(async function sendHtml() {
   assertEquals(context.response.headers.get("cache-control"), "max-age=0");
 });
 
-test(async function sendGzip() {
+test("sendGzip", async function () {
   const { context } = setup("/test.json");
   const fixture = await Deno.readFile("./fixtures/test.json.gz");
   encodingsAccepted = "gzip";
@@ -92,7 +90,7 @@ test(async function sendGzip() {
   );
 });
 
-test(async function sendBrotli() {
+test("sendBrotli", async function () {
   const { context } = setup("/test.json");
   const fixture = await Deno.readFile("./fixtures/test.json.br");
   encodingsAccepted = "br";
@@ -108,7 +106,7 @@ test(async function sendBrotli() {
   );
 });
 
-test(async function sendIdentity() {
+test("sendIdentity", async function () {
   const { context } = setup("/test.json");
   const fixture = await Deno.readFile("./fixtures/test.json");
   await send(context, context.request.path, {
@@ -123,7 +121,7 @@ test(async function sendIdentity() {
   );
 });
 
-test(async function send404() {
+test("send404", async function () {
   const { context } = setup("/foo.txt");
   encodingsAccepted = "identity";
   let didThrow = false;

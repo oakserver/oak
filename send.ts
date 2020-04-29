@@ -61,10 +61,6 @@ async function exists(path: string): Promise<boolean> {
   return Deno.stat(path).then((x) => x.isFile).catch(() => false);
 }
 
-function toUTCString(value: number): string {
-  return new Date(value).toUTCString();
-}
-
 /** Asynchronously fulfill a response with a file from the local file
  * system. */
 export async function send(
@@ -148,8 +144,8 @@ export async function send(
   }
 
   response.headers.set("Content-Length", String(stats.size));
-  if (!response.headers.has("Last-Modified") && stats.modified) {
-    response.headers.set("Last-Modified", toUTCString(stats.modified));
+  if (!response.headers.has("Last-Modified") && stats.mtime) {
+    response.headers.set("Last-Modified", stats.mtime.toUTCString());
   }
   if (!response.headers.has("Cache-Control")) {
     const directives = [`max-age=${(maxage / 1000) | 0}`];
