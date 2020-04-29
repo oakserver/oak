@@ -8,17 +8,17 @@ import {
 } from "./test_deps.ts";
 import { format, parse } from "./mediaTyper.ts";
 
-test(function formatBasicType() {
+test("formatBasicType", function () {
   const actual = format({ type: "text", subtype: "html" });
   assertStrictEq(actual, "text/html");
 });
 
-test(function formatWithSuffix() {
+test("formatWithSuffix", function () {
   const actual = format({ type: "image", subtype: "svg", suffix: "xml" });
   assertStrictEq(actual, "image/svg+xml");
 });
 
-test(function invalidType() {
+test("invalidType", function () {
   assertThrows(
     () => {
       format({ type: "text/", subtype: "html" });
@@ -28,7 +28,7 @@ test(function invalidType() {
   );
 });
 
-test(function invalidSubType() {
+test("invalidSubType", function () {
   assertThrows(
     () => {
       format({ type: "text", subtype: "html/" });
@@ -38,7 +38,7 @@ test(function invalidSubType() {
   );
 });
 
-test(function invalidSubType() {
+test("invalidSubType", function () {
   assertThrows(
     () => {
       format({ type: "image", subtype: "svg", suffix: "xml\\" });
@@ -48,17 +48,17 @@ test(function invalidSubType() {
   );
 });
 
-test(function parseBasicType() {
+test("parseBasicType", function () {
   const actual = parse("text/html");
   assertEquals(actual, { type: "text", subtype: "html", suffix: undefined });
 });
 
-test(function parseWithSuffix() {
+test("parseWithSuffix", function () {
   const actual = parse("image/svg+xml");
   assertEquals(actual, { type: "image", subtype: "svg", suffix: "xml" });
 });
 
-test(function parseLowerCase() {
+test("parseLowerCase", function () {
   const actual = parse("IMAGE/SVG+XML");
   assertEquals(actual, { type: "image", subtype: "svg", suffix: "xml" });
 });
