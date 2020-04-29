@@ -26,7 +26,7 @@ function createMockServerRequest(url = "/"): ServerRequest {
   } as any;
 }
 
-test(function context() {
+test("context", function () {
   const app = createMockApp();
   const serverRequest = createMockServerRequest();
   const context = new Context(app, serverRequest);
@@ -37,7 +37,7 @@ test(function context() {
   assert(context.response instanceof Response);
 });
 
-test(function contextThrows() {
+test("contextThrows", function () {
   const context = new Context(createMockApp(), createMockServerRequest());
   assertThrows(
     () => {
