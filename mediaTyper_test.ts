@@ -4,63 +4,87 @@ import {
   assertEquals,
   assertStrictEq,
   assertThrows,
-  test
+  test,
 } from "./test_deps.ts";
 import { format, parse } from "./mediaTyper.ts";
 
-test(function formatBasicType() {
-  const actual = format({ type: "text", subtype: "html" });
-  assertStrictEq(actual, "text/html");
+test({
+  name: "format basic type",
+  fn() {
+    const actual = format({ type: "text", subtype: "html" });
+    assertStrictEq(actual, "text/html");
+  },
 });
 
-test(function formatWithSuffix() {
-  const actual = format({ type: "image", subtype: "svg", suffix: "xml" });
-  assertStrictEq(actual, "image/svg+xml");
+test({
+  name: "format type with suffic",
+  fn() { // formatWithSuffix() {
+    const actual = format({ type: "image", subtype: "svg", suffix: "xml" });
+    assertStrictEq(actual, "image/svg+xml");
+  },
 });
 
-test(function invalidType() {
-  assertThrows(
-    () => {
-      format({ type: "text/", subtype: "html" });
-    },
-    TypeError,
-    "Invalid type",
-  );
+test({
+  name: "format invalid type",
+  fn() {
+    assertThrows(
+      () => {
+        format({ type: "text/", subtype: "html" });
+      },
+      TypeError,
+      "Invalid type",
+    );
+  },
 });
 
-test(function invalidSubType() {
-  assertThrows(
-    () => {
-      format({ type: "text", subtype: "html/" });
-    },
-    TypeError,
-    "Invalid subtype",
-  );
+test({
+  name: "format invalid sub type",
+  fn() {
+    assertThrows(
+      () => {
+        format({ type: "text", subtype: "html/" });
+      },
+      TypeError,
+      "Invalid subtype",
+    );
+  },
 });
 
-test(function invalidSubType() {
-  assertThrows(
-    () => {
-      format({ type: "image", subtype: "svg", suffix: "xml\\" });
-    },
-    TypeError,
-    "Invalid suffix",
-  );
+test({
+  name: "format invalid suffix",
+  fn() {
+    assertThrows(
+      () => {
+        format({ type: "image", subtype: "svg", suffix: "xml\\" });
+      },
+      TypeError,
+      "Invalid suffix",
+    );
+  },
 });
 
-test(function parseBasicType() {
-  const actual = parse("text/html");
-  assertEquals(actual, { type: "text", subtype: "html", suffix: undefined });
+test({
+  name: "parse basic type",
+  fn() {
+    const actual = parse("text/html");
+    assertEquals(actual, { type: "text", subtype: "html", suffix: undefined });
+  },
 });
 
-test(function parseWithSuffix() {
-  const actual = parse("image/svg+xml");
-  assertEquals(actual, { type: "image", subtype: "svg", suffix: "xml" });
+test({
+  name: "parse with suffix",
+  fn() {
+    const actual = parse("image/svg+xml");
+    assertEquals(actual, { type: "image", subtype: "svg", suffix: "xml" });
+  },
 });
 
-test(function parseLowerCase() {
-  const actual = parse("IMAGE/SVG+XML");
-  assertEquals(actual, { type: "image", subtype: "svg", suffix: "xml" });
+test({
+  name: "parse is case insensitive",
+  fn() {
+    const actual = parse("IMAGE/SVG+XML");
+    assertEquals(actual, { type: "image", subtype: "svg", suffix: "xml" });
+  },
 });
 
 const invalidTypes = [
@@ -78,7 +102,7 @@ const invalidTypes = [
 
 for (const type of invalidTypes) {
   test({
-    name: `invalidType: "${type}"`,
+    name: `parse invalidType: "${type}"`,
     fn() {
       assertThrows(
         () => {

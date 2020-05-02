@@ -203,9 +203,11 @@ function tokensToRegExp(
         delimiters.includes(token[token.length - 1]);
     } else {
       const capture = token.repeat
-        ? `(?:${token.pattern})(?:${escapeString(
-          token.delimiter || "",
-        )}(?:${token.pattern}))*`
+        ? `(?:${token.pattern})(?:${
+          escapeString(
+            token.delimiter || "",
+          )
+        }(?:${token.pattern}))*`
         : token.pattern;
 
       if (keys) {

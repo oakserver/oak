@@ -3,7 +3,7 @@ import {
   cyan,
   bold,
   yellow,
-  red
+  red,
 } from "https://deno.land/std@v0.39.0/fmt/colors.ts";
 
 import { Application, HttpError, send, Status } from "../mod.ts";
@@ -51,9 +51,11 @@ app.use(async (context, next) => {
   await next();
   const rt = context.response.headers.get("X-Response-Time");
   console.log(
-    `${green(context.request.method)} ${cyan(context.request.url)} - ${bold(
-      String(rt),
-    )}`,
+    `${green(context.request.method)} ${cyan(context.request.url)} - ${
+      bold(
+        String(rt),
+      )
+    }`,
   );
 });
 

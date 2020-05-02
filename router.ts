@@ -67,9 +67,11 @@ export interface RouterMiddleware<
   P extends RouteParams = RouteParams,
   S extends object = { [key: string]: any },
 > {
-  (context: RouterContext<P, S>, next: () => Promise<void>): Promise<
-    void
-  > | void;
+  (context: RouterContext<P, S>, next: () => Promise<void>):
+    | Promise<
+      void
+    >
+    | void;
 }
 
 export interface RouterOptions {
@@ -175,7 +177,12 @@ export class Router {
       }
       return this;
     }
-    const layer = new Layer(path, methods, middleware, {strict: this._strict});
+    const layer = new Layer(
+      path,
+      methods,
+      middleware,
+      { strict: this._strict },
+    );
     layer.setPrefix(this._prefix);
     this._stack.push(layer);
     return this;

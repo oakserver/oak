@@ -9,7 +9,7 @@ import {
   serve,
   serveTLS,
   Server,
-  ServerRequest
+  ServerRequest,
 } from "./deps.ts";
 
 let serverRequestStack: ServerRequest[] = [];
@@ -50,144 +50,174 @@ function createMockRequest(url = "https://example.com/"): ServerRequest {
   } as any;
 }
 
-test(function constructApp() {
-  const app = new Application();
-  assert(app instanceof Application);
+test({
+  name: "construct App()",
+  fn() {
+    const app = new Application();
+    assert(app instanceof Application);
+  },
 });
 
-test(async function registerMiddleware() {
-  serverRequestStack.push(createMockRequest());
-  const app = new Application(mockServe);
-  let called = 0;
-  app.use((context, next) => {
-    assert(context instanceof Context);
-    assertEquals(typeof next, "function");
-    called++;
-  });
+test({
+  name: "register middleware",
+  async fn() {
+    serverRequestStack.push(createMockRequest());
+    const app = new Application(mockServe);
+    let called = 0;
+    app.use((context, next) => {
+      assert(context instanceof Context);
+      assertEquals(typeof next, "function");
+      called++;
+    });
 
-  await app.listen("");
-  assertEquals(called, 1);
-  teardown();
+    await app.listen("");
+    assertEquals(called, 1);
+    teardown();
+  },
 });
 
-test(async function middlewareExecutionOrder1() {
-  serverRequestStack.push(createMockRequest());
-  const app = new Application(mockServe);
-  const callStack: number[] = [];
-  app.use(() => {
-    callStack.push(1);
-  });
+test({
+  name: "middleware execution order 1",
+  async fn() {
+    serverRequestStack.push(createMockRequest());
+    const app = new Application(mockServe);
+    const callStack: number[] = [];
+    app.use(() => {
+      callStack.push(1);
+    });
 
-  app.use(() => {
-    callStack.push(2);
-  });
+    app.use(() => {
+      callStack.push(2);
+    });
 
-  await app.listen("");
-  assertEquals(callStack, [1]);
-  teardown();
+    await app.listen("");
+    assertEquals(callStack, [1]);
+    teardown();
+  },
 });
 
-test(async function middlewareExecutionOrder2() {
-  serverRequestStack.push(createMockRequest());
-  const app = new Application(mockServe);
-  const callStack: number[] = [];
-  app.use((_context, next) => {
-    callStack.push(1);
-    next();
-  });
+test({
+  name: "middleware execution order 2",
+  async fn() {
+    serverRequestStack.push(createMockRequest());
+    const app = new Application(mockServe);
+    const callStack: number[] = [];
+    app.use((_context, next) => {
+      callStack.push(1);
+      next();
+    });
 
-  app.use(() => {
-    callStack.push(2);
-  });
+    app.use(() => {
+      callStack.push(2);
+    });
 
-  await app.listen("");
-  assertEquals(callStack, [1, 2]);
-  teardown();
+    await app.listen("");
+    assertEquals(callStack, [1, 2]);
+    teardown();
+  },
 });
 
-test(async function middlewareExecutionOrder3() {
-  serverRequestStack.push(createMockRequest());
-  const app = new Application(mockServe);
-  const callStack: number[] = [];
-  app.use((_context, next) => {
-    callStack.push(1);
-    next();
-    callStack.push(2);
-  });
+test({
+  name: "middleware execution order 3",
+  async fn() {
+    serverRequestStack.push(createMockRequest());
+    const app = new Application(mockServe);
+    const callStack: number[] = [];
+    app.use((_context, next) => {
+      callStack.push(1);
+      next();
+      callStack.push(2);
+    });
 
-  app.use(async () => {
-    callStack.push(3);
-    await Promise.resolve();
-    callStack.push(4);
-  });
+    app.use(async () => {
+      callStack.push(3);
+      await Promise.resolve();
+      callStack.push(4);
+    });
 
-  await app.listen("");
-  assertEquals(callStack, [1, 3, 2, 4]);
-  teardown();
+    await app.listen("");
+    assertEquals(callStack, [1, 3, 2, 4]);
+    teardown();
+  },
 });
 
-test(async function middlewareExecutionOrder4() {
-  serverRequestStack.push(createMockRequest());
-  const app = new Application(mockServe);
-  const callStack: number[] = [];
-  app.use(async (_context, next) => {
-    callStack.push(1);
-    await next();
-    callStack.push(2);
-  });
+test({
+  name: "middleware execution order 4",
+  async fn() {
+    serverRequestStack.push(createMockRequest());
+    const app = new Application(mockServe);
+    const callStack: number[] = [];
+    app.use(async (_context, next) => {
+      callStack.push(1);
+      await next();
+      callStack.push(2);
+    });
 
-  app.use(async () => {
-    callStack.push(3);
-    await Promise.resolve();
-    callStack.push(4);
-  });
+    app.use(async () => {
+      callStack.push(3);
+      await Promise.resolve();
+      callStack.push(4);
+    });
 
-  await app.listen("");
-  assertEquals(callStack, [1, 3, 4, 2]);
-  teardown();
+    await app.listen("");
+    assertEquals(callStack, [1, 3, 4, 2]);
+    teardown();
+  },
 });
 
-test(async function appListen() {
-  const app = new Application(mockServe);
-  await app.listen("127.0.0.1:8080");
-  assertEquals(addrStack, ["127.0.0.1:8080"]);
-  teardown();
+test({
+  name: "app.listen",
+  async fn() {
+    const app = new Application(mockServe);
+    await app.listen("127.0.0.1:8080");
+    assertEquals(addrStack, ["127.0.0.1:8080"]);
+    teardown();
+  },
 });
 
-test(async function appListenOptions() {
-  const app = new Application(mockServe);
-  await app.listen({ port: 8000 });
-  assertEquals(addrStack, [{ port: 8000 }]);
-  teardown();
+test({
+  name: "app.listen(options)",
+  async fn() {
+    const app = new Application(mockServe);
+    await app.listen({ port: 8000 });
+    assertEquals(addrStack, [{ port: 8000 }]);
+    teardown();
+  },
 });
 
-test(async function appListenTLS() {
-  const app = new Application(mockServe, mockServeTLS);
-  await app.listenTLS({
-    port: 8000,
-    certFile: "",
-    keyFile: "",
-  });
-  assertEquals(httpsOptionsStack, [
-    {
+test({
+  name: "app.listenTLS",
+  async fn() {
+    const app = new Application(mockServe, mockServeTLS);
+    await app.listenTLS({
       port: 8000,
       certFile: "",
       keyFile: "",
-    },
-  ]);
-  teardown();
+    });
+    assertEquals(httpsOptionsStack, [
+      {
+        port: 8000,
+        certFile: "",
+        keyFile: "",
+      },
+    ]);
+    teardown();
+  },
 });
 
-test(async function appState() {
-  serverRequestStack.push(createMockRequest());
-  const app = new Application<{ foo?: string }>(mockServe);
-  app.state.foo = "bar";
-  let called = false;
-  app.use((context) => {
-    assertEquals(context.state, { foo: "bar" });
-    assertStrictEq(app.state, context.state);
-    called = true;
-  });
-  await app.listen("");
-  assert(called);
+test({
+  name: "app.state",
+  async fn() {
+    serverRequestStack.push(createMockRequest());
+    const app = new Application<{ foo?: string }>(mockServe);
+    app.state.foo = "bar";
+    let called = false;
+    app.use((context) => {
+      assertEquals(context.state, { foo: "bar" });
+      assertStrictEq(app.state, context.state);
+      called = true;
+    });
+    await app.listen("");
+    assert(called);
+  },
 });

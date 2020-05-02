@@ -9,19 +9,19 @@ export {
   serve,
   Server,
   ServerRequest,
-  serveTLS
-} from "https://deno.land/std@v0.39.0/http/server.ts";
+  serveTLS,
+} from "https://deno.land/std@v0.42.0/http/server.ts";
 export {
   Status,
-  STATUS_TEXT
-} from "https://deno.land/std@v0.39.0/http/http_status.ts";
+  STATUS_TEXT,
+} from "https://deno.land/std@v0.42.0/http/http_status.ts";
 export {
   Cookies,
   Cookie,
   setCookie,
   getCookies,
-  delCookie
-} from "https://deno.land/std@v0.38.0/http/cookie.ts";
+  delCookie,
+} from "https://deno.land/std@v0.42.0/http/cookie.ts";
 export {
   basename,
   extname,
@@ -30,9 +30,9 @@ export {
   normalize,
   parse,
   resolve,
-  sep
-} from "https://deno.land/std@v0.39.0/path/mod.ts";
+  sep,
+} from "https://deno.land/std@v0.42.0/path/mod.ts";
 export {
   contentType,
-  lookup
-} from "https://deno.land/x/media_types@v1.0.0/mod.ts";
+  lookup,
+} from "https://deno.land/x/media_types@v2.0.0/mod.ts";

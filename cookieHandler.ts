@@ -5,7 +5,7 @@ import {
   setCookie,
   delCookie,
   Cookies,
-  Cookie
+  Cookie,
 } from "./deps.ts";
 
 export default class CookieHandler {

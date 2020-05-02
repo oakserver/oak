@@ -10,7 +10,7 @@ export {
   RouteParams,
   Router,
   RouterContext,
-  RouterMiddleware
+  RouterMiddleware,
 } from "./router.ts";
 export { send } from "./send.ts";
 export { HTTPMethods } from "./types.ts";

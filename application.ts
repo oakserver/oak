@@ -24,7 +24,7 @@ export class Application<S extends object = { [key: string]: any }> {
   /** Processing registered middleware on each request. */
   private async _handleRequest(
     request: ServerRequest,
-    middleware: (context: Context<S>) => Promise<void>
+    middleware: (context: Context<S>) => Promise<void>,
   ) {
     const context = new Context<S>(this, request);
     await middleware(context);

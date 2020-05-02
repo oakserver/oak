@@ -14,39 +14,51 @@ function createMockRequest(cookie?: string): ServerRequest {
   } as any;
 }
 
-test(function constructCookieHandler() {
-  const cookie = new CookieHandler(createMockRequest(), {});
-  assert(cookie instanceof CookieHandler);
+test({
+  name: "new CoockieHandler()",
+  fn() {
+    const cookie = new CookieHandler(createMockRequest(), {});
+    assert(cookie instanceof CookieHandler);
+  },
 });
 
-test(function getCookie() {
-  const cookie = new CookieHandler(
-    createMockRequest("foo=bar; name=value=value"),
-    {},
-  );
-  assert(cookie.get("foo") === "bar");
-  assert(cookie.get("name") === "value=value");
+test({
+  name: "cookie.getCookie()",
+  fn() {
+    const cookie = new CookieHandler(
+      createMockRequest("foo=bar; name=value=value"),
+      {},
+    );
+    assert(cookie.get("foo") === "bar");
+    assert(cookie.get("name") === "value=value");
+  },
 });
 
-test(function setCookie() {
-  const response = { headers: new Headers() };
-  const cookie = new CookieHandler(createMockRequest(), response);
-  cookie.set({
-    name: "foo",
-    value: "bar",
-    httpOnly: true,
-  });
+test({
+  name: "cookie.set()",
+  fn() {
+    const response = { headers: new Headers() };
+    const cookie = new CookieHandler(createMockRequest(), response);
+    cookie.set({
+      name: "foo",
+      value: "bar",
+      httpOnly: true,
+    });
 
-  assert(response.headers.get("Set-Cookie") === "foo=bar; HttpOnly");
+    assert(response.headers.get("Set-Cookie") === "foo=bar; HttpOnly");
+  },
 });
 
-test(function delCookie() {
-  const response = { headers: new Headers() };
-  const cookie = new CookieHandler(createMockRequest(), response);
-  cookie.del("foo");
+test({
+  name: "cookie.del()",
+  fn() {
+    const response = { headers: new Headers() };
+    const cookie = new CookieHandler(createMockRequest(), response);
+    cookie.del("foo");
 
-  assert(
-    response.headers.get("Set-Cookie") ===
-      "foo=; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
-  );
+    assert(
+      response.headers.get("Set-Cookie") ===
+        "foo=; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+    );
+  },
 });

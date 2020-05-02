@@ -26,24 +26,30 @@ function createMockServerRequest(url = "/"): ServerRequest {
   } as any;
 }
 
-test(function context() {
-  const app = createMockApp();
-  const serverRequest = createMockServerRequest();
-  const context = new Context(app, serverRequest);
-  assert(context instanceof Context);
-  assertStrictEq(context.state, app.state);
-  assertStrictEq(context.app, app);
-  assert(context.request instanceof Request);
-  assert(context.response instanceof Response);
+test({
+  name: "context",
+  fn() {
+    const app = createMockApp();
+    const serverRequest = createMockServerRequest();
+    const context = new Context(app, serverRequest);
+    assert(context instanceof Context);
+    assertStrictEq(context.state, app.state);
+    assertStrictEq(context.app, app);
+    assert(context.request instanceof Request);
+    assert(context.response instanceof Response);
+  },
 });
 
-test(function contextThrows() {
-  const context = new Context(createMockApp(), createMockServerRequest());
-  assertThrows(
-    () => {
-      context.throw(404, "foobar");
-    },
-    httpError.NotFound,
-    "foobar",
-  );
+test({
+  name: "context.throw()",
+  fn() {
+    const context = new Context(createMockApp(), createMockServerRequest());
+    assertThrows(
+      () => {
+        context.throw(404, "foobar");
+      },
+      httpError.NotFound,
+      "foobar",
+    );
+  },
 });

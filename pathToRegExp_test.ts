@@ -6,7 +6,7 @@ import {
   ParseOptions,
   Path,
   pathToRegExp,
-  RegExpOptions
+  RegExpOptions,
 } from "./pathToRegExp.ts";
 
 interface TestFixture {

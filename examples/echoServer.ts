@@ -2,7 +2,7 @@ import {
   green,
   cyan,
   bold,
-  yellow
+  yellow,
 } from "https://deno.land/std@v0.39.0/fmt/colors.ts";
 
 import { Application } from "../mod.ts";
@@ -14,9 +14,11 @@ app.use(async (ctx, next) => {
   await next();
   const rt = ctx.response.headers.get("X-Response-Time");
   console.log(
-    `${green(ctx.request.method)} ${cyan(ctx.request.url)} - ${bold(
-      String(rt),
-    )}`,
+    `${green(ctx.request.method)} ${cyan(ctx.request.url)} - ${
+      bold(
+        String(rt),
+      )
+    }`,
   );
 });
 

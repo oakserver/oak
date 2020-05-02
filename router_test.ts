@@ -4,9 +4,7 @@ import { assertEquals, assertStrictEq, test } from "./test_deps.ts";
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
-import { Router, RouterContext, RouteParams } from "./router.ts";
-import { Request } from "./request.ts";
-import { Response } from "./response.ts";
+import { Router } from "./router.ts";
 
 function createMockApp<S extends object = { [key: string]: any }>(
   state = {} as S,
@@ -58,340 +56,379 @@ function setup<S extends object = { [key: string]: any }>(
   return { app, context, next };
 }
 
-test(async function emptyRoutes() {
-  const { context, next } = setup();
+test({
+  name: "router empty routes",
+  async fn() {
+    const { context, next } = setup();
 
-  const router = new Router();
-  const mw = router.routes();
-  assertEquals(await mw(context, next), undefined);
+    const router = new Router();
+    const mw = router.routes();
+    assertEquals(await mw(context, next), undefined);
+  },
 });
 
-test(async function getSingleMatch() {
-  const { app, context, next } = setup("/", "GET");
+test({
+  name: "router get single match",
+  async fn() {
+    const { app, context, next } = setup("/", "GET");
 
-  const callStack: number[] = [];
-  const router = new Router();
-  router.get("/", (context) => {
-    assertStrictEq(context.router, router);
-    assertStrictEq(context.app, app);
-    callStack.push(1);
-  });
-  const mw = router.routes();
-  await mw(context, next);
-  assertEquals(callStack, [1]);
+    const callStack: number[] = [];
+    const router = new Router();
+    router.get("/", (context) => {
+      assertStrictEq(context.router, router);
+      assertStrictEq(context.app, app);
+      callStack.push(1);
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [1]);
+  },
 });
 
-test(async function matchSingleParam() {
-  const { context, next } = setup("/foo/bar", "GET");
+test({
+  name: "router match single param",
+  async fn() {
+    const { context, next } = setup("/foo/bar", "GET");
 
-  const callStack: number[] = [];
-  const router = new Router();
-  router.get("/", (context) => {
-    callStack.push(1);
-  });
-  router.get("/foo", (context) => {
-    callStack.push(2);
-  });
-  router.get<{ id: string }>("/foo/:id", (context) => {
-    callStack.push(3);
-    assertEquals(context.params.id, "bar");
-  });
-  const mw = router.routes();
-  await mw(context, next);
-  assertEquals(callStack, [3]);
+    const callStack: number[] = [];
+    const router = new Router();
+    router.get("/", (context) => {
+      callStack.push(1);
+    });
+    router.get("/foo", (context) => {
+      callStack.push(2);
+    });
+    router.get<{ id: string }>("/foo/:id", (context) => {
+      callStack.push(3);
+      assertEquals(context.params.id, "bar");
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [3]);
+  },
 });
 
-test(async function matchWithNext() {
-  const { context, next } = setup("/foo", "GET");
+test({
+  name: "router match with next",
+  async fn() {
+    const { context, next } = setup("/foo", "GET");
 
-  const callStack: number[] = [];
-  const router = new Router();
-  router.get("/", (_context) => {
-    callStack.push(1);
-  });
-  router.get("/foo", async (_context, next) => {
-    callStack.push(2);
-    await next();
-  });
-  router.get("/foo", () => {
-    callStack.push(3);
-  });
-  router.get("/foo", () => {
-    callStack.push(4);
-  });
-  const mw = router.routes();
-  await mw(context, next);
-  assertEquals(callStack, [2, 3]);
+    const callStack: number[] = [];
+    const router = new Router();
+    router.get("/", (_context) => {
+      callStack.push(1);
+    });
+    router.get("/foo", async (_context, next) => {
+      callStack.push(2);
+      await next();
+    });
+    router.get("/foo", () => {
+      callStack.push(3);
+    });
+    router.get("/foo", () => {
+      callStack.push(4);
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [2, 3]);
+  },
 });
 
-test(async function matchDelete() {
-  const { context, next } = setup("/", "DELETE");
+test({
+  name: "router match delete",
+  async fn() {
+    const { context, next } = setup("/", "DELETE");
 
-  const callStack: number[] = [];
-  const router = new Router();
-  router.all("/", async (_context, next) => {
-    callStack.push(0);
-    await next();
-  });
-  router.delete("/", () => {
-    callStack.push(1);
-  });
-  router.get("/", () => {
-    callStack.push(2);
-  });
-  router.head("/", () => {
-    callStack.push(3);
-  });
-  router.options("/", () => {
-    callStack.push(4);
-  });
-  router.patch("/", () => {
-    callStack.push(5);
-  });
-  router.post("/", () => {
-    callStack.push(6);
-  });
-  router.put("/", () => {
-    callStack.push(7);
-  });
-  const mw = router.routes();
-  await mw(context, next);
-  assertEquals(callStack, [0, 1]);
+    const callStack: number[] = [];
+    const router = new Router();
+    router.all("/", async (_context, next) => {
+      callStack.push(0);
+      await next();
+    });
+    router.delete("/", () => {
+      callStack.push(1);
+    });
+    router.get("/", () => {
+      callStack.push(2);
+    });
+    router.head("/", () => {
+      callStack.push(3);
+    });
+    router.options("/", () => {
+      callStack.push(4);
+    });
+    router.patch("/", () => {
+      callStack.push(5);
+    });
+    router.post("/", () => {
+      callStack.push(6);
+    });
+    router.put("/", () => {
+      callStack.push(7);
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [0, 1]);
+  },
 });
 
-test(async function matchGet() {
-  const { context, next } = setup("/", "GET");
+test({
+  name: "router match get",
+  async fn() {
+    const { context, next } = setup("/", "GET");
 
-  const callStack: number[] = [];
-  const router = new Router();
-  router.all("/", async (_context, next) => {
-    callStack.push(0);
-    await next();
-  });
-  router.delete("/", () => {
-    callStack.push(1);
-  });
-  router.get("/", () => {
-    callStack.push(2);
-  });
-  router.head("/", () => {
-    callStack.push(3);
-  });
-  router.options("/", () => {
-    callStack.push(4);
-  });
-  router.patch("/", () => {
-    callStack.push(5);
-  });
-  router.post("/", () => {
-    callStack.push(6);
-  });
-  router.put("/", () => {
-    callStack.push(7);
-  });
-  const mw = router.routes();
-  await mw(context, next);
-  assertEquals(callStack, [0, 2]);
+    const callStack: number[] = [];
+    const router = new Router();
+    router.all("/", async (_context, next) => {
+      callStack.push(0);
+      await next();
+    });
+    router.delete("/", () => {
+      callStack.push(1);
+    });
+    router.get("/", () => {
+      callStack.push(2);
+    });
+    router.head("/", () => {
+      callStack.push(3);
+    });
+    router.options("/", () => {
+      callStack.push(4);
+    });
+    router.patch("/", () => {
+      callStack.push(5);
+    });
+    router.post("/", () => {
+      callStack.push(6);
+    });
+    router.put("/", () => {
+      callStack.push(7);
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [0, 2]);
+  },
 });
 
-test(async function matchHead() {
-  const { context, next } = setup("/", "HEAD");
+test({
+  name: "router match head",
+  async fn() {
+    const { context, next } = setup("/", "HEAD");
 
-  const callStack: number[] = [];
-  const router = new Router();
-  router.all("/", async (_context, next) => {
-    callStack.push(0);
-    await next();
-  });
-  router.delete("/", () => {
-    callStack.push(1);
-  });
-  router.head("/", () => {
-    callStack.push(3);
-  });
-  router.get("/", () => {
-    callStack.push(2);
-  });
-  router.options("/", () => {
-    callStack.push(4);
-  });
-  router.patch("/", () => {
-    callStack.push(5);
-  });
-  router.post("/", () => {
-    callStack.push(6);
-  });
-  router.put("/", () => {
-    callStack.push(7);
-  });
-  const mw = router.routes();
-  await mw(context, next);
-  assertEquals(callStack, [0, 3]);
+    const callStack: number[] = [];
+    const router = new Router();
+    router.all("/", async (_context, next) => {
+      callStack.push(0);
+      await next();
+    });
+    router.delete("/", () => {
+      callStack.push(1);
+    });
+    router.head("/", () => {
+      callStack.push(3);
+    });
+    router.get("/", () => {
+      callStack.push(2);
+    });
+    router.options("/", () => {
+      callStack.push(4);
+    });
+    router.patch("/", () => {
+      callStack.push(5);
+    });
+    router.post("/", () => {
+      callStack.push(6);
+    });
+    router.put("/", () => {
+      callStack.push(7);
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [0, 3]);
+  },
 });
 
-test(async function matchOptions() {
-  const { context, next } = setup("/", "OPTIONS");
+test({
+  name: "router match options",
+  async fn() {
+    const { context, next } = setup("/", "OPTIONS");
 
-  const callStack: number[] = [];
-  const router = new Router();
-  router.all("/", async (_context, next) => {
-    callStack.push(0);
-    await next();
-  });
-  router.delete("/", () => {
-    callStack.push(1);
-  });
-  router.get("/", () => {
-    callStack.push(2);
-  });
-  router.head("/", () => {
-    callStack.push(3);
-  });
-  router.options("/", () => {
-    callStack.push(4);
-  });
-  router.patch("/", () => {
-    callStack.push(5);
-  });
-  router.post("/", () => {
-    callStack.push(6);
-  });
-  router.put("/", () => {
-    callStack.push(7);
-  });
-  const mw = router.routes();
-  await mw(context, next);
-  assertEquals(callStack, [4]);
+    const callStack: number[] = [];
+    const router = new Router();
+    router.all("/", async (_context, next) => {
+      callStack.push(0);
+      await next();
+    });
+    router.delete("/", () => {
+      callStack.push(1);
+    });
+    router.get("/", () => {
+      callStack.push(2);
+    });
+    router.head("/", () => {
+      callStack.push(3);
+    });
+    router.options("/", () => {
+      callStack.push(4);
+    });
+    router.patch("/", () => {
+      callStack.push(5);
+    });
+    router.post("/", () => {
+      callStack.push(6);
+    });
+    router.put("/", () => {
+      callStack.push(7);
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [4]);
+  },
 });
 
-test(async function matchPatch() {
-  const { context, next } = setup("/", "PATCH");
+test({
+  name: "router match patch",
+  async fn() {
+    const { context, next } = setup("/", "PATCH");
 
-  const callStack: number[] = [];
-  const router = new Router();
-  router.all("/", async (_context, next) => {
-    callStack.push(0);
-    await next();
-  });
-  router.delete("/", () => {
-    callStack.push(1);
-  });
-  router.get("/", () => {
-    callStack.push(2);
-  });
-  router.head("/", () => {
-    callStack.push(3);
-  });
-  router.options("/", () => {
-    callStack.push(4);
-  });
-  router.patch("/", () => {
-    callStack.push(5);
-  });
-  router.post("/", () => {
-    callStack.push(6);
-  });
-  router.put("/", () => {
-    callStack.push(7);
-  });
-  const mw = router.routes();
-  await mw(context, next);
-  assertEquals(callStack, [5]);
+    const callStack: number[] = [];
+    const router = new Router();
+    router.all("/", async (_context, next) => {
+      callStack.push(0);
+      await next();
+    });
+    router.delete("/", () => {
+      callStack.push(1);
+    });
+    router.get("/", () => {
+      callStack.push(2);
+    });
+    router.head("/", () => {
+      callStack.push(3);
+    });
+    router.options("/", () => {
+      callStack.push(4);
+    });
+    router.patch("/", () => {
+      callStack.push(5);
+    });
+    router.post("/", () => {
+      callStack.push(6);
+    });
+    router.put("/", () => {
+      callStack.push(7);
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [5]);
+  },
 });
 
-test(async function matchPost() {
-  const { context, next } = setup("/", "POST");
+test({
+  name: "router match post",
+  async fn() {
+    const { context, next } = setup("/", "POST");
 
-  const callStack: number[] = [];
-  const router = new Router();
-  router.all("/", async (_context, next) => {
-    callStack.push(0);
-    await next();
-  });
-  router.delete("/", () => {
-    callStack.push(1);
-  });
-  router.get("/", () => {
-    callStack.push(2);
-  });
-  router.head("/", () => {
-    callStack.push(3);
-  });
-  router.options("/", () => {
-    callStack.push(4);
-  });
-  router.patch("/", () => {
-    callStack.push(5);
-  });
-  router.post("/", () => {
-    callStack.push(6);
-  });
-  router.put("/", () => {
-    callStack.push(7);
-  });
-  const mw = router.routes();
-  await mw(context, next);
-  assertEquals(callStack, [0, 6]);
+    const callStack: number[] = [];
+    const router = new Router();
+    router.all("/", async (_context, next) => {
+      callStack.push(0);
+      await next();
+    });
+    router.delete("/", () => {
+      callStack.push(1);
+    });
+    router.get("/", () => {
+      callStack.push(2);
+    });
+    router.head("/", () => {
+      callStack.push(3);
+    });
+    router.options("/", () => {
+      callStack.push(4);
+    });
+    router.patch("/", () => {
+      callStack.push(5);
+    });
+    router.post("/", () => {
+      callStack.push(6);
+    });
+    router.put("/", () => {
+      callStack.push(7);
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [0, 6]);
+  },
 });
 
-test(async function matchPut() {
-  const { context, next } = setup("/", "PUT");
+test({
+  name: "router match put",
+  async fn() {
+    const { context, next } = setup("/", "PUT");
 
-  const callStack: number[] = [];
-  const router = new Router();
-  router.all("/", async (_context, next) => {
-    callStack.push(0);
-    await next();
-  });
-  router.delete("/", () => {
-    callStack.push(1);
-  });
-  router.get("/", () => {
-    callStack.push(2);
-  });
-  router.head("/", () => {
-    callStack.push(3);
-  });
-  router.options("/", () => {
-    callStack.push(4);
-  });
-  router.patch("/", () => {
-    callStack.push(5);
-  });
-  router.post("/", () => {
-    callStack.push(6);
-  });
-  router.put("/", () => {
-    callStack.push(7);
-  });
-  const mw = router.routes();
-  await mw(context, next);
-  assertEquals(callStack, [0, 7]);
+    const callStack: number[] = [];
+    const router = new Router();
+    router.all("/", async (_context, next) => {
+      callStack.push(0);
+      await next();
+    });
+    router.delete("/", () => {
+      callStack.push(1);
+    });
+    router.get("/", () => {
+      callStack.push(2);
+    });
+    router.head("/", () => {
+      callStack.push(3);
+    });
+    router.options("/", () => {
+      callStack.push(4);
+    });
+    router.patch("/", () => {
+      callStack.push(5);
+    });
+    router.post("/", () => {
+      callStack.push(6);
+    });
+    router.put("/", () => {
+      callStack.push(7);
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [0, 7]);
+  },
 });
 
-test(async function matchPrefix() {
-  const { context, next } = setup("/route1/action1", "GET");
-  const callStack: number[] = [];
-  const router = new Router({ prefix: "/route1" });
-  router.get("/action1", () => {
-    callStack.push(0);
-  });
-  const mw = router.routes();
-  await mw(context, next);
-  assertEquals(callStack, [0]);
+test({
+  name: "router patch prefix",
+  async fn() {
+    const { context, next } = setup("/route1/action1", "GET");
+    const callStack: number[] = [];
+    const router = new Router({ prefix: "/route1" });
+    router.get("/action1", () => {
+      callStack.push(0);
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [0]);
+  },
 });
 
-test(async function matchStrict() {
-  const { context, next } = setup("/route", "GET");
-  const callStack: number[] = [];
-  const router = new Router({ strict: true });
-  router.get("/route", () => {
-    callStack.push(0);
-  });
-  router.get("/route/", () => {
-    callStack.push(1);
-  });
-  const mw = router.routes();
-  await mw(context, next);
-  assertEquals(callStack, [0]);
+test({
+  name: "router match strict",
+  async fn() {
+    const { context, next } = setup("/route", "GET");
+    const callStack: number[] = [];
+    const router = new Router({ strict: true });
+    router.get("/route", () => {
+      callStack.push(0);
+    });
+    router.get("/route/", () => {
+      callStack.push(1);
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [0]);
+  },
 });
