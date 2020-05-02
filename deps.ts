@@ -16,6 +16,13 @@ export {
   STATUS_TEXT
 } from "https://deno.land/std@v0.39.0/http/http_status.ts";
 export {
+  Cookies,
+  Cookie,
+  setCookie,
+  getCookies,
+  delCookie
+} from "https://deno.land/std@v0.38.0/http/cookie.ts";
+export {
   basename,
   extname,
   join,

@@ -6,6 +6,7 @@ import { createHttpError } from "./httpError.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { ErrorStatus } from "./types.ts";
+import CookieHandler from "./cookieHandler.ts";
 
 export class Context<S extends object = { [key: string]: any }> {
   /** A reference to the current application */
@@ -16,6 +17,9 @@ export class Context<S extends object = { [key: string]: any }> {
 
   /** The response object */
   response = new Response();
+
+  /** The cookie handler */
+  cookies: CookieHandler;
 
   /** The object to pass state to front-end views.  This can be typed by
    * supplying the generic state argument when creating a new app.  For
@@ -30,6 +34,7 @@ export class Context<S extends object = { [key: string]: any }> {
     this.app = app;
     this.state = app.state;
     this.request = new Request(serverRequest);
+    this.cookies = new CookieHandler(serverRequest, this.response);
   }
 
   /** Create and throw an HTTP Error, which can be used to pass status
