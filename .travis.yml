@@ -1,7 +1,7 @@
 language: python
 
 install:
-  - curl -L https://deno.land/x/install/install.sh | sh -s "v0.42.0"
+  - curl -L https://deno.land/x/install/install.sh | sh -s "v1.0.0-rc1"
   - export PATH="$HOME/.deno/bin:$PATH"
 
 script:
