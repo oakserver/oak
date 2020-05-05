@@ -32,6 +32,8 @@ export {
   resolve,
   sep,
 } from "https://deno.land/std@v1.0.0-rc1/path/mod.ts";
+export { HmacSha256 } from "https://deno.land/std@v1.0.0-rc1/util/sha256.ts";
+export { assert } from "https://deno.land/std@v1.0.0-rc1/testing/asserts.ts";
 export {
   contentType,
   lookup,
