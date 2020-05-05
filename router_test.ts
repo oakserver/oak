@@ -6,7 +6,9 @@ import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { Router } from "./router.ts";
 
-function createMockApp<S extends object = { [key: string]: any }>(
+function createMockApp<
+  S extends Record<string | number | symbol, any> = Record<string, any>,
+>(
   state = {} as S,
 ): Application<S> {
   return {
@@ -14,7 +16,9 @@ function createMockApp<S extends object = { [key: string]: any }>(
   } as any;
 }
 
-function createMockContext<S extends object = { [key: string]: any }>(
+function createMockContext<
+  S extends Record<string | number | symbol, any> = Record<string, any>,
+>(
   app: Application<S>,
   path = "/",
   method = "GET",
@@ -42,7 +46,9 @@ function createMockNext() {
   return async function next() {};
 }
 
-function setup<S extends object = { [key: string]: any }>(
+function setup<
+  S extends Record<string | number | symbol, any> = Record<string, any>,
+>(
   path = "/",
   method = "GET",
 ): {

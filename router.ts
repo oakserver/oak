@@ -54,7 +54,7 @@ export interface RouteParams {
 /** The context passed router middleware.  */
 export interface RouterContext<
   P extends RouteParams = RouteParams,
-  S extends object = { [key: string]: any },
+  S extends Record<string | number | symbol, any> = Record<string, any>,
 > extends Context<S> {
   /** Any parameters parsed from the route when matched. */
   params: P;
@@ -65,7 +65,7 @@ export interface RouterContext<
 
 export interface RouterMiddleware<
   P extends RouteParams = RouteParams,
-  S extends object = { [key: string]: any },
+  S extends Record<string | number | symbol, any> = Record<string, any>,
 > {
   (context: RouterContext<P, S>, next: () => Promise<void>):
     | Promise<
@@ -161,19 +161,19 @@ const contextRouteMatches = new WeakMap<RouterContext, Layer[]>();
  * path name of the request.
  */
 export class Router {
-  private _methods: HTTPMethods[];
-  private _prefix = "";
-  private _stack: Layer[] = [];
-  private _strict = false;
+  #methods: HTTPMethods[];
+  #prefix = "";
+  #stack: Layer[] = [];
+  #strict = false;
 
-  private _addRoute(
+  #addRoute = (
     path: string | string[],
     middleware: RouterMiddleware[],
     ...methods: HTTPMethods[]
-  ): this {
+  ): this => {
     if (Array.isArray(path)) {
       for (const r of path) {
-        this._addRoute(r, middleware, ...methods);
+        this.#addRoute(r, middleware, ...methods);
       }
       return this;
     }
@@ -181,20 +181,20 @@ export class Router {
       path,
       methods,
       middleware,
-      { strict: this._strict },
+      { strict: this.#strict },
     );
-    layer.setPrefix(this._prefix);
-    this._stack.push(layer);
+    layer.setPrefix(this.#prefix);
+    this.#stack.push(layer);
     return this;
-  }
+  };
 
-  private _match(
+  #match = (
     path: string,
     method: HTTPMethods,
-  ): { routesMatched: Layer[]; matches: Layer[] } {
+  ): { routesMatched: Layer[]; matches: Layer[] } => {
     const routesMatched: Layer[] = [];
     const matches: Layer[] = [];
-    for (const layer of this._stack) {
+    for (const layer of this.#stack) {
       if (layer.matches(path)) {
         routesMatched.push(layer);
         if (layer.methods.includes(method)) {
@@ -203,10 +203,10 @@ export class Router {
       }
     }
     return { routesMatched, matches };
-  }
+  };
 
   constructor(options: RouterOptions = {}) {
-    this._methods = options.methods || [
+    this.#methods = options.methods || [
       "DELETE",
       "GET",
       "HEAD",
@@ -215,8 +215,8 @@ export class Router {
       "POST",
       "PUT",
     ];
-    if (options.prefix) this._prefix = options.prefix;
-    if (options.strict) this._strict = options.strict;
+    if (options.prefix) this.#prefix = options.prefix;
+    if (options.strict) this.#strict = options.strict;
   }
 
   /** Register middleware for the specified routes and the `DELETE`, `GET`,
@@ -226,7 +226,7 @@ export class Router {
     route: string | string[],
     ...middleware: RouterMiddleware<P>[]
   ): this {
-    return this._addRoute(
+    return this.#addRoute(
       route,
       middleware as RouterMiddleware[],
       "DELETE",
@@ -240,7 +240,7 @@ export class Router {
    * allowed methods for the defined routes.
    */
   allowedMethods(options: AllowedMethodsOptions = {}): Middleware {
-    const implemented = this._methods;
+    const implemented = this.#methods;
     return async function allowedMethods(context, next) {
       await next();
       const allowed = new Set<HTTPMethods>();
@@ -303,7 +303,7 @@ export class Router {
     route: string | string[],
     ...middleware: RouterMiddleware<P>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "DELETE");
+    return this.#addRoute(route, middleware as RouterMiddleware[], "DELETE");
   }
 
   /** Register middleware for the specified routes when the `GET` method is
@@ -313,7 +313,7 @@ export class Router {
     route: string | string[],
     ...middleware: RouterMiddleware<P>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "GET");
+    return this.#addRoute(route, middleware as RouterMiddleware[], "GET");
   }
 
   /** Register middleware for the specified routes when the `HEAD` method is
@@ -323,7 +323,7 @@ export class Router {
     route: string | string[],
     ...middleware: RouterMiddleware<P>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "HEAD");
+    return this.#addRoute(route, middleware as RouterMiddleware[], "HEAD");
   }
 
   /** Register middleware for the specified routes when the `OPTIONS` method is
@@ -333,7 +333,7 @@ export class Router {
     route: string | string[],
     ...middleware: RouterMiddleware<P>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "OPTIONS");
+    return this.#addRoute(route, middleware as RouterMiddleware[], "OPTIONS");
   }
 
   /** Register middleware for the specified routes when the `PATCH` method is
@@ -343,7 +343,7 @@ export class Router {
     route: string | string[],
     ...middleware: RouterMiddleware<P>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "PATCH");
+    return this.#addRoute(route, middleware as RouterMiddleware[], "PATCH");
   }
 
   /** Register middleware for the specified routes when the `POST` method is
@@ -353,7 +353,7 @@ export class Router {
     route: string | string[],
     ...middleware: RouterMiddleware<P>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "POST");
+    return this.#addRoute(route, middleware as RouterMiddleware[], "POST");
   }
 
   /** Register middleware for the specified routes when the `PUT` method is
@@ -363,7 +363,7 @@ export class Router {
     route: string | string[],
     ...middleware: RouterMiddleware<P>[]
   ): this {
-    return this._addRoute(route, middleware as RouterMiddleware[], "PUT");
+    return this.#addRoute(route, middleware as RouterMiddleware[], "PUT");
   }
 
   /** Return middleware that represents all the currently registered routes. */
@@ -373,7 +373,7 @@ export class Router {
       next: () => Promise<void>,
     ): Promise<void> => {
       const { path, method } = context.request;
-      const { routesMatched, matches } = this._match(path, method);
+      const { routesMatched, matches } = this.#match(path, method);
 
       const contextRoutesMatched = contextRouteMatches.get(context);
       contextRouteMatches.set(

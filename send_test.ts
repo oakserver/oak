@@ -10,7 +10,9 @@ import { send } from "./send.ts";
 
 let encodingsAccepted = "identity";
 
-function createMockApp<S extends object = { [key: string]: any }>(
+function createMockApp<
+  S extends Record<string | number | symbol, any> = Record<string, any>,
+>(
   state = {} as S,
 ): Application<S> {
   return {
@@ -18,7 +20,9 @@ function createMockApp<S extends object = { [key: string]: any }>(
   } as any;
 }
 
-function createMockContext<S extends object = { [key: string]: any }>(
+function createMockContext<
+  S extends Record<string | number | symbol, any> = Record<string, any>,
+>(
   app: Application<S>,
   path = "/",
   method = "GET",
@@ -45,7 +49,9 @@ function createMockContext<S extends object = { [key: string]: any }>(
   } as unknown) as Context<S>;
 }
 
-function setup<S extends object = { [key: string]: any }>(
+function setup<
+  S extends Record<string | number | symbol, any> = Record<string, any>,
+>(
   path = "/",
   method = "GET",
 ): {

@@ -14,7 +14,7 @@ const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
 const encoder = new TextEncoder();
 
 export class Response {
-  private _getBody(): Uint8Array | undefined {
+  #getBody = (): Uint8Array | undefined => {
     const typeofBody = typeof this.body;
     let result: Uint8Array | undefined;
     if (BODY_TYPES.includes(typeofBody)) {
@@ -28,16 +28,16 @@ export class Response {
       this.type = this.type || "json";
     }
     return result;
-  }
+  };
 
-  private _setContentType() {
+  #setContentType = (): void => {
     if (this.type) {
       const contentTypeString = contentType(this.type);
       if (contentTypeString && !this.headers.has("Content-Type")) {
         this.headers.append("Content-Type", contentTypeString);
       }
     }
-  }
+  };
 
   /** The body of the response */
   body?: any;
@@ -55,10 +55,10 @@ export class Response {
    * server. */
   toServerResponse(): ServerResponse {
     // Process the body
-    const body = this._getBody();
+    const body = this.#getBody();
 
     // If there is a response type, set the content type header
-    this._setContentType();
+    this.#setContentType();
 
     // If there is no body and no content type and no set length, then set the
     // content length to 0

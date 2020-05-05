@@ -8,7 +8,9 @@ import { Response } from "./response.ts";
 import { ErrorStatus } from "./types.ts";
 import CookieHandler from "./cookieHandler.ts";
 
-export class Context<S extends object = { [key: string]: any }> {
+export class Context<
+  S extends Record<string | number | symbol, any> = Record<string, any>,
+> {
   /** A reference to the current application */
   app: Application<any>;
 
