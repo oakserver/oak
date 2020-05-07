@@ -20,7 +20,7 @@ export class Context<S extends State = Record<string, any>> {
   request: Request;
 
   /** The response object */
-  response = new Response();
+  response: Response = new Response();
 
   /** The object to pass state to front-end views.  This can be typed by
    * supplying the generic state argument when creating a new app.  For
