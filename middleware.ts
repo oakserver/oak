@@ -1,10 +1,11 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
+import { State } from "./application.ts";
 import { Context } from "./context.ts";
 
 /** Middleware are functions which are chained together to deal with requests. */
 export interface Middleware<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
+  S extends State = Record<string, any>,
   T extends Context = Context<S>,
 > {
   (context: T, next: () => Promise<void>): Promise<void> | void;
@@ -12,7 +13,7 @@ export interface Middleware<
 
 /** Compose multiple middleware functions into a single middleware function. */
 export function compose<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
+  S extends State = Record<string, any>,
   T extends Context = Context<S>,
 >(middleware: Middleware<S, T>[]): (context: T) => Promise<void> {
   return function composedMiddleware(context: T, next?: () => Promise<void>) {

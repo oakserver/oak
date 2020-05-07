@@ -7,6 +7,9 @@
 import { HmacSha256 } from "./deps.ts";
 import { compare } from "./tssCompare.ts";
 
+export type Data = string | number[] | ArrayBuffer | Uint8Array;
+export type Key = string | number[] | ArrayBuffer | Uint8Array;
+
 const replacements: Record<string, string> = {
   "/": "_",
   "+": "-",
@@ -14,7 +17,7 @@ const replacements: Record<string, string> = {
 };
 
 export class KeyStack {
-  #keys: Array<string | number[] | ArrayBuffer | Uint8Array>;
+  #keys: Key[];
 
   /** A class which accepts an array of keys that are used to sign and verify
    * data and allows easy key rotation without invalidation of previously signed
@@ -23,17 +26,14 @@ export class KeyStack {
    * @param keys An array of keys, of which the index 0 will be used to sign
    *             data, but verification can happen against any key.
    */
-  constructor(keys: Array<string | number[] | ArrayBuffer | Uint8Array>) {
+  constructor(keys: Key[]) {
     if (!(0 in keys)) {
       throw new TypeError("keys must contain at least one value");
     }
     this.#keys = keys;
   }
 
-  #sign = (
-    data: string | number[] | ArrayBuffer | Uint8Array,
-    key: string | number[] | ArrayBuffer | Uint8Array,
-  ): string => {
+  #sign = (data: Data, key: Key): string => {
     return btoa(
       String.fromCharCode.apply(
         undefined,
@@ -46,27 +46,21 @@ export class KeyStack {
   /** Take `data` and return a SHA256 HMAC digest that uses the current 0 index
    * of the `keys` passed to the constructor.  This digest is in the form of a
    * URL safe base64 encoded string. */
-  sign(data: string | number[] | ArrayBuffer | Uint8Array): string {
+  sign(data: Data): string {
     return this.#sign(data, this.#keys[0]);
   }
 
   /** Given `data` and a `digest`, verify that one of the `keys` provided the
    * constructor was used to generate the `digest`.  Returns `true` if one of
    * the keys was used, otherwise `false`. */
-  verify(
-    data: string | number[] | ArrayBuffer | Uint8Array,
-    digest: string,
-  ): boolean {
+  verify(data: Data, digest: string): boolean {
     return this.indexOf(data, digest) > -1;
   }
 
   /** Given `data` and a `digest`, return the current index of the key in the
    * `keys` passed the constructor that was used to generate the digest.  If no
    * key can be found, the method returns `-1`. */
-  indexOf(
-    data: string | number[] | ArrayBuffer | Uint8Array,
-    digest: string,
-  ): number {
+  indexOf(data: Data, digest: string): number {
     for (let i = 0; i < this.#keys.length; i++) {
       if (compare(digest, this.#sign(data, this.#keys[i]))) {
         return i;

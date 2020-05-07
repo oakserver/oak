@@ -1,7 +1,8 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-export { Application } from "./application.ts";
+export { Application, State } from "./application.ts";
 export { Context } from "./context.ts";
+export { CookiesGetOptions, CookiesSetDeleteOptions } from "./cookies.ts";
 export { HttpError } from "./httpError.ts";
 export { compose as composeMiddleware, Middleware } from "./middleware.ts";
 export { BodyType, Body, Request } from "./request.ts";

@@ -1,18 +1,20 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { Application } from "./application.ts";
+import { Application, State } from "./application.ts";
+import { Cookies } from "./cookies.ts";
 import { ServerRequest } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
+import { KeyStack } from "./keyStack.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { ErrorStatus } from "./types.ts";
-import CookieHandler from "./cookieHandler.ts";
 
-export class Context<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
-> {
+export class Context<S extends State = Record<string, any>> {
   /** A reference to the current application */
   app: Application<any>;
+
+  /** The cookies object */
+  cookies: Cookies;
 
   /** The request object */
   request: Request;
@@ -20,15 +22,16 @@ export class Context<
   /** The response object */
   response = new Response();
 
-  /** The cookie handler */
-  cookies: CookieHandler;
-
   /** The object to pass state to front-end views.  This can be typed by
    * supplying the generic state argument when creating a new app.  For
    * example:
    *
    *       const app = new Application<{ foo: string }>();
-   *
+   * 
+   * Or can be contextually inferred based on setting an initial state object:
+   * 
+   *       const app = new Application({ state: { foo: "bar" } });
+   * 
    */
   state: S;
 
@@ -36,7 +39,10 @@ export class Context<
     this.app = app;
     this.state = app.state;
     this.request = new Request(serverRequest);
-    this.cookies = new CookieHandler(serverRequest, this.response);
+    this.cookies = new Cookies(this.request, this.response, {
+      keys: this.app.keys as KeyStack | undefined,
+      secure: this.request.secure,
+    });
   }
 
   /** Create and throw an HTTP Error, which can be used to pass status

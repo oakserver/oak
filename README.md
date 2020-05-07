@@ -25,7 +25,7 @@ import { Application } from "https://deno.land/x/oak/mod.ts";
 
 const app = new Application();
 
-app.use(ctx => {
+app.use((ctx) => {
   ctx.response.body = "Hello World!";
 });
 
@@ -59,12 +59,29 @@ app.use(async (ctx, next) => {
 });
 
 // Hello World!
-app.use(ctx => {
+app.use((ctx) => {
   ctx.response.body = "Hello World!";
 });
 
 await app.listen({ port: 8000 });
 ```
+
+An instance of application has some properties as well:
+
+- `.keys`
+
+  Keys to be used when signing and verifying cookies. The value can be set to
+  an array of keys, and instance of `KeyStack`, or an object which provides the
+  same interface as `KeyStack` (e.g. an instance of
+  [keygrip](https://github.com/crypto-utils/keygrip)). If just the keys are
+  passed, oak will manage the keys via `KeyStack` which allows easy key rotation
+  without requiring re-signing of data values.
+
+- `.state`
+
+  A record of application state, which can be strongly typed by specifying a
+  generic argument when constructing an `Application()`, or inferred by passing
+  a state object (e.g. `Application({ state })`).
 
 ### Context
 
@@ -73,6 +90,11 @@ The context passed to middleware has several properties:
 - `.app`
 
   A reference to the `Application` that is invoking this middleware.
+
+- `.cookies`
+
+  The `Cookies` instance for this context which allows you to read and set
+  cookies.
 
 - `.request`
 
@@ -85,8 +107,9 @@ The context passed to middleware has several properties:
 
 - `.state`
 
-  A "map" of application state, which can be strongly typed by specifying a
-  generic argument when constructing and `Application`.
+  A record of application state, which can be strongly typed by specifying a
+  generic argument when constructing an `Application()`, or inferred by passing
+  a state object (e.g. `Application({ state })`).
 
 The context passed to middleware has one method:
 
@@ -99,6 +122,27 @@ Unlike other middleware frameworks, `context` does not have a significant
 amount of aliases. The information about the request is only located in
 `.request` and the information about the response is only located in
 `.response`.
+
+#### Cookies
+
+The `context.cookies` allows access to the values of cookies in the request,
+and allows cookies to be set in the response. It automatically secures cookies
+if the `.keys` property is set on the application. It has several methods:
+
+- `.get(key: string, options?: CookieGetOptions)`
+
+  Attempts to retrieve the cookie out of the request and returns the value of
+  the cookie based on the key. If the applications `.keys` is set, then the
+  cookie will be verified against a signed version of the cookie. If the
+  cookie is valid, the value will be returned. If it is invalid, the cookie
+  signature will be set to deleted on the response. If the cookie was not
+  signed by the current key, it will be resigned and added to the response.
+
+- `.set(key: string, value: string, options?: CookieSetDeleteOptions)`
+
+  Will set a cookie in the response based on the provided key, value and any
+  options. If the applications `.keys` is set, then the cookie will be signed
+  and the signature added to the response.
 
 #### Request
 
@@ -122,6 +166,10 @@ several properties:
 
   The path part of the request URL.
 
+- `.protocol`
+
+  Either `http` or `https` based on the request.
+
 - `.search`
 
   The raw search string part of the request.
@@ -130,6 +178,10 @@ several properties:
 
   An instance of `URLSearchParams` which contain the parsed value of the search
   part of the request URL.
+
+- `.secure`
+
+  A shortcut for `.protocol`, returning `true` if HTTPS otherwise `false`.
 
 - `.severRequest`
 
@@ -217,18 +269,18 @@ const books = new Map<string, any>();
 books.set("1", {
   id: "1",
   title: "The Hound of the Baskervilles",
-  author: "Conan Doyle, Author"
+  author: "Conan Doyle, Author",
 });
 
 const router = new Router();
 router
-  .get("/", context => {
+  .get("/", (context) => {
     context.response.body = "Hello world!";
   })
-  .get("/book", context => {
+  .get("/book", (context) => {
     context.response.body = Array.from(books.values());
   })
-  .get("/book/:id", context => {
+  .get("/book/:id", (context) => {
     if (context.params && context.params.id && books.has(context.params.id)) {
       context.response.body = books.get(context.params.id);
     }
@@ -256,10 +308,10 @@ import { Application, send } from "https://deno.land/x/oak/mod.ts";
 (async () => {
   const app = new Application();
 
-  app.use(async context => {
+  app.use(async (context) => {
     await send(context, context.request.path, {
       root: `${Deno.cwd()}/examples/static`,
-      index: "index.html"
+      index: "index.html",
     });
   });
 

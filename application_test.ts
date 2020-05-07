@@ -6,11 +6,12 @@ import { Context } from "./context.ts";
 import {
   HTTPOptions,
   HTTPSOptions,
-  serve,
-  serveTLS,
+  serve as denoServe,
+  serveTLS as denoServeTls,
   Server,
   ServerRequest,
 } from "./deps.ts";
+import { Data, KeyStack } from "./keyStack.ts";
 
 let serverRequestStack: ServerRequest[] = [];
 let addrStack: Array<string | HTTPOptions> = [];
@@ -32,21 +33,25 @@ class MockServer {
   }
 }
 
-const mockServe: typeof serve = function (addr: string | HTTPOptions): Server {
+const serve: typeof denoServe = function (addr: string | HTTPOptions): Server {
   addrStack.push(addr);
   return new MockServer() as Server;
 };
 
-const mockServeTLS: typeof serveTLS = function (options: HTTPSOptions): Server {
+const serveTls: typeof denoServeTls = function (options: HTTPSOptions): Server {
   httpsOptionsStack.push(options);
   return new MockServer() as Server;
 };
 
-function createMockRequest(url = "https://example.com/"): ServerRequest {
+function createMockRequest(
+  url = "https://example.com/",
+  proto = "HTTP/1.1",
+): ServerRequest {
   return {
     url,
     headers: new Headers(),
     async respond() {},
+    proto,
   } as any;
 }
 
@@ -62,7 +67,7 @@ test({
   name: "register middleware",
   async fn() {
     serverRequestStack.push(createMockRequest());
-    const app = new Application(mockServe);
+    const app = new Application({ serve });
     let called = 0;
     app.use((context, next) => {
       assert(context instanceof Context);
@@ -80,7 +85,7 @@ test({
   name: "middleware execution order 1",
   async fn() {
     serverRequestStack.push(createMockRequest());
-    const app = new Application(mockServe);
+    const app = new Application({ serve });
     const callStack: number[] = [];
     app.use(() => {
       callStack.push(1);
@@ -100,7 +105,7 @@ test({
   name: "middleware execution order 2",
   async fn() {
     serverRequestStack.push(createMockRequest());
-    const app = new Application(mockServe);
+    const app = new Application({ serve });
     const callStack: number[] = [];
     app.use((_context, next) => {
       callStack.push(1);
@@ -121,7 +126,7 @@ test({
   name: "middleware execution order 3",
   async fn() {
     serverRequestStack.push(createMockRequest());
-    const app = new Application(mockServe);
+    const app = new Application({ serve });
     const callStack: number[] = [];
     app.use((_context, next) => {
       callStack.push(1);
@@ -145,7 +150,7 @@ test({
   name: "middleware execution order 4",
   async fn() {
     serverRequestStack.push(createMockRequest());
-    const app = new Application(mockServe);
+    const app = new Application({ serve });
     const callStack: number[] = [];
     app.use(async (_context, next) => {
       callStack.push(1);
@@ -168,7 +173,7 @@ test({
 test({
   name: "app.listen",
   async fn() {
-    const app = new Application(mockServe);
+    const app = new Application({ serve });
     await app.listen("127.0.0.1:8080");
     assertEquals(addrStack, ["127.0.0.1:8080"]);
     teardown();
@@ -178,7 +183,7 @@ test({
 test({
   name: "app.listen(options)",
   async fn() {
-    const app = new Application(mockServe);
+    const app = new Application({ serve });
     await app.listen({ port: 8000 });
     assertEquals(addrStack, [{ port: 8000 }]);
     teardown();
@@ -188,7 +193,7 @@ test({
 test({
   name: "app.listenTLS",
   async fn() {
-    const app = new Application(mockServe, mockServeTLS);
+    const app = new Application({ serve, serveTls });
     await app.listenTLS({
       port: 8000,
       certFile: "",
@@ -209,7 +214,7 @@ test({
   name: "app.state",
   async fn() {
     serverRequestStack.push(createMockRequest());
-    const app = new Application<{ foo?: string }>(mockServe);
+    const app = new Application<{ foo?: string }>({ state: {}, serve });
     app.state.foo = "bar";
     let called = false;
     app.use((context) => {
@@ -219,5 +224,49 @@ test({
     });
     await app.listen("");
     assert(called);
+  },
+});
+
+test({
+  name: "app.keys undefined",
+  fn() {
+    const app = new Application();
+    assertEquals(app.keys, undefined);
+  },
+});
+
+test({
+  name: "app.keys passed as array",
+  fn() {
+    const app = new Application({ keys: ["foo"] });
+    assert(app.keys instanceof KeyStack);
+  },
+});
+
+test({
+  name: "app.keys passed as KeyStack-like",
+  fn() {
+    const keys = {
+      sign(data: Data): string {
+        return "";
+      },
+      verify(data: Data, digest: string): boolean {
+        return true;
+      },
+      indexOf(data: Data, digest: string): number {
+        return 0;
+      },
+    } as KeyStack;
+    const app = new Application({ keys });
+    assert(app.keys === keys);
+  },
+});
+
+test({
+  name: "app.keys set as array",
+  fn() {
+    const app = new Application();
+    app.keys = ["foo"];
+    assert(app.keys instanceof KeyStack);
   },
 });

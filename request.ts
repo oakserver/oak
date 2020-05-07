@@ -57,6 +57,11 @@ export class Request {
     return this.#path;
   }
 
+  /** The protocol for the request, either `http` or `https`. */
+  get protocol(): "http" | "https" {
+    return this.#serverRequest.proto.match(/^https/i) ? "https" : "http";
+  }
+
   /** The search part of the URL of the request. */
   get search(): string | undefined {
     return this.#search;
@@ -65,6 +70,11 @@ export class Request {
   /** The parsed `URLSearchParams` of the request. */
   get searchParams(): URLSearchParams {
     return this.#searchParams;
+  }
+
+  /** Shortcut to `request.protocol === "https"`. */
+  get secure(): boolean {
+    return this.protocol === "https";
   }
 
   /** Returns the _original_ Deno server request. */

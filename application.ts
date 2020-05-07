@@ -1,5 +1,6 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
+import { Key, KeyStack } from "./keyStack.ts";
 import { Context } from "./context.ts";
 import { compose, Middleware } from "./middleware.ts";
 import {
@@ -8,29 +9,82 @@ import {
   serveTLS as defaultServeTls,
   ServerRequest,
 } from "./deps.ts";
+
+export interface ApplicationOptions<S> {
+  /** An initial set of keys (or instance of `KeyGrip`) to be used for signing
+   * cookies produced by the application. */
+  keys?: KeyStack | Key[];
+
+  /** The `server()` function to be used to read requests.
+   * 
+   * _Not used generally, as this is just for mocking for test purposes_ */
+  serve?: typeof defaultServe;
+
+  /** The `server()` function to be used to read requests.
+   * 
+   * _Not used generally, as this is just for mocking for test purposes_ */
+  serveTls?: typeof defaultServeTls;
+
+  /** The initial state object for the application, of which the type can be
+   * used to infer the type of the state for both the application and any of the
+   * application's context. */
+  state?: S;
+}
+
+export type State = Record<string | number | symbol, any>;
+
 /** A class which registers middleware (via `.use()`) and then processes
  * inbound requests against that middleware (via `.listen()`).
  *
  * The `context.state` can be typed via passing a generic argument when
  * constructing an instance of `Application`.
  */
-export class Application<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
-> {
+export class Application<S extends State = Record<string, any>> {
+  #keys?: KeyStack;
   #middleware: Middleware<S, Context<S>>[] = [];
   #serve: typeof defaultServe;
   #serveTls: typeof defaultServeTls;
+
+  /** A set of keys, or an instance of `KeyStack` which will be used to sign
+   * cookies read and set by the application to avoid tampering with the
+   * cookies. */
+  get keys(): KeyStack | Key[] | undefined {
+    return this.#keys;
+  }
+
+  set keys(keys: KeyStack | Key[] | undefined) {
+    if (!keys) {
+      this.#keys = undefined;
+      return;
+    } else if (Array.isArray(keys)) {
+      this.#keys = new KeyStack(keys);
+    } else {
+      this.#keys = keys;
+    }
+  }
 
   /** Generic state of the application, which can be specified by passing the
    * generic argument when constructing:
    *
    *       const app = new Application<{ foo: string }>();
+   * 
+   * Or can be contextually inferred based on setting an initial state object:
+   * 
+   *       const app = new Application({ state: { foo: "bar" } });
+   * 
    */
-  state = {} as S;
+  state: S;
 
-  constructor(serve = defaultServe, serveTls = defaultServeTls) {
-    // These are just here to make mocking easy, versus being intended as part
-    // of normal usage of this class.
+  constructor(options: ApplicationOptions<S> = {}) {
+    const {
+      state,
+      keys,
+      serve = defaultServe,
+      serveTls = defaultServeTls,
+    } = options;
+
+    this.keys = keys;
+    this.state = state ?? {} as S;
     this.#serve = serve;
     this.#serveTls = serveTls;
   }
@@ -40,7 +94,7 @@ export class Application<
     request: ServerRequest,
     middleware: (context: Context<S>) => Promise<void>,
   ) => {
-    const context = new Context<S>(this, request);
+    const context = new Context(this, request);
     await middleware(context);
     await request.respond(context.response.toServerResponse());
   };
@@ -48,7 +102,7 @@ export class Application<
   /** Start listening for requests over HTTP, processing registered middleware
    * on each request. */
   async listen(addr: string | Deno.ListenOptions): Promise<void> {
-    const middleware = compose<S, Context<S>>(this.#middleware);
+    const middleware = compose(this.#middleware);
     const server = this.#serve(addr);
     for await (const request of server) {
       this.#handleRequest(request, middleware);
@@ -58,7 +112,7 @@ export class Application<
   /** Start listening for requests over HTTPS, processing registered middleware
    * on each request. */
   async listenTLS(options: HTTPSOptions): Promise<void> {
-    const middleware = compose<S, Context<S>>(this.#middleware);
+    const middleware = compose(this.#middleware);
     const server = this.#serveTls(options);
     for await (const request of server) {
       this.#handleRequest(request, middleware);

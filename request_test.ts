@@ -28,10 +28,16 @@ function createMockBodyReader(body: string): Deno.Reader {
   };
 }
 
+interface MockServerRequestOptions {
+  url?: string;
+  body?: string;
+  headerValues?: Record<string, string>;
+  proto?: string;
+}
+
 function createMockServerRequest(
-  url = "/",
-  body = "",
-  headerValues: { [header: string]: string } = {},
+  { url = "/", body = "", headerValues = {}, proto = "HTTP/1.1" }:
+    MockServerRequestOptions = {},
 ): ServerRequest {
   const headers = new Headers();
   for (const [key, value] of Object.entries(headerValues)) {
@@ -44,6 +50,7 @@ function createMockServerRequest(
     headers,
     method: "GET",
     url,
+    proto,
     body: createMockBodyReader(body),
     async respond() {},
   } as any;
@@ -53,7 +60,7 @@ test({
   name: "request.searchParams",
   fn() {
     const request = new Request(
-      createMockServerRequest("/foo?bar=baz&qat=qux"),
+      createMockServerRequest({ url: "/foo?bar=baz&qat=qux" }),
     );
     assertEquals(request.path, "/foo");
     assertEquals(request.search, "?bar=baz&qat=qux");
@@ -78,8 +85,10 @@ test({
   name: "request.acceptsEncodings",
   fn() {
     const request = new Request(
-      createMockServerRequest("/", "", {
-        "Accept-Encoding": "gzip, compress;q=0.2, identity;q=0.5",
+      createMockServerRequest({
+        headerValues: {
+          "Accept-Encoding": "gzip, compress;q=0.2, identity;q=0.5",
+        },
       }),
     );
     assertEquals(request.acceptsEncodings("gzip", "identity"), "gzip");
@@ -90,8 +99,10 @@ test({
   name: "request.accepts()",
   fn() {
     const request = new Request(
-      createMockServerRequest("/", "", {
-        Accept: "application/json;q=0.2, text/html",
+      createMockServerRequest({
+        headerValues: {
+          Accept: "application/json;q=0.2, text/html",
+        },
       }),
     );
     assertEquals(request.accepts("application/json", "text/html"), "text/html");
@@ -102,8 +113,10 @@ test({
   name: "request.accepts not provided",
   fn() {
     const request = new Request(
-      createMockServerRequest("/", "", {
-        Accept: "application/json;q=0.2, text/html",
+      createMockServerRequest({
+        headerValues: {
+          Accept: "application/json;q=0.2, text/html",
+        },
       }),
     );
     assertEquals(request.accepts(), ["text/html", "application/json"]);
@@ -113,7 +126,7 @@ test({
 test({
   name: "request.accepts none",
   fn() { // requestNoAccepts() {
-    const request = new Request(createMockServerRequest("/"));
+    const request = new Request(createMockServerRequest({ url: "/" }));
     assertEquals(request.accepts("application/json"), undefined);
   },
 });
@@ -122,7 +135,7 @@ test({
   name: "request.accepts no match",
   fn() { // requestNoAcceptsMatch() {
     const request = new Request(
-      createMockServerRequest("/", "", { Accept: "text/html" }),
+      createMockServerRequest({ headerValues: { Accept: "text/html" } }),
     );
     assertEquals(request.accepts("application/json"), undefined);
   },
@@ -132,8 +145,11 @@ test({
   name: "request.body JSON",
   async fn() { // requestBodyJson() {
     const request = new Request(
-      createMockServerRequest("/", `{"foo":"bar"}`, {
-        "Content-Type": "application/json",
+      createMockServerRequest({
+        body: `{"foo":"bar"}`,
+        headerValues: {
+          "Content-Type": "application/json",
+        },
       }),
     );
     assertEquals(await request.body(), {
@@ -147,9 +163,14 @@ test({
   name: "request.body Form URLEncoded",
   async fn() { // requestBodyForm() {
     const request = new Request(
-      createMockServerRequest("/", `foo=bar&bar=1&baz=qux+%2B+quux`, {
-        "Content-Type": "application/x-www-form-urlencoded",
-      }),
+      createMockServerRequest(
+        {
+          body: `foo=bar&bar=1&baz=qux+%2B+quux`,
+          headerValues: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        },
+      ),
     );
     const actual = await request.body();
     assertEquals(actual!.type, BodyType.Form);
@@ -169,8 +190,11 @@ test({
   name: "request.body text",
   async fn() { // requestBodyText() {
     const request = new Request(
-      createMockServerRequest("/", "hello world!", {
-        "Content-Type": "text/plain",
+      createMockServerRequest({
+        body: "hello world!",
+        headerValues: {
+          "Content-Type": "text/plain",
+        },
       }),
     );
     assertEquals(await request.body(), {
@@ -195,12 +219,51 @@ test({
   name: "request.body unsupported media type",
   async fn() { // unsupportedMediaTypeBody() {
     const request = new Request(
-      createMockServerRequest("/", "blah", {
-        "Content-Type": "multipart/form-data",
+      createMockServerRequest({
+        body: "blah",
+        headerValues: {
+          "Content-Type": "multipart/form-data",
+        },
       }),
     );
     await assertThrowsAsync(async () => {
       await request.body();
     }, httpErrors.UnsupportedMediaType);
+  },
+});
+
+test({
+  name: "request.protocol http",
+  fn() {
+    const request = new Request(createMockServerRequest());
+    assertEquals(request.protocol, "http");
+  },
+});
+
+test({
+  name: "request.protocol https",
+  fn() {
+    const request = new Request(
+      createMockServerRequest({ proto: "HTTPS/1.1" }),
+    );
+    assertEquals(request.protocol, "https");
+  },
+});
+
+test({
+  name: "request.secure is false",
+  fn() {
+    const request = new Request(createMockServerRequest());
+    assertEquals(request.secure, false);
+  },
+});
+
+test({
+  name: "request.protocol is true",
+  fn() {
+    const request = new Request(
+      createMockServerRequest({ proto: "HTTPS/1.1" }),
+    );
+    assertEquals(request.secure, true);
   },
 });
