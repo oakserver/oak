@@ -11,6 +11,12 @@ This middleware framework is inspired by [Koa](https://github.com/koajs/koa)
 and middleware router inspired by
 [koa-router](https://github.com/alexmingoia/koa-router/).
 
+This README focuses on the mechanics of the oak APIs and is intended for those
+who are familiar with JavaScript middleware frameworks like Express and Koa as
+well as a decent understanding of Deno. If you aren't familiar with these,
+please check out documentation on
+[oakserver.github.io/oak](https://oakserver.github.io/oak).
+
 ## Application, middleware, and context
 
 The `Application` class wraps the `serve()` function from the `http` package. It
@@ -111,9 +117,15 @@ The context passed to middleware has several properties:
   generic argument when constructing an `Application()`, or inferred by passing
   a state object (e.g. `Application({ state })`).
 
-The context passed to middleware has one method:
+The context passed to middleware has two methods:
 
-- `.throws()`
+- `.assert()`
+
+  Makes an assertion, which if not true, throws an `HTTPError`, which subclass
+  is identified by the second argument, with the message being the third
+  argument.
+
+- `.throw()`
 
   Throws an `HTTPError`, which subclass is identified by the first argument,
   with the message being passed as the second.
