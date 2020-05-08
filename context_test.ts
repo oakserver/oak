@@ -44,6 +44,24 @@ test({
 });
 
 test({
+  name: "context.assert()",
+  fn() {
+    const context: Context = new Context(
+      createMockApp(),
+      createMockServerRequest(),
+    );
+    assertThrows(
+      () => {
+        let loggedIn: string | undefined;
+        context.assert(loggedIn, 401, "Unauthorized");
+      },
+      httpError.Unauthorized,
+      "Unauthorized",
+    );
+  },
+});
+
+test({
   name: "context.throw()",
   fn() {
     const context = new Context(createMockApp(), createMockServerRequest());

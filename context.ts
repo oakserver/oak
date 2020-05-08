@@ -45,9 +45,30 @@ export class Context<S extends State = Record<string, any>> {
     });
   }
 
+  /** Asserts the condition and if the condition fails, creates an HTTP error
+   * with the provided status (which defaults to `500`).  The error status by 
+   * default will be set on the `.response.status`.
+   */
+  assert(
+    condition: any,
+    errorStatus: ErrorStatus = 500,
+    message?: string,
+    props?: object,
+  ): asserts condition {
+    if (condition) {
+      return;
+    }
+    const err = createHttpError(errorStatus, message);
+    if (props) {
+      Object.assign(err, props);
+    }
+    throw err;
+  }
+
   /** Create and throw an HTTP Error, which can be used to pass status
    * information which can be caught by other middleware to send more
-   * meaningful error messages back to the client.
+   * meaningful error messages back to the client.  The passed error status will
+   * be set on the `.response.status` by default as well.
    */
   throw(errorStatus: ErrorStatus, message?: string, props?: object): never {
     const err = createHttpError(errorStatus, message);
