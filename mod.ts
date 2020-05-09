@@ -9,7 +9,7 @@ export {
 } from "./cookies.ts";
 export { HttpError } from "./httpError.ts";
 export { compose as composeMiddleware, Middleware } from "./middleware.ts";
-export { BodyType, Body, Request } from "./request.ts";
+export { Body, BodyType, BodyReader, Request } from "./request.ts";
 export { Response } from "./response.ts";
 export {
   RouteParams,

@@ -4,12 +4,10 @@ import {
   test,
   assertEquals,
   assertStrictEq,
-  assertThrowsAsync,
 } from "./test_deps.ts";
 import { ServerRequest } from "./deps.ts";
-import httpErrors from "./httpError.ts";
-import { Request, BodyType } from "./request.ts";
-
+import { Request } from "./request.ts";
+import { assert } from "https://deno.land/std@v1.0.0-rc1/testing/asserts.ts";
 const encoder = new TextEncoder();
 
 function createMockBodyReader(body: string): Deno.Reader {
@@ -30,16 +28,23 @@ function createMockBodyReader(body: string): Deno.Reader {
 
 interface MockServerRequestOptions {
   url?: string;
+  host?: string;
   body?: string;
   headerValues?: Record<string, string>;
   proto?: string;
 }
 
 function createMockServerRequest(
-  { url = "/", body = "", headerValues = {}, proto = "HTTP/1.1" }:
-    MockServerRequestOptions = {},
+  {
+    url = "/",
+    host = "localhost",
+    body = "",
+    headerValues = {},
+    proto = "HTTP/1.1",
+  }: MockServerRequestOptions = {},
 ): ServerRequest {
   const headers = new Headers();
+  headers.set("host", host);
   for (const [key, value] of Object.entries(headerValues)) {
     headers.set(key, value);
   }
@@ -62,13 +67,30 @@ test({
     const request = new Request(
       createMockServerRequest({ url: "/foo?bar=baz&qat=qux" }),
     );
-    assertEquals(request.path, "/foo");
-    assertEquals(request.search, "?bar=baz&qat=qux");
+    assertEquals(request.url.pathname, "/foo");
+    assertEquals(request.url.search, "?bar=baz&qat=qux");
     assertEquals(request.method, "GET");
-    assertEquals(Array.from(request.searchParams.entries()), [
+    assertEquals(Array.from(request.url.searchParams.entries()), [
       ["bar", "baz"],
       ["qat", "qux"],
     ]);
+  },
+});
+
+test({
+  name: "request.url",
+  fn() {
+    const mockServerRequest = createMockServerRequest({
+      host: "oakserver.github.io:8080",
+      url: "/foo/bar/baz?up=down",
+      proto: "HTTPS/1.1",
+    });
+    const request = new Request(mockServerRequest);
+    assert(request.url instanceof URL);
+    assertEquals(request.url.protocol, "https:");
+    assertEquals(request.url.hostname, "oakserver.github.io");
+    assertEquals(request.url.host, "oakserver.github.io:8080");
+    assertEquals(request.url.pathname, "/foo/bar/baz");
   },
 });
 
@@ -125,7 +147,7 @@ test({
 
 test({
   name: "request.accepts none",
-  fn() { // requestNoAccepts() {
+  fn() {
     const request = new Request(createMockServerRequest({ url: "/" }));
     assertEquals(request.accepts("application/json"), undefined);
   },
@@ -133,7 +155,7 @@ test({
 
 test({
   name: "request.accepts no match",
-  fn() { // requestNoAcceptsMatch() {
+  fn() {
     const request = new Request(
       createMockServerRequest({ headerValues: { Accept: "text/html" } }),
     );
@@ -143,7 +165,7 @@ test({
 
 test({
   name: "request.body JSON",
-  async fn() { // requestBodyJson() {
+  async fn() {
     const request = new Request(
       createMockServerRequest({
         body: `{"foo":"bar"}`,
@@ -153,7 +175,7 @@ test({
       }),
     );
     assertEquals(await request.body(), {
-      type: BodyType.JSON,
+      type: "json",
       value: { foo: "bar" },
     });
   },
@@ -161,7 +183,7 @@ test({
 
 test({
   name: "request.body Form URLEncoded",
-  async fn() { // requestBodyForm() {
+  async fn() {
     const request = new Request(
       createMockServerRequest(
         {
@@ -173,7 +195,7 @@ test({
       ),
     );
     const actual = await request.body();
-    assertEquals(actual!.type, BodyType.Form);
+    assertEquals(actual.type, "form");
     if (actual && actual.type === "form") {
       assertEquals(Array.from(actual.value.entries()), [
         ["foo", "bar"],
@@ -188,7 +210,7 @@ test({
 
 test({
   name: "request.body text",
-  async fn() { // requestBodyText() {
+  async fn() {
     const request = new Request(
       createMockServerRequest({
         body: "hello world!",
@@ -198,7 +220,49 @@ test({
       }),
     );
     assertEquals(await request.body(), {
-      type: BodyType.Text,
+      type: "text",
+      value: "hello world!",
+    });
+  },
+});
+
+test({
+  name: "new Request(serverRequest, bodyContentTypes)",
+  async fn() {
+    const request = new Request(
+      createMockServerRequest({
+        body: "console.log('hello world!');",
+        headerValues: {
+          "Content-Type": "application/javascript",
+        },
+      }),
+      {
+        text: ["application/javascript"],
+      },
+    );
+    assertEquals(await request.body(), {
+      type: "text",
+      value: "console.log('hello world!');",
+    });
+  },
+});
+
+test({
+  name: "new Request(serverRequest, bodyContentTypes) defaults work",
+  async fn() {
+    const request = new Request(
+      createMockServerRequest({
+        body: "hello world!",
+        headerValues: {
+          "Content-Type": "text/plain",
+        },
+      }),
+      {
+        text: ["application/javascript"],
+      },
+    );
+    assertEquals(await request.body(), {
+      type: "text",
       value: "hello world!",
     });
   },
@@ -206,10 +270,10 @@ test({
 
 test({
   name: "request.body resolves undefined",
-  async fn() { // noBodyResolvesUndefined() {
+  async fn() {
     const request = new Request(createMockServerRequest());
     assertEquals(await request.body(), {
-      type: BodyType.Undefined,
+      type: "undefined",
       value: undefined,
     });
   },
@@ -217,7 +281,7 @@ test({
 
 test({
   name: "request.body unsupported media type",
-  async fn() { // unsupportedMediaTypeBody() {
+  async fn() {
     const request = new Request(
       createMockServerRequest({
         body: "blah",
@@ -226,27 +290,9 @@ test({
         },
       }),
     );
-    await assertThrowsAsync(async () => {
-      await request.body();
-    }, httpErrors.UnsupportedMediaType);
-  },
-});
-
-test({
-  name: "request.protocol http",
-  fn() {
-    const request = new Request(createMockServerRequest());
-    assertEquals(request.protocol, "http");
-  },
-});
-
-test({
-  name: "request.protocol https",
-  fn() {
-    const request = new Request(
-      createMockServerRequest({ proto: "HTTPS/1.1" }),
-    );
-    assertEquals(request.protocol, "https");
+    const actual = await request.body();
+    assertEquals(actual.type, "raw");
+    assert(actual.value instanceof Uint8Array);
   },
 });
 
@@ -259,7 +305,7 @@ test({
 });
 
 test({
-  name: "request.protocol is true",
+  name: "request.secure is true",
   fn() {
     const request = new Request(
       createMockServerRequest({ proto: "HTTPS/1.1" }),

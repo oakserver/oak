@@ -38,7 +38,7 @@ function createMockContext<
       path,
       search: undefined,
       searchParams: new URLSearchParams(),
-      url: path,
+      url: new URL(`http://localhost${path}`),
     },
     response: {
       status: Status.OK,
@@ -69,7 +69,7 @@ test({
   async fn() {
     const { context } = setup("/test.html");
     const fixture = await Deno.readFile("./fixtures/test.html");
-    await send(context, context.request.path, {
+    await send(context, context.request.url.pathname, {
       root: "./fixtures",
     });
     assertEquals(context.response.body, fixture);
@@ -89,7 +89,7 @@ test({
     const { context } = setup("/test.json");
     const fixture = await Deno.readFile("./fixtures/test.json.gz");
     encodingsAccepted = "gzip";
-    await send(context, context.request.path, {
+    await send(context, context.request.url.pathname, {
       root: "./fixtures",
     });
     assertEquals(context.response.body, fixture);
@@ -108,7 +108,7 @@ test({
     const { context } = setup("/test.json");
     const fixture = await Deno.readFile("./fixtures/test.json.br");
     encodingsAccepted = "br";
-    await send(context, context.request.path, {
+    await send(context, context.request.url.pathname, {
       root: "./fixtures",
     });
     assertEquals(context.response.body, fixture);
@@ -126,7 +126,7 @@ test({
   async fn() {
     const { context } = setup("/test.json");
     const fixture = await Deno.readFile("./fixtures/test.json");
-    await send(context, context.request.path, {
+    await send(context, context.request.url.pathname, {
       root: "./fixtures",
     });
     assertEquals(context.response.body, fixture);
@@ -146,7 +146,7 @@ test({
     encodingsAccepted = "identity";
     let didThrow = false;
     try {
-      await send(context, context.request.path, {
+      await send(context, context.request.url.pathname, {
         root: "./fixtures",
       });
     } catch (e) {

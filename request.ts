@@ -7,38 +7,55 @@ import { isMediaType } from "./isMediaType.ts";
 import { preferredMediaTypes } from "./mediaType.ts";
 import { HTTPMethods } from "./types.ts";
 
-export enum BodyType {
-  JSON = "json",
-  Form = "form",
-  Text = "text",
-  Undefined = "undefined",
-}
+export type BodyType =
+  | "json"
+  | "form"
+  | "text"
+  | "raw"
+  | "undefined"
+  | "reader";
+
+export type BodyJson = { type: "json"; value: any };
+export type BodyForm = { type: "form"; value: URLSearchParams };
+export type BodyText = { type: "text"; value: string };
+export type BodyRaw = { type: "raw"; value: Uint8Array };
+export type BodyUndefined = { type: "undefined"; value: undefined };
+
+export type BodyReader = { type: "reader"; value: Deno.Reader };
 
 export type Body =
-  | { type: BodyType.JSON; value: any }
-  | { type: BodyType.Form; value: URLSearchParams }
-  | { type: BodyType.Text; value: string }
-  | { type: BodyType.Undefined; value: undefined };
+  | BodyJson
+  | BodyForm
+  | BodyText
+  | BodyRaw
+  | BodyUndefined;
 
 const decoder = new TextDecoder();
 
-const jsonTypes = ["json", "application/*+json", "application/csp-report"];
-const formTypes = ["urlencoded"];
-const textTypes = ["text"];
+export interface BodyContentTypes {
+  json?: string[];
+  form?: string[];
+  text?: string[];
+}
+
+const defaultBodyContentTypes = {
+  json: ["json", "application/*+json", "application/csp-report"],
+  form: ["urlencoded"],
+  text: ["text"],
+};
 
 export class Request {
-  #body?: Body;
-  #path: string;
+  #body?: Body | BodyReader;
+  #contentTypes: Required<BodyContentTypes>;
   #rawBodyPromise?: Promise<Uint8Array>;
-  #search?: string;
-  #searchParams: URLSearchParams;
   #serverRequest: ServerRequest;
+  #url?: URL;
 
   /** Is `true` if the request has a body, otherwise `false`. */
   get hasBody(): boolean {
     return (
       this.headers.get("transfer-encoding") !== null ||
-      !!parseInt(this.headers.get("content-length") || "")
+      !!parseInt(this.headers.get("content-length") ?? "")
     );
   }
 
@@ -52,29 +69,10 @@ export class Request {
     return this.#serverRequest.method as HTTPMethods;
   }
 
-  /** The path of the request. */
-  get path(): string {
-    return this.#path;
-  }
-
-  /** The protocol for the request, either `http` or `https`. */
-  get protocol(): "http" | "https" {
-    return this.#serverRequest.proto.match(/^https/i) ? "https" : "http";
-  }
-
-  /** The search part of the URL of the request. */
-  get search(): string | undefined {
-    return this.#search;
-  }
-
-  /** The parsed `URLSearchParams` of the request. */
-  get searchParams(): URLSearchParams {
-    return this.#searchParams;
-  }
-
-  /** Shortcut to `request.protocol === "https"`. */
+  /** Shortcut to `request.url.protocol === "https"`. */
   get secure(): boolean {
-    return this.protocol === "https";
+    console.log("this.url.protocol", this.url.protocol);
+    return this.url.protocol === "https:";
   }
 
   /** Returns the _original_ Deno server request. */
@@ -82,17 +80,37 @@ export class Request {
     return this.#serverRequest;
   }
 
-  /** The URL of the request. */
-  get url(): string {
-    return this.#serverRequest.url;
+  /** A WHATWG parsed URL. */
+  get url(): URL {
+    if (!this.#url) {
+      const serverRequest = this.#serverRequest;
+      const proto = serverRequest.proto.split("/")[0].toLowerCase();
+      this.#url = new URL(
+        `${proto}://${serverRequest.headers.get("host")}${serverRequest.url}`,
+      );
+    }
+    return this.#url;
   }
 
-  constructor(serverRequest: ServerRequest) {
+  constructor(
+    serverRequest: ServerRequest,
+    bodyContentTypes: BodyContentTypes = {},
+  ) {
     this.#serverRequest = serverRequest;
-    const [path, search] = serverRequest.url.split("?");
-    this.#path = path;
-    this.#search = search ? `?${search}` : undefined;
-    this.#searchParams = new URLSearchParams(search);
+    this.#contentTypes = {
+      json: [...defaultBodyContentTypes.json],
+      form: [...defaultBodyContentTypes.form],
+      text: [...defaultBodyContentTypes.text],
+    };
+    if (bodyContentTypes.json) {
+      this.#contentTypes.json.push(...bodyContentTypes.json);
+    }
+    if (bodyContentTypes.form) {
+      this.#contentTypes.form.push(...bodyContentTypes.form);
+    }
+    if (bodyContentTypes.text) {
+      this.#contentTypes.text.push(...bodyContentTypes.text);
+    }
   }
 
   /** Returns an array of media types, accepted by the requestor, in order of
@@ -158,9 +176,42 @@ export class Request {
   /** If there is a body in the request, resolves with an object which
    * describes the body.  The `type` provides what type the body is and `body`
    * provides the actual body.
+   * 
+   * If you need access to the "raw" interface for the body, pass `true` as the
+   * first argument and the method will resolve if the `Deno.Reader`.
+   * 
+   *       app.use(async (ctx) => {
+   *         const result = await ctx.request.body(true);
+   *         const body = await Deno.readAll(result.body);
+   *       });
+   * 
    */
-  async body(): Promise<Body> {
+  async body(asDenoReader: true): Promise<BodyReader>;
+  /** If there is a body in the request, resolves with an object which
+   * describes the body.  The `type` provides what type the body is and `body`
+   * provides the actual body.
+   * 
+   * If you need access to the "raw" interface for the body, pass `true` as the
+   * first argument and the method will resolve if the `Deno.Reader`.
+   * 
+   *       app.use(async (ctx) => {
+   *         const result = await ctx.request.body(true);
+   *         const body = await Deno.readAll(result.body);
+   *       });
+   * 
+   */
+  async body(): Promise<Body>;
+  async body(asDenoReader = false): Promise<Body | BodyReader> {
     if (this.#body) {
+      if (asDenoReader && this.#body.type !== "reader") {
+        return Promise.reject(
+          new TypeError(`Body already consumed as type: "${this.#body.type}".`),
+        );
+      } else if (this.#body.type === "reader") {
+        return Promise.reject(
+          new TypeError(`Body already consumed as type: "reader".`),
+        );
+      }
       return this.#body;
     }
     const encoding = this.headers.get("content-encoding") || "identity";
@@ -170,22 +221,31 @@ export class Request {
       );
     }
     if (!this.hasBody) {
-      return { type: BodyType.Undefined, value: undefined };
+      return (this.#body = { type: "undefined", value: undefined });
     }
     const contentType = this.headers.get("content-type");
     if (contentType) {
-      const rawBody = await (this.#rawBodyPromise ||
-        (this.#rawBodyPromise = Deno.readAll(this.#serverRequest.body)));
-      const str = decoder.decode(rawBody);
-      if (isMediaType(contentType, jsonTypes)) {
-        return (this.#body = { type: BodyType.JSON, value: JSON.parse(str) });
-      } else if (isMediaType(contentType, formTypes)) {
+      if (asDenoReader) {
         return (this.#body = {
-          type: BodyType.Form,
-          value: new URLSearchParams(str.replace(/\+/g, " ")),
+          type: "reader",
+          value: this.#serverRequest.body,
         });
-      } else if (isMediaType(contentType, textTypes)) {
-        return (this.#body = { type: BodyType.Text, value: str });
+      }
+      const rawBody = await (this.#rawBodyPromise ??
+        (this.#rawBodyPromise = Deno.readAll(this.#serverRequest.body)));
+      const value = decoder.decode(rawBody);
+      const contentTypes = this.#contentTypes;
+      if (isMediaType(contentType, contentTypes.json)) {
+        return (this.#body = { type: "json", value: JSON.parse(value) });
+      } else if (isMediaType(contentType, contentTypes.form)) {
+        return (this.#body = {
+          type: "form",
+          value: new URLSearchParams(value.replace(/\+/g, " ")),
+        });
+      } else if (isMediaType(contentType, contentTypes.text)) {
+        return (this.#body = { type: "text", value });
+      } else {
+        return (this.#body = { type: "raw", value: rawBody });
       }
     }
     throw new httpErrors.UnsupportedMediaType(

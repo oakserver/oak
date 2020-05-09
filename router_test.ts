@@ -31,7 +31,7 @@ function createMockContext<
       path,
       search: undefined,
       searchParams: new URLSearchParams(),
-      url: path,
+      url: new URL(`http://localhost${path}`),
     },
     response: {
       status: Status.OK,

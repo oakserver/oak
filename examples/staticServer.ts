@@ -51,7 +51,7 @@ app.use(async (context, next) => {
   await next();
   const rt = context.response.headers.get("X-Response-Time");
   console.log(
-    `${green(context.request.method)} ${cyan(context.request.url)} - ${
+    `${green(context.request.method)} ${cyan(context.request.url.pathname)} - ${
       bold(
         String(rt),
       )
@@ -69,7 +69,7 @@ app.use(async (context, next) => {
 
 // Send static content
 app.use(async (context) => {
-  await send(context, context.request.path, {
+  await send(context, context.request.url.pathname, {
     root: `${Deno.cwd()}/examples/static`,
     index: "index.html",
   });

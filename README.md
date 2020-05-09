@@ -74,6 +74,13 @@ await app.listen({ port: 8000 });
 
 An instance of application has some properties as well:
 
+- `.bodyContentTypes`
+
+  An optional record that can add extra content types to be used when parsing
+  the body in a request. Valid keys for the record are `json`, `form`, and
+  `text` and values are arrays of strings that represent the media type to
+  apply.
+
 - `.keys`
 
   Keys to be used when signing and verifying cookies. The value can be set to
@@ -174,23 +181,6 @@ several properties:
 
   A string that represents the HTTP method for the request.
 
-- `.path`
-
-  The path part of the request URL.
-
-- `.protocol`
-
-  Either `http` or `https` based on the request.
-
-- `.search`
-
-  The raw search string part of the request.
-
-- `.searchParams`
-
-  An instance of `URLSearchParams` which contain the parsed value of the search
-  part of the request URL.
-
 - `.secure`
 
   A shortcut for `.protocol`, returning `true` if HTTPS otherwise `false`.
@@ -201,8 +191,8 @@ several properties:
 
 - `.url`
 
-  _TODO_ currently the same as `.path`, logic needs to be added to determine
-  the requested host.
+  An instance of `URL` which is based on the full URL for the request. This is
+  in place of having parts of the URL exposed on the rest of the request object.
 
 And several methods:
 
@@ -229,22 +219,26 @@ And several methods:
 
   To be implemented.
 
-- `.body()`
+- `.body(asDenoReader?: boolean)`
 
-  The method resolves to a parsed version of the request body. Currently oak
-  supports request body types of JSON, text and URL encoded form data. If the
-  content type of the request is not supported, the request will be rejected
-  with a 415 HTTP Error.
+  The method resolves to a version of the request body. Currently oak supports
+  request body types of JSON, text and URL encoded form data. If the content
+  type is missing, the request will be rejected with a 415 HTTP Error.
 
-  If the content type is supported, the method resolves with an object which
-  contains a `type` property set to `"json"`, `"text"`, `"form"`, or
-  `"undefined"` and a `value` property set with the parsed value of the
-  property. For JSON it will be the parsed value of the JSON string. For text,
-  it will simply be a string and for a form, it will be an instance of
-  `URLSearchParams`. For an undefined body, the value will be `undefined`.
+  When `asDenoReader` is false or not passed, the method resolves with an object
+  which contains a `type` property set to `"json"`, `"text"`, `"form"`,
+  `"undefined"`, or `"raw"` and a `value` property set with the parsed value of
+  the property. For JSON it will be the parsed value of the JSON string. For
+  text, it will simply be a string and for a form, it will be an instance of
+  `URLSearchParams`. For an undefined body, the value will be `undefined`. If
+  the content type is not supported, the body will be returned with a `type` of
+  `"raw"` and the `value` will be set to a `Uint8Array` containing the raw bytes
+  for the request. If the application cannot handle the content type, it should
+  throw a 415 HTTP Error.
 
-  For more advanced use cases of the body, the original server request is
-  available and contains a `.body` reader.
+  When `asDenoReader` is true, the method resolves with an object who's `type`
+  property is `"reader"` and who's `value` property is a `Deno.Reader` which is
+  the HTTP server request's native response.
 
 ### Automatic response body handling
 

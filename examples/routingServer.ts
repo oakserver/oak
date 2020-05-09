@@ -34,10 +34,10 @@ function notFound(context: Context) {
 
 const router = new Router();
 router
-  .get("/", (context, next) => {
+  .get("/", (context) => {
     context.response.body = "Hello world!";
   })
-  .get("/book", async (context, next) => {
+  .get("/book", async (context) => {
     context.response.body = Array.from(books.values());
   })
   .get<{ id: string }>("/book/:id", async (context, next) => {
@@ -55,7 +55,7 @@ app.use(async (context, next) => {
   await next();
   const rt = context.response.headers.get("X-Response-Time");
   console.log(
-    `${green(context.request.method)} ${cyan(context.request.url)} - ${
+    `${green(context.request.method)} ${cyan(context.request.url.pathname)} - ${
       bold(
         String(rt),
       )

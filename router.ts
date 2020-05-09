@@ -372,8 +372,8 @@ export class Router {
       context: RouterContext,
       next: () => Promise<void>,
     ): Promise<void> => {
-      const { path, method } = context.request;
-      const { routesMatched, matches } = this.#match(path, method);
+      const { url: { pathname }, method } = context.request;
+      const { routesMatched, matches } = this.#match(pathname, method);
 
       const contextRoutesMatched = contextRouteMatches.get(context);
       contextRouteMatches.set(
@@ -391,7 +391,7 @@ export class Router {
 
       const chain = matches.reduce((prev, layer) => {
         prev.push((context: RouterContext, next: () => Promise<void>) => {
-          const captures = layer.captures(path);
+          const captures = layer.captures(pathname);
           context.params = layer.params(captures, context.params);
           return next();
         });
