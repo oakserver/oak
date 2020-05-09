@@ -2,7 +2,7 @@
 
 import { KeyStack } from "./keyStack.ts";
 import { assertEquals } from "./test_deps.ts";
-import { assert } from "https://deno.land/std@v1.0.0-rc1/testing/asserts.ts";
+import { assert } from "https://deno.land/std@v0.50.0/testing/asserts.ts";
 const { test } = Deno;
 
 test({

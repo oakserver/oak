@@ -33,7 +33,7 @@ export {
   sep,
 } from "https://deno.land/std@v0.50.0/path/mod.ts";
 export { HmacSha256 } from "https://deno.land/std@v0.50.0/hash/sha256.ts";
-export { assert } from "https://deno.land/std@v1.0.0-rc1/testing/asserts.ts";
+export { assert } from "https://deno.land/std@v0.50.0/testing/asserts.ts";
 export {
   contentType,
   lookup,
