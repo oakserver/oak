@@ -30,6 +30,28 @@ export type Body =
   | BodyRaw
   | BodyUndefined;
 
+export interface BodyOptions {
+  /** If `true`, return a body value of `Deno.Reader`. */
+  asReader?: boolean;
+
+  /** A map of extra content types to determine how to parse the body. */
+  contentTypes?: {
+    /** Content types listed here will always return a "raw" Uint8Array. */
+    raw?: string[];
+    /** Content types listed here will be parsed as a JSON string. */
+    json?: string[];
+    /** Content types listed here will be parsed as form data and return
+     * `URLSearchParameters` as the value of the body. */
+    form?: string[];
+    /** Content types listed here will be parsed as text. */
+    text?: string[];
+  };
+}
+
+export interface BodyOptionsAsReader extends BodyOptions {
+  asReader: true;
+}
+
 const decoder = new TextDecoder();
 
 export interface BodyContentTypes {
@@ -46,7 +68,6 @@ const defaultBodyContentTypes = {
 
 export class Request {
   #body?: Body | BodyReader;
-  #contentTypes: Required<BodyContentTypes>;
   #rawBodyPromise?: Promise<Uint8Array>;
   #serverRequest: ServerRequest;
   #url?: URL;
@@ -94,23 +115,8 @@ export class Request {
 
   constructor(
     serverRequest: ServerRequest,
-    bodyContentTypes: BodyContentTypes = {},
   ) {
     this.#serverRequest = serverRequest;
-    this.#contentTypes = {
-      json: [...defaultBodyContentTypes.json],
-      form: [...defaultBodyContentTypes.form],
-      text: [...defaultBodyContentTypes.text],
-    };
-    if (bodyContentTypes.json) {
-      this.#contentTypes.json.push(...bodyContentTypes.json);
-    }
-    if (bodyContentTypes.form) {
-      this.#contentTypes.form.push(...bodyContentTypes.form);
-    }
-    if (bodyContentTypes.text) {
-      this.#contentTypes.text.push(...bodyContentTypes.text);
-    }
   }
 
   /** Returns an array of media types, accepted by the requestor, in order of
@@ -186,7 +192,7 @@ export class Request {
    *       });
    * 
    */
-  async body(asDenoReader: true): Promise<BodyReader>;
+  async body(options: BodyOptionsAsReader): Promise<BodyReader>;
   /** If there is a body in the request, resolves with an object which
    * describes the body.  The `type` provides what type the body is and `body`
    * provides the actual body.
@@ -200,10 +206,12 @@ export class Request {
    *       });
    * 
    */
-  async body(): Promise<Body>;
-  async body(asDenoReader = false): Promise<Body | BodyReader> {
+  async body(options?: BodyOptions): Promise<Body>;
+  async body(
+    { asReader, contentTypes = {} }: BodyOptions = {},
+  ): Promise<Body | BodyReader> {
     if (this.#body) {
-      if (asDenoReader && this.#body.type !== "reader") {
+      if (asReader && this.#body.type !== "reader") {
         return Promise.reject(
           new TypeError(`Body already consumed as type: "${this.#body.type}".`),
         );
@@ -225,7 +233,7 @@ export class Request {
     }
     const contentType = this.headers.get("content-type");
     if (contentType) {
-      if (asDenoReader) {
+      if (asReader) {
         return (this.#body = {
           type: "reader",
           value: this.#serverRequest.body,
@@ -234,15 +242,29 @@ export class Request {
       const rawBody = await (this.#rawBodyPromise ??
         (this.#rawBodyPromise = Deno.readAll(this.#serverRequest.body)));
       const value = decoder.decode(rawBody);
-      const contentTypes = this.#contentTypes;
-      if (isMediaType(contentType, contentTypes.json)) {
+      const contentTypesRaw = contentTypes.raw;
+      const contentTypesJson = [
+        ...defaultBodyContentTypes.json,
+        ...(contentTypes.json ?? []),
+      ];
+      const contentTypesForm = [
+        ...defaultBodyContentTypes.form,
+        ...(contentTypes.form ?? []),
+      ];
+      const contentTypesText = [
+        ...defaultBodyContentTypes.text,
+        ...(contentTypes.text ?? []),
+      ];
+      if (contentTypesRaw && isMediaType(contentType, contentTypesRaw)) {
+        return (this.#body = { type: "raw", value: rawBody });
+      } else if (isMediaType(contentType, contentTypesJson)) {
         return (this.#body = { type: "json", value: JSON.parse(value) });
-      } else if (isMediaType(contentType, contentTypes.form)) {
+      } else if (isMediaType(contentType, contentTypesForm)) {
         return (this.#body = {
           type: "form",
           value: new URLSearchParams(value.replace(/\+/g, " ")),
         });
-      } else if (isMediaType(contentType, contentTypes.text)) {
+      } else if (isMediaType(contentType, contentTypesText)) {
         return (this.#body = { type: "text", value });
       } else {
         return (this.#body = { type: "raw", value: rawBody });

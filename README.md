@@ -74,13 +74,6 @@ await app.listen({ port: 8000 });
 
 An instance of application has some properties as well:
 
-- `.bodyContentTypes`
-
-  An optional record that can add extra content types to be used when parsing
-  the body in a request. Valid keys for the record are `json`, `form`, and
-  `text` and values are arrays of strings that represent the media type to
-  apply.
-
 - `.keys`
 
   Keys to be used when signing and verifying cookies. The value can be set to
@@ -219,14 +212,14 @@ And several methods:
 
   To be implemented.
 
-- `.body(asDenoReader?: boolean)`
+- `.body(options?: BodyOptions)`
 
   The method resolves to a version of the request body. Currently oak supports
   request body types of JSON, text and URL encoded form data. If the content
   type is missing, the request will be rejected with a 415 HTTP Error.
 
-  When `asDenoReader` is false or not passed, the method resolves with an object
-  which contains a `type` property set to `"json"`, `"text"`, `"form"`,
+  When the option `asReader` is false or not passed, the method resolves with an
+  object which contains a `type` property set to `"json"`, `"text"`, `"form"`,
   `"undefined"`, or `"raw"` and a `value` property set with the parsed value of
   the property. For JSON it will be the parsed value of the JSON string. For
   text, it will simply be a string and for a form, it will be an instance of
@@ -236,9 +229,44 @@ And several methods:
   for the request. If the application cannot handle the content type, it should
   throw a 415 HTTP Error.
 
-  When `asDenoReader` is true, the method resolves with an object who's `type`
-  property is `"reader"` and who's `value` property is a `Deno.Reader` which is
-  the HTTP server request's native response.
+  When option `asReader` is true, the method resolves with an object who's
+  `type` property is `"reader"` and who's `value` property is a `Deno.Reader`
+  which is the HTTP server request's native response.
+
+  You can use the option `contentTypes` to set additional media types that when
+  present as the content type for the request, the body will be parsed
+  accordingly. The options takes possibly four keys: `json`, `form`, `text`,
+  and `raw`. For example if you wanted JavaScript sent to the server to be
+  parsed as text, you would do something like this:
+
+  ```ts
+  app.use((ctx) => {
+    const result = await ctx.request.body({
+      contextTypes: {
+        text: ["application/javascript"],
+      },
+    });
+    result.type; // "text"
+    result.value; // a string containing the text
+  });
+  ```
+
+  In particular the `contentTypes.raw` can be used to override default types
+  that are supported that you would want the middleware to handle itself. For
+  example if you wanted the middleware to parse all text media types itself, you
+  would do something like this:
+
+  ```ts
+  app.use((ctx) => {
+    const result = await ctx.request.body({
+      contentTypes: {
+        raw: ["text"],
+      },
+    });
+    result.type; // "raw"
+    result.value; // a Uint8Array of all of the bytes read from the request
+  });
+  ```
 
 ### Automatic response body handling
 

@@ -42,4 +42,4 @@ export { assert } from "https://deno.land/std@0.50.0/testing/asserts.ts";
 export {
   contentType,
   lookup,
-} from "https://deno.land/x/media_types@v2.0.0/mod.ts";
+} from "https://deno.land/x/media_types@v2.2.0/mod.ts";
