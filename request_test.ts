@@ -7,7 +7,8 @@ import {
 } from "./test_deps.ts";
 import { ServerRequest } from "./deps.ts";
 import { Request } from "./request.ts";
-import { assert } from "https://deno.land/std@v0.50.0/testing/asserts.ts";
+import { assert } from "https://deno.land/std@0.50.0/testing/asserts.ts";
+import { decoder } from "https://deno.land/std@0.50.0/encoding/utf8.ts";
 const encoder = new TextEncoder();
 
 function createMockBodyReader(body: string): Deno.Reader {
@@ -227,7 +228,24 @@ test({
 });
 
 test({
-  name: "new Request(serverRequest, bodyContentTypes)",
+  name: "request.body({ asReader: true })",
+  async fn() {
+    const request = new Request(
+      createMockServerRequest({
+        body: "foo",
+        headerValues: {
+          "Content-Type": "text/plain",
+        },
+      }),
+    );
+    const actual = await request.body({ asReader: true });
+    assertEquals(actual.type, "reader");
+    assertEquals(decoder.decode(await Deno.readAll(actual.value)), "foo");
+  },
+});
+
+test({
+  name: "request.body(contentTypes)",
   async fn() {
     const request = new Request(
       createMockServerRequest({
@@ -236,19 +254,21 @@ test({
           "Content-Type": "application/javascript",
         },
       }),
+    );
+    assertEquals(
+      await request.body(
+        { contentTypes: { text: ["application/javascript"] } },
+      ),
       {
-        text: ["application/javascript"],
+        type: "text",
+        value: "console.log('hello world!');",
       },
     );
-    assertEquals(await request.body(), {
-      type: "text",
-      value: "console.log('hello world!');",
-    });
   },
 });
 
 test({
-  name: "new Request(serverRequest, bodyContentTypes) defaults work",
+  name: "request.body(contentTypes) does not overwrite",
   async fn() {
     const request = new Request(
       createMockServerRequest({
@@ -257,14 +277,16 @@ test({
           "Content-Type": "text/plain",
         },
       }),
+    );
+    assertEquals(
+      await request.body(
+        { contentTypes: { text: ["application/javascript"] } },
+      ),
       {
-        text: ["application/javascript"],
+        type: "text",
+        value: "hello world!",
       },
     );
-    assertEquals(await request.body(), {
-      type: "text",
-      value: "hello world!",
-    });
   },
 });
 

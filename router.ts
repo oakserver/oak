@@ -46,10 +46,7 @@ interface AllowedMethodsOptions {
   throw?: boolean;
 }
 
-export interface RouteParams {
-  [key: string]: string | undefined;
-  [key: number]: string | undefined;
-}
+export type RouteParams = Record<string | number, string | undefined>;
 
 /** The context passed router middleware.  */
 export interface RouterContext<

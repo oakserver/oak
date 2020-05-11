@@ -48,18 +48,6 @@ export class Application<S extends State = Record<string, any>> {
   #serveTls: typeof defaultServeTls;
   #server: Server | undefined
 
-  /** Optional additional content types that should be used for parsing of the
-   * body in requests.  Valid keys are `json`, `text`, and `form`.
-   * 
-   * For example, to have JavaScript automatically parsed as text, you would do
-   * the following:
-   * 
-   *       const app = new Application();
-   *       app.bodyContentTypes = { text: ["application/javascript"] };
-   * 
-   */
-  bodyContentTypes?: BodyContentTypes;
-
   /** A set of keys, or an instance of `KeyStack` which will be used to sign
    * cookies read and set by the application to avoid tampering with the
    * cookies. */

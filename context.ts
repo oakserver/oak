@@ -38,7 +38,7 @@ export class Context<S extends State = Record<string, any>> {
   constructor(app: Application<S>, serverRequest: ServerRequest) {
     this.app = app;
     this.state = app.state;
-    this.request = new Request(serverRequest, app.bodyContentTypes);
+    this.request = new Request(serverRequest);
     this.cookies = new Cookies(this.request, this.response, {
       keys: this.app.keys as KeyStack | undefined,
       secure: this.request.secure,

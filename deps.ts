@@ -2,6 +2,9 @@
 
 // This file contains the external dependencies that oak depends upon
 
+// `std` dependencies
+
+export { HmacSha256 } from "https://deno.land/std@0.50.0/hash/sha256.ts";
 export {
   HTTPOptions,
   HTTPSOptions,
@@ -10,11 +13,11 @@ export {
   Server,
   ServerRequest,
   serveTLS,
-} from "https://deno.land/std@v0.50.0/http/server.ts";
+} from "https://deno.land/std@0.50.0/http/server.ts";
 export {
   Status,
   STATUS_TEXT,
-} from "https://deno.land/std@v0.50.0/http/http_status.ts";
+} from "https://deno.land/std@0.50.0/http/http_status.ts";
 export {
   Cookies,
   Cookie,
@@ -31,10 +34,11 @@ export {
   parse,
   resolve,
   sep,
-} from "https://deno.land/std@v0.50.0/path/mod.ts";
-export { HmacSha256 } from "https://deno.land/std@v0.50.0/hash/sha256.ts";
-export { assert } from "https://deno.land/std@v0.50.0/testing/asserts.ts";
+} from "https://deno.land/std@0.50.0/path/mod.ts";
+export { assert } from "https://deno.land/std@0.50.0/testing/asserts.ts";
+
+// 3rd party dependencies
 export {
   contentType,
   lookup,
-} from "https://deno.land/x/media_types@v2.0.0/mod.ts";
+} from "https://deno.land/x/media_types@v2.2.0/mod.ts";
