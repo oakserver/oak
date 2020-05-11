@@ -6,6 +6,7 @@ import {
   serve as defaultServe,
   serveTLS as defaultServeTls,
   ServerRequest,
+  Server
 } from "./deps.ts";
 import { Key, KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
@@ -45,6 +46,7 @@ export class Application<S extends State = Record<string, any>> {
   #middleware: Middleware<S, Context<S>>[] = [];
   #serve: typeof defaultServe;
   #serveTls: typeof defaultServeTls;
+  #server: Server | undefined
 
   /** Optional additional content types that should be used for parsing of the
    * body in requests.  Valid keys are `json`, `text`, and `form`.
@@ -88,6 +90,7 @@ export class Application<S extends State = Record<string, any>> {
    */
   state: S;
 
+
   constructor(options: ApplicationOptions<S> = {}) {
     const {
       state,
@@ -115,9 +118,11 @@ export class Application<S extends State = Record<string, any>> {
   /** Start listening for requests over HTTP, processing registered middleware
    * on each request. */
   async listen(addr: string | Deno.ListenOptions): Promise<void> {
+    
     const middleware = compose(this.#middleware);
-    const server = this.#serve(addr);
-    for await (const request of server) {
+    this.#server = this.#serve(addr);
+
+    for await (const request of this.#server) {
       this.#handleRequest(request, middleware);
     }
   }
@@ -125,11 +130,21 @@ export class Application<S extends State = Record<string, any>> {
   /** Start listening for requests over HTTPS, processing registered middleware
    * on each request. */
   async listenTLS(options: HTTPSOptions): Promise<void> {
+    
     const middleware = compose(this.#middleware);
-    const server = this.#serveTls(options);
-    for await (const request of server) {
+    this.#server = this.#serveTls(options);
+    
+    for await (const request of this.#server) {
       this.#handleRequest(request, middleware);
     }
+  }
+
+  async close() {
+
+    if (!this.#server) 
+      throw "Server cannot be closed if not started";
+
+    await this.#server.close();
   }
 
   /** Register middleware to be used with the application. */

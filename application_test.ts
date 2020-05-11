@@ -1,6 +1,6 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { test, assert, assertEquals, assertStrictEq } from "./test_deps.ts";
+import { test, assert, assertEquals, assertStrictEq, assertThrowsAsync } from "./test_deps.ts";
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import {
@@ -268,5 +268,25 @@ test({
     const app = new Application();
     app.keys = ["foo"];
     assert(app.keys instanceof KeyStack);
+  },
+});
+
+
+test({
+  name: "can close application after listening", 
+  async fn() {
+
+    const app = new Application({ serve });    
+    await app.listen("");
+    await app.close(); 
+  },
+});
+
+test({
+  name: "cannot close if app is not already listening",
+  async fn() {
+    const app = new Application({ serve });
+    //await app.listen(""); //NOTE: not listening 
+    assertThrowsAsync(app.close);
   },
 });
