@@ -298,7 +298,6 @@ test({
 
 test({
   name: "app.addEventListener()",
-  ignore: true, // rc2 does not expose ErrorEvent, need rc3
   async fn() {
     const app = new Application({ serve });
     app.addEventListener("error", (evt) => {
