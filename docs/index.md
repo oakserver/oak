@@ -8,6 +8,9 @@ This middleware framework is inspired by [Koa](https://github.com/koajs/koa)
 and middleware router inspired by
 [koa-router](https://github.com/alexmingoia/koa-router/).
 
+- [Frequently Asked Questions](./FAQ)
+- [Getting Started](#getting-started)
+
 ## Getting started
 
 Oak is designed with Deno in mind, and versions of oak are tagged for specific
