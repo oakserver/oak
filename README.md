@@ -22,9 +22,9 @@ Also, check out our [FAQs](https://oakserver.github.io/oak/FAQ).
 _Warning_ The examples in this README pull from `master`, which may not make
 sense to do when you are looking to actually deploy a workload. You would want
 to "pin" to a particular version which is compatible with the version of Deno
-you are using and has a fixed set of APIs you would expect.  
-`https://deno.land/x/` supports using git tags in the URL to direct you at a
-particular version. So to use version 3.0.0 of oak, you would want to import
+you are using and has a fixed set of APIs you would expect. `https://deno.land/x/`
+supports using git tags in the URL to direct you at a particular version. So to
+use version 3.0.0 of oak, you would want to import
 `https://deno.land/x/oak@v3.0.0/mod.ts`.
 
 ## Application, middleware, and context
