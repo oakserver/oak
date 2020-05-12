@@ -27,6 +27,7 @@ export {
 export { Response } from "./response.ts";
 export {
   RouteParams,
+  Route,
   Router,
   RouterContext,
   RouterMiddleware,

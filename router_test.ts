@@ -438,3 +438,18 @@ test({
     assertEquals(callStack, [0]);
   },
 });
+
+test({
+  name: "router as iterator",
+  fn() {
+    const router = new Router();
+    router.all("/route", () => {});
+    router.delete("/route/:id", () => {});
+    router.patch("/route/:id", () => {});
+    const routes = [...router];
+    assertEquals(routes.length, 3);
+    assertEquals(routes[0].path, "/route");
+    assertEquals(routes[0].methods, ["HEAD", "DELETE", "GET", "POST", "PUT"]);
+    assertEquals(routes[0].middleware.length, 1);
+  },
+});

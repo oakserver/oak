@@ -48,6 +48,13 @@ interface AllowedMethodsOptions {
 
 export type RouteParams = Record<string | number, string | undefined>;
 
+export interface Route {
+  path: string;
+  methods: HTTPMethods[];
+  middleware: RouterMiddleware[];
+  options?: RouterOptions;
+}
+
 /** The context passed router middleware.  */
 export interface RouterContext<
   P extends RouteParams = RouteParams,
@@ -109,7 +116,7 @@ class Layer {
     middleware: RouterMiddleware | RouterMiddleware[],
     public options: LayerOptions = {},
   ) {
-    this.name = options.name || null;
+    this.name = options.name ?? null;
     this.stack = Array.isArray(middleware) ? middleware : [middleware];
     if (this.methods.includes("GET")) {
       this.methods.unshift("HEAD");
@@ -150,6 +157,16 @@ class Layer {
     }
     return this;
   }
+}
+
+function inspectLayer(layer: Layer): Route {
+  const { path, methods, stack, options } = layer;
+  return {
+    path,
+    methods: [...methods],
+    middleware: [...stack],
+    options: options ? { ...options } : undefined,
+  };
 }
 
 const contextRouteMatches = new WeakMap<RouterContext, Layer[]>();
@@ -397,5 +414,42 @@ export class Router {
       return compose(chain)(context as RouterContext);
     };
     return dispatch as Middleware;
+  }
+
+  // Iterator interfaces
+
+  *entries(): IterableIterator<[Route, Route]> {
+    for (const layer of this.#stack) {
+      const value = inspectLayer(layer);
+      yield [value, value];
+    }
+  }
+
+  forEach(
+    callback: (value1: Route, value2: Route, router: this) => void,
+    thisArg: any = null,
+  ): void {
+    for (const layer of this.#stack) {
+      const value = inspectLayer(layer);
+      callback.call(thisArg, value, value, this);
+    }
+  }
+
+  *keys(): IterableIterator<Route> {
+    for (const layer of this.#stack) {
+      yield inspectLayer(layer);
+    }
+  }
+
+  *values(): IterableIterator<Route> {
+    for (const layer of this.#stack) {
+      yield inspectLayer(layer);
+    }
+  }
+
+  *[Symbol.iterator](): IterableIterator<Route> {
+    for (const layer of this.#stack) {
+      yield inspectLayer(layer);
+    }
   }
 }
