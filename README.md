@@ -257,7 +257,7 @@ And several methods:
   ```ts
   app.use((ctx) => {
     const result = await ctx.request.body({
-      contextTypes: {
+      contentTypes: {
         text: ["application/javascript"],
       },
     });
