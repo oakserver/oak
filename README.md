@@ -17,6 +17,8 @@ well as a decent understanding of Deno. If you aren't familiar with these,
 please check out documentation on
 [oakserver.github.io/oak](https://oakserver.github.io/oak).
 
+Also, check out our [FAQs](https://oakserver.github.io/oak/FAQ).
+
 _Warning_ The examples in this README pull from `master`, which may not make
 sense to do when you are looking to actually deploy a workload. You would want
 to "pin" to a particular version which is compatible with the version of Deno
@@ -196,8 +198,9 @@ several properties:
 
 - `.url`
 
-  An instance of `URL` which is based on the full URL for the request. This is
-  in place of having parts of the URL exposed on the rest of the request object.
+  An instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL)
+  which is based on the full URL for the request. This is in place of having
+  parts of the URL exposed on the rest of the request object.
 
 And several methods:
 
