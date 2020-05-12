@@ -100,7 +100,7 @@ export class Request {
     return this.#serverRequest;
   }
 
-  /** A WHATWG parsed URL. */
+  /** A parsed URL for the request which complies with the browser standards. */
   get url(): URL {
     if (!this.#url) {
       const serverRequest = this.#serverRequest;

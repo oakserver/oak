@@ -6,8 +6,6 @@
 
 export { HmacSha256 } from "https://deno.land/std@0.50.0/hash/sha256.ts";
 export {
-  HTTPOptions,
-  HTTPSOptions,
   Response,
   serve,
   Server,

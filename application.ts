@@ -2,14 +2,46 @@
 
 import { Context } from "./context.ts";
 import {
-  HTTPSOptions,
   serve as defaultServe,
   serveTLS as defaultServeTls,
   ServerRequest,
 } from "./deps.ts";
 import { Key, KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
-import { BodyContentTypes } from "./request.ts";
+
+export interface ListenOptionsBase {
+  hostname?: string;
+  port: number;
+  secure?: false;
+  signal?: AbortSignal;
+}
+
+export interface ListenOptionsTls {
+  certFile: string;
+  hostname?: string;
+  keyFile: string;
+  port: number;
+  secure: true;
+  signal?: AbortSignal;
+}
+
+export type ListenOptions = ListenOptionsTls | ListenOptionsBase;
+
+function isOptionsTls(options: ListenOptions): options is ListenOptionsTls {
+  return options.secure === true;
+}
+
+interface ErrorEventListener {
+  (evt: ErrorEvent): void | Promise<void>;
+}
+
+interface ErrorEventListenerObject {
+  handleEvent(evt: ErrorEvent): void | Promise<void>;
+}
+
+type ErrorEventListenerOrEventListenerObject =
+  | ErrorEventListener
+  | ErrorEventListenerObject;
 
 export interface ApplicationOptions<S> {
   /** An initial set of keys (or instance of `KeyGrip`) to be used for signing
@@ -40,7 +72,8 @@ export type State = Record<string | number | symbol, any>;
  * The `context.state` can be typed via passing a generic argument when
  * constructing an instance of `Application`.
  */
-export class Application<S extends State = Record<string, any>> {
+export class Application<S extends State = Record<string, any>>
+  extends EventTarget {
   #keys?: KeyStack;
   #middleware: Middleware<S, Context<S>>[] = [];
   #serve: typeof defaultServe;
@@ -77,6 +110,7 @@ export class Application<S extends State = Record<string, any>> {
   state: S;
 
   constructor(options: ApplicationOptions<S> = {}) {
+    super();
     const {
       state,
       keys,
@@ -100,23 +134,52 @@ export class Application<S extends State = Record<string, any>> {
     await request.respond(context.response.toServerResponse());
   };
 
-  /** Start listening for requests over HTTP, processing registered middleware
-   * on each request. */
-  async listen(addr: string | Deno.ListenOptions): Promise<void> {
-    const middleware = compose(this.#middleware);
-    const server = this.#serve(addr);
-    for await (const request of server) {
-      this.#handleRequest(request, middleware);
-    }
+  addEventListener(
+    type: "error",
+    listener: ErrorEventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ): void {
+    super.addEventListener(type, listener, options);
   }
 
-  /** Start listening for requests over HTTPS, processing registered middleware
-   * on each request. */
-  async listenTLS(options: HTTPSOptions): Promise<void> {
+  /** Start listening for requests, processing registered middleware on each
+   * request.  If the options `.secure` is undefined or `false`, the listening
+   * will be over HTTP.  If the options `.secure` property is `true`, a
+   * `.certFile` and a `.keyFile` property need to be supplied and requests
+   * will be processed over HTTPS. */
+  async listen(addr: string): Promise<void>;
+  /** Start listening for requests, processing registered middleware on each
+   * request.  If the options `.secure` is undefined or `false`, the listening
+   * will be over HTTP.  If the options `.secure` property is `true`, a
+   * `.certFile` and a `.keyFile` property need to be supplied and requests
+   * will be processed over HTTPS. */
+  async listen(options: ListenOptions): Promise<void>;
+  async listen(options: string | ListenOptions): Promise<void> {
+    if (typeof options === "string") {
+      const [hostname, port] = options.split(":");
+      options = {
+        hostname,
+        port: parseInt(port, 10),
+      };
+    }
     const middleware = compose(this.#middleware);
-    const server = this.#serveTls(options);
+    const server = isOptionsTls(options)
+      ? this.#serveTls(options)
+      : this.#serve(options);
+    const { signal } = options;
     for await (const request of server) {
-      this.#handleRequest(request, middleware);
+      this.#handleRequest(request, middleware).then(undefined, (error) => {
+        const message = error instanceof Error ? error.message : undefined;
+        this.dispatchEvent(new ErrorEvent("error", { message, error }));
+      });
+      if (signal && signal.aborted) {
+        return;
+      }
     }
   }
 

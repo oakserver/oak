@@ -1,21 +1,20 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
 import { test, assert, assertEquals, assertStrictEq } from "./test_deps.ts";
-import { Application } from "./application.ts";
+import { Application, ListenOptions, ListenOptionsTls } from "./application.ts";
 import { Context } from "./context.ts";
 import {
-  HTTPOptions,
-  HTTPSOptions,
   serve as denoServe,
   serveTLS as denoServeTls,
   Server,
   ServerRequest,
 } from "./deps.ts";
 import { Data, KeyStack } from "./keyStack.ts";
+import httpErrors from "./httpError.ts";
 
 let serverRequestStack: ServerRequest[] = [];
-let addrStack: Array<string | HTTPOptions> = [];
-let httpsOptionsStack: HTTPSOptions[] = [];
+let addrStack: Array<string | ListenOptions> = [];
+let httpsOptionsStack: Array<Omit<ListenOptionsTls, "secure">> = [];
 
 function teardown() {
   serverRequestStack = [];
@@ -33,12 +32,16 @@ class MockServer {
   }
 }
 
-const serve: typeof denoServe = function (addr: string | HTTPOptions): Server {
+const serve: typeof denoServe = function (
+  addr: string | ListenOptions,
+): Server {
   addrStack.push(addr);
   return new MockServer() as Server;
 };
 
-const serveTls: typeof denoServeTls = function (options: HTTPSOptions): Server {
+const serveTls: typeof denoServeTls = function (
+  options: Omit<ListenOptionsTls, "secure">,
+): Server {
   httpsOptionsStack.push(options);
   return new MockServer() as Server;
 };
@@ -175,7 +178,7 @@ test({
   async fn() {
     const app = new Application({ serve });
     await app.listen("127.0.0.1:8080");
-    assertEquals(addrStack, ["127.0.0.1:8080"]);
+    assertEquals(addrStack, [{ hostname: "127.0.0.1", port: 8080 }]);
     teardown();
   },
 });
@@ -194,14 +197,16 @@ test({
   name: "app.listenTLS",
   async fn() {
     const app = new Application({ serve, serveTls });
-    await app.listenTLS({
+    await app.listen({
       port: 8000,
+      secure: true,
       certFile: "",
       keyFile: "",
     });
     assertEquals(httpsOptionsStack, [
       {
         port: 8000,
+        secure: true,
         certFile: "",
         keyFile: "",
       },
@@ -224,6 +229,7 @@ test({
     });
     await app.listen("");
     assert(called);
+    teardown();
   },
 });
 
@@ -268,5 +274,41 @@ test({
     const app = new Application();
     app.keys = ["foo"];
     assert(app.keys instanceof KeyStack);
+  },
+});
+
+test({
+  name: "app.listen({ signal })",
+  async fn() {
+    const app = new Application({ serve });
+    const abortController = new AbortController();
+    serverRequestStack.push(createMockRequest());
+    serverRequestStack.push(createMockRequest());
+    let count = 0;
+    app.use(() => {
+      count++;
+    });
+    const p = app.listen("localhost:8000");
+    abortController.abort();
+    await p;
+    assertEquals(count, 2);
+    teardown();
+  },
+});
+
+test({
+  name: "app.addEventListener()",
+  ignore: true, // rc2 does not expose ErrorEvent, need rc3
+  async fn() {
+    const app = new Application({ serve });
+    app.addEventListener("error", (evt) => {
+      assert(evt.error instanceof httpErrors.InternalServerError);
+    });
+    serverRequestStack.push(createMockRequest());
+    app.use((ctx) => {
+      ctx.throw(500, "oops!");
+    });
+    await app.listen({ port: 8000 });
+    teardown();
   },
 });

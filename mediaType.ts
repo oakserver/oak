@@ -217,8 +217,8 @@ function getMediaTypePriority(
     if (
       spec &&
       ((priority.s || 0) - (spec.s || 0) ||
-        (priority.q || 0) - (spec.q || 0) ||
-        (priority.o || 0) - (spec.o || 0)) < 0
+          (priority.q || 0) - (spec.q || 0) ||
+          (priority.o || 0) - (spec.o || 0)) < 0
     ) {
       priority = spec;
     }

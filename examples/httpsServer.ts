@@ -11,7 +11,7 @@ import {
   yellow,
 } from "https://deno.land/std@0.50.0/fmt/colors.ts";
 
-import { Application, HTTPSOptions } from "../mod.ts";
+import { Application } from "../mod.ts";
 
 const app = new Application();
 
@@ -39,11 +39,12 @@ app.use((ctx) => {
   ctx.response.body = "Hello World!";
 });
 
-const options: HTTPSOptions = {
+const options = {
   port: 8000,
+  secure: true,
   certFile: "./examples/tls/localhost.crt",
   keyFile: "./examples/tls/localhost.key",
 };
 console.log(bold("Start listening on ") + yellow(String(options.port)));
-await app.listenTLS(options);
+await app.listen(options);
 console.log(bold("Finished."));

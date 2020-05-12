@@ -78,7 +78,9 @@ app.use(router.allowedMethods());
 // A basic 404 page
 app.use(notFound);
 
-const address = "127.0.0.1:8000";
-console.log(bold("Start listening on ") + yellow(address));
-await app.listen(address);
+const options = { hostname: "127.0.0.1", port: 8000 };
+console.log(
+  bold("Start listening on ") + yellow(`${options.hostname}:${options.port}`),
+);
+await app.listen(options);
 console.log(bold("Finished."));

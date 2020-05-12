@@ -17,6 +17,14 @@ well as a decent understanding of Deno. If you aren't familiar with these,
 please check out documentation on
 [oakserver.github.io/oak](https://oakserver.github.io/oak).
 
+_Warning_ The examples in this README pull from `master`, which may not make
+sense to do when you are looking to actually deploy a workload. You would want
+to "pin" to a particular version which is compatible with the version of Deno
+you are using and has a fixed set of APIs you would expect.  
+`https://deno.land/x/` supports using git tags in the URL to direct you at a
+particular version. So to use version 3.0.0 of oak, you would want to import
+`https://deno.land/x/oak@v3.0.0/mod.ts`.
+
 ## Application, middleware, and context
 
 The `Application` class wraps the `serve()` function from the `http` package. It
@@ -71,6 +79,10 @@ app.use((ctx) => {
 
 await app.listen({ port: 8000 });
 ```
+
+To provide an HTTPS server, then the `app.listen()` options need to include the
+options `.secure` option set to `true` and supply a `.certFile` and a `.keyFile`
+options as well.
 
 An instance of application has some properties as well:
 
@@ -285,6 +297,57 @@ otherwise it will be set to `text/plain`. If the value is an object, other
 than a `Uint8Array` or `null`, the object will be passed to `JSON.stringify()`
 and the `Content-Type` will be set to `application/json`.
 
+### Closing the server
+
+If you want to close the application, the application supports the option of
+an [abort signal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
+Here is an example of using the signal:
+
+```ts
+import { Application } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application();
+
+const controller = new AbortController();
+const { signal } = controller;
+
+// Add some middleware using `app.use()`
+
+const listenPromise = app.listen({ port: 8000, signal });
+
+// In order to close the sever...
+controller.abort();
+
+// Listen will stop listening for requests and the promise will resolve...
+await listenPromise;
+// and you can do something after the close to shutdown
+```
+
+### Error handling
+
+The class `Application` extends the global `EventTarget` in Deno, and when
+uncaught errors occur in the middleware or sending of responses, an `EventError`
+will be dispatched to the application. To listen for these errors, you would
+add an event handler to the application instance:
+
+```ts
+import { Application } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application();
+
+app.addEventListener("error", (evt) => {
+  // Will log the thrown error to the console.
+  console.log(evt.error);
+});
+
+app.use((ctx) => {
+  // Will throw a 500 on every request.
+  ctx.throw(500);
+});
+
+await app.listen({ port: 80 });
+```
+
 ## Router
 
 The `Router` class produces middleware which can be used with an `Application`
@@ -339,18 +402,16 @@ A basic usage would look something like this:
 ```ts
 import { Application, send } from "https://deno.land/x/oak/mod.ts";
 
-(async () => {
-  const app = new Application();
+const app = new Application();
 
-  app.use(async (context) => {
-    await send(context, context.request.url.pathname, {
-      root: `${Deno.cwd()}/examples/static`,
-      index: "index.html",
-    });
+app.use(async (context) => {
+  await send(context, context.request.url.pathname, {
+    root: `${Deno.cwd()}/examples/static`,
+    index: "index.html",
   });
+});
 
-  await app.listen({ port: 8000 });
-})();
+await app.listen({ port: 8000 });
 ```
 
 ---

@@ -136,7 +136,8 @@ function getEncodingPriority(
 
     if (
       spec &&
-      (priority.s! - spec.s! || priority.q - spec.q || priority.o! - spec.o!) <
+      (priority.s! - spec.s! || priority.q - spec.q ||
+          priority.o! - spec.o!) <
         0
     ) {
       priority = spec;
