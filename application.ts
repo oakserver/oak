@@ -5,10 +5,11 @@ import {
   serve as defaultServe,
   serveTLS as defaultServeTls,
   ServerRequest,
+  Status,
+  STATUS_TEXT,
 } from "./deps.ts";
 import { Key, KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
-
 export interface ListenOptionsBase {
   hostname?: string;
   port: number;
@@ -31,17 +32,22 @@ function isOptionsTls(options: ListenOptions): options is ListenOptionsTls {
   return options.secure === true;
 }
 
-interface ErrorEventListener {
-  (evt: ErrorEvent): void | Promise<void>;
+interface ApplicationErrorEventListener<S> {
+  (evt: ApplicationErrorEvent<S>): void | Promise<void>;
 }
 
-interface ErrorEventListenerObject {
-  handleEvent(evt: ErrorEvent): void | Promise<void>;
+interface ApplicationErrorEventListenerObject<S> {
+  handleEvent(evt: ApplicationErrorEvent<S>): void | Promise<void>;
 }
 
-type ErrorEventListenerOrEventListenerObject =
-  | ErrorEventListener
-  | ErrorEventListenerObject;
+export interface ApplicationErrorEventInit<S extends State>
+  extends ErrorEventInit {
+  context?: Context<S>;
+}
+
+type ApplicationErrorEventListenerOrEventListenerObject<S> =
+  | ApplicationErrorEventListener<S>
+  | ApplicationErrorEventListenerObject<S>;
 
 export interface ApplicationOptions<S> {
   /** An initial set of keys (or instance of `KeyGrip`) to be used for signing
@@ -65,6 +71,15 @@ export interface ApplicationOptions<S> {
 }
 
 export type State = Record<string | number | symbol, any>;
+
+export class ApplicationErrorEvent<S extends State> extends ErrorEvent {
+  context?: Context<S>;
+
+  constructor(type: string, eventInitDict: ApplicationErrorEventInit<S>) {
+    super(type, eventInitDict);
+    this.context = eventInitDict.context;
+  }
+}
 
 /** A class which registers middleware (via `.use()`) and then processes
  * inbound requests against that middleware (via `.listen()`).
@@ -124,19 +139,60 @@ export class Application<S extends State = Record<string, any>>
     this.#serveTls = serveTls;
   }
 
+  /** Deal with uncaught errors in either the middleware or sending the
+   * response. */
+  #handleError = (context: Context<S>, error: any): void => {
+    if (!(error instanceof Error)) {
+      error = new Error(`non-error thrown: ${JSON.stringify(error)}`);
+    }
+    const { message } = error;
+    this.dispatchEvent(
+      new ApplicationErrorEvent("error", { context, message, error }),
+    );
+    if (!context.response.writable) {
+      return;
+    }
+    for (const key of context.response.headers.keys()) {
+      context.response.headers.delete(key);
+    }
+    if (error.headers && error.headers instanceof Headers) {
+      for (const [key, value] of error.headers) {
+        context.response.headers.set(key, value);
+      }
+    }
+    context.response.type = "text";
+    const status: Status = context.response.status =
+      error instanceof Deno.errors.NotFound
+        ? 404
+        : error.status && typeof error.status === "number"
+        ? error.status
+        : 500;
+    context.response.body = error.expose
+      ? error.message
+      : STATUS_TEXT.get(status);
+  };
+
   /** Processing registered middleware on each request. */
   #handleRequest = async (
     request: ServerRequest,
     middleware: (context: Context<S>) => Promise<void>,
   ) => {
     const context = new Context(this, request);
-    await middleware(context);
-    await request.respond(context.response.toServerResponse());
+    try {
+      await middleware(context);
+    } catch (err) {
+      this.#handleError(context, err);
+    }
+    try {
+      await request.respond(context.response.toServerResponse());
+    } catch (err) {
+      this.#handleError(context, err);
+    }
   };
 
   addEventListener(
     type: "error",
-    listener: ErrorEventListenerOrEventListenerObject | null,
+    listener: ApplicationErrorEventListenerOrEventListenerObject<S> | null,
     options?: boolean | AddEventListenerOptions,
   ): void;
   addEventListener(
@@ -161,25 +217,30 @@ export class Application<S extends State = Record<string, any>>
   async listen(options: ListenOptions): Promise<void>;
   async listen(options: string | ListenOptions): Promise<void> {
     if (typeof options === "string") {
-      const [hostname, port] = options.split(":");
-      options = {
-        hostname,
-        port: parseInt(port, 10),
-      };
+      const addr = options.split(":");
+      const port = parseInt(addr.pop()!, 10);
+      const hostname = addr.join(":");
+      options = { hostname, port };
     }
     const middleware = compose(this.#middleware);
     const server = isOptionsTls(options)
       ? this.#serveTls(options)
       : this.#serve(options);
     const { signal } = options;
-    for await (const request of server) {
-      this.#handleRequest(request, middleware).then(undefined, (error) => {
-        const message = error instanceof Error ? error.message : undefined;
-        this.dispatchEvent(new ErrorEvent("error", { message, error }));
-      });
-      if (signal && signal.aborted) {
-        return;
+    try {
+      for await (const request of server) {
+        this.#handleRequest(request, middleware);
+        if (signal && signal.aborted) {
+          return;
+        }
       }
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : "Application Error";
+      this.dispatchEvent(
+        new ApplicationErrorEvent("error", { message, error }),
+      );
     }
   }
 

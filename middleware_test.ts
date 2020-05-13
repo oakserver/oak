@@ -1,11 +1,14 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
 import { test, assertEquals, assertStrictEq } from "./test_deps.ts";
+import { State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
+import httpErrors, { createHttpError } from "./httpError.ts";
+import { ErrorStatus } from "./types.ts";
 import { compose, Middleware } from "./middleware.ts";
-
-function createMockContext<S extends object = { [key: string]: any }>() {
+import { assert } from "https://deno.land/std@0.50.0/testing/asserts.ts";
+function createMockContext<S extends State = Record<string, any>>() {
   return ({
     request: {
       headers: new Headers(),
@@ -19,6 +22,28 @@ function createMockContext<S extends object = { [key: string]: any }>() {
       status: Status.OK,
       body: undefined,
       headers: new Headers(),
+    },
+    assert(
+      condition: any,
+      errorStatus: ErrorStatus = 500,
+      message?: string,
+      props?: object,
+    ): asserts condition {
+      if (condition) {
+        return;
+      }
+      const err = createHttpError(errorStatus, message);
+      if (props) {
+        Object.assign(err, props);
+      }
+      throw err;
+    },
+    throw(errorStatus: ErrorStatus, message?: string, props?: object): never {
+      const err = createHttpError(errorStatus, message);
+      if (props) {
+        Object.assign(err, props);
+      }
+      throw err;
     },
   } as unknown) as Context<S>;
 }
@@ -42,5 +67,25 @@ test({
     };
     await compose([mw1, mw2])(mockContext);
     assertEquals(callStack, [1, 2]);
+  },
+});
+
+test({
+  name: "next() is catchable",
+  async fn() {
+    let caught: any;
+    const mw1: Middleware = async (ctx, next) => {
+      try {
+        await next();
+      } catch (err) {
+        caught = err;
+      }
+    };
+    const mw2: Middleware = async (ctx) => {
+      ctx.throw(500);
+    };
+    const context = createMockContext();
+    await compose([mw1, mw2])(context);
+    assert(caught instanceof httpErrors.InternalServerError);
   },
 });

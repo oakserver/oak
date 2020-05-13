@@ -14,9 +14,12 @@ const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
 const encoder = new TextEncoder();
 
 export class Response {
+  #writable = true;
+
   #getBody = (): Uint8Array | undefined => {
     const typeofBody = typeof this.body;
     let result: Uint8Array | undefined;
+    this.#writable = false;
     if (BODY_TYPES.includes(typeofBody)) {
       const bodyText = String(this.body);
       result = encoder.encode(bodyText);
@@ -50,6 +53,10 @@ export class Response {
 
   /** The media type, or extension of the response */
   type?: string;
+
+  get writable(): boolean {
+    return this.#writable;
+  }
 
   /** Take this response and convert it to the response used by the Deno net
    * server. */

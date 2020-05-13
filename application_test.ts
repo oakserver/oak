@@ -13,11 +13,13 @@ import { Data, KeyStack } from "./keyStack.ts";
 import httpErrors from "./httpError.ts";
 
 let serverRequestStack: ServerRequest[] = [];
+let requestResponseStack: ServerResponse[] = [];
 let addrStack: Array<string | ListenOptions> = [];
 let httpsOptionsStack: Array<Omit<ListenOptionsTls, "secure">> = [];
 
 function teardown() {
   serverRequestStack = [];
+  requestResponseStack = [];
   addrStack = [];
   httpsOptionsStack = [];
 }
@@ -46,6 +48,12 @@ const serveTls: typeof denoServeTls = function (
   return new MockServer() as Server;
 };
 
+interface ServerResponse {
+  status?: number;
+  headers?: Headers;
+  body?: Uint8Array;
+}
+
 function createMockRequest(
   url = "https://example.com/",
   proto = "HTTP/1.1",
@@ -53,7 +61,9 @@ function createMockRequest(
   return {
     url,
     headers: new Headers(),
-    async respond() {},
+    async respond(response: ServerResponse) {
+      requestResponseStack.push(response);
+    },
     proto,
   } as any;
 }
@@ -184,6 +194,16 @@ test({
 });
 
 test({
+  name: "app.listen IPv6 Loopback",
+  async fn() {
+    const app = new Application({ serve });
+    await app.listen("::1:8080");
+    assertEquals(addrStack, [{ hostname: "::1", port: 8080 }]);
+    teardown();
+  },
+});
+
+test({
   name: "app.listen(options)",
   async fn() {
     const app = new Application({ serve });
@@ -308,6 +328,21 @@ test({
       ctx.throw(500, "oops!");
     });
     await app.listen({ port: 8000 });
+    teardown();
+  },
+});
+
+test({
+  name: "uncaught errors impact response",
+  async fn() {
+    const app = new Application({ serve });
+    serverRequestStack.push(createMockRequest());
+    app.use((ctx) => {
+      ctx.throw(404, "File Not Found");
+    });
+    await app.listen({ port: 8000 });
+    const [response] = requestResponseStack;
+    assertEquals(response.status, 404);
     teardown();
   },
 });
