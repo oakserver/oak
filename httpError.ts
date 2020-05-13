@@ -96,7 +96,7 @@ function createHttpErrorConstructor<E extends typeof HttpError>(
   return Ctor as E;
 }
 
-const httpErrors: {
+export const httpErrors: {
   [P in keyof typeof ErrorStatus]: typeof HttpError;
 } = {} as any;
 
@@ -114,4 +114,6 @@ export function createHttpError(
   return new httpErrors[ErrorStatus[status] as any](message);
 }
 
-export default httpErrors;
+export function isHttpError(value: any): value is HttpError {
+  return value instanceof HttpError;
+}

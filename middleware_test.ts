@@ -4,7 +4,7 @@ import { test, assertEquals, assertStrictEq } from "./test_deps.ts";
 import { State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
-import httpErrors, { createHttpError } from "./httpError.ts";
+import { createHttpError, httpErrors } from "./httpError.ts";
 import { ErrorStatus } from "./types.ts";
 import { compose, Middleware } from "./middleware.ts";
 import { assert } from "https://deno.land/std@0.50.0/testing/asserts.ts";

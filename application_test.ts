@@ -10,7 +10,7 @@ import {
   ServerRequest,
 } from "./deps.ts";
 import { Data, KeyStack } from "./keyStack.ts";
-import httpErrors from "./httpError.ts";
+import { httpErrors } from "./httpError.ts";
 
 let serverRequestStack: ServerRequest[] = [];
 let requestResponseStack: ServerResponse[] = [];

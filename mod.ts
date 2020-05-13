@@ -14,7 +14,7 @@ export {
   CookiesGetOptions,
   CookiesSetDeleteOptions,
 } from "./cookies.ts";
-export { HttpError } from "./httpError.ts";
+export { HttpError, httpErrors, isHttpError } from "./httpError.ts";
 export { compose as composeMiddleware, Middleware } from "./middleware.ts";
 export {
   Body,

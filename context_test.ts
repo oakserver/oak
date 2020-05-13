@@ -7,7 +7,7 @@ import { Cookies } from "./cookies.ts";
 import { ServerRequest } from "./deps.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
-import httpError from "./httpError.ts";
+import { httpErrors } from "./httpError.ts";
 
 function createMockApp<S extends State = Record<string, any>>(
   state = {} as S,
@@ -55,7 +55,7 @@ test({
         let loggedIn: string | undefined;
         context.assert(loggedIn, 401, "Unauthorized");
       },
-      httpError.Unauthorized,
+      httpErrors.Unauthorized,
       "Unauthorized",
     );
   },
@@ -69,7 +69,7 @@ test({
       () => {
         context.throw(404, "foobar");
       },
-      httpError.NotFound,
+      httpErrors.NotFound,
       "foobar",
     );
   },

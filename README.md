@@ -328,10 +328,45 @@ await listenPromise;
 
 ### Error handling
 
-The class `Application` extends the global `EventTarget` in Deno, and when
-uncaught errors occur in the middleware or sending of responses, an `EventError`
-will be dispatched to the application. To listen for these errors, you would
-add an event handler to the application instance:
+Middleware can be used to handle other errors with middleware. Awaiting other
+middleware to execute while trapping errors works. So if you had an error
+handling middleware that provides a well managed response to errors would work
+like this:
+
+```ts
+import {
+  Application,
+  isHttpError,
+  Status,
+} from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application();
+
+app.use(async (ctx, next) => {
+  try {
+    await next();
+  } catch (err) {
+    if (isHttpError(error)) {
+      switch (error.status) {
+        Status.NotFound:
+          // handle NotFound
+          break;
+        default:
+          // handle other statuses
+      }
+    } else {
+      // rethrow if you can't handle the error
+      throw err;
+    }
+  }
+});
+```
+
+Uncaught middleware exceptions will be caught by the application. `Application`
+extends the global `EventTarget` in Deno, and when uncaught errors occur in the
+middleware or sending of responses, an `EventError` will be dispatched to the
+application. To listen for these errors, you would add an event handler to the
+application instance:
 
 ```ts
 import { Application } from "https://deno.land/x/oak/mod.ts";

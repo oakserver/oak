@@ -5,7 +5,7 @@ import { assert, assertEquals, assertStrictEq, test } from "./test_deps.ts";
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
-import httpErrors from "./httpError.ts";
+import { httpErrors } from "./httpError.ts";
 import { send } from "./send.ts";
 
 let encodingsAccepted = "identity";

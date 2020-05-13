@@ -2,13 +2,13 @@
 
 import { test, assert, assertEquals } from "./test_deps.ts";
 
-import httpError, { createHttpError } from "./httpError.ts";
+import { httpErrors, createHttpError } from "./httpError.ts";
 
 test({
   name: "createHttpError",
   fn() {
     const err = createHttpError(501);
-    assert(err instanceof httpError.NotImplemented);
+    assert(err instanceof httpErrors.NotImplemented);
     assertEquals(err.status, 501);
     assertEquals(err.name, "NotImplementedError");
     assertEquals(err.message, "Not Implemented");
@@ -16,9 +16,9 @@ test({
 });
 
 test({
-  name: "httpError.NotImplemented()",
+  name: "httpErrors.NotImplemented()",
   fn() {
-    const err = new httpError.NotImplemented();
+    const err = new httpErrors.NotImplemented();
     assertEquals(err.status, 501);
     assertEquals(err.name, "NotImplementedError");
     assertEquals(err.message, "Not Implemented");

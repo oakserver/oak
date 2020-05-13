@@ -2,7 +2,7 @@
 
 import { ServerRequest } from "./deps.ts";
 import { preferredEncodings } from "./encoding.ts";
-import httpErrors from "./httpError.ts";
+import { httpErrors } from "./httpError.ts";
 import { isMediaType } from "./isMediaType.ts";
 import { preferredMediaTypes } from "./mediaType.ts";
 import { HTTPMethods } from "./types.ts";

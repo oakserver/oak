@@ -1,7 +1,7 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
 import { assertEquals, assertThrows, test } from "./test_deps.ts";
-import httpErrors from "./httpError.ts";
+import { httpErrors } from "./httpError.ts";
 import { decodeComponent, resolvePath } from "./util.ts";
 
 test({
