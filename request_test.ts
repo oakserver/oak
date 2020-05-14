@@ -7,8 +7,8 @@ import {
 } from "./test_deps.ts";
 import { ServerRequest } from "./deps.ts";
 import { Request } from "./request.ts";
-import { assert } from "https://deno.land/std@0.50.0/testing/asserts.ts";
-import { decoder } from "https://deno.land/std@0.50.0/encoding/utf8.ts";
+import { assert } from "https://deno.land/std@0.51.0/testing/asserts.ts";
+import { decoder } from "https://deno.land/std@0.51.0/encoding/utf8.ts";
 const encoder = new TextEncoder();
 
 function createMockBodyReader(body: string): Deno.Reader {

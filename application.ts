@@ -10,7 +10,7 @@ import {
 } from "./deps.ts";
 import { Key, KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
-import { Server } from "https://deno.land/std@0.50.0/http/server.ts";
+import { Server } from "https://deno.land/std@0.51.0/http/server.ts";
 export interface ListenOptionsBase {
   hostname?: string;
   port: number;
