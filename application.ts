@@ -73,6 +73,8 @@ export interface ApplicationOptions<S> {
 
 export type State = Record<string | number | symbol, any>;
 
+const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
+
 export class ApplicationErrorEvent<S extends State> extends ErrorEvent {
   context?: Context<S>;
 
@@ -224,10 +226,12 @@ export class Application<S extends State = Record<string, any>>
   async listen(options: ListenOptions): Promise<void>;
   async listen(options: string | ListenOptions): Promise<void> {
     if (typeof options === "string") {
-      const addr = options.split(":");
-      const port = parseInt(addr.pop()!, 10);
-      const hostname = addr.join(":");
-      options = { hostname, port };
+      const match = ADDR_REGEXP.exec(options);
+      if (!match) {
+        throw TypeError(`Invalid address passed: "${options}"`);
+      }
+      const [, hostname, portStr] = match;
+      options = { hostname, port: parseInt(portStr, 10) };
     }
     const middleware = compose(this.#middleware);
     const server = isOptionsTls(options)

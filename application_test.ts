@@ -88,7 +88,7 @@ test({
       called++;
     });
 
-    await app.listen("");
+    await app.listen(":8000");
     assertEquals(called, 1);
     teardown();
   },
@@ -108,7 +108,7 @@ test({
       callStack.push(2);
     });
 
-    await app.listen("");
+    await app.listen(":8000");
     assertEquals(callStack, [1]);
     teardown();
   },
@@ -129,7 +129,7 @@ test({
       callStack.push(2);
     });
 
-    await app.listen("");
+    await app.listen(":8000");
     assertEquals(callStack, [1, 2]);
     teardown();
   },
@@ -153,7 +153,7 @@ test({
       callStack.push(4);
     });
 
-    await app.listen("");
+    await app.listen(":8000");
     assertEquals(callStack, [1, 3, 2, 4]);
     teardown();
   },
@@ -177,7 +177,7 @@ test({
       callStack.push(4);
     });
 
-    await app.listen("");
+    await app.listen(":8000");
     assertEquals(callStack, [1, 3, 4, 2]);
     teardown();
   },
@@ -197,7 +197,7 @@ test({
   name: "app.listen IPv6 Loopback",
   async fn() {
     const app = new Application({ serve });
-    await app.listen("::1:8080");
+    await app.listen("[::1]:8080");
     assertEquals(addrStack, [{ hostname: "::1", port: 8080 }]);
     teardown();
   },
@@ -247,7 +247,7 @@ test({
       assertStrictEq(app.state, context.state);
       called = true;
     });
-    await app.listen("");
+    await app.listen(":8000");
     assert(called);
     teardown();
   },
