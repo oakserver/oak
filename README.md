@@ -214,7 +214,14 @@ And several methods:
 
 - `.acceptsCharsets(...charsets: string[])`
 
-  To be implemented.
+  Negotiates the character encoding supported by the request for the response.
+  If no character encodings are passed, the method returns a prioritized array
+  of accepted character encodings. If character encodings are passed, the best
+  negotiated charset is returned. If there are no encodings matched, then
+  `undefined` is returned.
+
+  Most browsers simply to not send a character encoding header anymore, and it
+  is just expected UTF-8 will be used.
 
 - `.acceptsEncodings(...encodings: string[])`
 
@@ -225,7 +232,11 @@ And several methods:
 
 - `.acceptsLanguages(...languages: string[])`
 
-  To be implemented.
+  Negotiates the language the client is able to understand. Where a locale
+  variant takes preference. If no encodings are passed, the method returns a
+  prioritized array of understood languages. If languages are passed, the best
+  negotiated language is returned. If there are no languages matched, then
+  `undefined` is returned.
 
 - `.body(options?: BodyOptions)`
 
@@ -352,7 +363,7 @@ app.use(async (ctx, next) => {
           // handle NotFound
           break;
         default:
-          // handle other statuses
+        // handle other statuses
       }
     } else {
       // rethrow if you can't handle the error
