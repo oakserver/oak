@@ -10,6 +10,7 @@ import {
 } from "./deps.ts";
 import { Key, KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
+import { Server } from "https://deno.land/std@0.50.0/http/server.ts";
 export interface ListenOptionsBase {
   hostname?: string;
   port: number;
@@ -173,18 +174,24 @@ export class Application<S extends State = Record<string, any>>
   };
 
   /** Processing registered middleware on each request. */
-  #handleRequest = async (
-    request: ServerRequest,
-    middleware: (context: Context<S>) => Promise<void>,
-  ) => {
+  #handleRequest = async (request: ServerRequest, state: {
+    closed: boolean;
+    middleware: (context: Context<S>) => Promise<void>;
+    server: Server;
+  }) => {
     const context = new Context(this, request);
-    try {
-      await middleware(context);
-    } catch (err) {
-      this.#handleError(context, err);
+    if (!state.closed) {
+      try {
+        await state.middleware(context);
+      } catch (err) {
+        this.#handleError(context, err);
+      }
     }
     try {
       await request.respond(context.response.toServerResponse());
+      if (state.closed) {
+        state.server.close();
+      }
     } catch (err) {
       this.#handleError(context, err);
     }
@@ -227,12 +234,13 @@ export class Application<S extends State = Record<string, any>>
       ? this.#serveTls(options)
       : this.#serve(options);
     const { signal } = options;
+    const state = { closed: false, middleware, server };
+    if (signal) {
+      signal.addEventListener("abort", () => state.closed = true);
+    }
     try {
       for await (const request of server) {
-        this.#handleRequest(request, middleware);
-        if (signal && signal.aborted) {
-          return;
-        }
+        this.#handleRequest(request, state);
       }
     } catch (error) {
       const message = error instanceof Error
