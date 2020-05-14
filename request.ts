@@ -1,11 +1,13 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
 import { ServerRequest } from "./deps.ts";
-import { preferredEncodings } from "./encoding.ts";
 import { httpErrors } from "./httpError.ts";
 import { isMediaType } from "./isMediaType.ts";
-import { preferredMediaTypes } from "./mediaType.ts";
 import { HTTPMethods } from "./types.ts";
+import { preferredCharsets } from "./negotiation/charset.ts";
+import { preferredEncodings } from "./negotiation/encoding.ts";
+import { preferredLanguages } from "./negotiation/language.ts";
+import { preferredMediaTypes } from "./negotiation/mediaType.ts";
 
 export type BodyType =
   | "json"
@@ -122,7 +124,7 @@ export class Request {
    * preference.  If there are no encodings supplied by the requestor,
    * `undefined` is returned.
    */
-  accepts(): string[];
+  accepts(): string[] | undefined;
   /** For a given set of media types, return the best match accepted by the
    * requestor.  If there are no encoding that match, then the method returns
    * `undefined`.
@@ -139,17 +141,33 @@ export class Request {
     return preferredMediaTypes(acceptValue);
   }
 
-  acceptsCharsets(): string[];
+  /** Returns an array of charsets, accepted by the requestor, in order of
+   * preference.  If there are no charsets supplied by the requestor,
+   * `undefined` is returned.
+   */
+  acceptsCharsets(): string[] | undefined;
+  /** For a given set of charsets, return the best match accepted by the
+   * requestor.  If there are no charsets that match, then the method returns
+   * `undefined`. */
   acceptsCharsets(...charsets: string[]): string | undefined;
   acceptsCharsets(...charsets: string[]): string[] | string | undefined {
-    return undefined;
+    const acceptCharsetValue = this.#serverRequest.headers.get(
+      "Accept-Charset",
+    );
+    if (!acceptCharsetValue) {
+      return;
+    }
+    if (charsets.length) {
+      return preferredCharsets(acceptCharsetValue, charsets)[0];
+    }
+    return preferredCharsets(acceptCharsetValue);
   }
 
-  /** Returns an array of encodings, accepted the the requestor, in order of
+  /** Returns an array of encodings, accepted by the requestor, in order of
    * preference.  If there are no encodings supplied by the requestor,
    * `undefined` is returned.
    */
-  acceptsEncodings(): string[];
+  acceptsEncodings(): string[] | undefined;
   /** For a given set of encodings, return the best match accepted by the
    * requestor.  If there are no encodings that match, then the method returns
    * `undefined`.
@@ -172,10 +190,26 @@ export class Request {
     return preferredEncodings(acceptEncodingValue);
   }
 
-  acceptsLanguages(): string[];
+  /** Returns an array of languages, accepted by the requestor, in order of
+   * preference.  If there are no languages supplied by the requestor,
+   * `undefined` is returned.
+   */
+  acceptsLanguages(): string[] | undefined;
+  /** For a given set of languages, return the best match accepted by the
+   * requestor.  If there are no languages that match, then the method returns
+   * `undefined`. */
   acceptsLanguages(...langs: string[]): string | undefined;
   acceptsLanguages(...langs: string[]): string[] | string | undefined {
-    return undefined;
+    const acceptLanguageValue = this.#serverRequest.headers.get(
+      "Accept-Language",
+    );
+    if (!acceptLanguageValue) {
+      return;
+    }
+    if (langs.length) {
+      return preferredLanguages(acceptLanguageValue, langs)[0];
+    }
+    return preferredLanguages(acceptLanguageValue);
   }
 
   /** If there is a body in the request, resolves with an object which

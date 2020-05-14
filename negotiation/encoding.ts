@@ -28,17 +28,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-interface Specificity {
+import { compareSpecs, isQuality, Specificity } from "./common.ts";
+
+interface EncodingSpecificty extends Specificity {
   encoding?: string;
-  i: number;
-  o?: number;
-  q: number;
-  s?: number;
 }
 
 const simpleEncodingRegExp = /^\s*([^\s;]+)\s*(?:;(.*))?$/;
 
-function parseEncoding(str: string, i: number): Specificity | undefined {
+function parseEncoding(str: string, i: number): EncodingSpecificty | undefined {
   const match = simpleEncodingRegExp.exec(str);
   if (!match) {
     return undefined;
@@ -62,7 +60,7 @@ function parseEncoding(str: string, i: number): Specificity | undefined {
 
 function specify(
   encoding: string,
-  spec: Specificity,
+  spec: EncodingSpecificty,
   i: number = -1,
 ): Specificity | undefined {
   if (!spec.encoding) {
@@ -83,9 +81,9 @@ function specify(
   };
 }
 
-function parseAcceptEncoding(accept: string): Specificity[] {
+function parseAcceptEncoding(accept: string): EncodingSpecificty[] {
   const accepts = accept.split(",");
-  const parsedAccepts: Specificity[] = [];
+  const parsedAccepts: EncodingSpecificty[] = [];
   let hasIdentity = false;
   let minQuality = 1;
 
@@ -108,20 +106,6 @@ function parseAcceptEncoding(accept: string): Specificity[] {
   }
 
   return parsedAccepts;
-}
-
-function compareSpecs(a: Specificity, b: Specificity) {
-  return (
-    b.q - a.q ||
-    (b.s || 0) - (a.s || 0) ||
-    (a.o || 0) - (b.o || 0) ||
-    a.i - b.i ||
-    0
-  );
-}
-
-function isQuality(spec: Specificity) {
-  return spec.q > 0;
 }
 
 function getEncodingPriority(

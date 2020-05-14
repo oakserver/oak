@@ -28,14 +28,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-interface Specification {
+import { compareSpecs, isQuality, Specificity } from "./common.ts";
+
+interface MediaTypeSpecificity extends Specificity {
   type: string;
   subtype: string;
   params: { [param: string]: string | undefined };
-  i: number;
-  q: number;
-  o?: number;
-  s?: number;
 }
 
 const simpleMediaTypeRegExp = /^\s*([^\s\/;]+)\/([^;\s]+)\s*(?:;(.*))?$/;
@@ -91,7 +89,10 @@ function splitKeyValuePair(str: string): [string, string | undefined] {
   return [key.toLowerCase(), value];
 }
 
-function parseMediaType(str: string, i: number): Specification | undefined {
+function parseMediaType(
+  str: string,
+  i: number,
+): MediaTypeSpecificity | undefined {
   const match = simpleMediaTypeRegExp.exec(str);
 
   if (!match) {
@@ -122,10 +123,10 @@ function parseMediaType(str: string, i: number): Specification | undefined {
   return { type, subtype, params, q, i };
 }
 
-function parseAccept(accept: string): Specification[] {
+function parseAccept(accept: string): MediaTypeSpecificity[] {
   const accepts = splitMediaTypes(accept);
 
-  const mediaTypes: Specification[] = [];
+  const mediaTypes: MediaTypeSpecificity[] = [];
   for (let i = 0; i < accepts.length; i++) {
     const mediaType = parseMediaType(accepts[i].trim(), i);
 
@@ -137,31 +138,15 @@ function parseAccept(accept: string): Specification[] {
   return mediaTypes;
 }
 
-function isQuality(spec: Partial<Specification>): boolean {
-  return (spec.q || 0) > 0;
-}
-
-function compareSpecs(
-  a: Partial<Specification>,
-  b: Partial<Specification>,
-): number {
-  return (
-    (b.q || 0) - (a.q || 0) ||
-    (b.s || 0) - (a.s || 0) ||
-    (a.o || 0) - (b.o || 0) ||
-    (a.i || 0) - (b.i || 0)
-  );
-}
-
-function getFullType(spec: Specification) {
+function getFullType(spec: MediaTypeSpecificity) {
   return `${spec.type}/${spec.subtype}`;
 }
 
 function specify(
   type: string,
-  spec: Specification,
+  spec: MediaTypeSpecificity,
   index: number,
-): Partial<Specification> | undefined {
+): Specificity | undefined {
   const p = parseMediaType(type, index);
 
   if (!p) {
@@ -206,10 +191,10 @@ function specify(
 
 function getMediaTypePriority(
   type: string,
-  accepted: Specification[],
+  accepted: MediaTypeSpecificity[],
   index: number,
 ) {
-  let priority: Partial<Specification> = { o: -1, q: 0, s: 0, i: index };
+  let priority: Specificity = { o: -1, q: 0, s: 0, i: index };
 
   for (const accepts of accepted) {
     const spec = specify(type, accepts, index);
