@@ -192,7 +192,7 @@ several properties:
 
   A shortcut for `.protocol`, returning `true` if HTTPS otherwise `false`.
 
-- `.severRequest`
+- `.serverRequest`
 
   The original `net` server request.
 
