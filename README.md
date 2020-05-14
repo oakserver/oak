@@ -346,9 +346,9 @@ app.use(async (ctx, next) => {
   try {
     await next();
   } catch (err) {
-    if (isHttpError(error)) {
-      switch (error.status) {
-        Status.NotFound:
+    if (isHttpError(err)) {
+      switch (err.status) {
+        case Status.NotFound:
           // handle NotFound
           break;
         default:
