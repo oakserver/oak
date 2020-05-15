@@ -18,7 +18,7 @@ please check out documentation on
 [oakserver.github.io/oak](https://oakserver.github.io/oak).
 
 Also, check out our [FAQs](https://oakserver.github.io/oak/FAQ) and the
-[awesome-deno](https://oakserver.github.com/awesome-deno/) site of community
+[awesome-oak](https://oakserver.github.com/awesome-oak/) site of community
 resources.
 
 _Warning_ The examples in this README pull from `master`, which may not make
