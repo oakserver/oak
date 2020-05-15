@@ -17,7 +17,9 @@ well as a decent understanding of Deno. If you aren't familiar with these,
 please check out documentation on
 [oakserver.github.io/oak](https://oakserver.github.io/oak).
 
-Also, check out our [FAQs](https://oakserver.github.io/oak/FAQ).
+Also, check out our [FAQs](https://oakserver.github.io/oak/FAQ) and the
+[awesome-deno](https://oakserver.github.com/awesome-deno/) site of community
+resources.
 
 _Warning_ The examples in this README pull from `master`, which may not make
 sense to do when you are looking to actually deploy a workload. You would want

@@ -9,6 +9,8 @@ and middleware router inspired by
 [koa-router](https://github.com/alexmingoia/koa-router/).
 
 - [Frequently Asked Questions](./FAQ)
+- [Awesome oak](https://oakserver.github.io/awesome-oak/) - Community resources
+  for oak.
 - [Getting Started](#getting-started)
 
 ## Getting started
