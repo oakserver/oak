@@ -9,5 +9,7 @@ jobs:
     steps:
       - name: Install Deno
         run: curl -L https://deno.land/x/install/install.sh | sh -s "v1.0.0"
+      - name: LS
+        run: ls -lh
       - name: Run Tests
-        run: ~/.deno/bin/deno test --allow-read
+        run: ~/.deno/bin/deno test --allow-read .
