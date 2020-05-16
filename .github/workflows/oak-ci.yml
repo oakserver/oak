@@ -9,7 +9,5 @@ jobs:
     steps:
       - name: Install Deno
         run: curl -L https://deno.land/x/install/install.sh | sh -s "v1.0.0"
-      - name: Export Path
-        run: export PATH="$HOME/.deno/bin:$PATH"
       - name: Run Tests
-        run: ./deno test --allow-read
+        run: ~/.deno/bin/deno test --allow-read
