@@ -11,6 +11,8 @@ and middleware router inspired by
 - [Frequently Asked Questions](./FAQ)
 - [Awesome oak](https://oakserver.github.io/awesome-oak/) - Community resources
   for oak.
+- [oak-middleware](https://github.com/oakserver/middleware/) - A collection of
+  middleware maintained by us.
 - [Getting Started](#getting-started)
 
 ## Getting started
