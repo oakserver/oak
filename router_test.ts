@@ -5,7 +5,10 @@ import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { Router } from "./router.ts";
-
+import {
+  assertThrows,
+  assertThrowsAsync,
+} from "https://deno.land/std@0.51.0/testing/asserts.ts";
 function createMockApp<
   S extends Record<string | number | symbol, any> = Record<string, any>,
 >(
@@ -451,5 +454,20 @@ test({
     assertEquals(routes[0].path, "/route");
     assertEquals(routes[0].methods, ["HEAD", "DELETE", "GET", "POST", "PUT"]);
     assertEquals(routes[0].middleware.length, 1);
+  },
+});
+
+test({
+  name: "route throws",
+  fn() {
+    const { context, next } = setup();
+    const router = new Router();
+    router.all("/", (ctx) => {
+      ctx.throw(404);
+    });
+    const mw = router.routes();
+    assertThrowsAsync(async () => {
+      await mw(context, next);
+    });
   },
 });

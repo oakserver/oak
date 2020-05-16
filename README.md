@@ -1,6 +1,6 @@
 # oak
 
-[![][tci badge]][tci link]
+[![](https://github.com/oakserver/oak/workflows/ci/badge.svg)](https://github.com/oakserver/oak)
 [![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/oak/mod.ts)
 
 A middleware framework for Deno's
@@ -473,6 +473,3 @@ including those directly adapted are licensed under the MIT License.
 
 All additional work is copyright 2018 - 2020 the oak authors. All rights
 reserved.
-
-[tci badge]: https://travis-ci.com/oakserver/oak.svg?branch=master
-[tci link]: https://travis-ci.com/oakserver/oak

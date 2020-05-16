@@ -1,0 +1,14 @@
+name: oak ci
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Deno
+        run: curl -L https://deno.land/x/install/install.sh | sh -s "v1.0.0"
+        run: export PATH="$HOME/.deno/bin:$PATH"
+      - name: Run Tests
+        run: deno test --allow-read
