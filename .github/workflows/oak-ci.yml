@@ -7,9 +7,8 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Install Deno
-        run: curl -L https://deno.land/x/install/install.sh | sh -s "v1.0.0"
-      - name: LS
-        run: ls -lh
       - name: Run Tests
-        run: ~/.deno/bin/deno test --allow-read .
+        run: |
+          curl -L https://deno.land/x/install/install.sh | sh -s "v1.0.0"
+          export PATH="$HOME/.deno/bin:$PATH"
+          deno test --allow-read
