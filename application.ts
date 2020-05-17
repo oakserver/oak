@@ -177,22 +177,28 @@ export class Application<S extends State = Record<string, any>>
 
   /** Processing registered middleware on each request. */
   #handleRequest = async (request: ServerRequest, state: {
+    handling: boolean;
+    closing: boolean;
     closed: boolean;
     middleware: (context: Context<S>) => Promise<void>;
     server: Server;
   }) => {
     const context = new Context(this, request);
-    if (!state.closed) {
+    if (!state.closing && !state.closed) {
+      state.handling = true;
       try {
         await state.middleware(context);
       } catch (err) {
         this.#handleError(context, err);
+      } finally {
+        state.handling = false;
       }
     }
     try {
       await request.respond(context.response.toServerResponse());
-      if (state.closed) {
+      if (state.closing) {
         state.server.close();
+        state.closed = true;
       }
     } catch (err) {
       this.#handleError(context, err);
@@ -243,9 +249,21 @@ export class Application<S extends State = Record<string, any>>
       ? this.#serveTls(options)
       : this.#serve(options);
     const { signal } = options;
-    const state = { closed: false, middleware, server };
+    const state = {
+      closed: false,
+      closing: false,
+      handling: false,
+      middleware,
+      server,
+    };
     if (signal) {
-      signal.addEventListener("abort", () => state.closed = true);
+      signal.addEventListener("abort", () => {
+        if (!state.handling) {
+          server.close();
+          state.closed = true;
+        }
+        state.closing = true;
+      });
     }
     try {
       for await (const request of server) {
