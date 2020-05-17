@@ -11,7 +11,7 @@ import {
 } from "./deps.ts";
 import { Data, KeyStack } from "./keyStack.ts";
 import { httpErrors } from "./httpError.ts";
-
+import { assertThrowsAsync } from "https://deno.land/std@0.51.0/testing/asserts.ts";
 let serverRequestStack: ServerRequest[] = [];
 let requestResponseStack: ServerResponse[] = [];
 let addrStack: Array<string | ListenOptions> = [];
@@ -187,6 +187,7 @@ test({
   name: "app.listen",
   async fn() {
     const app = new Application({ serve });
+    app.use(() => {});
     await app.listen("127.0.0.1:8080");
     assertEquals(addrStack, [{ hostname: "127.0.0.1", port: 8080 }]);
     teardown();
@@ -197,6 +198,7 @@ test({
   name: "app.listen IPv6 Loopback",
   async fn() {
     const app = new Application({ serve });
+    app.use(() => {});
     await app.listen("[::1]:8080");
     assertEquals(addrStack, [{ hostname: "::1", port: 8080 }]);
     teardown();
@@ -207,6 +209,7 @@ test({
   name: "app.listen(options)",
   async fn() {
     const app = new Application({ serve });
+    app.use(() => {});
     await app.listen({ port: 8000 });
     assertEquals(addrStack, [{ port: 8000 }]);
     teardown();
@@ -217,6 +220,7 @@ test({
   name: "app.listenTLS",
   async fn() {
     const app = new Application({ serve, serveTls });
+    app.use(() => {});
     await app.listen({
       port: 8000,
       secure: true,
@@ -344,5 +348,15 @@ test({
     const [response] = requestResponseStack;
     assertEquals(response.status, 404);
     teardown();
+  },
+});
+
+test({
+  name: "app.listen() without middleware",
+  async fn() {
+    const app = new Application({ serve });
+    await assertThrowsAsync(async () => {
+      await app.listen(":8000");
+    }, TypeError);
   },
 });

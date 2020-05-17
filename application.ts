@@ -225,6 +225,11 @@ export class Application<S extends State = Record<string, any>>
    * will be processed over HTTPS. */
   async listen(options: ListenOptions): Promise<void>;
   async listen(options: string | ListenOptions): Promise<void> {
+    if (!this.#middleware.length) {
+      return Promise.reject(
+        new TypeError("There is no middleware to process requests."),
+      );
+    }
     if (typeof options === "string") {
       const match = ADDR_REGEXP.exec(options);
       if (!match) {

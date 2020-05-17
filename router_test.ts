@@ -459,14 +459,14 @@ test({
 
 test({
   name: "route throws",
-  fn() {
+  async fn() {
     const { context, next } = setup();
     const router = new Router();
     router.all("/", (ctx) => {
       ctx.throw(404);
     });
     const mw = router.routes();
-    assertThrowsAsync(async () => {
+    await assertThrowsAsync(async () => {
       await mw(context, next);
     });
   },
