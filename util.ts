@@ -1,7 +1,17 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { isAbsolute, join, normalize, resolve, sep } from "./deps.ts";
+import { isAbsolute, join, normalize, resolve, sep, Status } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
+
+/** A HTTP status that is a redirect (3XX). */
+export type RedirectStatus =
+  | Status.MultipleChoices // 300
+  | Status.MovedPermanently // 301
+  | Status.Found // 302
+  | Status.SeeOther // 303
+  | Status.UseProxy // 305 - DEPRECATED
+  | Status.TemporaryRedirect // 307
+  | Status.PermanentRedirect; // 308
 
 /** Safely decode a URI component, where if it fails, instead of throwing,
  * just returns the original string
@@ -12,6 +22,19 @@ export function decodeComponent(text: string) {
   } catch {
     return text;
   }
+}
+
+/** Determines if a HTTP `Status` is a `RedirectStatus` (3XX). */
+export function isRedirectStatus(value: Status): value is RedirectStatus {
+  return [
+    Status.MultipleChoices,
+    Status.MovedPermanently,
+    Status.Found,
+    Status.SeeOther,
+    Status.UseProxy,
+    Status.TemporaryRedirect,
+    Status.PermanentRedirect,
+  ].includes(value);
 }
 
 /** Determines if a string "looks" like HTML */

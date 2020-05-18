@@ -296,6 +296,45 @@ And several methods:
   });
   ```
 
+#### Response
+
+The `context.response` contains information about the response which will be
+sent back to the requestor. It contains several properties:
+
+- `.body`
+
+  The body of the response, which can often be handled by the automatic response
+  body handling documented below.
+
+- `.headers`
+
+  A `Headers` instance which contains the headers for the response.
+
+- `.status`
+
+  An HTTP `Status` code that will be sent back with the response. If this is
+  not set before responding, oak will default to `200 OK` if there is a `.body`,
+  otherwise `404 Not Found`.
+
+- `.type`
+
+  A media type or extension to set the `Content-Type` header for the response.
+  For example, you can provide `txt` or `text/plain` to describe the body.
+
+And a method:
+
+- `.redirect(url?: string | URL | REDIRECT_BACK, alt?: string | URL)`
+
+  A method to simplify redirecting the response to another URL. It will set
+  the `Location` header to the supplied `url` and the status to `302 Found`
+  (unless the status is already a `3XX` status). The use of symbol
+  `REDIRECT_BACK` as the `url` indicates that the `Referrer` header in the
+  request should be used as the direction, with the `alt` being the alternative
+  location if the `Referrer` is not set. If neither the `alt` nor the
+  `Referrer` are set, the redirect will occur to `/`. A basic HTML (if the
+  requestor supports it) or a text body will be set explaining they are being
+  redirected.
+
 ### Automatic response body handling
 
 When the response `Content-Type` is not set in the headers of the `.response`,
@@ -303,7 +342,7 @@ oak will automatically try to determine the appropriate `Content-Type`. First
 it will look at `.response.type`. If assigned, it will try to resolve the
 appropriate media type based on treating the value of `.type` as either the
 media type, or resolving the media type based on an extension. For example if
-`.type` was set to `".html"`, then the `Content-Type` will be set to
+`.type` was set to `"html"`, then the `Content-Type` will be set to
 `"text/html"`.
 
 If `.type` is not set with a value, then oak will inspect the value of

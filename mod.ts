@@ -24,7 +24,7 @@ export {
   BodyType,
   Request,
 } from "./request.ts";
-export { Response } from "./response.ts";
+export { Response, REDIRECT_BACK } from "./response.ts";
 export {
   RouteParams,
   Route,
@@ -34,6 +34,7 @@ export {
 } from "./router.ts";
 export { send } from "./send.ts";
 export { HTTPMethods } from "./types.ts";
+export { isRedirectStatus, RedirectStatus } from "./util.ts";
 
 // Re-exported from `net`
 export { Status, STATUS_TEXT } from "./deps.ts";

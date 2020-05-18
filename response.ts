@@ -1,7 +1,8 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
 import { contentType, Status } from "./deps.ts";
-import { isHtml } from "./util.ts";
+import { Request } from "./request.ts";
+import { isHtml, isRedirectStatus } from "./util.ts";
 
 interface ServerResponse {
   status?: number;
@@ -9,11 +10,14 @@ interface ServerResponse {
   body?: Uint8Array;
 }
 
+export const REDIRECT_BACK = Symbol("redirect backwards");
+
 const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
 
 const encoder = new TextEncoder();
 
 export class Response {
+  #request: Request;
   #writable = true;
 
   #getBody = (): Uint8Array | undefined => {
@@ -56,6 +60,52 @@ export class Response {
 
   get writable(): boolean {
     return this.#writable;
+  }
+
+  constructor(request: Request) {
+    this.#request = request;
+  }
+
+  /** Sets the response to redirect to the supplied `url`.
+   * 
+   * If the `.status` is not currently a redirect status, the status will be set
+   * to `302 Found`.
+   * 
+   * The body will be set to a message indicating the redirection is occurring.
+   */
+  redirect(url: string | URL): void;
+  /** Sets the response to redirect back to the referrer if available, with an
+   * optional `alt` URL if there is no referrer header on the request.  If there
+   * is no referrer header, nor an `alt` parameter, the redirect is set to `/`.
+   * 
+   * If the `.status` is not currently a redirect status, the status will be set
+   * to `302 Found`.
+   * 
+   * The body will be set to a message indicating the redirection is occurring.
+   */
+  redirect(url: typeof REDIRECT_BACK, alt?: string | URL): void;
+  redirect(
+    url: string | URL | typeof REDIRECT_BACK,
+    alt: string | URL = "/",
+  ): void {
+    if (url === REDIRECT_BACK) {
+      url = this.#request.headers.get("Referrer") ?? String(alt);
+    } else if (typeof url === "object") {
+      url = String(url);
+    }
+    this.headers.set("Location", encodeURI(url));
+    if (!this.status || !isRedirectStatus(this.status)) {
+      this.status = Status.Found;
+    }
+
+    if (this.#request.accepts("html")) {
+      url = encodeURI(url);
+      this.type = "text/html; charset=utf-8";
+      this.body = `Redirecting to <a href="${url}">${url}</a>.`;
+      return;
+    }
+    this.type = "text/plain; charset=utf-8";
+    this.body = `Redirecting to ${url}.`;
   }
 
   /** Take this response and convert it to the response used by the Deno net

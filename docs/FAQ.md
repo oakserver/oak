@@ -38,3 +38,35 @@ will resolve with the
 [`Deno.Reader`](https://doc.deno.land/https/github.com/denoland/deno/releases/latest/download/lib.deno.d.ts#Deno.Reader)
 interface in the `value` property of the response. You can then read from this
 interface the "raw" body content.
+
+## How to perform a redirect?
+
+In the `ctx.response` call the `.redirect()` method. For example:
+
+```ts
+import { Application } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application();
+
+app.use((ctx) => {
+  ctx.response.redirect("https://deno.land/");
+});
+
+await app.listen({ port: 8000 });
+```
+
+The symbol `REDIRECT_BACK` can be used to redirect the requestor back to the to
+the referrer (if the request's `Referrer` header has been set), and the second
+argument can be used to provide a "backup" if there is no referrer. For example:
+
+```ts
+import { Application, REDIRECT_BACK } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application();
+
+app.use((ctx) => {
+  ctx.response.redirect(REDIRECT_BACK, "/home");
+});
+
+await app.listen({ port: 8000 });
+```
