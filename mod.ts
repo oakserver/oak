@@ -33,8 +33,8 @@ export {
   RouterMiddleware,
 } from "./router.ts";
 export { send } from "./send.ts";
-export { HTTPMethods } from "./types.ts";
-export { isRedirectStatus, RedirectStatus } from "./util.ts";
+export { ErrorStatus, HTTPMethods, RedirectStatus } from "./types.d.ts";
+export { isErrorStatus, isRedirectStatus } from "./util.ts";
 
 // Re-exported from `net`
 export { Status, STATUS_TEXT } from "./deps.ts";

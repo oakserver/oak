@@ -26,59 +26,60 @@
  * THE SOFTWARE.
  */
 
-import { STATUS_TEXT } from "./deps.ts";
-import { ErrorStatus } from "./types.ts";
+import { Status, STATUS_TEXT } from "./deps.ts";
+import { ErrorStatus } from "./types.d.ts";
 
-const errorStatusMap = new Map<string, ErrorStatus>();
-errorStatusMap.set("BadRequest", 400);
-errorStatusMap.set("Unauthorized", 401);
-errorStatusMap.set("PaymentRequired", 402);
-errorStatusMap.set("Forbidden", 403);
-errorStatusMap.set("NotFound", 404);
-errorStatusMap.set("MethodNotAllowed", 405);
-errorStatusMap.set("NotAcceptable", 406);
-errorStatusMap.set("ProxyAuthRequired", 407);
-errorStatusMap.set("RequestTimeout", 408);
-errorStatusMap.set("Conflict", 409);
-errorStatusMap.set("Gone", 410);
-errorStatusMap.set("LengthRequired", 411);
-errorStatusMap.set("PreconditionFailed", 412);
-errorStatusMap.set("RequestEntityTooLarge", 413);
-errorStatusMap.set("RequestURITooLong", 414);
-errorStatusMap.set("UnsupportedMediaType", 415);
-errorStatusMap.set("RequestedRangeNotSatisfiable", 416);
-errorStatusMap.set("ExpectationFailed", 417);
-errorStatusMap.set("Teapot", 418);
-errorStatusMap.set("MisdirectedRequest", 421);
-errorStatusMap.set("UnprocessableEntity", 422);
-errorStatusMap.set("Locked", 423);
-errorStatusMap.set("FailedDependency", 424);
-errorStatusMap.set("UpgradeRequired", 426);
-errorStatusMap.set("PreconditionRequired", 428);
-errorStatusMap.set("TooManyRequests", 429);
-errorStatusMap.set("RequestHeaderFieldsTooLarge", 431);
-errorStatusMap.set("UnavailableForLegalReasons", 451);
-errorStatusMap.set("InternalServerError", 500);
-errorStatusMap.set("NotImplemented", 501);
-errorStatusMap.set("BadGateway", 502);
-errorStatusMap.set("ServiceUnavailable", 503);
-errorStatusMap.set("GatewayTimeout", 504);
-errorStatusMap.set("HTTPVersionNotSupported", 505);
-errorStatusMap.set("VariantAlsoNegotiates", 506);
-errorStatusMap.set("InsufficientStorage", 507);
-errorStatusMap.set("LoopDetected", 508);
-errorStatusMap.set("NotExtended", 510);
-errorStatusMap.set("NetworkAuthenticationRequired", 511);
+const errorStatusMap = {
+  "BadRequest": 400,
+  "Unauthorized": 401,
+  "PaymentRequired": 402,
+  "Forbidden": 403,
+  "NotFound": 404,
+  "MethodNotAllowed": 405,
+  "NotAcceptable": 406,
+  "ProxyAuthRequired": 407,
+  "RequestTimeout": 408,
+  "Conflict": 409,
+  "Gone": 410,
+  "LengthRequired": 411,
+  "PreconditionFailed": 412,
+  "RequestEntityTooLarge": 413,
+  "RequestURITooLong": 414,
+  "UnsupportedMediaType": 415,
+  "RequestedRangeNotSatisfiable": 416,
+  "ExpectationFailed": 417,
+  "Teapot": 418,
+  "MisdirectedRequest": 421,
+  "UnprocessableEntity": 422,
+  "Locked": 423,
+  "FailedDependency": 424,
+  "UpgradeRequired": 426,
+  "PreconditionRequired": 428,
+  "TooManyRequests": 429,
+  "RequestHeaderFieldsTooLarge": 431,
+  "UnavailableForLegalReasons": 451,
+  "InternalServerError": 500,
+  "NotImplemented": 501,
+  "BadGateway": 502,
+  "ServiceUnavailable": 503,
+  "GatewayTimeout": 504,
+  "HTTPVersionNotSupported": 505,
+  "VariantAlsoNegotiates": 506,
+  "InsufficientStorage": 507,
+  "LoopDetected": 508,
+  "NotExtended": 510,
+  "NetworkAuthenticationRequired": 511,
+};
 
 export class HttpError extends Error {
   expose = false;
-  status = ErrorStatus.InternalServerError;
+  status = Status.InternalServerError;
 }
 
 function createHttpErrorConstructor<E extends typeof HttpError>(
   status: ErrorStatus,
 ): E {
-  const name = `${ErrorStatus[status]}Error`;
+  const name = `${Status[status]}Error`;
   const Ctor = class extends HttpError {
     constructor(message?: string) {
       super();
@@ -96,12 +97,13 @@ function createHttpErrorConstructor<E extends typeof HttpError>(
   return Ctor as E;
 }
 
-export const httpErrors: {
-  [P in keyof typeof ErrorStatus]: typeof HttpError;
-} = {} as any;
+export const httpErrors: Record<keyof typeof errorStatusMap, typeof HttpError> =
+  {} as any;
 
-for (const [key, value] of errorStatusMap) {
-  httpErrors[key as any] = createHttpErrorConstructor(value);
+for (const [key, value] of Object.entries(errorStatusMap)) {
+  httpErrors[key as keyof typeof errorStatusMap] = createHttpErrorConstructor(
+    value,
+  );
 }
 
 /** Create a specific class of `HttpError` based on the status, which defaults
@@ -111,7 +113,7 @@ export function createHttpError(
   status: ErrorStatus = 500,
   message?: string,
 ): HttpError {
-  return new httpErrors[ErrorStatus[status] as any](message);
+  return new httpErrors[Status[status] as keyof typeof errorStatusMap](message);
 }
 
 export function isHttpError(value: any): value is HttpError {

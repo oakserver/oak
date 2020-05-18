@@ -3,7 +3,7 @@
 import { ServerRequest } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { isMediaType } from "./isMediaType.ts";
-import { HTTPMethods } from "./types.ts";
+import { HTTPMethods } from "./types.d.ts";
 import { preferredCharsets } from "./negotiation/charset.ts";
 import { preferredEncodings } from "./negotiation/encoding.ts";
 import { preferredLanguages } from "./negotiation/language.ts";

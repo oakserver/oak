@@ -7,7 +7,7 @@ import { createHttpError } from "./httpError.ts";
 import { KeyStack } from "./keyStack.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
-import { ErrorStatus } from "./types.ts";
+import { ErrorStatus } from "./types.d.ts";
 
 export class Context<S extends State = Record<string, any>> {
   /** A reference to the current application */

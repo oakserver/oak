@@ -11,6 +11,7 @@ test({
     assertEquals(typeof mod.Context, "function");
     assertEquals(typeof mod.HttpError, "function");
     assertEquals(typeof mod.httpErrors, "object");
+    assertEquals(typeof mod.isErrorStatus, "function");
     assertEquals(typeof mod.isHttpError, "function");
     assertEquals(typeof mod.isRedirectStatus, "function");
     assertEquals(typeof mod.composeMiddleware, "function");
@@ -22,6 +23,6 @@ test({
     assertEquals(typeof mod.STATUS_TEXT, "object");
     assertEquals(typeof mod.Status, "object");
     assertEquals(typeof mod.send, "function");
-    assertEquals(Object.keys(mod).length, 15);
+    assertEquals(Object.keys(mod).length, 16);
   },
 });

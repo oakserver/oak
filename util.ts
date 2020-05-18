@@ -2,16 +2,7 @@
 
 import { isAbsolute, join, normalize, resolve, sep, Status } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
-
-/** A HTTP status that is a redirect (3XX). */
-export type RedirectStatus =
-  | Status.MultipleChoices // 300
-  | Status.MovedPermanently // 301
-  | Status.Found // 302
-  | Status.SeeOther // 303
-  | Status.UseProxy // 305 - DEPRECATED
-  | Status.TemporaryRedirect // 307
-  | Status.PermanentRedirect; // 308
+import { ErrorStatus, RedirectStatus } from "./types.d.ts";
 
 /** Safely decode a URI component, where if it fails, instead of throwing,
  * just returns the original string
@@ -22,6 +13,51 @@ export function decodeComponent(text: string) {
   } catch {
     return text;
   }
+}
+
+/** Determines if a HTTP `Status` is an `ErrorStatus` (4XX or 5XX). */
+export function isErrorStatus(value: Status): value is ErrorStatus {
+  return [
+    Status.BadRequest,
+    Status.Unauthorized,
+    Status.PaymentRequired,
+    Status.Forbidden,
+    Status.NotFound,
+    Status.MethodNotAllowed,
+    Status.NotAcceptable,
+    Status.ProxyAuthRequired,
+    Status.RequestTimeout,
+    Status.Conflict,
+    Status.Gone,
+    Status.LengthRequired,
+    Status.PreconditionFailed,
+    Status.RequestEntityTooLarge,
+    Status.RequestURITooLong,
+    Status.UnsupportedMediaType,
+    Status.RequestedRangeNotSatisfiable,
+    Status.ExpectationFailed,
+    Status.Teapot,
+    Status.MisdirectedRequest,
+    Status.UnprocessableEntity,
+    Status.Locked,
+    Status.FailedDependency,
+    Status.UpgradeRequired,
+    Status.PreconditionRequired,
+    Status.TooManyRequests,
+    Status.RequestHeaderFieldsTooLarge,
+    Status.UnavailableForLegalReasons,
+    Status.InternalServerError,
+    Status.NotImplemented,
+    Status.BadGateway,
+    Status.ServiceUnavailable,
+    Status.GatewayTimeout,
+    Status.HTTPVersionNotSupported,
+    Status.VariantAlsoNegotiates,
+    Status.InsufficientStorage,
+    Status.LoopDetected,
+    Status.NotExtended,
+    Status.NetworkAuthenticationRequired,
+  ].includes(value);
 }
 
 /** Determines if a HTTP `Status` is a `RedirectStatus` (3XX). */

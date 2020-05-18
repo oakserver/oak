@@ -30,7 +30,7 @@ import { Status } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { Middleware, compose } from "./middleware.ts";
 import { Key, pathToRegExp } from "./pathToRegExp.ts";
-import { HTTPMethods } from "./types.ts";
+import { HTTPMethods } from "./types.d.ts";
 import { decodeComponent } from "./util.ts";
 
 const { MethodNotAllowed, NotImplemented } = httpErrors;
