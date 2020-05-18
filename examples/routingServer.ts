@@ -46,6 +46,9 @@ router
     } else {
       return notFound(context);
     }
+  })
+  .post("/", async (context) => {
+    context.response.body = {status:true, requestBody:await context.request.body()};
   });
 
 const app = new Application();

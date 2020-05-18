@@ -471,6 +471,9 @@ router
     if (context.params && context.params.id && books.has(context.params.id)) {
       context.response.body = books.get(context.params.id);
     }
+  })
+  .post("/", async (context) => {
+    context.response.body = {status:true, requestBody:await context.request.body()};
   });
 
 const app = new Application();

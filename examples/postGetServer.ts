@@ -22,7 +22,7 @@ router
       response.status = 400;
       response.body = { msg: "Invalid data" };
     } else {
-      response.body = { msg: "Success", data: request.body() };
+      response.body = { msg: "Success", data: await request.body() };
     }
   });
 
