@@ -17,12 +17,12 @@ router
     let data_id = context.params.id!;
     context.response.body = { name: data.get(data_id) };
   })
-  .post("/data", ({ request, response }) => {
+  .post("/data", async ({ request, response }) => {
     if (!request.hasBody) {
       response.status = 400;
       response.body = { msg: "Invalid data" };
     } else {
-      response.body = { msg: "Success", data: request.body() };
+      response.body = { msg: "Success", data: await request.body() };
     }
   });
 
