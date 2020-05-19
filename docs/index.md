@@ -8,10 +8,11 @@ This middleware framework is inspired by [Koa](https://github.com/koajs/koa)
 and middleware router inspired by
 [koa-router](https://github.com/alexmingoia/koa-router/).
 
+- [deno doc for oak](https://doc.deno.land/https/deno.land/x/oak/mod.ts)
 - [Frequently Asked Questions](./FAQ)
 - [Awesome oak](https://oakserver.github.io/awesome-oak/) - Community resources
   for oak.
-- [oak-middleware](https://github.com/oakserver/middleware/) - A collection of
+- [oak_middleware](https://oakserver.github.io/middleware/) - A collection of
   middleware maintained by us.
 - [Getting Started](#getting-started)
 
@@ -23,7 +24,7 @@ oak off of `master`, though in practice you should _pin_ to a specific version
 of oak in order to ensure compatibility.
 
 For example if you wanted to use version 3.1.0 of oak, you would want to import
-oak from `https://deno.land/x/oak@3.1.0/mod.ts`.
+oak from `https://deno.land/x/oak@4.0.0/mod.ts`.
 
 All of the parts of oak that are intended to be used in creating a server are
 exported from `mod.ts` and most of the time, you will simply want to import the
