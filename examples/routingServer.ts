@@ -10,7 +10,14 @@ import {
   yellow,
 } from "https://deno.land/std@0.51.0/fmt/colors.ts";
 
-import { Application, Context, Router, Status } from "../mod.ts";
+import {
+  Application,
+  Context,
+  isHttpError,
+  Router,
+  RouterContext,
+  Status,
+} from "../mod.ts";
 
 interface Book {
   id: string;
@@ -39,6 +46,31 @@ router
   })
   .get("/book", async (context) => {
     context.response.body = Array.from(books.values());
+  })
+  .post("/book", async (context: RouterContext) => {
+    console.log("post book");
+    if (!context.request.hasBody) {
+      context.throw(Status.BadRequest, "Bad Request");
+    }
+    const body = await context.request.body();
+    let book: Partial<Book> | undefined;
+    if (body.type === "json") {
+      book = body.value;
+    } else if (body.type === "form") {
+      book = {};
+      for (const [key, value] of body.value) {
+        book[key as keyof Book] = value;
+      }
+    }
+    if (book) {
+      context.assert(book.id && typeof book.id === "string", Status.BadRequest);
+      books.set(book.id, book as Book);
+      context.response.status = Status.OK;
+      context.response.body = book;
+      context.response.type = "json";
+      return;
+    }
+    context.throw(Status.BadRequest, "Bad Request");
   })
   .get<{ id: string }>("/book/:id", async (context, next) => {
     if (context.params && books.has(context.params.id)) {
@@ -69,6 +101,28 @@ app.use(async (context, next) => {
   await next();
   const ms = Date.now() - start;
   context.response.headers.set("X-Response-Time", `${ms}ms`);
+});
+
+// Error handler
+app.use(async (context, next) => {
+  try {
+    await next();
+  } catch (err) {
+    if (isHttpError(err)) {
+      context.response.status = err.status;
+      const { message, status, stack } = err;
+      if (context.request.accepts("json")) {
+        context.response.body = { message, status, stack };
+        context.response.type = "json";
+      } else {
+        context.response.body = `${status} ${message}\n\n${stack ?? ""}`;
+        context.response.type = "text/plain";
+      }
+    } else {
+      console.log(err);
+      throw err;
+    }
+  }
 });
 
 // Use the router
