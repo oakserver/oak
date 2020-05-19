@@ -1,5 +1,15 @@
 # Frequently Asked Questions
 
+## Where can I find full API documentation?
+
+One of the advantages of Deno (and TypeScript) is that it is quite easy to
+inline documentation in the code. The `doc.deno.land` site provides all the
+documentation directly from the source code. The documentation for
+[oak's mod.ts](https://doc.deno.land/https/deno.land/x/oak/mod.ts) contains all
+the APIs that are considered "public". You can also get an output of the
+documentation directly via `deno doc https://deno.land/x/oak/mod.ts` to your
+console.
+
 ## Where is ctx.host, ctx.path, ctx.querystring, etc.?
 
 Instead of creating "aliases" to lots of different parts of the requested URL,
