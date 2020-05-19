@@ -4,8 +4,12 @@ import { Status } from "./deps.ts";
 import { test, assertEquals } from "./test_deps.ts";
 import { Request } from "./request.ts";
 import { Response, REDIRECT_BACK } from "./response.ts";
-
+import { assert } from "https://deno.land/std@0.51.0/testing/asserts.ts";
 const decoder = new TextDecoder();
+
+function decodeBody(body: Uint8Array | Deno.Reader | undefined): string {
+  return decoder.decode(body as Uint8Array);
+}
 
 function createMockRequest({
   headers,
@@ -50,7 +54,7 @@ test({
     const response = new Response(createMockRequest());
     response.body = "Hello world!";
     const serverResponse = response.toServerResponse();
-    assertEquals(decoder.decode(serverResponse.body), "Hello world!");
+    assertEquals(decodeBody(serverResponse.body), "Hello world!");
     assertEquals(serverResponse.status, 200);
     assertEquals(
       serverResponse.headers!.get("content-type"),
@@ -67,7 +71,7 @@ test({
     response.body = "<!DOCTYPE html><html><body>Hello world!</body></html>";
     const serverResponse = response.toServerResponse();
     assertEquals(
-      decoder.decode(serverResponse.body),
+      decodeBody(serverResponse.body),
       "<!DOCTYPE html><html><body>Hello world!</body></html>",
     );
     assertEquals(serverResponse.status, 200);
@@ -85,7 +89,7 @@ test({
     const response = new Response(createMockRequest());
     response.body = { foo: "bar" };
     const serverResponse = response.toServerResponse();
-    assertEquals(decoder.decode(serverResponse.body), `{"foo":"bar"}`);
+    assertEquals(decodeBody(serverResponse.body), `{"foo":"bar"}`);
     assertEquals(serverResponse.status, 200);
     assertEquals(
       serverResponse.headers!.get("content-type"),
@@ -101,7 +105,7 @@ test({
     const response = new Response(createMockRequest());
     response.body = Symbol("foo");
     const serverResponse = response.toServerResponse();
-    assertEquals(decoder.decode(serverResponse.body), "Symbol(foo)");
+    assertEquals(decodeBody(serverResponse.body), "Symbol(foo)");
     assertEquals(serverResponse.status, 200);
     assertEquals(
       serverResponse.headers!.get("content-type"),
@@ -117,7 +121,7 @@ test({
     const response = new Response(createMockRequest());
     response.body = new TextEncoder().encode("Hello world!");
     const serverResponse = response.toServerResponse();
-    assertEquals(decoder.decode(serverResponse.body), "Hello world!");
+    assertEquals(decodeBody(serverResponse.body), "Hello world!");
     assertEquals(serverResponse.status, 200);
     assertEquals(Array.from(serverResponse.headers!.entries()).length, 0);
   },
@@ -131,7 +135,7 @@ test({
     response.body = "console.log('hello world');";
     const serverResponse = response.toServerResponse();
     assertEquals(
-      decoder.decode(serverResponse.body),
+      decodeBody(serverResponse.body),
       "console.log('hello world');",
     );
     assertEquals(serverResponse.status, 200);
@@ -152,7 +156,7 @@ test({
     response.headers.set("content-type", "text/plain");
     const serverResponse = response.toServerResponse();
     assertEquals(
-      decoder.decode(serverResponse.body),
+      decodeBody(serverResponse.body),
       "console.log('hello world');",
     );
     assertEquals(serverResponse.status, 200);
@@ -178,7 +182,7 @@ test({
     const serverResponse = response.toServerResponse();
     assertEquals(serverResponse.status, Status.Found);
     assertEquals(
-      decoder.decode(serverResponse.body),
+      decodeBody(serverResponse.body),
       `Redirecting to <a href="./foo">./foo</a>.`,
     );
     assertEquals(serverResponse.headers!.get("Location"), "./foo");
@@ -198,7 +202,7 @@ test({
     const serverResponse = response.toServerResponse();
     assertEquals(serverResponse.status, Status.Found);
     assertEquals(
-      decoder.decode(serverResponse.body),
+      decodeBody(serverResponse.body),
       `Redirecting to <a href="https://example.com/foo">https://example.com/foo</a>.`,
     );
     assertEquals(
@@ -218,7 +222,7 @@ test({
     const serverResponse = response.toServerResponse();
     assertEquals(serverResponse.status, Status.Found);
     assertEquals(
-      decoder.decode(serverResponse.body),
+      decodeBody(serverResponse.body),
       `Redirecting to <a href="https://example.com/foo">https://example.com/foo</a>.`,
     );
     assertEquals(
@@ -236,7 +240,7 @@ test({
     const serverResponse = response.toServerResponse();
     assertEquals(serverResponse.status, Status.Found);
     assertEquals(
-      decoder.decode(serverResponse.body),
+      decodeBody(serverResponse.body),
       `Redirecting to <a href="https://example.com/foo">https://example.com/foo</a>.`,
     );
     assertEquals(
@@ -254,7 +258,7 @@ test({
     const serverResponse = response.toServerResponse();
     assertEquals(serverResponse.status, Status.Found);
     assertEquals(
-      decoder.decode(serverResponse.body),
+      decodeBody(serverResponse.body),
       `Redirecting to <a href="/">/</a>.`,
     );
     assertEquals(serverResponse.headers!.get("Location"), "/");
@@ -273,7 +277,7 @@ test({
     const serverResponse = response.toServerResponse();
     assertEquals(serverResponse.status, Status.Found);
     assertEquals(
-      decoder.decode(serverResponse.body),
+      decodeBody(serverResponse.body),
       `Redirecting to https://example.com/foo.`,
     );
     assertEquals(
@@ -284,5 +288,16 @@ test({
       serverResponse.headers?.get("Content-Type"),
       "text/plain; charset=utf-8",
     );
+  },
+});
+
+test({
+  name: "response.body() passes Deno.Reader",
+  fn() {
+    const response = new Response(createMockRequest());
+    const body = new Deno.Buffer();
+    response.body = body;
+    const serverResponse = response.toServerResponse();
+    assert(serverResponse.body === body);
   },
 });

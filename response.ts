@@ -7,7 +7,7 @@ import { isHtml, isRedirectStatus } from "./util.ts";
 interface ServerResponse {
   status?: number;
   headers?: Headers;
-  body?: Uint8Array;
+  body?: Uint8Array | Deno.Reader;
 }
 
 export const REDIRECT_BACK = Symbol("redirect backwards");
@@ -16,19 +16,25 @@ const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
 
 const encoder = new TextEncoder();
 
+/** Guard for `Deno.Reader`. */
+function isReader(value: any): value is Deno.Reader {
+  return typeof value === "object" && "read" in value &&
+    typeof value.read === "function";
+}
+
 export class Response {
   #request: Request;
   #writable = true;
 
-  #getBody = (): Uint8Array | undefined => {
+  #getBody = (): Uint8Array | Deno.Reader | undefined => {
     const typeofBody = typeof this.body;
-    let result: Uint8Array | undefined;
+    let result: Uint8Array | Deno.Reader | undefined;
     this.#writable = false;
     if (BODY_TYPES.includes(typeofBody)) {
       const bodyText = String(this.body);
       result = encoder.encode(bodyText);
       this.type = this.type || (isHtml(bodyText) ? "html" : "text/plain");
-    } else if (this.body instanceof Uint8Array) {
+    } else if (this.body instanceof Uint8Array || isReader(this.body)) {
       result = this.body;
     } else if (typeofBody === "object" && this.body !== null) {
       result = encoder.encode(JSON.stringify(this.body));
@@ -117,22 +123,24 @@ export class Response {
     // If there is a response type, set the content type header
     this.#setContentType();
 
+    const { headers, status } = this;
+
     // If there is no body and no content type and no set length, then set the
     // content length to 0
     if (
       !(
         body ||
-        this.headers.has("Content-Type") ||
-        this.headers.has("Content-Length")
+        headers.has("Content-Type") ||
+        headers.has("Content-Length")
       )
     ) {
-      this.headers.append("Content-Length", "0");
+      headers.append("Content-Length", "0");
     }
 
     return {
-      status: this.status || (body ? Status.OK : Status.NotFound),
+      status: status ?? (body ? Status.OK : Status.NotFound),
       body,
-      headers: this.headers,
+      headers,
     };
   }
 }
