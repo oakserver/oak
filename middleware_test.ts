@@ -1,13 +1,12 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { test, assertEquals, assertStrictEq } from "./test_deps.ts";
+import { test, assert, assertEquals, assertStrictEq } from "./test_deps.ts";
 import { State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { createHttpError, httpErrors } from "./httpError.ts";
 import { ErrorStatus } from "./types.d.ts";
 import { compose, Middleware } from "./middleware.ts";
-import { assert } from "https://deno.land/std@0.51.0/testing/asserts.ts";
 function createMockContext<S extends State = Record<string, any>>() {
   return ({
     request: {

@@ -1,14 +1,15 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, assertStrictEq, test } from "./test_deps.ts";
+import {
+  assertEquals,
+  assertStrictEq,
+  assertThrowsAsync,
+  test,
+} from "./test_deps.ts";
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { Router } from "./router.ts";
-import {
-  assertThrows,
-  assertThrowsAsync,
-} from "https://deno.land/std@0.51.0/testing/asserts.ts";
 function createMockApp<
   S extends Record<string | number | symbol, any> = Record<string, any>,
 >(
