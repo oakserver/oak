@@ -5,10 +5,11 @@ import {
   assert,
   assertEquals,
   assertStrictEq,
-  decoder,
 } from "./test_deps.ts";
 import { ServerRequest } from "./deps.ts";
 import { Request } from "./request.ts";
+
+const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
 function createMockBodyReader(body: string): Deno.Reader {
