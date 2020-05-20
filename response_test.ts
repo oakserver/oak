@@ -1,10 +1,9 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
 import { Status } from "./deps.ts";
-import { test, assertEquals } from "./test_deps.ts";
+import { test, assert, assertEquals } from "./test_deps.ts";
 import { Request } from "./request.ts";
 import { Response, REDIRECT_BACK } from "./response.ts";
-import { assert } from "https://deno.land/std@0.51.0/testing/asserts.ts";
 const decoder = new TextDecoder();
 
 function decodeBody(body: Uint8Array | Deno.Reader | undefined): string {

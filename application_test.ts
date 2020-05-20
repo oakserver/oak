@@ -1,6 +1,12 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { test, assert, assertEquals, assertStrictEq } from "./test_deps.ts";
+import {
+  test,
+  assert,
+  assertEquals,
+  assertStrictEq,
+  assertThrowsAsync,
+} from "./test_deps.ts";
 import { Application, ListenOptions, ListenOptionsTls } from "./application.ts";
 import { Context } from "./context.ts";
 import {
@@ -11,7 +17,6 @@ import {
 } from "./deps.ts";
 import { Data, KeyStack } from "./keyStack.ts";
 import { httpErrors } from "./httpError.ts";
-import { assertThrowsAsync } from "https://deno.land/std@0.51.0/testing/asserts.ts";
 let serverRequestStack: ServerRequest[] = [];
 let requestResponseStack: ServerResponse[] = [];
 let addrStack: Array<string | ListenOptions> = [];

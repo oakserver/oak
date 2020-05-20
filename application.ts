@@ -4,13 +4,13 @@ import { Context } from "./context.ts";
 import {
   serve as defaultServe,
   serveTLS as defaultServeTls,
+  Server,
   ServerRequest,
   Status,
   STATUS_TEXT,
 } from "./deps.ts";
 import { Key, KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
-import { Server } from "https://deno.land/std@0.51.0/http/server.ts";
 export interface ListenOptionsBase {
   hostname?: string;
   port: number;
