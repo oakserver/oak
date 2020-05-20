@@ -1,6 +1,6 @@
 /**
  * Adapted directly from koa-router at
- * https://github.com/alexmingoia/koa-router/ which is licensed as:
+ * https://github.com/koajs/router/ which is licensed as:
  *
  * The MIT License (MIT)
  *
@@ -26,10 +26,9 @@
  */
 
 import { Context } from "./context.ts";
-import { Status } from "./deps.ts";
+import { Key, pathToRegexp, Status } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { Middleware, compose } from "./middleware.ts";
-import { Key, pathToRegExp } from "./pathToRegExp.ts";
 import { HTTPMethods } from "./types.d.ts";
 import { decodeComponent } from "./util.ts";
 
@@ -53,6 +52,7 @@ export interface Route {
   methods: HTTPMethods[];
   middleware: RouterMiddleware[];
   options?: RouterOptions;
+  regexp: RegExp;
 }
 
 /** The context passed router middleware.  */
@@ -121,7 +121,7 @@ class Layer {
     if (this.methods.includes("GET")) {
       this.methods.unshift("HEAD");
     }
-    this.regexp = pathToRegExp(path, this.paramNames, options);
+    this.regexp = pathToRegexp(path, this.paramNames, options);
   }
 
   matches(path: string): boolean {
@@ -153,19 +153,20 @@ class Layer {
     if (this.path) {
       this.path = `${prefix}${this.path}`;
       this.paramNames = [];
-      this.regexp = pathToRegExp(this.path, this.paramNames, this.options);
+      this.regexp = pathToRegexp(this.path, this.paramNames, this.options);
     }
     return this;
   }
 }
 
 function inspectLayer(layer: Layer): Route {
-  const { path, methods, stack, options } = layer;
+  const { path, methods, stack, options, regexp } = layer;
   return {
     path,
     methods: [...methods],
     middleware: [...stack],
     options: options ? { ...options } : undefined,
+    regexp,
   };
 }
 
@@ -183,6 +184,7 @@ export class Router {
   #addRoute = (
     path: string | string[],
     middleware: RouterMiddleware[],
+    // deno-fmt-ignore
     ...methods: HTTPMethods[]
   ): this => {
     if (Array.isArray(path)) {
@@ -219,8 +221,8 @@ export class Router {
     return { routesMatched, matches };
   };
 
-  constructor(options: RouterOptions = {}) {
-    this.#methods = options.methods || [
+  constructor({ methods, prefix, strict }: RouterOptions = {}) {
+    this.#methods = methods ?? [
       "DELETE",
       "GET",
       "HEAD",
@@ -229,8 +231,12 @@ export class Router {
       "POST",
       "PUT",
     ];
-    if (options.prefix) this.#prefix = options.prefix;
-    if (options.strict) this.#strict = options.strict;
+    if (prefix) {
+      this.#prefix = prefix;
+    }
+    if (strict) {
+      this.#strict = strict;
+    }
   }
 
   /** Register middleware for the specified routes and the `DELETE`, `GET`,

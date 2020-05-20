@@ -41,3 +41,11 @@ export {
   contentType,
   lookup,
 } from "https://deno.land/x/media_types@v2.3.1/mod.ts";
+export {
+  compile,
+  Key,
+  parse as pathParse,
+  ParseOptions,
+  pathToRegexp,
+  TokensToRegexpOptions,
+} from "https://raw.githubusercontent.com/pillarjs/path-to-regexp/v6.1.0/src/index.ts";
