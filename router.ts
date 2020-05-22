@@ -95,9 +95,6 @@ export interface RouterOptions {
    * optional.  Defaults to `false`.
    */
   strict?: boolean;
-
-  /**end */
-  end?: boolean;
 }
 
 interface LayerOptions {
@@ -105,7 +102,6 @@ interface LayerOptions {
   name?: string;
   sensitive?: boolean;
   strict?: boolean;
-  end?: boolean;
 }
 
 class Layer {
