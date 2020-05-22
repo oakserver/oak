@@ -95,6 +95,9 @@ export interface RouterOptions {
    * optional.  Defaults to `false`.
    */
   strict?: boolean;
+
+  /**end */
+  end?: boolean;
 }
 
 interface LayerOptions {
@@ -102,6 +105,7 @@ interface LayerOptions {
   name?: string;
   sensitive?: boolean;
   strict?: boolean;
+  end?: boolean;
 }
 
 class Layer {
@@ -121,10 +125,13 @@ class Layer {
     if (this.methods.includes("GET")) {
       this.methods.unshift("HEAD");
     }
+    console.log("path", path, "params", this.paramNames, "options", options);
     this.regexp = pathToRegexp(path, this.paramNames, options);
   }
 
   matches(path: string): boolean {
+    console.log("matches path", path);
+    console.log("regex test for path:", this.regexp.test(path));
     return this.regexp.test(path);
   }
 
@@ -146,20 +153,45 @@ class Layer {
       return [];
     }
     const [, ...captures] = path.match(this.regexp)!;
+    console.log("captures", captures);
     return captures;
   }
 
   setPrefix(prefix: string): this {
     if (this.path) {
-      this.path = `${prefix}${this.path}`;
+      //fix
+      console.log("before path:", this.path);
+      if (this.path === "/" && !this.options.strict) {
+        // check if path is set to "base" and the strict option
+        this.path = `${prefix}`;
+      } else {
+        this.path = `${prefix}${this.path}`;
+      }
+
+      console.log(" after path:", this.path);
       this.paramNames = [];
+      console.log("reg options: ", this.options);
+      console.log("setPrefix before regexp :", this.regexp);
+      console.log(
+        "SETPREFIX:  ",
+        "path",
+        this.path,
+        "params",
+        this.paramNames,
+        "options",
+        this.options,
+      );
+      const regexFix = pathToRegexp("/prefix", this.paramNames, this.options);
+      console.log("regexFix: ", regexFix);
       this.regexp = pathToRegexp(this.path, this.paramNames, this.options);
+      console.log("setPrefix after regexp :", this.regexp);
     }
     return this;
   }
 }
 
 function inspectLayer(layer: Layer): Route {
+  console.log("inpspectLayer", layer);
   const { path, methods, stack, options, regexp } = layer;
   return {
     path,
@@ -180,6 +212,7 @@ export class Router {
   #prefix = "";
   #stack: Layer[] = [];
   #strict = false;
+  #end = false;
 
   #addRoute = (
     path: string | string[],
@@ -233,9 +266,11 @@ export class Router {
     ];
     if (prefix) {
       this.#prefix = prefix;
+      console.log("router option prefix", prefix);
     }
     if (strict) {
       this.#strict = strict;
+      console.log("router option strict::", strict);
     }
   }
 
