@@ -12,6 +12,6 @@ jobs:
 
       - name: run tests
         run: |
-          curl -L https://deno.land/x/install/install.sh | sh -s "v1.0.1"
+          curl -L https://deno.land/x/install/install.sh | sh -s "v1.0.2"
           export PATH="$HOME/.deno/bin:$PATH"
           deno test --allow-read
