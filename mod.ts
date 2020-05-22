@@ -8,7 +8,7 @@ export {
   ListenOptionsTls,
   State,
 } from "./application.ts";
-export { Context } from "./context.ts";
+export { Context, ContextSendOptions } from "./context.ts";
 export {
   Cookies,
   CookiesGetOptions,

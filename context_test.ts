@@ -1,6 +1,12 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { test, assert, assertStrictEq, assertThrows } from "./test_deps.ts";
+import {
+  test,
+  assert,
+  assertEquals,
+  assertStrictEq,
+  assertThrows,
+} from "./test_deps.ts";
 import { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Cookies } from "./cookies.ts";
@@ -72,5 +78,45 @@ test({
       httpErrors.NotFound,
       "foobar",
     );
+  },
+});
+
+test({
+  name: "context.send() default path",
+  async fn() {
+    const context = new Context(
+      createMockApp(),
+      createMockServerRequest("/test.html"),
+    );
+    const fixture = await Deno.readFile("./fixtures/test.html");
+    await context.send({ root: "./fixtures" });
+    assertEquals(context.response.body, fixture);
+    assertEquals(context.response.type, ".html");
+    assertEquals(
+      context.response.headers.get("content-length"),
+      String(fixture.length),
+    );
+    assert(context.response.headers.get("last-modified") != null);
+    assertEquals(context.response.headers.get("cache-control"), "max-age=0");
+  },
+});
+
+test({
+  name: "context.send() default path",
+  async fn() {
+    const context = new Context(
+      createMockApp(),
+      createMockServerRequest(),
+    );
+    const fixture = await Deno.readFile("./fixtures/test.html");
+    await context.send({ path: "/test.html", root: "./fixtures" });
+    assertEquals(context.response.body, fixture);
+    assertEquals(context.response.type, ".html");
+    assertEquals(
+      context.response.headers.get("content-length"),
+      String(fixture.length),
+    );
+    assert(context.response.headers.get("last-modified") != null);
+    assertEquals(context.response.headers.get("cache-control"), "max-age=0");
   },
 });

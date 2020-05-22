@@ -66,7 +66,9 @@ async function exists(path: string): Promise<boolean> {
 }
 
 /** Asynchronously fulfill a response with a file from the local file
- * system. */
+ * system.
+ * 
+ * Requires Deno read permission. */
 export async function send(
   { request, response }: Context,
   path: string,

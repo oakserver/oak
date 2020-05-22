@@ -7,7 +7,15 @@ import { createHttpError } from "./httpError.ts";
 import { KeyStack } from "./keyStack.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
+import { send, SendOptions } from "./send.ts";
 import { ErrorStatus } from "./types.d.ts";
+
+export interface ContextSendOptions extends SendOptions {
+  /** The filename to send, which will be resolved based on the other options.
+   * If this property is omitted, the current context's `.request.url.pathname`
+   * will be used. */
+  path?: string;
+}
 
 export class Context<S extends State = Record<string, any>> {
   /** A reference to the current application */
@@ -64,6 +72,18 @@ export class Context<S extends State = Record<string, any>> {
       Object.assign(err, props);
     }
     throw err;
+  }
+
+  /** Asynchronously fulfill a response with a file from the local file
+   * system.
+   * 
+   * If the `options.path` is not supplied, the file to be sent will default
+   * to this `.request.url.pathname`.
+   * 
+   * Requires Deno read permission. */
+  send(options: ContextSendOptions): Promise<string | undefined> {
+    const { path = this.request.url.pathname, ...sendOptions } = options;
+    return send(this, path, sendOptions);
   }
 
   /** Create and throw an HTTP Error, which can be used to pass status
