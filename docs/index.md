@@ -85,7 +85,7 @@ insufficient in a lot of cases to create useful middleware. This is where the
 control the flow of other middleware, without the other middleware having to be
 aware of it. `next()` indicates to the application that it should continue
 executing other middleware in the chain. `next()` always returns a promise
-which is resolved then the other middleware in the chain has resolved.
+which is resolved when the other middleware in the chain has resolved.
 
 If you use `next()`, almost all the time you will want to `await next();` so
 that the code in your middleware function executes as you expect. If you don't
