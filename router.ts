@@ -1,5 +1,5 @@
 /**
- * Adapted directly from koa-router at
+ * Adapted directly from @koa/router at
  * https://github.com/koajs/router/ which is licensed as:
  *
  * The MIT License (MIT)
@@ -26,32 +26,66 @@
  */
 
 import { Context } from "./context.ts";
-import { Key, pathToRegexp, Status } from "./deps.ts";
+import {
+  assert,
+  compile,
+  Key,
+  ParseOptions,
+  pathParse,
+  pathToRegexp,
+  Status,
+  TokensToRegexpOptions,
+} from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { Middleware, compose } from "./middleware.ts";
-import { HTTPMethods } from "./types.d.ts";
+import { HTTPMethods, RedirectStatus } from "./types.d.ts";
 import { decodeComponent } from "./util.ts";
 
-const { MethodNotAllowed, NotImplemented } = httpErrors;
+interface Matches {
+  path: Layer[];
+  pathAndMethod: Layer[];
+  route: boolean;
+}
 
-interface AllowedMethodsOptions {
-  /** A method to be called in lieu of throwing a `MethodNotAllowed` HTTP
-   * error. */
-  methodNotAllowed?: () => any;
+export interface RouterAllowedMethodsOptions {
+  /** Use the value returned from this function instead of an HTTP error
+   * `MethodNotAllowed`. */
+  methodNotAllowed?(): any;
 
-  /** A method to be called in lieu of throwing a `NotImplemented` HTTP
-   * error */
-  notImplemented?: () => any;
+  /** Use the value returned from this function instead of an HTTP error
+   * `NotImplemented`. */
+  notImplemented?(): any;
+
+  /** When dealing with a non-implemented method or a method not allowed, throw
+   * an error instead of setting the status and header for the response. */
   throw?: boolean;
 }
 
-export type RouteParams = Record<string | number, string | undefined>;
-
-export interface Route {
-  path: string;
+export interface Route<
+  P extends RouteParams = RouteParams,
+  S extends Record<string | number | symbol, any> = Record<string, any>,
+> {
+  /** The HTTP methods that this route handles. */
   methods: HTTPMethods[];
-  middleware: RouterMiddleware[];
-  options?: RouterOptions;
+
+  /** The middleware that will be applied to this route. */
+  middleware: RouterMiddleware<P, S>[];
+
+  /** An optional name for the route. */
+  name?: string;
+
+  /** Options that were used to create the route. */
+  options: LayerOptions;
+
+  /** The parameters that are identified in the route that will be parsed out
+   * on matched requests. */
+  paramNames: (keyof P)[];
+
+  /** The path that this route manages. */
+  path: string;
+
+  /** The regular expression used for matching and parsing parameters for the
+   * route. */
   regexp: RegExp;
 }
 
@@ -60,11 +94,26 @@ export interface RouterContext<
   P extends RouteParams = RouteParams,
   S extends Record<string | number | symbol, any> = Record<string, any>,
 > extends Context<S> {
+  /** When matching the route, an array of the capturing groups from the regular
+   * expression. */
+  captures: string[];
+
+  /** The routes that were matched for this request. */
+  matched?: Layer<P, S>[];
+
   /** Any parameters parsed from the route when matched. */
   params: P;
 
   /** A reference to the router instance. */
   router: Router;
+
+  /** If the matched route has a `name`, the matched route name is provided
+   * here. */
+  routeName?: string;
+
+  /** Overrides the matched path for future route middleware, when a
+   * `routerPath` option is not defined on the `Router` options. */
+  routerPath?: string;
 }
 
 export interface RouterMiddleware<
@@ -72,157 +121,302 @@ export interface RouterMiddleware<
   S extends Record<string | number | symbol, any> = Record<string, any>,
 > {
   (context: RouterContext<P, S>, next: () => Promise<void>):
-    | Promise<
-      void
-    >
+    | Promise<void>
     | void;
+  /** For route parameter middleware, the `param` key for this parameter will
+   * be set. */
+  param?: keyof P;
 }
 
 export interface RouterOptions {
-  /** The part of the path that should prefix all the routes for this
-   * router. */
-  prefix?: string;
-
-  /** The set of HTTP methods that this router can service. */
+  /** Override the default set of methods supported by the router. */
   methods?: HTTPMethods[];
 
+  /** Only handle routes where. */
+  prefix?: string;
+
+  /** Override the `request.url.pathname` when matching middleware to run. */
+  routerPath?: string;
+
   /** Determines if routes are matched in a case sensitive way.  Defaults to
-   * `false`.
-   */
+   * `false`. */
   sensitive?: boolean;
 
   /** Determines if routes are matched strictly, where the trailing `/` is not
-   * optional.  Defaults to `false`.
-   */
+   * optional.  Defaults to `false`. */
   strict?: boolean;
 }
 
-interface LayerOptions {
+/** Middleware that will be called by the router when handling a specific
+ * parameter, which the middleware will be called when a request matches the
+ * route parameter. */
+export interface RouterParamMiddleware<
+  P extends RouteParams = RouteParams,
+  S extends Record<string | number | symbol, any> = Record<string, any>,
+> {
+  (
+    param: string,
+    context: RouterContext<P, S>,
+    next: () => Promise<void>,
+  ): Promise<void> | void;
+}
+
+export type RouteParams = Record<string | number, string | undefined>;
+
+type LayerOptions = TokensToRegexpOptions & ParseOptions & {
   ignoreCaptures?: boolean;
   name?: string;
-  sensitive?: boolean;
-  strict?: boolean;
+};
+
+type UrlOptions = TokensToRegexpOptions & ParseOptions & {
+  /** When generating a URL from a route, add the query to the URL.  If an
+   * object */
+  query?: URLSearchParams | Record<string, string> | string;
+};
+
+/** Generate a URL from a string, potentially replace route params with
+ * values. */
+function toUrl(url: string, params: RouteParams = {}, options?: UrlOptions) {
+  const tokens = pathParse(url);
+  let replace: RouteParams = {};
+
+  if (tokens.some((token) => typeof token === "object")) {
+    replace = params;
+  } else {
+    options = params;
+  }
+
+  const toPath = compile(url, options);
+  let replaced = toPath(replace);
+
+  if (options && options.query) {
+    const url = new URL(replaced, "http://oak");
+    if (typeof options.query === "string") {
+      url.search = options.query;
+    } else {
+      url.search = String(
+        options.query instanceof URLSearchParams
+          ? options.query
+          : new URLSearchParams(options.query),
+      );
+    }
+    return `${url.pathname}${url.search}${url.hash}`;
+  }
+  return replaced;
 }
 
-class Layer {
-  name: string | null;
-  paramNames: Key[] = [];
-  regexp: RegExp;
-  stack: RouterMiddleware[];
+class Layer<
+  P extends RouteParams = RouteParams,
+  S extends Record<string | number | symbol, any> = Record<string, any>,
+> {
+  #opts: LayerOptions;
+  #paramNames: Key[] = [];
+  #regexp: RegExp;
+
+  methods: HTTPMethods[];
+  name?: string;
+  path: string;
+  stack: RouterMiddleware<P, S>[];
 
   constructor(
-    public path: string,
-    public methods: HTTPMethods[],
-    middleware: RouterMiddleware | RouterMiddleware[],
-    public options: LayerOptions = {},
+    path: string,
+    methods: HTTPMethods[],
+    middleware: RouterMiddleware<P, S> | RouterMiddleware<P, S>[],
+    { name, ...opts }: LayerOptions = {},
   ) {
-    this.name = options.name ?? null;
-    this.stack = Array.isArray(middleware) ? middleware : [middleware];
+    this.#opts = opts;
+    this.name = name;
+    this.methods = [...methods];
     if (this.methods.includes("GET")) {
       this.methods.unshift("HEAD");
     }
-    this.regexp = pathToRegexp(path, this.paramNames, options);
+    this.stack = Array.isArray(middleware) ? middleware : [middleware];
+    this.path = path;
+    this.#regexp = pathToRegexp(path, this.#paramNames, this.#opts);
   }
 
-  matches(path: string): boolean {
-    return this.regexp.test(path);
+  match(path: string): boolean {
+    return this.#regexp.test(path);
   }
 
-  params(captures: string[], existingParams: RouteParams = {}): RouteParams {
+  params(
+    captures: string[],
+    existingParams: RouteParams = {},
+  ): RouteParams {
     const params = existingParams;
     for (let i = 0; i < captures.length; i++) {
-      if (this.paramNames[i]) {
-        const capture = captures[i];
-        params[this.paramNames[i].name] = capture
-          ? decodeComponent(capture)
-          : capture;
+      if (this.#paramNames[i]) {
+        const c = captures[i];
+        params[this.#paramNames[i].name] = c ? decodeComponent(c) : c;
       }
     }
     return params;
   }
 
   captures(path: string): string[] {
-    if (this.options.ignoreCaptures) {
+    if (this.#opts.ignoreCaptures) {
       return [];
     }
-    const [, ...captures] = path.match(this.regexp)!;
-    return captures;
+    return path.match(this.#regexp)?.slice(1) ?? [];
+  }
+
+  url(
+    params: RouteParams = {},
+    options?: UrlOptions,
+  ): string {
+    const url = this.path.replace(/\(\.\*\)/g, "");
+    return toUrl(url, params, options);
+  }
+
+  param(
+    param: string,
+    fn: RouterParamMiddleware<any, any>,
+  ) {
+    const stack = this.stack;
+    const params = this.#paramNames;
+    const middleware: RouterMiddleware = function (
+      this: Router,
+      ctx,
+      next,
+    ): Promise<void> | void {
+      const p = ctx.params[param];
+      assert(p);
+      return fn.call(this, p, ctx, next);
+    };
+    middleware.param = param;
+
+    const names = params.map((p) => p.name);
+
+    const x = names.indexOf(param);
+    if (x >= 0) {
+      for (let i = 0; i < stack.length; i++) {
+        const fn = stack[i];
+        if (!fn.param || names.indexOf(fn.param as (string | number)) > x) {
+          stack.splice(i, 0, middleware);
+          break;
+        }
+      }
+    }
+    return this;
   }
 
   setPrefix(prefix: string): this {
     if (this.path) {
-      this.path = `${prefix}${this.path}`;
-      this.paramNames = [];
-      this.regexp = pathToRegexp(this.path, this.paramNames, this.options);
+      this.path = this.path !== "/" || this.#opts.strict === true
+        ? `${prefix}${this.path}`
+        : prefix;
+      this.#paramNames = [];
+      this.#regexp = pathToRegexp(this.path, this.#paramNames, this.#opts);
     }
     return this;
   }
+
+  toJSON(): Route<any, any> {
+    return {
+      methods: [...this.methods],
+      middleware: [...this.stack],
+      paramNames: this.#paramNames.map((key) => key.name),
+      path: this.path,
+      regexp: this.#regexp,
+      options: { ...this.#opts },
+    };
+  }
 }
 
-function inspectLayer(layer: Layer): Route {
-  const { path, methods, stack, options, regexp } = layer;
-  return {
-    path,
-    methods: [...methods],
-    middleware: [...stack],
-    options: options ? { ...options } : undefined,
-    regexp,
-  };
-}
-
-const contextRouteMatches = new WeakMap<RouterContext, Layer[]>();
-
-/** A class that routes requests to middleware based on the method and the
- * path name of the request.
- */
-export class Router {
+export class Router<
+  RP extends RouteParams = RouteParams,
+  RS extends Record<string | number | symbol, any> = Record<string, any>,
+> {
+  #opts: RouterOptions;
   #methods: HTTPMethods[];
-  #prefix = "";
+  #params: Record<string, RouterParamMiddleware<any, any>> = {};
   #stack: Layer[] = [];
-  #strict = false;
 
-  #addRoute = (
-    path: string | string[],
-    middleware: RouterMiddleware[],
-    // deno-fmt-ignore
-    ...methods: HTTPMethods[]
-  ): this => {
-    if (Array.isArray(path)) {
-      for (const r of path) {
-        this.#addRoute(r, middleware, ...methods);
-      }
-      return this;
-    }
-    const layer = new Layer(
-      path,
-      methods,
-      middleware,
-      { strict: this.#strict },
-    );
-    layer.setPrefix(this.#prefix);
-    this.#stack.push(layer);
-    return this;
-  };
+  #match = (path: string, method: HTTPMethods): Matches => {
+    const matches: Matches = {
+      path: [],
+      pathAndMethod: [],
+      route: false,
+    };
 
-  #match = (
-    path: string,
-    method: HTTPMethods,
-  ): { routesMatched: Layer[]; matches: Layer[] } => {
-    const routesMatched: Layer[] = [];
-    const matches: Layer[] = [];
-    for (const layer of this.#stack) {
-      if (layer.matches(path)) {
-        routesMatched.push(layer);
-        if (layer.methods.includes(method)) {
-          matches.push(layer);
+    for (const route of this.#stack) {
+      if (route.match(path)) {
+        matches.path.push(route);
+        if (route.methods.length === 0 || route.methods.includes(method)) {
+          matches.pathAndMethod.push(route);
+          if (route.methods.length) {
+            matches.route = true;
+          }
         }
       }
     }
-    return { routesMatched, matches };
+
+    return matches;
   };
 
-  constructor({ methods, prefix, strict }: RouterOptions = {}) {
-    this.#methods = methods ?? [
+  #register = (
+    path: string | string[],
+    middleware: RouterMiddleware[],
+    methods: HTTPMethods[],
+    options: LayerOptions = {},
+  ): void => {
+    if (Array.isArray(path)) {
+      for (const p of path) {
+        this.#register(p, middleware, methods, options);
+      }
+      return;
+    }
+
+    const { end, name, sensitive, strict, ignoreCaptures } = options;
+    const route = new Layer(path, methods, middleware, {
+      end: end === false ? end : true,
+      name,
+      sensitive: sensitive ?? this.#opts.sensitive ?? false,
+      strict: strict ?? this.#opts.strict ?? false,
+      ignoreCaptures,
+    });
+
+    if (this.#opts.prefix) {
+      route.setPrefix(this.#opts.prefix);
+    }
+
+    for (const [param, mw] of Object.entries(this.#params)) {
+      route.param(param, mw);
+    }
+
+    this.#stack.push(route);
+  };
+
+  #route = (name: string): Layer | undefined => {
+    for (const route of this.#stack) {
+      if (route.name === name) {
+        return route;
+      }
+    }
+  };
+
+  #useVerb = (
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware,
+    middleware: RouterMiddleware[],
+    methods: HTTPMethods[],
+  ): void => {
+    let name: string | undefined = undefined;
+    let path: string;
+    if (typeof pathOrMiddleware === "string") {
+      name = nameOrPath;
+      path = pathOrMiddleware;
+    } else {
+      path = nameOrPath;
+      middleware.unshift(pathOrMiddleware);
+    }
+
+    this.#register(path, middleware, methods, { name });
+  };
+
+  constructor(opts: RouterOptions = {}) {
+    this.#opts = opts;
+    this.#methods = opts.methods ?? [
       "DELETE",
       "GET",
       "HEAD",
@@ -231,231 +425,498 @@ export class Router {
       "POST",
       "PUT",
     ];
-    if (prefix) {
-      this.#prefix = prefix;
-    }
-    if (strict) {
-      this.#strict = strict;
-    }
   }
 
-  /** Register middleware for the specified routes and the `DELETE`, `GET`,
-   * `POST`, or `PUT` method is requested
-   */
-  all<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this.#addRoute(
-      route,
+  /** Register named middleware for the specified routes when the `DELETE`,
+   * `GET`, `POST`, or `PUT` method is requested. */
+  all<P extends RP = RP, S extends RS = RS>(
+    name: string,
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  /** Register middleware for the specified routes when the `DELETE`,
+   * `GET`, `POST`, or `PUT` method is requested. */
+  all<P extends RP = RP, S extends RS = RS>(
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  all<P extends RP = RP, S extends RS = RS>(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<P, S>,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S> {
+    this.#useVerb(
+      nameOrPath,
+      pathOrMiddleware as (string | RouterMiddleware),
       middleware as RouterMiddleware[],
-      "DELETE",
-      "GET",
-      "POST",
-      "PUT",
+      ["DELETE", "GET", "POST", "PUT"],
     );
+    return this as Router<any, any>;
   }
 
-  /** Middleware that automatically handles dealing with responding with
-   * allowed methods for the defined routes.
-   */
-  allowedMethods(options: AllowedMethodsOptions = {}): Middleware {
+  /** Middleware that handles requests for HTTP methods registered with the
+   * router.  If none of the routes handle a method, then "not allowed" logic
+   * will be used.  If a method is supported by some routes, but not the
+   * particular matched router, then "not implemented" will be returned.
+   * 
+   * The middleware will also automatically handle the `OPTIONS` method,
+   * responding with a `200 OK` when the `Allowed` header sent to the allowed
+   * methods for a given route.
+   * 
+   * By default, a "not allowed" request will respond with a `405 Not Allowed`
+   * and a "not implemented" will respond with a `501 Not Implemented`. Setting
+   * the option `.throw` to `true` will cause the middleware to throw an
+   * `HTTPError` instead of setting the response status.  The error can be
+   * overridden by providing a `.notImplemented` or `.notAllowed` method in the
+   * options, of which the value will be returned will be thrown instead of the
+   * HTTP error. */
+  allowedMethods(
+    options: RouterAllowedMethodsOptions = {},
+  ): Middleware {
     const implemented = this.#methods;
-    return async function allowedMethods(context, next) {
+
+    const allowedMethods: Middleware = async (context, next) => {
+      const ctx = context as RouterContext;
       await next();
-      const allowed = new Set<HTTPMethods>();
-      if (
-        !context.response.status ||
-        context.response.status === Status.NotFound
-      ) {
-        const contextRoutesMatched = contextRouteMatches.get(
-          context as RouterContext,
-        );
-        if (contextRoutesMatched) {
-          for (const layer of contextRoutesMatched) {
-            for (const method of layer.methods) {
-              allowed.add(method);
-            }
+      if (!ctx.response.status || ctx.response.status === Status.NotFound) {
+        assert(ctx.matched);
+        const allowed = new Set<HTTPMethods>();
+        for (const route of ctx.matched) {
+          for (const method of route.methods) {
+            allowed.add(method);
           }
         }
-        const allowedValue = Array.from(allowed).join(", ");
-        if (!implemented.includes(context.request.method)) {
+
+        const allowedStr = [...allowed].join(", ");
+        if (!implemented.includes(ctx.request.method)) {
           if (options.throw) {
-            let notImplementedThrowable: any;
-            if (typeof options.notImplemented === "function") {
-              notImplementedThrowable = options.notImplemented();
-            } else {
-              notImplementedThrowable = new NotImplemented();
-            }
-            throw notImplementedThrowable;
+            throw options.notImplemented
+              ? options.notImplemented()
+              : new httpErrors.NotImplemented();
           } else {
-            context.response.status = Status.NotImplemented;
-            context.response.headers.set("Allow", allowedValue);
+            ctx.response.status = Status.NotImplemented;
+            ctx.response.headers.set("Allowed", allowedStr);
           }
         } else if (allowed.size) {
-          if (context.request.method === "OPTIONS") {
-            context.response.status = Status.OK;
-            context.response.body = "";
-            context.response.headers.set("Allow", allowedValue);
-          } else if (!allowed.has(context.request.method)) {
+          if (ctx.request.method === "OPTIONS") {
+            ctx.response.status = Status.OK;
+            ctx.response.headers.set("Allowed", allowedStr);
+          } else if (!allowed.has(ctx.request.method)) {
             if (options.throw) {
-              let notAllowedThrowable: any;
-              if (typeof options.methodNotAllowed === "function") {
-                notAllowedThrowable = options.methodNotAllowed();
-              } else {
-                notAllowedThrowable = new MethodNotAllowed();
-              }
-              throw notAllowedThrowable;
+              throw options.methodNotAllowed
+                ? options.methodNotAllowed()
+                : new httpErrors.MethodNotAllowed();
             } else {
-              context.response.status = Status.MethodNotAllowed;
-              context.response.headers.set("Allow", allowedValue);
+              ctx.response.status = Status.MethodNotAllowed;
+              ctx.response.headers.set("Allowed", allowedStr);
             }
           }
         }
       }
     };
+
+    return allowedMethods;
   }
 
-  /** Register middleware for the specified routes when the `DELETE` method is
-   * requested.
-   */
-  delete<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this.#addRoute(route, middleware as RouterMiddleware[], "DELETE");
+  /** Register named middleware for the specified routes when the `DELETE`,
+   *  method is requested. */
+  delete<P extends RP = RP, S extends RS = RS>(
+    name: string,
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  /** Register middleware for the specified routes when the `DELETE`,
+   * method is requested. */
+  delete<P extends RP = RP, S extends RS = RS>(
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  delete<P extends RP = RP, S extends RS = RS>(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<P, S>,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S> {
+    this.#useVerb(
+      nameOrPath,
+      pathOrMiddleware as (string | RouterMiddleware),
+      middleware as RouterMiddleware[],
+      ["DELETE"],
+    );
+    return this as Router<any, any>;
   }
 
-  /** Register middleware for the specified routes when the `GET` method is
-   * requested.
-   */
-  get<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this.#addRoute(route, middleware as RouterMiddleware[], "GET");
-  }
-
-  /** Register middleware for the specified routes when the `HEAD` method is
-   * requested.
-   */
-  head<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this.#addRoute(route, middleware as RouterMiddleware[], "HEAD");
-  }
-
-  /** Register middleware for the specified routes when the `OPTIONS` method is
-   * requested.
-   */
-  options<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this.#addRoute(route, middleware as RouterMiddleware[], "OPTIONS");
-  }
-
-  /** Register middleware for the specified routes when the `PATCH` method is
-   * requested.
-   */
-  patch<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this.#addRoute(route, middleware as RouterMiddleware[], "PATCH");
-  }
-
-  /** Register middleware for the specified routes when the `POST` method is
-   * requested.
-   */
-  post<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this.#addRoute(route, middleware as RouterMiddleware[], "POST");
-  }
-
-  /** Register middleware for the specified routes when the `PUT` method is
-   * requested.
-   */
-  put<P extends RouteParams = RouteParams>(
-    route: string | string[],
-    ...middleware: RouterMiddleware<P>[]
-  ): this {
-    return this.#addRoute(route, middleware as RouterMiddleware[], "PUT");
-  }
-
-  /** Return middleware that represents all the currently registered routes. */
-  routes(): Middleware {
-    const dispatch = async (
-      context: RouterContext,
-      next: () => Promise<void>,
-    ): Promise<void> => {
-      const { url: { pathname }, method } = context.request;
-      const { routesMatched, matches } = this.#match(pathname, method);
-
-      const contextRoutesMatched = contextRouteMatches.get(context);
-      contextRouteMatches.set(
-        context,
-        contextRoutesMatched
-          ? [...contextRoutesMatched, ...routesMatched]
-          : routesMatched,
-      );
-
-      context.router = this;
-
-      if (!matches.length) {
-        return next();
-      }
-
-      const chain = matches.reduce((prev, layer) => {
-        prev.push((context: RouterContext, next: () => Promise<void>) => {
-          const captures = layer.captures(pathname);
-          context.params = layer.params(captures, context.params);
-          return next();
-        });
-        return [...prev, ...layer.stack];
-      }, [] as RouterMiddleware[]);
-      return compose(chain)(context as RouterContext);
-    };
-    return dispatch as Middleware;
-  }
-
-  // Iterator interfaces
-
+  /** Iterate over the routes currently added to the router.  To be compatible
+   * with the iterable interfaces, both the key and value are set to the value
+   * of the route. */
   *entries(): IterableIterator<[Route, Route]> {
-    for (const layer of this.#stack) {
-      const value = inspectLayer(layer);
+    for (const route of this.#stack) {
+      const value = route.toJSON();
       yield [value, value];
     }
   }
 
+  /** Iterate over the routes currently added to the router, calling the
+   * `callback` function for each value. */
   forEach(
     callback: (value1: Route, value2: Route, router: this) => void,
     thisArg: any = null,
   ): void {
-    for (const layer of this.#stack) {
-      const value = inspectLayer(layer);
+    for (const route of this.#stack) {
+      const value = route.toJSON();
       callback.call(thisArg, value, value, this);
     }
   }
 
+  /** Register named middleware for the specified routes when the `GET`,
+   *  method is requested. */
+  get<P extends RP = RP, S extends RS = RS>(
+    name: string,
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  /** Register middleware for the specified routes when the `GET`,
+   * method is requested. */
+  get<P extends RP = RP, S extends RS = RS>(
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  get<P extends RP = RP, S extends RS = RS>(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<P, S>,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S> {
+    this.#useVerb(
+      nameOrPath,
+      pathOrMiddleware as (string | RouterMiddleware),
+      middleware as RouterMiddleware[],
+      ["GET"],
+    );
+    return this as Router<any, any>;
+  }
+
+  /** Register named middleware for the specified routes when the `HEAD`,
+   *  method is requested. */
+  head<P extends RP = RP, S extends RS = RS>(
+    name: string,
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  /** Register middleware for the specified routes when the `HEAD`,
+   * method is requested. */
+  head<P extends RP = RP, S extends RS = RS>(
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  head<P extends RP = RP, S extends RS = RS>(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<P, S>,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S> {
+    this.#useVerb(
+      nameOrPath,
+      pathOrMiddleware as (string | RouterMiddleware),
+      middleware as RouterMiddleware[],
+      ["HEAD"],
+    );
+    return this as Router<any, any>;
+  }
+
+  /** Iterate over the routes currently added to the router.  To be compatible
+   * with the iterable interfaces, the key is set to the value of the route. */
   *keys(): IterableIterator<Route> {
-    for (const layer of this.#stack) {
-      yield inspectLayer(layer);
+    for (const route of this.#stack) {
+      yield route.toJSON();
     }
   }
 
+  /** Register named middleware for the specified routes when the `OPTIONS`,
+   * method is requested. */
+  options<P extends RP = RP, S extends RS = RS>(
+    name: string,
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  /** Register middleware for the specified routes when the `OPTIONS`,
+   * method is requested. */
+  options<P extends RP = RP, S extends RS = RS>(
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  options<P extends RP = RP, S extends RS = RS>(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<P, S>,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S> {
+    this.#useVerb(
+      nameOrPath,
+      pathOrMiddleware as (string | RouterMiddleware),
+      middleware as RouterMiddleware[],
+      ["OPTIONS"],
+    );
+    return this as Router<any, any>;
+  }
+
+  /** Register param middleware, which will be called when the particular param
+   * is parsed from the route. */
+  param<S extends RS = RS>(
+    param: keyof RP,
+    middleware: RouterParamMiddleware<RP, S>,
+  ): Router<RP, S> {
+    this.#params[param as string] = middleware;
+    for (const route of this.#stack) {
+      route.param(param as string, middleware);
+    }
+    return this;
+  }
+
+  /** Register named middleware for the specified routes when the `PATCH`,
+   * method is requested. */
+  patch<P extends RP = RP, S extends RS = RS>(
+    name: string,
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  /** Register middleware for the specified routes when the `PATCH`,
+   * method is requested. */
+  patch<P extends RP = RP, S extends RS = RS>(
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  patch<P extends RP = RP, S extends RS = RS>(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<P, S>,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S> {
+    this.#useVerb(
+      nameOrPath,
+      pathOrMiddleware as (string | RouterMiddleware),
+      middleware as RouterMiddleware[],
+      ["PATCH"],
+    );
+    return this as Router<any, any>;
+  }
+
+  /** Register named middleware for the specified routes when the `POST`,
+   * method is requested. */
+  post<P extends RP = RP, S extends RS = RS>(
+    name: string,
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  /** Register middleware for the specified routes when the `POST`,
+   * method is requested. */
+  post<P extends RP = RP, S extends RS = RS>(
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  post<P extends RP = RP, S extends RS = RS>(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<P, S>,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S> {
+    this.#useVerb(
+      nameOrPath,
+      pathOrMiddleware as (string | RouterMiddleware),
+      middleware as RouterMiddleware[],
+      ["POST"],
+    );
+    return this as Router<any, any>;
+  }
+
+  /** Set the router prefix for this router. */
+  prefix(prefix: string): this {
+    prefix = prefix.replace(/\/$/, "");
+    this.#opts.prefix = prefix;
+    for (const route of this.#stack) {
+      route.setPrefix(prefix);
+    }
+    return this;
+  }
+
+  /** Register named middleware for the specified routes when the `PUT`
+   * method is requested. */
+  put<P extends RP = RP, S extends RS = RS>(
+    name: string,
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  /** Register middleware for the specified routes when the `PUT`
+   * method is requested. */
+  put<P extends RP = RP, S extends RS = RS>(
+    path: string,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  put<P extends RP = RP, S extends RS = RS>(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<P, S>,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S> {
+    this.#useVerb(
+      nameOrPath,
+      pathOrMiddleware as (string | RouterMiddleware),
+      middleware as RouterMiddleware[],
+      ["PUT"],
+    );
+    return this as Router<any, any>;
+  }
+
+  /** Register a direction middleware, where when the `source` path is matched
+   * the router will redirect the request to the `destination` path.  A `status`
+   * of `302 Found` will be set by default.
+   * 
+   * The `source` and `destination` can be named routes. */
+  redirect(
+    source: string,
+    destination: string,
+    status: RedirectStatus = Status.Found,
+  ): Router<RS> {
+    if (source[0] !== "/") {
+      const s = this.url(source);
+      if (!s) {
+        throw new RangeError(`Could not resolve named route: "${source}"`);
+      }
+      source = s;
+    }
+    if (destination[0] !== "/") {
+      const d = this.url(destination);
+      if (!d) {
+        throw new RangeError(`Could not resolve named route: "${source}"`);
+      }
+      destination = d;
+    }
+
+    return this.all(source, (ctx) => {
+      ctx.response.redirect(destination);
+      ctx.response.status = status;
+    });
+  }
+
+  /** Return middleware that will do all the route processing that the router
+   * has been configured to handle.  Typical usage would be something like this:
+   * 
+   * ```ts
+   * import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+   * 
+   * const app = new Application();
+   * const router = new Router();
+   * 
+   * // register routes
+   * 
+   * app.use(router.routes());
+   * app.use(router.allowedMethods());
+   * await app.listen({ port: 80 });
+   * ```
+   */
+  routes(): Middleware {
+    const dispatch = (
+      context: Context,
+      next: () => Promise<void>,
+    ): Promise<void> => {
+      const ctx = context as RouterContext;
+      const { url: { pathname }, method } = ctx.request;
+      const path = this.#opts.routerPath ?? ctx.routerPath ?? pathname;
+      const matches = this.#match(path, method);
+
+      if (ctx.matched) {
+        ctx.matched.push(...matches.path);
+      } else {
+        ctx.matched = [...matches.path];
+      }
+
+      ctx.router = this as Router;
+
+      if (!matches.route) return next();
+
+      const { pathAndMethod: matchedRoutes } = matches;
+
+      const chain = matchedRoutes.reduce(
+        (prev, route) => [
+          ...prev,
+          (ctx: RouterContext, next: () => Promise<void>): Promise<void> => {
+            ctx.captures = route.captures(path);
+            ctx.params = route.params(ctx.captures, ctx.params);
+            ctx.routeName = route.name;
+            return next();
+          },
+          ...route.stack,
+        ],
+        [] as RouterMiddleware[],
+      );
+      return compose(chain)(ctx);
+    };
+    dispatch.router = this;
+    return dispatch;
+  }
+
+  /** Generate a URL pathname for a named route, interpolating the optional
+   * params provided.  Also accepts an optional set of options. */
+  url<P extends RP = RP>(
+    name: string,
+    params?: P,
+    options?: UrlOptions,
+  ): string | undefined {
+    const route = this.#route(name);
+
+    if (route) {
+      return route.url(params, options);
+    }
+  }
+
+  /** Register middleware to be used on every matched route. */
+  use<P extends RP = RP, S extends RS = RS>(
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  /** Register middleware to be used on every route that matches the supplied
+   * `path`. */
+  use<P extends RP = RP, S extends RS = RS>(
+    path: string | string[],
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S>;
+  use<P extends RP = RP, S extends RS = RS>(
+    pathOrMiddleware: string | string[] | RouterMiddleware<P, S>,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P, S> {
+    let path: string | string[] | undefined;
+    if (
+      typeof pathOrMiddleware === "string" || Array.isArray(pathOrMiddleware)
+    ) {
+      path = pathOrMiddleware;
+    } else {
+      middleware.unshift(pathOrMiddleware);
+    }
+
+    this.#register(
+      path ?? "(.*)",
+      middleware as RouterMiddleware[],
+      [],
+      { end: false, ignoreCaptures: !path },
+    );
+
+    return this as Router<any, any>;
+  }
+
+  /** Iterate over the routes currently added to the router. */
   *values(): IterableIterator<Route> {
-    for (const layer of this.#stack) {
-      yield inspectLayer(layer);
+    for (const route of this.#stack) {
+      yield route.toJSON();
     }
   }
 
+  /** Provide an iterator interface that iterates over the routes registered
+   * with the router. */
   *[Symbol.iterator](): IterableIterator<Route> {
-    for (const layer of this.#stack) {
-      yield inspectLayer(layer);
+    for (const route of this.#stack) {
+      yield route.toJSON();
     }
+  }
+
+  /** Generate a URL pathname based on the provided path, interpolating the
+   * optional params provided.  Also accepts an optional set of options. */
+  static url(
+    path: string,
+    params?: RouteParams,
+    options?: UrlOptions,
+  ): string {
+    return toUrl(path, params, options);
   }
 }

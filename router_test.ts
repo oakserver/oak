@@ -9,7 +9,9 @@ import {
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
+import { httpErrors } from "./httpError.ts";
 import { Router } from "./router.ts";
+
 function createMockApp<
   S extends Record<string | number | symbol, any> = Record<string, any>,
 >(
@@ -27,6 +29,7 @@ function createMockContext<
   path = "/",
   method = "GET",
 ) {
+  const headers = new Headers();
   return ({
     app,
     request: {
@@ -38,9 +41,12 @@ function createMockContext<
       url: new URL(`http://localhost${path}`),
     },
     response: {
-      status: Status.OK,
+      status: undefined,
       body: undefined,
-      headers: new Headers(),
+      redirect(url: string | URL) {
+        headers.set("Location", encodeURI(String(url)));
+      },
+      headers,
     },
     state: app.state,
   } as unknown) as Context<S>;
@@ -470,5 +476,170 @@ test({
     await assertThrowsAsync(async () => {
       await mw(context, next);
     });
+  },
+});
+
+test({
+  name: "router prefix, default route",
+  async fn() {
+    const { context, next } = setup("/foo");
+    let called = 0;
+    const router = new Router({
+      prefix: "/foo",
+    });
+    router.all("/", () => {
+      called++;
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(called, 1);
+  },
+});
+
+test({
+  name: "router redirect",
+  async fn() {
+    const { context, next } = setup("/foo");
+    const router = new Router();
+    router.redirect("/foo", "/bar");
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(context.response.status, Status.Found);
+    assertEquals(context.response.headers.get("Location"), "/bar");
+  },
+});
+
+test({
+  name: "router redirect, 301 Moved Permanently",
+  async fn() {
+    const { context, next } = setup("/foo");
+    const router = new Router();
+    router.redirect("/foo", "/bar", Status.MovedPermanently);
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(context.response.status, Status.MovedPermanently);
+    assertEquals(context.response.headers.get("Location"), "/bar");
+  },
+});
+
+test({
+  name: "router param middleware",
+  async fn() {
+    const { context, next } = setup("/book/1234/price");
+    const router = new Router<{ id: string }>();
+    const callStack: string[] = [];
+    router.param("id", (param, ctx, next) => {
+      callStack.push("param");
+      assertEquals(param, "1234");
+      assertEquals(ctx.params.id, "1234");
+      return next();
+    });
+    router.all("/book/:id/price", (ctx, next) => {
+      callStack.push("all");
+      assertEquals(ctx.params.id, "1234");
+      return next();
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, ["param", "all"]);
+  },
+});
+
+test({
+  name: "router allowedMethods() OPTIONS",
+  async fn() {
+    const { context, next } = setup("/foo", "OPTIONS");
+    const router = new Router();
+    router.put("/foo", (_ctx, next) => {
+      return next();
+    });
+    router.patch("/foo", (_ctx, next) => {
+      return next();
+    });
+    const routes = router.routes();
+    const mw = router.allowedMethods();
+    await routes(context, next);
+    await mw(context, next);
+    assertEquals(context.response.status, Status.OK);
+    assertEquals(context.response.headers.get("Allowed"), "PUT, PATCH");
+  },
+});
+
+test({
+  name: "router allowedMethods() Not Implemented",
+  async fn() {
+    const { context, next } = setup("/foo", "PATCH");
+    const router = new Router({ methods: ["GET"] });
+    router.get("/foo", (_ctx, next) => {
+      return next();
+    });
+    const routes = router.routes();
+    const mw = router.allowedMethods();
+    await routes(context, next);
+    await mw(context, next);
+    assertEquals(context.response.status, Status.NotImplemented);
+  },
+});
+
+test({
+  name: "router allowedMethods() Method Not Allowed",
+  async fn() {
+    const { context, next } = setup("/foo", "PUT");
+    const router = new Router();
+    router.get("/foo", (_ctx, next) => {
+      return next();
+    });
+    const routes = router.routes();
+    const mw = router.allowedMethods();
+    await routes(context, next);
+    await mw(context, next);
+    assertEquals(context.response.status, Status.MethodNotAllowed);
+  },
+});
+
+test({
+  name: "router allowedMethods() throws Not Implemented",
+  async fn() {
+    const { context, next } = setup("/foo", "PATCH");
+    const router = new Router({ methods: ["GET"] });
+    router.get("/foo", (_ctx, next) => {
+      return next();
+    });
+    const routes = router.routes();
+    const mw = router.allowedMethods({ throw: true });
+    await routes(context, next);
+    await assertThrowsAsync(async () => {
+      await mw(context, next);
+    }, httpErrors.NotImplemented);
+  },
+});
+
+test({
+  name: "router allowedMethods() throws Method Not Allowed",
+  async fn() {
+    const { context, next } = setup("/foo", "PUT");
+    const router = new Router();
+    router.get("/foo", (_ctx, next) => {
+      return next();
+    });
+    const routes = router.routes();
+    const mw = router.allowedMethods({ throw: true });
+    await routes(context, next);
+    await assertThrowsAsync(async () => {
+      await mw(context, next);
+    }, httpErrors.MethodNotAllowed);
+  },
+});
+
+test({
+  name: "router named route - get URL",
+  fn() {
+    const router = new Router<{ id: string }>();
+    router.get("get_book", "/book/:id", (ctx, next) => next());
+    assertEquals(router.url("get_book", { id: "1234" }), "/book/1234");
+    assertEquals(
+      router.url("get_book", { id: "1234" }, { query: { sort: "ASC" } }),
+      "/book/1234?sort=ASC",
+    );
   },
 });
