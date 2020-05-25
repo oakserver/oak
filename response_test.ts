@@ -291,6 +291,20 @@ test({
 });
 
 test({
+  name: "response.redirect() with url on query string",
+  fn() {
+    const response = new Response(createMockRequest());
+    response.redirect("https://example.com/foo?redirect=https%3A%2F%2Fdeno.land");
+    const serverResponse = response.toServerResponse();
+    assertEquals(serverResponse.status, Status.Found);
+    assertEquals(
+      serverResponse.headers?.get("Location"),
+      "https://example.com/foo?redirect=https%3A%2F%2Fdeno.land",
+    );
+  },
+});
+
+test({
   name: "response.body() passes Deno.Reader",
   fn() {
     const response = new Response(createMockRequest());
