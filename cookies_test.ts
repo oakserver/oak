@@ -1,3 +1,5 @@
+// Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
+
 import { test, assertEquals } from "./test_deps.ts";
 
 import { Cookies } from "./cookies.ts";

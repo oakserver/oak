@@ -12,7 +12,10 @@ import {
 
 import { Application } from "../mod.ts";
 
-const app = new Application();
+const app = new Application({
+  // This will be used to sign cookies to help prevent cookie tampering
+  keys: ["secret1"],
+});
 
 // Logger
 app.use(async (ctx, next) => {
