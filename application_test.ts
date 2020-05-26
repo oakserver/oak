@@ -365,3 +365,18 @@ test({
     }, TypeError);
   },
 });
+
+test({
+  name: "app.state type handling",
+  fn() {
+    const app = new Application({ state: { id: 1 } });
+    app.use((ctx: Context<{ session: number }>) => {
+      ctx.state.session = 0;
+    }).use((ctx) => {
+      ctx.state.id = 1;
+      ctx.state.session = 2;
+      // @ts-expect-error
+      ctx.state.bar = 3;
+    });
+  },
+});

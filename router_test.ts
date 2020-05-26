@@ -10,16 +10,20 @@ import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
-import { Router } from "./router.ts";
+import { Router, RouterContext } from "./router.ts";
 
 function createMockApp<
   S extends Record<string | number | symbol, any> = Record<string, any>,
 >(
   state = {} as S,
 ): Application<S> {
-  return {
+  const app = {
     state,
-  } as any;
+    use() {
+      return app;
+    },
+  };
+  return app as any;
 }
 
 function createMockContext<
@@ -638,5 +642,36 @@ test({
       router.url("get_book", { id: "1234" }, { query: { sort: "ASC" } }),
       "/book/1234?sort=ASC",
     );
+  },
+});
+
+test({
+  name: "router types",
+  fn() {
+    const app = createMockApp<{ id: string }>();
+    const router = new Router();
+
+    app.use(
+      router.get(
+        "/:id",
+        (ctx: RouterContext<{ id: string }, { session: number }>) => {
+          ctx.params.id;
+          ctx.state.session;
+        },
+      ).get("/:id/names", (ctx) => {
+        ctx.params.id;
+        ctx.state.session;
+      }).put("/:page", (ctx: RouterContext<{ page: string }>) => {
+        ctx.params.page;
+      }).put("/value", (ctx) => {
+        ctx.params.id;
+        ctx.params.page;
+        ctx.state.session;
+        // @ts-expect-error
+        ctx.params.foo;
+      }).routes(),
+    ).use((ctx) => {
+      ctx.state.id;
+    });
   },
 });

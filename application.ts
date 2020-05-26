@@ -90,10 +90,10 @@ export class ApplicationErrorEvent<S extends State> extends ErrorEvent {
  * The `context.state` can be typed via passing a generic argument when
  * constructing an instance of `Application`.
  */
-export class Application<S extends State = Record<string, any>>
+export class Application<AS extends State = Record<string, any>>
   extends EventTarget {
   #keys?: KeyStack;
-  #middleware: Middleware<S, Context<S>>[] = [];
+  #middleware: Middleware<State, Context<State>>[] = [];
   #serve: typeof defaultServe;
   #serveTls: typeof defaultServeTls;
 
@@ -125,9 +125,9 @@ export class Application<S extends State = Record<string, any>>
    *       const app = new Application({ state: { foo: "bar" } });
    * 
    */
-  state: S;
+  state: AS;
 
-  constructor(options: ApplicationOptions<S> = {}) {
+  constructor(options: ApplicationOptions<AS> = {}) {
     super();
     const {
       state,
@@ -137,14 +137,14 @@ export class Application<S extends State = Record<string, any>>
     } = options;
 
     this.keys = keys;
-    this.state = state ?? {} as S;
+    this.state = state ?? {} as AS;
     this.#serve = serve;
     this.#serveTls = serveTls;
   }
 
   /** Deal with uncaught errors in either the middleware or sending the
    * response. */
-  #handleError = (context: Context<S>, error: any): void => {
+  #handleError = (context: Context<AS>, error: any): void => {
     if (!(error instanceof Error)) {
       error = new Error(`non-error thrown: ${JSON.stringify(error)}`);
     }
@@ -180,7 +180,7 @@ export class Application<S extends State = Record<string, any>>
     handling: boolean;
     closing: boolean;
     closed: boolean;
-    middleware: (context: Context<S>) => Promise<void>;
+    middleware: (context: Context<AS>) => Promise<void>;
     server: Server;
   }) => {
     const context = new Context(this, request);
@@ -207,7 +207,7 @@ export class Application<S extends State = Record<string, any>>
 
   addEventListener(
     type: "error",
-    listener: ApplicationErrorEventListenerOrEventListenerObject<S> | null,
+    listener: ApplicationErrorEventListenerOrEventListenerObject<AS> | null,
     options?: boolean | AddEventListenerOptions,
   ): void;
   addEventListener(
@@ -280,8 +280,10 @@ export class Application<S extends State = Record<string, any>>
   }
 
   /** Register middleware to be used with the application. */
-  use(...middleware: Middleware<S, Context<S>>[]): this {
+  use<S extends State = AS>(
+    ...middleware: Middleware<S, Context<S>>[]
+  ): Application<S extends AS ? S : (S & AS)> {
     this.#middleware.push(...middleware);
-    return this;
+    return this as Application<any>;
   }
 }
