@@ -2,7 +2,7 @@
 
 import { contentType, Status } from "./deps.ts";
 import { Request } from "./request.ts";
-import { isHtml, isRedirectStatus } from "./util.ts";
+import { isHtml, isRedirectStatus, encodeUrl } from "./util.ts";
 
 interface ServerResponse {
   status?: number;
@@ -99,7 +99,7 @@ export class Response {
     } else if (typeof url === "object") {
       url = String(url);
     }
-    this.headers.set("Location", encodeURI(url));
+    this.headers.set("Location", encodeUrl(url));
     if (!this.status || !isRedirectStatus(this.status)) {
       this.status = Status.Found;
     }
