@@ -4,6 +4,12 @@ import { isAbsolute, join, normalize, resolve, sep, Status } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
 import { ErrorStatus, RedirectStatus } from "./types.d.ts";
 
+const ENCODE_CHARS_REGEXP = /(?:[^\x21\x25\x26-\x3B\x3D\x3F-\x5B\x5D\x5F\x61-\x7A\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g
+
+const UNMATCHED_SURROGATE_PAIR_REGEXP = /(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF]([^\uDC00-\uDFFF]|$)/g;
+
+const UNMATCHED_SURROGATE_PAIR_REPLACE = "$1\uFFFD$2";
+
 /** Safely decode a URI component, where if it fails, instead of throwing,
  * just returns the original string
  */
@@ -13,6 +19,13 @@ export function decodeComponent(text: string) {
   } catch {
     return text;
   }
+}
+
+/** Encodes the url preventing double enconding */
+export function encodeUrl(url: string) {
+  return String(url)
+    .replace(UNMATCHED_SURROGATE_PAIR_REGEXP, UNMATCHED_SURROGATE_PAIR_REPLACE)
+    .replace(ENCODE_CHARS_REGEXP, encodeURI)
 }
 
 /** Determines if a HTTP `Status` is an `ErrorStatus` (4XX or 5XX). */
