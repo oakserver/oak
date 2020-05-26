@@ -33,6 +33,7 @@ type CookieAttributes = CookiesSetDeleteOptions;
 const matchCache: Record<string, RegExp> = {};
 
 const FIELD_CONTENT_REGEXP = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
+const KEY_REGEXP = /(?:^|;) *([^=]*)=[^;]*/g;
 const SAME_SITE_REGEXP = /^(?:lax|none|strict)$/i;
 
 function getPattern(name: string): RegExp {
@@ -41,9 +42,7 @@ function getPattern(name: string): RegExp {
   }
 
   return matchCache[name] = new RegExp(
-    "(?:^|;) *" +
-      name.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&") +
-      "=([^;]*)",
+    `(?:^|;) *${name.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")}=([^;]*)`,
   );
 }
 
@@ -145,10 +144,28 @@ class Cookie implements CookieAttributes {
 }
 
 export class Cookies {
+  #cookieKeys?: string[];
   #keys?: KeyStack;
   #request: Request;
   #response: Response;
   #secure?: boolean;
+
+  #requestKeys = (): string[] => {
+    if (this.#cookieKeys) {
+      return this.#cookieKeys;
+    }
+    const result = this.#cookieKeys = [] as string[];
+    const header = this.#request.headers.get("cookie");
+    if (!header) {
+      return result;
+    }
+    let matches: RegExpExecArray | null;
+    while ((matches = KEY_REGEXP.exec(header))) {
+      const [, key] = matches;
+      result.push(key);
+    }
+    return result;
+  };
 
   constructor(
     request: Request,
@@ -160,6 +177,41 @@ export class Cookies {
     this.#request = request;
     this.#response = response;
     this.#secure = secure;
+  }
+
+  /** Set a cookie to be deleted in the response.  This is a "shortcut" to
+   * `.set(name, null, options?)`. */
+  delete(name: string, options: CookiesSetDeleteOptions = {}): boolean {
+    this.set(name, null, options);
+    return true;
+  }
+
+  /** Iterate over the request's cookies, yielding up a tuple containing the
+   * key and the value.
+   * 
+   * If there are keys set on the application, only keys and values that are
+   * properly signed will be returned. */
+  *entries(): IterableIterator<[string, string]> {
+    const keys = this.#requestKeys();
+    for (const key of keys) {
+      const value = this.get(key);
+      if (value) {
+        yield [key, value];
+      }
+    }
+  }
+
+  forEach(
+    callback: (key: string, value: string, cookies: this) => void,
+    thisArg: any = null,
+  ): void {
+    const keys = this.#requestKeys();
+    for (const key of keys) {
+      const value = this.get(key);
+      if (value) {
+        callback.call(thisArg, key, value, this);
+      }
+    }
   }
 
   /** Get the value of a cookie from the request.
@@ -202,6 +254,20 @@ export class Cookies {
         this.set(nameSig, this.#keys.sign(data), { signed: false });
       }
       return value;
+    }
+  }
+
+  /** Iterate over the request's cookies, yielding up the keys.
+   * 
+   * If there are keys set on the application, only the keys that are properly
+   * signed will be returned. */
+  *keys(): IterableIterator<string> {
+    const keys = this.#requestKeys();
+    for (const key of keys) {
+      const value = this.get(key);
+      if (value) {
+        yield key;
+      }
     }
   }
 
@@ -249,10 +315,32 @@ export class Cookies {
     return this;
   }
 
-  /** Set a cookie to be deleted in the response.  This is a "shortcut" to
-   * `.set(name, null, options?)`. */
-  delete(name: string, options: CookiesSetDeleteOptions = {}): boolean {
-    this.set(name, null, options);
-    return true;
+  /** Iterate over the request's cookies, yielding up each value.
+   * 
+   * If there are keys set on the application, only the values that are
+   * properly signed will be returned. */
+  *values(): IterableIterator<string> {
+    const keys = this.#requestKeys();
+    for (const key of keys) {
+      const value = this.get(key);
+      if (value) {
+        yield value;
+      }
+    }
+  }
+
+  /** Iterate over the request's cookies, yielding up a tuple containing the
+   * key and the value.
+   * 
+   * If there are keys set on the application, only keys and values that are
+   * properly signed will be returned. */
+  *[Symbol.iterator](): IterableIterator<[string, string]> {
+    const keys = this.#requestKeys();
+    for (const key of keys) {
+      const value = this.get(key);
+      if (value) {
+        yield [key, value];
+      }
+    }
   }
 }

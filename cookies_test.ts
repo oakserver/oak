@@ -143,3 +143,37 @@ test({
     );
   },
 });
+
+test({
+  name: "iterate cookies",
+  fn() {
+    const request = createMockRequest(
+      ["bar=foo", "foo=baz", "baz=1234"],
+    );
+    const response = createMockResponse();
+    const cookies = new Cookies(
+      request,
+      response,
+    );
+    assertEquals(
+      [...cookies],
+      [["bar", "foo"], ["foo", "baz"], ["baz", "1234"]],
+    );
+  },
+});
+
+test({
+  name: "iterate signed cookie",
+  fn() {
+    const request = createMockRequest(
+      ["bar=foo", "bar.sig=S7GhXzJF3n4j8JwTupr7H-h25qtt_vs0stdETXZb-Ro"],
+    );
+    const response = createMockResponse();
+    const cookies = new Cookies(
+      request,
+      response,
+      { keys: new KeyStack(["secret1"]) },
+    );
+    assertEquals([...cookies], [["bar", "foo"]]);
+  },
+});
