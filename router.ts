@@ -823,7 +823,7 @@ export class Router<
         ctx.matched = [...matches.path];
       }
 
-      ctx.router = this as Router;
+      ctx.router = this as Router<any, any>;
 
       if (!matches.route) return next();
 

@@ -35,10 +35,7 @@ function createMockContext<
     request: {
       headers: new Headers(),
       method,
-      path,
-      search: undefined,
-      searchParams: new URLSearchParams(),
-      url: new URL(`http://localhost${path}`),
+      url: new URL(path, "https://localhost/"),
     },
     response: {
       status: undefined,

@@ -504,6 +504,59 @@ app.use(async (context) => {
 await app.listen({ port: 8000 });
 ```
 
+## Helpers
+
+The `mod.ts` also exports a variable named `helpers` which contains functions
+that help with managing contexts.
+
+### getQuery(ctx, options?)
+
+The `helpers.getQuery()` function is designed to make it easier to determine
+what a request might be querying in the middleware. It takes the supplied
+context's `.request.url.searchParams` and converts it to a record object of the
+keys and values. For example, it would convert the following request:
+
+```
+https://localhost/resource/?foo=bar&baz=qat
+```
+
+Into an object like this:
+
+```js
+{
+  foo: "bar",
+  baz: "qat"
+}
+```
+
+The function can take a couple of options. The `asMap` will result in a `Map`
+being returned instead of an object. The `mergeParams` will merge in parameters
+that were parsed out of the route. This only works with router contexts, and
+any params will be overwritten by the request's search params. If the following
+URL was requested:
+
+```
+https://localhost/book/1234/page/23?page=32&size=24
+```
+
+And the following was the router middleware:
+
+```ts
+router.get("/book/:id/page/:page", (ctx) => {
+  getQuery(ctx, { mergeParams: true });
+});
+```
+
+Would result in the return value being:
+
+```js
+{
+  id: "1234",
+  page: "32",
+  size: "24"
+}
+```
+
 ---
 
 There are several modules that are directly adapted from other modules. They
