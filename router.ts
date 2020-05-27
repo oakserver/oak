@@ -521,22 +521,22 @@ export class Router<
 
   /** Register named middleware for the specified routes when the `DELETE`,
    *  method is requested. */
-  delete(
+  delete<P extends RouteParams = RP, S extends State = RS>(
     name: string,
     path: string,
-    ...middleware: RouterMiddleware<RP, RS>[]
-  ): Router<RP, RS>;
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P extends RP ? P : (P & RP), S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `DELETE`,
    * method is requested. */
-  delete(
+  delete<P extends RouteParams = RP, S extends State = RS>(
     path: string,
-    ...middleware: RouterMiddleware<RP, RS>[]
-  ): Router<RP, RS>;
-  delete(
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P extends RP ? P : (P & RP), S extends RS ? S : (S & RS)>;
+  delete<P extends RouteParams = RP, S extends State = RS>(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<RP, RS>,
-    ...middleware: RouterMiddleware<RP, RS>[]
-  ): Router<RP, RS> {
+    pathOrMiddleware: string | RouterMiddleware<P, S>,
+    ...middleware: RouterMiddleware<P, S>[]
+  ): Router<P extends RP ? P : (P & RP), S extends RS ? S : (S & RS)> {
     this.#useVerb(
       nameOrPath,
       pathOrMiddleware as (string | RouterMiddleware),

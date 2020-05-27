@@ -380,8 +380,6 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
 await app.listen({ port: 80 });
 ```
 
-To start u
-
 ### Closing the server
 
 If you want to close the application, the application supports the option of
