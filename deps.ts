@@ -33,6 +33,7 @@ export {
   resolve,
   sep,
 } from "https://deno.land/std@0.53.0/path/mod.ts";
+export { BufReader } from "https://deno.land/std@0.53.0/io/bufio.ts";
 export { assert } from "https://deno.land/std@0.53.0/testing/asserts.ts";
 
 // 3rd party dependencies
