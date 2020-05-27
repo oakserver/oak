@@ -46,8 +46,8 @@ export interface SendOptions {
    * `undefined`) */
 
   extensions?: string[];
-    /** Tamanho do buffer para enviar arquivos. Deve ter uma boa relação entre
-     *  consumo de memória e overhead. Recomendo 32k. */
+    /** Buffer size for sending files. There must be a good relationship between
+     * memory consumption and overhead. I recommend 32k. */
   buffSize?: number;
 }
 
