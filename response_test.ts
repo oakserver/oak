@@ -1,9 +1,10 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
 import { Status } from "./deps.ts";
-import { test, assert, assertEquals } from "./test_deps.ts";
+import { test, assert, assertEquals, assertThrows } from "./test_deps.ts";
 import { Request } from "./request.ts";
 import { Response, REDIRECT_BACK } from "./response.ts";
+
 const decoder = new TextDecoder();
 
 function decodeBody(body: Uint8Array | Deno.Reader | undefined): string {
@@ -294,7 +295,9 @@ test({
   name: "response.redirect() with url on query string",
   fn() {
     const response = new Response(createMockRequest());
-    response.redirect("https://example.com/foo?redirect=https%3A%2F%2Fdeno.land");
+    response.redirect(
+      "https://example.com/foo?redirect=https%3A%2F%2Fdeno.land",
+    );
     const serverResponse = response.toServerResponse();
     assertEquals(serverResponse.status, Status.Found);
     assertEquals(
@@ -312,5 +315,49 @@ test({
     response.body = body;
     const serverResponse = response.toServerResponse();
     assert(serverResponse.body === body);
+  },
+});
+
+test({
+  name: "response.status reflects body state",
+  fn() {
+    const response = new Response(createMockRequest());
+    assertEquals(response.status, Status.NotFound);
+    response.body = "hello";
+    assertEquals(response.status, Status.OK);
+    response.status = Status.PartialContent;
+    assertEquals(response.status, Status.PartialContent);
+  },
+});
+
+test({
+  name: "response.toServerResponse() is a memo",
+  fn() {
+    const response = new Response(createMockRequest());
+    const sr1 = response.toServerResponse();
+    const sr2 = response.toServerResponse();
+    assert(sr1 === sr2);
+  },
+});
+
+test({
+  name: "response.body cannot be set after server response",
+  fn() {
+    const response = new Response(createMockRequest());
+    response.toServerResponse();
+    assertThrows(() => {
+      response.body = "";
+    }, Error);
+  },
+});
+
+test({
+  name: "response.status cannot be set after server response",
+  fn() {
+    const response = new Response(createMockRequest());
+    response.toServerResponse();
+    assertThrows(() => {
+      response.status = Status.Found;
+    }, Error);
   },
 });

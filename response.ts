@@ -23,22 +23,28 @@ function isReader(value: any): value is Deno.Reader {
 }
 
 export class Response {
+  #body?: any;
+  #headers = new Headers();
   #request: Request;
+  #serverResponse?: ServerResponse;
+  #status?: Status;
+  #type?: string;
   #writable = true;
 
   #getBody = (): Uint8Array | Deno.Reader | undefined => {
     const typeofBody = typeof this.body;
     let result: Uint8Array | Deno.Reader | undefined;
-    this.#writable = false;
     if (BODY_TYPES.includes(typeofBody)) {
       const bodyText = String(this.body);
       result = encoder.encode(bodyText);
       this.type = this.type || (isHtml(bodyText) ? "html" : "text/plain");
     } else if (this.body instanceof Uint8Array || isReader(this.body)) {
       result = this.body;
-    } else if (typeofBody === "object" && this.body !== null) {
+    } else if (this.body && typeofBody === "object") {
       result = encoder.encode(JSON.stringify(this.body));
       this.type = this.type || "json";
+    } else if (this.body) {
+      throw new TypeError("Response body was set, but could not convert");
     }
     return result;
   };
@@ -52,18 +58,78 @@ export class Response {
     }
   };
 
-  /** The body of the response */
-  body?: any;
+  /** The body of the response.  The body will be automatically processed when
+   * the response is being sent and converted to a `Uint8Array` or a
+   * `Deno.Reader`. */
+  get body(): any {
+    return this.#body;
+  }
 
-  /** Headers that will be returned in the response */
-  headers = new Headers();
+  /** The body of the response.  The body will be automatically processed when
+   * the response is being sent and converted to a `Uint8Array` or a
+   * `Deno.Reader`. */
+  set body(value: any) {
+    if (!this.#writable) {
+      throw new Error("The response is not writable.");
+    }
+    this.#body = value;
+  }
 
-  /** The HTTP status of the response */
-  status?: Status;
+  /** Headers that will be returned in the response. */
+  get headers(): Headers {
+    return this.#headers;
+  }
 
-  /** The media type, or extension of the response */
-  type?: string;
+  /** Headers that will be returned in the response. */
+  set headers(value: Headers) {
+    if (!this.#writable) {
+      throw new Error("The response is not writable.");
+    }
+    this.#headers = value;
+  }
 
+  /** The HTTP status of the response.  If this has not been explicitly set,
+   * reading the value will return what would be the value of status if the
+   * response were sent at this point in processing the middleware.  If the body
+   * has been set, the status will be `200 OK`.  If a value for the body has
+   * not been set yet, the status will be `404 Not Found`. */
+  get status(): Status {
+    if (this.#status) {
+      return this.#status;
+    }
+    const typeofbody = typeof this.body;
+    return this.body &&
+      (BODY_TYPES.includes(typeofbody) || typeofbody === "object")
+      ? Status.OK
+      : Status.NotFound;
+  }
+
+  /** The HTTP status of the response.  If this has not been explicitly set,
+   * reading the value will return what would be the value of status if the
+   * response were sent at this point in processing the middleware.  If the body
+   * has been set, the status will be `200 OK`.  If a value for the body has
+   * not been set yet, the status will be `404 Not Found`. */
+  set status(value: Status) {
+    if (!this.#writable) {
+      throw new Error("The response is not writable.");
+    }
+    this.#status = value;
+  }
+
+  /** The media type, or extension of the response.  Setting this value will
+   * ensure an appropriate `Content-Type` header is added to the response. */
+  get type(): string | undefined {
+    return this.#type;
+  }
+  set type(value: string | undefined) {
+    if (!this.#writable) {
+      throw new Error("The response is not writable.");
+    }
+    this.#type = value;
+  }
+
+  /** A read-only property which determines if the response is writable or not.
+   * Once the response has been processed, this value is set to `false`. */
   get writable(): boolean {
     return this.#writable;
   }
@@ -115,15 +181,18 @@ export class Response {
   }
 
   /** Take this response and convert it to the response used by the Deno net
-   * server. */
+   * server.  Calling this will set the response to not be writable. */
   toServerResponse(): ServerResponse {
+    if (this.#serverResponse) {
+      return this.#serverResponse;
+    }
     // Process the body
     const body = this.#getBody();
 
     // If there is a response type, set the content type header
     this.#setContentType();
 
-    const { headers, status } = this;
+    const { headers } = this;
 
     // If there is no body and no content type and no set length, then set the
     // content length to 0
@@ -137,8 +206,9 @@ export class Response {
       headers.append("Content-Length", "0");
     }
 
-    return {
-      status: status ?? (body ? Status.OK : Status.NotFound),
+    this.#writable = false;
+    return this.#serverResponse = {
+      status: this.#status ?? (body ? Status.OK : Status.NotFound),
       body,
       headers,
     };
