@@ -48,7 +48,7 @@ export interface SendOptions {
   extensions?: string[];
     /** Buffer size for sending files. There must be a good relationship between
      * memory consumption and overhead. I recommend 32k. */
-  buffSize: number;
+  buffSize?: number;
 }
 
 function isHidden(root: string, path: string) {
@@ -76,7 +76,7 @@ async function exists(path: string): Promise<boolean> {
 export async function send(
   { request, response }: Context,
   path: string,
-  options: SendOptions = { root: "", buffSize: 32000 },
+  options: SendOptions = { root: "" },
 ): Promise<string | undefined> {
   const {
     brotli = true,
@@ -88,7 +88,7 @@ export async function send(
     immutable = false,
     maxage = 0,
     root,
-    buffSize
+    buffSize = 32000
   } = options;
   const trailingSlash = path[path.length - 1] === "/";
   path = decodeComponent(path.substr(parse(path).root.length));
@@ -171,7 +171,7 @@ export async function send(
       : extname(path);
   }
   const file = await Deno.open(path);
-  const bufReader = new BufReader(file,options.buffSize);
+  const bufReader = new BufReader(file,buffSize);
   response.body = bufReader;
 
   return path;
