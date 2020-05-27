@@ -5,7 +5,7 @@
 
 import { Context } from "./context.ts";
 import { createHttpError } from "./httpError.ts";
-import { basename, extname, parse, sep } from "./deps.ts";
+import { basename, extname, parse, sep, BufReader } from "./deps.ts";
 import { decodeComponent, resolvePath } from "./util.ts";
 
 export interface SendOptions {
@@ -44,7 +44,11 @@ export interface SendOptions {
   /** Try to match extensions from passed array to search for file when no
    * extension is sufficed in URL. First found is served. (defaults to
    * `undefined`) */
+
   extensions?: string[];
+    /** Tamanho do buffer para enviar arquivos. Deve ter uma boa relação entre
+     *  consumo de memória e overhead. Recomendo 32k. */
+  buffSize?: number;
 }
 
 function isHidden(root: string, path: string) {
@@ -72,7 +76,7 @@ async function exists(path: string): Promise<boolean> {
 export async function send(
   { request, response }: Context,
   path: string,
-  options: SendOptions = { root: "" },
+  options: SendOptions = { root: "", buffSize: 32000 },
 ): Promise<string | undefined> {
   const {
     brotli = true,
@@ -165,7 +169,9 @@ export async function send(
       ? extname(basename(path, encodingExt))
       : extname(path);
   }
-  response.body = await Deno.readFile(path);
+  const file = await Deno.open(path);
+  const bufReader = new BufReader(file,options.buffSize);
+  response.body = bufReader;
 
   return path;
 }
