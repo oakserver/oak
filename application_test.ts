@@ -380,3 +380,22 @@ test({
     });
   },
 });
+
+test({
+  name: "application listen event",
+  async fn() {
+    const app = new Application({ serve });
+    let called = 0;
+    app.addEventListener("listen", (evt) => {
+      called++;
+      assertEquals(evt.hostname, "localhost");
+      assertEquals(evt.port, 80);
+      assertEquals(evt.secure, false);
+    });
+    app.use((ctx) => {
+      ctx.response.body = "hello world";
+    });
+    await app.listen({ hostname: "localhost", port: 80 });
+    assertEquals(called, 1);
+  },
+});

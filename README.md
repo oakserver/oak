@@ -352,6 +352,36 @@ otherwise it will be set to `text/plain`. If the value is an object, other
 than a `Uint8Array` or `null`, the object will be passed to `JSON.stringify()`
 and the `Content-Type` will be set to `application/json`.
 
+### Opening the server
+
+The application method `.listen()` is used to open the server, start listening
+for requests, and processing the registered middleware for each request. This
+method returns a promise when the server closes.
+
+Once the server is open, before it starts processing requests, the application
+will fire a `"listen"` event, which can be listened for via the
+`.addEventListener()` method. For example:
+
+```ts
+import { Application } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application();
+
+app.addEventListener("listen", ({ hostname, port, secure }) => {
+  console.log(
+    `Listening on: ${secure ? "https://" : "http://"}${
+      hostname ?? "localhost"
+    }:${port}`
+  );
+});
+
+// register some middleware
+
+await app.listen({ port: 80 });
+```
+
+To start u
+
 ### Closing the server
 
 If you want to close the application, the application supports the option of

@@ -41,14 +41,31 @@ interface ApplicationErrorEventListenerObject<S> {
   handleEvent(evt: ApplicationErrorEvent<S>): void | Promise<void>;
 }
 
-export interface ApplicationErrorEventInit<S extends State>
-  extends ErrorEventInit {
+interface ApplicationErrorEventInit<S extends State> extends ErrorEventInit {
   context?: Context<S>;
 }
 
 type ApplicationErrorEventListenerOrEventListenerObject<S> =
   | ApplicationErrorEventListener<S>
   | ApplicationErrorEventListenerObject<S>;
+
+interface ApplicationListenEventListener {
+  (evt: ApplicationListenEvent): void | Promise<void>;
+}
+
+interface ApplicationListenEventListenerObject {
+  handleEvent(evt: ApplicationListenEvent): void | Promise<void>;
+}
+
+interface ApplicationListenEventInit extends EventInit {
+  hostname?: string;
+  port: number;
+  secure: boolean;
+}
+
+type ApplicationListenEventListenerOrEventListenerObject =
+  | ApplicationListenEventListener
+  | ApplicationListenEventListenerObject;
 
 export interface ApplicationOptions<S> {
   /** An initial set of keys (or instance of `KeyGrip`) to be used for signing
@@ -78,9 +95,22 @@ const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 export class ApplicationErrorEvent<S extends State> extends ErrorEvent {
   context?: Context<S>;
 
-  constructor(type: string, eventInitDict: ApplicationErrorEventInit<S>) {
-    super(type, eventInitDict);
+  constructor(eventInitDict: ApplicationErrorEventInit<S>) {
+    super("error", eventInitDict);
     this.context = eventInitDict.context;
+  }
+}
+
+export class ApplicationListenEvent extends Event {
+  hostname?: string;
+  port: number;
+  secure: boolean;
+
+  constructor(eventInitDict: ApplicationListenEventInit) {
+    super("listen", eventInitDict);
+    this.hostname = eventInitDict.hostname;
+    this.port = eventInitDict.port;
+    this.secure = eventInitDict.secure;
   }
 }
 
@@ -149,9 +179,7 @@ export class Application<AS extends State = Record<string, any>>
       error = new Error(`non-error thrown: ${JSON.stringify(error)}`);
     }
     const { message } = error;
-    this.dispatchEvent(
-      new ApplicationErrorEvent("error", { context, message, error }),
-    );
+    this.dispatchEvent(new ApplicationErrorEvent({ context, message, error }));
     if (!context.response.writable) {
       return;
     }
@@ -211,6 +239,11 @@ export class Application<AS extends State = Record<string, any>>
     options?: boolean | AddEventListenerOptions,
   ): void;
   addEventListener(
+    type: "listen",
+    listener: ApplicationListenEventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  addEventListener(
     type: string,
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
@@ -265,6 +298,10 @@ export class Application<AS extends State = Record<string, any>>
         state.closing = true;
       });
     }
+    const { hostname, port, secure = false } = options;
+    this.dispatchEvent(
+      new ApplicationListenEvent({ hostname, port, secure }),
+    );
     try {
       for await (const request of server) {
         this.#handleRequest(request, state);
@@ -274,7 +311,7 @@ export class Application<AS extends State = Record<string, any>>
         ? error.message
         : "Application Error";
       this.dispatchEvent(
-        new ApplicationErrorEvent("error", { message, error }),
+        new ApplicationErrorEvent({ message, error }),
       );
     }
   }

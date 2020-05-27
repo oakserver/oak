@@ -62,11 +62,13 @@ app.use(router.allowedMethods());
 // A basic 404 page
 app.use(notFound);
 
+app.addEventListener("listen", ({ hostname, port }) => {
+  console.log(
+    bold("Start listening on ") + yellow(`${hostname}:${port}`),
+  );
+});
+
 // Utilise the signal from the controller
 const { signal } = controller;
-const options = { hostname: "127.0.0.1", port: 8000, signal };
-console.log(
-  bold("Start listening on ") + yellow(`${options.hostname}:${options.port}`),
-);
-await app.listen(options);
+await app.listen({ hostname: "127.0.0.1", port: 8000, signal });
 console.log(bold("Finished."));

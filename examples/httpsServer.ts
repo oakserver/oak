@@ -39,12 +39,16 @@ app.use((ctx) => {
   ctx.response.body = "Hello World!";
 });
 
-const options = {
+app.addEventListener("listen", ({ hostname, port }) => {
+  console.log(
+    bold("Start listening on ") + yellow(`${hostname}:${port}`),
+  );
+});
+
+await app.listen({
   port: 8000,
   secure: true,
   certFile: "./examples/tls/localhost.crt",
   keyFile: "./examples/tls/localhost.key",
-};
-console.log(bold("Start listening on ") + yellow(String(options.port)));
-await app.listen(options);
+});
 console.log(bold("Finished."));

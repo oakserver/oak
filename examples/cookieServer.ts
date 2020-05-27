@@ -47,9 +47,11 @@ app.use((ctx) => {
   }
 });
 
-const options = { hostname: "127.0.0.1", port: 8000 };
-console.log(
-  bold("Start listening on ") + yellow(`${options.hostname}:${options.port}`),
-);
-await app.listen(options);
+app.addEventListener("listen", ({ hostname, port }) => {
+  console.log(
+    bold("Start listening on ") + yellow(`${hostname}:${port}`),
+  );
+});
+
+await app.listen({ hostname: "127.0.0.1", port: 8000 });
 console.log(bold("Finished."));
