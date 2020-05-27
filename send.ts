@@ -48,7 +48,7 @@ export interface SendOptions {
   extensions?: string[];
     /** Buffer size for sending files. There must be a good relationship between
      * memory consumption and overhead. I recommend 32k. */
-  buffSize?: number;
+  buffSize: number;
 }
 
 function isHidden(root: string, path: string) {
