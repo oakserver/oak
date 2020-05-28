@@ -4,10 +4,21 @@ import { contentType, Status } from "./deps.ts";
 import { Request } from "./request.ts";
 import { isHtml, isRedirectStatus, encodeUrl } from "./util.ts";
 
+type Body =
+  | string
+  | number
+  | bigint
+  | boolean
+  | symbol
+  | object
+  | undefined
+  | null;
+type BodyFunction = () => Body | Promise<Body>;
+
 interface ServerResponse {
-  status?: number;
-  headers?: Headers;
-  body?: Uint8Array | Deno.Reader;
+  status: number;
+  headers: Headers;
+  body: Uint8Array | Deno.Reader | undefined;
 }
 
 export const REDIRECT_BACK = Symbol("redirect backwards");
@@ -22,8 +33,36 @@ function isReader(value: any): value is Deno.Reader {
     typeof value.read === "function";
 }
 
+function isPromiseLike(value: any): value is PromiseLike<any> {
+  return value && typeof value === "object" && "then" in value &&
+    typeof value.then === "function";
+}
+
+async function convertBody(
+  body: Body | BodyFunction,
+  type?: string,
+): Promise<[Uint8Array | Deno.Reader | undefined, string | undefined]> {
+  let result: Uint8Array | Deno.Reader | undefined;
+  if (BODY_TYPES.includes(typeof body)) {
+    const bodyText = String(body);
+    result = encoder.encode(bodyText);
+    type = type ?? (isHtml(bodyText) ? "html" : "text/plain");
+  } else if (body instanceof Uint8Array || isReader(body)) {
+    result = body;
+  } else if (body && typeof body === "object") {
+    result = encoder.encode(JSON.stringify(body));
+    type = type ?? "json";
+  } else if (typeof body === "function") {
+    const result = body.call(null);
+    return convertBody(isPromiseLike(result) ? await result : result, type);
+  } else if (body) {
+    throw new TypeError("Response body was set but could not convert.");
+  }
+  return [result, type];
+}
+
 export class Response {
-  #body?: any;
+  #body?: Body | BodyFunction;
   #headers = new Headers();
   #request: Request;
   #serverResponse?: ServerResponse;
@@ -31,22 +70,10 @@ export class Response {
   #type?: string;
   #writable = true;
 
-  #getBody = (): Uint8Array | Deno.Reader | undefined => {
-    const typeofBody = typeof this.body;
-    let result: Uint8Array | Deno.Reader | undefined;
-    if (BODY_TYPES.includes(typeofBody)) {
-      const bodyText = String(this.body);
-      result = encoder.encode(bodyText);
-      this.type = this.type || (isHtml(bodyText) ? "html" : "text/plain");
-    } else if (this.body instanceof Uint8Array || isReader(this.body)) {
-      result = this.body;
-    } else if (this.body && typeofBody === "object") {
-      result = encoder.encode(JSON.stringify(this.body));
-      this.type = this.type || "json";
-    } else if (this.body) {
-      throw new TypeError("Response body was set, but could not convert");
-    }
-    return result;
+  #getBody = async (): Promise<Uint8Array | Deno.Reader | undefined> => {
+    const [body, type] = await convertBody(this.body, this.type);
+    this.type = type;
+    return body;
   };
 
   #setContentType = (): void => {
@@ -61,14 +88,14 @@ export class Response {
   /** The body of the response.  The body will be automatically processed when
    * the response is being sent and converted to a `Uint8Array` or a
    * `Deno.Reader`. */
-  get body(): any {
+  get body(): Body | BodyFunction {
     return this.#body;
   }
 
   /** The body of the response.  The body will be automatically processed when
    * the response is being sent and converted to a `Uint8Array` or a
    * `Deno.Reader`. */
-  set body(value: any) {
+  set body(value: Body | BodyFunction) {
     if (!this.#writable) {
       throw new Error("The response is not writable.");
     }
@@ -182,12 +209,12 @@ export class Response {
 
   /** Take this response and convert it to the response used by the Deno net
    * server.  Calling this will set the response to not be writable. */
-  toServerResponse(): ServerResponse {
+  async toServerResponse(): Promise<ServerResponse> {
     if (this.#serverResponse) {
       return this.#serverResponse;
     }
     // Process the body
-    const body = this.#getBody();
+    const body = await this.#getBody();
 
     // If there is a response type, set the content type header
     this.#setContentType();

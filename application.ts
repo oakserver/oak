@@ -223,7 +223,7 @@ export class Application<AS extends State = Record<string, any>>
       }
     }
     try {
-      await request.respond(context.response.toServerResponse());
+      await request.respond(await context.response.toServerResponse());
       if (state.closing) {
         state.server.close();
         state.closed = true;

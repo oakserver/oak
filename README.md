@@ -349,8 +349,16 @@ If `.type` is not set with a value, then oak will inspect the value of
 `.response.body`. If the value is a `string`, then oak will check to see if
 the string looks like HTML, if so, `Content-Type` will be set to `text/html`
 otherwise it will be set to `text/plain`. If the value is an object, other
-than a `Uint8Array` or `null`, the object will be passed to `JSON.stringify()`
-and the `Content-Type` will be set to `application/json`.
+than a `Uint8Array`, a `Deno.Reader`, or `null`, the object will be passed to
+`JSON.stringify()` and the `Content-Type` will be set to `application/json`.
+
+If the type of body is a number, bigint or symbol, it will be coerced to a
+string and treated as text.
+
+If the value of body is a function, the function will be called with no
+arguments. If the return value of the function is promise like, that will be
+await, and the resolved value will be processed as above. If the value is not
+promise like, it will be processed as above.
 
 ### Opening the server
 
