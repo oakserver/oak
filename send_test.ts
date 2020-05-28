@@ -72,7 +72,13 @@ test({
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
     });
-    assertEquals(context.response.body, fixture);
+    let tempArray = new Array();
+    let byte;
+    while ((byte = await context.response.body.readByte()) !== null) {
+      tempArray.push(byte);
+    }
+    let bytes = Uint8Array.from(tempArray);
+    assertEquals(bytes, fixture);
     assertEquals(context.response.type, ".html");
     assertEquals(
       context.response.headers.get("content-length"),
@@ -92,7 +98,13 @@ test({
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
     });
-    assertEquals(context.response.body, fixture);
+    let tempArray = new Array();
+    let byte;
+    while ((byte = await context.response.body.readByte()) !== null) {
+      tempArray.push(byte);
+    }
+    let bytes = Uint8Array.from(tempArray);
+    assertEquals(bytes, fixture);
     assertEquals(context.response.type, ".json");
     assertEquals(context.response.headers.get("content-encoding"), "gzip");
     assertEquals(
@@ -111,7 +123,13 @@ test({
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
     });
-    assertEquals(context.response.body, fixture);
+    let tempArray = new Array();
+    let byte;
+    while ((byte = await context.response.body.readByte()) !== null) {
+      tempArray.push(byte);
+    }
+    let bytes = Uint8Array.from(tempArray);
+    assertEquals(bytes, fixture);
     assertEquals(context.response.type, ".json");
     assertEquals(context.response.headers.get("content-encoding"), "br");
     assertEquals(
@@ -129,7 +147,13 @@ test({
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
     });
-    assertEquals(context.response.body, fixture);
+    let tempArray = new Array();
+    let byte;
+    while ((byte = await context.response.body.readByte()) !== null) {
+      tempArray.push(byte);
+    }
+    let bytes = Uint8Array.from(tempArray);
+    assertEquals(bytes, fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEq(context.response.headers.get("content-encoding"), null);
     assertEquals(

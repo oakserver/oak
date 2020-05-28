@@ -5,7 +5,7 @@
 
 import { Context } from "./context.ts";
 import { createHttpError } from "./httpError.ts";
-import { basename, extname, parse, sep } from "./deps.ts";
+import { basename, extname, parse, sep, BufReader } from "./deps.ts";
 import { decodeComponent, resolvePath } from "./util.ts";
 
 export interface SendOptions {
@@ -45,6 +45,10 @@ export interface SendOptions {
    * extension is sufficed in URL. First found is served. (defaults to
    * `undefined`) */
   extensions?: string[];
+
+  /** The number of bytes per segment to read the file from
+   * the file system.  Defaults to 32k. */
+  segmentSize?: number;
 }
 
 function isHidden(root: string, path: string) {
@@ -84,6 +88,7 @@ export async function send(
     immutable = false,
     maxage = 0,
     root,
+    segmentSize = 32000,
   } = options;
   const trailingSlash = path[path.length - 1] === "/";
   path = decodeComponent(path.substr(parse(path).root.length));
@@ -165,7 +170,9 @@ export async function send(
       ? extname(basename(path, encodingExt))
       : extname(path);
   }
-  response.body = await Deno.readFile(path);
+  const file = await Deno.open(path);
+  const bufReader = new BufReader(file, segmentSize);
+  response.body = bufReader;
 
   return path;
 }

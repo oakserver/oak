@@ -90,7 +90,13 @@ test({
     );
     const fixture = await Deno.readFile("./fixtures/test.html");
     await context.send({ root: "./fixtures" });
-    assertEquals(context.response.body, fixture);
+    let tempArray = new Array();
+    let byte;
+    while ((byte = await context.response.body.readByte()) !== null) {
+      tempArray.push(byte);
+    }
+    let bytes = Uint8Array.from(tempArray);
+    assertEquals(bytes, fixture);
     assertEquals(context.response.type, ".html");
     assertEquals(
       context.response.headers.get("content-length"),
@@ -110,7 +116,13 @@ test({
     );
     const fixture = await Deno.readFile("./fixtures/test.html");
     await context.send({ path: "/test.html", root: "./fixtures" });
-    assertEquals(context.response.body, fixture);
+    let tempArray = new Array();
+    let byte;
+    while ((byte = await context.response.body.readByte()) !== null) {
+      tempArray.push(byte);
+    }
+    let bytes = Uint8Array.from(tempArray);
+    assertEquals(bytes, fixture);
     assertEquals(context.response.type, ".html");
     assertEquals(
       context.response.headers.get("content-length"),
