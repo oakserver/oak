@@ -15,7 +15,9 @@ export interface Middleware<
 export function compose<
   S extends State = Record<string, any>,
   T extends Context = Context<S>,
->(middleware: Middleware<S, T>[]): (context: T) => Promise<void> {
+>(
+  middleware: Middleware<S, T>[],
+): (context: T, next?: () => Promise<void>) => Promise<void> {
   return function composedMiddleware(context: T, next?: () => Promise<void>) {
     let index = -1;
 

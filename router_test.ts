@@ -675,3 +675,33 @@ test({
     });
   },
 });
+
+test({
+  name: "middleware returned from router.routes() passes next",
+  async fn() {
+    const { context } = setup("/foo", "GET");
+
+    const callStack: number[] = [];
+
+    async function next() {
+      callStack.push(4);
+    }
+
+    const router = new Router();
+    router.get("/", (_context) => {
+      callStack.push(1);
+    });
+    router.get("/foo", async (_context, next) => {
+      callStack.push(2);
+      await next();
+    });
+    router.get("/foo", async (_context, next) => {
+      callStack.push(3);
+      await next();
+    });
+
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [2, 3, 4]);
+  },
+});

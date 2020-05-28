@@ -844,7 +844,7 @@ export class Router<
         ],
         [] as RouterMiddleware[],
       );
-      return compose(chain)(ctx);
+      return compose(chain)(ctx, next);
     };
     dispatch.router = this;
     return dispatch;
