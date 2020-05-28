@@ -9,7 +9,7 @@ including a router middleware.
 
 This middleware framework is inspired by [Koa](https://github.com/koajs/koa)
 and middleware router inspired by
-[koa-router](https://github.com/alexmingoia/koa-router/).
+[@koa/router](https://github.com/koajs/router/).
 
 This README focuses on the mechanics of the oak APIs and is intended for those
 who are familiar with JavaScript middleware frameworks like Express and Koa as
