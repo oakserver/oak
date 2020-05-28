@@ -268,7 +268,7 @@ And several methods:
   parsed as text, you would do something like this:
 
   ```ts
-  app.use((ctx) => {
+  app.use(async (ctx) => {
     const result = await ctx.request.body({
       contentTypes: {
         text: ["application/javascript"],
@@ -285,7 +285,7 @@ And several methods:
   would do something like this:
 
   ```ts
-  app.use((ctx) => {
+  app.use(async (ctx) => {
     const result = await ctx.request.body({
       contentTypes: {
         raw: ["text"],
