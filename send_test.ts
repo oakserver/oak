@@ -129,7 +129,7 @@ test({
       tempArray.push(byte);
     }
     let bytes = Uint8Array.from(tempArray);
-    assertEquals(context.response.body, fixture);
+    assertEquals(bytes, fixture);
     assertEquals(context.response.type, ".json");
     assertEquals(context.response.headers.get("content-encoding"), "br");
     assertEquals(
