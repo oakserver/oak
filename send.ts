@@ -1,182 +1,178 @@
-// Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
+/*!
+ * Adapted from koa-send at https://github.com/koajs/send and which is licensed
+ * with the MIT license.
+ */
 
-import { assert, assertEquals, assertStrictEq, test } from "./test_deps.ts";
-
-import { Application } from "./application.ts";
 import { Context } from "./context.ts";
-import { Status } from "./deps.ts";
-import { httpErrors } from "./httpError.ts";
-import { send } from "./send.ts";
+import { createHttpError } from "./httpError.ts";
+import { basename, extname, parse, sep, BufReader } from "./deps.ts";
+import { decodeComponent, resolvePath } from "./util.ts";
 
-let encodingsAccepted = "identity";
+export interface SendOptions {
+  /** Browser cache max-age in milliseconds. (defaults to `0`) */
+  maxage?: number;
 
-function createMockApp<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
->(
-  state = {} as S,
-): Application<S> {
-  return {
-    state,
-  } as any;
+  /** Tell the browser the resource is immutable and can be cached
+   * indefinitely. (defaults to `false`) */
+  immutable?: boolean;
+
+  /** Allow transfer of hidden files. (defaults to `false`) */
+  hidden?: boolean;
+
+  /** Root directory to restrict file access. */
+  root: string;
+
+  /** Name of the index file to serve automatically when visiting the root
+   * location. (defaults to none) */
+  index?: string;
+
+  /** Try to serve the gzipped version of a file automatically when gzip is
+   * supported by a client and if the requested file with `.gz` extension
+   * exists. (defaults to `true`). */
+  gzip?: boolean;
+
+  /** Try to serve the brotli version of a file automatically when brotli is
+   * supported by a client and if the requested file with `.br` extension
+   * exists. (defaults to `true`) */
+  brotli?: boolean;
+
+  /** If `true`, format the path to serve static file servers and not require a
+   * trailing slash for directories, so that you can do both `/directory` and
+   * `/directory/`. (defaults to `true`) */
+  format?: boolean;
+
+  /** Try to match extensions from passed array to search for file when no
+   * extension is sufficed in URL. First found is served. (defaults to
+   * `undefined`) */
+  extensions?: string[];
+
+  /** The number of bytes per segment to read the file from
+   * the file system.  Defaults to 32k. */
+  segmentSize?: number;
 }
 
-function createMockContext<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
->(
-  app: Application<S>,
-  path = "/",
-  method = "GET",
-) {
-  return ({
-    app,
-    request: {
-      acceptsEncodings() {
-        return encodingsAccepted;
-      },
-      headers: new Headers(),
-      method,
-      path,
-      search: undefined,
-      searchParams: new URLSearchParams(),
-      url: new URL(`http://localhost${path}`),
-    },
-    response: {
-      status: Status.OK,
-      body: undefined,
-      headers: new Headers(),
-    },
-    state: app.state,
-  } as unknown) as Context<S>;
+function isHidden(root: string, path: string) {
+  const pathArr = path.substr(root.length).split(sep);
+  for (const segment of pathArr) {
+    if (segment[0] === ".") {
+      return true;
+    }
+    return false;
+  }
 }
 
-function setup<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
->(
-  path = "/",
-  method = "GET",
-): {
-  app: Application<S>;
-  context: Context<S>;
-} {
-  encodingsAccepted = "identity";
-  const app = createMockApp<S>();
-  const context = createMockContext<S>(app, path, method);
-  return { app, context };
+async function exists(path: string): Promise<boolean> {
+  try {
+    return (await Deno.stat(path)).isFile;
+  } catch {
+    return false;
+  }
 }
 
-test({
-  name: "send HTML",
-  async fn() {
-    const { context } = setup("/test.html");
-    const fixture = await Deno.readFile("./fixtures/test.html");
-    await send(context, context.request.url.pathname, {
-      root: "./fixtures",
-    });
-    let tempArray = new Array();
-    let byte;
-    while ((byte = await context.response.body.readByte()) !== null) {
-      tempArray.push(byte);
-    }
-    let bytes = Uint8Array.from(tempArray);
-    assertEquals(bytes, fixture);
-    assertEquals(context.response.type, ".html");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
-    assert(context.response.headers.get("last-modified") != null);
-    assertEquals(context.response.headers.get("cache-control"), "max-age=0");
-  },
-});
+/** Asynchronously fulfill a response with a file from the local file
+ * system.
+ * 
+ * Requires Deno read permission. */
+export async function send(
+  { request, response }: Context,
+  path: string,
+  options: SendOptions = { root: "" },
+): Promise<string | undefined> {
+  const {
+    brotli = true,
+    extensions,
+    format = true,
+    gzip = true,
+    index,
+    hidden = false,
+    immutable = false,
+    maxage = 0,
+    root,
+    segmentSize = 32000,
+  } = options;
+  const trailingSlash = path[path.length - 1] === "/";
+  path = decodeComponent(path.substr(parse(path).root.length));
+  if (index && trailingSlash) {
+    path += index;
+  }
 
-test({
-  name: "send gzip",
-  async fn() {
-    const { context } = setup("/test.json");
-    const fixture = await Deno.readFile("./fixtures/test.json.gz");
-    encodingsAccepted = "gzip";
-    await send(context, context.request.url.pathname, {
-      root: "./fixtures",
-    });
-    let tempArray = new Array();
-    let byte;
-    while ((byte = await context.response.body.readByte()) !== null) {
-      tempArray.push(byte);
-    }
-    let bytes = Uint8Array.from(tempArray);
-    assertEquals(bytes, fixture);
-    assertEquals(context.response.type, ".json");
-    assertEquals(context.response.headers.get("content-encoding"), "gzip");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
-  },
-});
+  path = resolvePath(root, path);
 
-test({
-  name: "send brotli",
-  async fn() {
-    const { context } = setup("/test.json");
-    const fixture = await Deno.readFile("./fixtures/test.json.br");
-    encodingsAccepted = "br";
-    await send(context, context.request.url.pathname, {
-      root: "./fixtures",
-    });
-    let tempArray = new Array();
-    let byte;
-    while ((byte = await context.response.body.readByte()) !== null) {
-      tempArray.push(byte);
-    }
-    let bytes = Uint8Array.from(tempArray);
-    assertEquals(context.response.body, fixture);
-    assertEquals(context.response.type, ".json");
-    assertEquals(context.response.headers.get("content-encoding"), "br");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
-  },
-});
+  if (!hidden && isHidden(root, path)) {
+    return;
+  }
 
-test({
-  name: "send identity",
-  async fn() {
-    const { context } = setup("/test.json");
-    const fixture = await Deno.readFile("./fixtures/test.json");
-    await send(context, context.request.url.pathname, {
-      root: "./fixtures",
-    });
-    let tempArray = new Array();
-    let byte;
-    while ((byte = await context.response.body.readByte()) !== null) {
-      tempArray.push(byte);
-    }
-    let bytes = Uint8Array.from(tempArray);
-    assertEquals(bytes, fixture);
-    assertEquals(context.response.type, ".json");
-    assertStrictEq(context.response.headers.get("content-encoding"), null);
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
-  },
-});
+  let encodingExt = "";
+  if (
+    brotli &&
+    request.acceptsEncodings("br", "identity") === "br" &&
+    (await exists(`${path}.br`))
+  ) {
+    path = `${path}.br`;
+    response.headers.set("Content-Encoding", "br");
+    response.headers.delete("Content-Length");
+    encodingExt = ".br";
+  } else if (
+    gzip &&
+    request.acceptsEncodings("gzip", "identity") === "gzip" &&
+    (await exists(`${path}.gz`))
+  ) {
+    path = `${path}.gz`;
+    response.headers.set("Content-Encoding", "gzip");
+    response.headers.delete("Content-Length");
+    encodingExt = ".gz";
+  }
 
-test({
-  name: "send 404",
-  async fn() {
-    const { context } = setup("/foo.txt");
-    encodingsAccepted = "identity";
-    let didThrow = false;
-    try {
-      await send(context, context.request.url.pathname, {
-        root: "./fixtures",
-      });
-    } catch (e) {
-      assert(e instanceof httpErrors.NotFound);
-      didThrow = true;
+  if (extensions && !/\.[^/]*$/.exec(path)) {
+    for (let ext of extensions) {
+      if (!/^\./.exec(ext)) {
+        ext = `.${ext}`;
+      }
+      if (await exists(`${path}${ext}`)) {
+        path += ext;
+        break;
+      }
     }
-    assert(didThrow);
-  },
-});
+  }
+
+  let stats: Deno.FileInfo;
+  try {
+    stats = await Deno.stat(path);
+
+    if (stats.isDirectory) {
+      if (format && index) {
+        path += `/${index}`;
+        stats = await Deno.stat(path);
+      } else {
+        return;
+      }
+    }
+  } catch (err) {
+    if (err instanceof Deno.errors.NotFound) {
+      throw createHttpError(404, err.message);
+    }
+    throw createHttpError(500, err.message);
+  }
+
+  response.headers.set("Content-Length", String(stats.size));
+  if (!response.headers.has("Last-Modified") && stats.mtime) {
+    response.headers.set("Last-Modified", stats.mtime.toUTCString());
+  }
+  if (!response.headers.has("Cache-Control")) {
+    const directives = [`max-age=${(maxage / 1000) | 0}`];
+    if (immutable) {
+      directives.push("immutable");
+    }
+    response.headers.set("Cache-Control", directives.join(","));
+  }
+  if (!response.type) {
+    response.type = encodingExt !== ""
+      ? extname(basename(path, encodingExt))
+      : extname(path);
+  }
+  const file = await Deno.open(path);
+  const bufReader = new BufReader(file, segmentSize);
+  response.body = bufReader;
+
+  return path;
+}
