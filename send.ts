@@ -44,12 +44,11 @@ export interface SendOptions {
   /** Try to match extensions from passed array to search for file when no
    * extension is sufficed in URL. First found is served. (defaults to
    * `undefined`) */
-
   extensions?: string[];
-  
-  /** Buffer size for sending files. There must be a good relationship between
-   * memory consumption and overhead. I recommend 32k. */
-  buffSize?: number;
+
+  /** The number of bytes per segment to read the file from
+   * the file system.  Defaults to 32k. */
+  segmentSize?: number;
 }
 
 function isHidden(root: string, path: string) {
@@ -89,7 +88,7 @@ export async function send(
     immutable = false,
     maxage = 0,
     root,
-    buffSize = 32000
+    segmentSize = 32000
   } = options;
   const trailingSlash = path[path.length - 1] === "/";
   path = decodeComponent(path.substr(parse(path).root.length));
@@ -172,7 +171,7 @@ export async function send(
       : extname(path);
   }
   const file = await Deno.open(path);
-  const bufReader = new BufReader(file,buffSize);
+  const bufReader = new BufReader(file, segmentSize);
   response.body = bufReader;
 
   return path;
