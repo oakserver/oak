@@ -5,50 +5,46 @@
 
 import { Context } from "./context.ts";
 import { createHttpError } from "./httpError.ts";
-import { basename, extname, parse, sep, BufReader } from "./deps.ts";
+import { basename, extname, parse, sep } from "./deps.ts";
 import { decodeComponent, resolvePath } from "./util.ts";
 
 export interface SendOptions {
-  /** Browser cache max-age in milliseconds. (defaults to `0`) */
-  maxage?: number;
-
-  /** Tell the browser the resource is immutable and can be cached
-   * indefinitely. (defaults to `false`) */
-  immutable?: boolean;
-
-  /** Allow transfer of hidden files. (defaults to `false`) */
-  hidden?: boolean;
-
-  /** Root directory to restrict file access. */
-  root: string;
-
-  /** Name of the index file to serve automatically when visiting the root
-   * location. (defaults to none) */
-  index?: string;
-
-  /** Try to serve the gzipped version of a file automatically when gzip is
-   * supported by a client and if the requested file with `.gz` extension
-   * exists. (defaults to `true`). */
-  gzip?: boolean;
-
   /** Try to serve the brotli version of a file automatically when brotli is
    * supported by a client and if the requested file with `.br` extension
    * exists. (defaults to `true`) */
   brotli?: boolean;
-
-  /** If `true`, format the path to serve static file servers and not require a
-   * trailing slash for directories, so that you can do both `/directory` and
-   * `/directory/`. (defaults to `true`) */
-  format?: boolean;
 
   /** Try to match extensions from passed array to search for file when no
    * extension is sufficed in URL. First found is served. (defaults to
    * `undefined`) */
   extensions?: string[];
 
-  /** The number of bytes per segment to read the file from
-   * the file system.  Defaults to 32k. */
-  segmentSize?: number;
+  /** If `true`, format the path to serve static file servers and not require a
+   * trailing slash for directories, so that you can do both `/directory` and
+   * `/directory/`. (defaults to `true`) */
+  format?: boolean;
+
+  /** Try to serve the gzipped version of a file automatically when gzip is
+   * supported by a client and if the requested file with `.gz` extension
+   * exists. (defaults to `true`). */
+  gzip?: boolean;
+
+  /** Allow transfer of hidden files. (defaults to `false`) */
+  hidden?: boolean;
+
+  /** Tell the browser the resource is immutable and can be cached
+   * indefinitely. (defaults to `false`) */
+  immutable?: boolean;
+
+  /** Name of the index file to serve automatically when visiting the root
+   * location. (defaults to none) */
+  index?: string;
+
+  /** Browser cache max-age in milliseconds. (defaults to `0`) */
+  maxage?: number;
+
+  /** Root directory to restrict file access. */
+  root: string;
 }
 
 function isHidden(root: string, path: string) {
@@ -83,12 +79,11 @@ export async function send(
     extensions,
     format = true,
     gzip = true,
-    index,
     hidden = false,
     immutable = false,
+    index,
     maxage = 0,
     root,
-    segmentSize = 32000,
   } = options;
   const trailingSlash = path[path.length - 1] === "/";
   path = decodeComponent(path.substr(parse(path).root.length));
@@ -170,9 +165,9 @@ export async function send(
       ? extname(basename(path, encodingExt))
       : extname(path);
   }
-  const file = await Deno.open(path);
-  const bufReader = new BufReader(file, segmentSize);
-  response.body = bufReader;
+  const file = await Deno.open(path, { read: true });
+  response.addResource(file.rid);
+  response.body = file;
 
   return path;
 }

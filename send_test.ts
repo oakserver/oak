@@ -27,6 +27,10 @@ function createMockContext<
   path = "/",
   method = "GET",
 ) {
+  let body: any;
+  let status = Status.OK;
+  const headers = new Headers();
+  const resources: number[] = [];
   return ({
     app,
     request: {
@@ -41,12 +45,43 @@ function createMockContext<
       url: new URL(`http://localhost${path}`),
     },
     response: {
-      status: Status.OK,
-      body: undefined,
-      headers: new Headers(),
+      get status(): Status {
+        return status;
+      },
+      set status(value: Status) {
+        status = value;
+      },
+      get body(): any {
+        return body;
+      },
+      set body(value: any) {
+        body = value;
+      },
+      addResource(rid: number) {
+        resources.push(rid);
+      },
+      destroy() {
+        body = undefined;
+        for (const rid of resources) {
+          Deno.close(rid);
+        }
+      },
+      headers,
+      async toServerResponse() {
+        return {
+          status,
+          body,
+          headers,
+        };
+      },
     },
     state: app.state,
   } as unknown) as Context<S>;
+}
+
+function isDenoReader(value: any): value is Deno.Reader {
+  return value && typeof value === "object" && "read" in value &&
+    typeof value.read === "function";
 }
 
 function setup<
@@ -69,16 +104,12 @@ test({
   async fn() {
     const { context } = setup("/test.html");
     const fixture = await Deno.readFile("./fixtures/test.html");
-    await send(context, context.request.url.pathname, {
-      root: "./fixtures",
-    });
-    let tempArray = new Array();
-    let byte;
-    while ((byte = await context.response.body.readByte()) !== null) {
-      tempArray.push(byte);
-    }
-    let bytes = Uint8Array.from(tempArray);
-    assertEquals(bytes, fixture);
+    await send(context, context.request.url.pathname, { root: "./fixtures" });
+    const serverResponse = context.response.toServerResponse();
+    const bodyReader = (await serverResponse).body;
+    assert(isDenoReader(bodyReader));
+    const body = await Deno.readAll(bodyReader);
+    assertEquals(body, fixture);
     assertEquals(context.response.type, ".html");
     assertEquals(
       context.response.headers.get("content-length"),
@@ -86,6 +117,7 @@ test({
     );
     assert(context.response.headers.get("last-modified") != null);
     assertEquals(context.response.headers.get("cache-control"), "max-age=0");
+    context.response.destroy();
   },
 });
 
@@ -98,19 +130,18 @@ test({
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
     });
-    let tempArray = new Array();
-    let byte;
-    while ((byte = await context.response.body.readByte()) !== null) {
-      tempArray.push(byte);
-    }
-    let bytes = Uint8Array.from(tempArray);
-    assertEquals(bytes, fixture);
+    const serverResponse = context.response.toServerResponse();
+    const bodyReader = (await serverResponse).body;
+    assert(isDenoReader(bodyReader));
+    const body = await Deno.readAll(bodyReader);
+    assertEquals(body, fixture);
     assertEquals(context.response.type, ".json");
     assertEquals(context.response.headers.get("content-encoding"), "gzip");
     assertEquals(
       context.response.headers.get("content-length"),
       String(fixture.length),
     );
+    context.response.destroy();
   },
 });
 
@@ -120,22 +151,19 @@ test({
     const { context } = setup("/test.json");
     const fixture = await Deno.readFile("./fixtures/test.json.br");
     encodingsAccepted = "br";
-    await send(context, context.request.url.pathname, {
-      root: "./fixtures",
-    });
-    let tempArray = new Array();
-    let byte;
-    while ((byte = await context.response.body.readByte()) !== null) {
-      tempArray.push(byte);
-    }
-    let bytes = Uint8Array.from(tempArray);
-    assertEquals(bytes, fixture);
+    await send(context, context.request.url.pathname, { root: "./fixtures" });
+    const serverResponse = context.response.toServerResponse();
+    const bodyReader = (await serverResponse).body;
+    assert(isDenoReader(bodyReader));
+    const body = await Deno.readAll(bodyReader);
+    assertEquals(body, fixture);
     assertEquals(context.response.type, ".json");
     assertEquals(context.response.headers.get("content-encoding"), "br");
     assertEquals(
       context.response.headers.get("content-length"),
       String(fixture.length),
     );
+    context.response.destroy();
   },
 });
 
@@ -147,19 +175,18 @@ test({
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
     });
-    let tempArray = new Array();
-    let byte;
-    while ((byte = await context.response.body.readByte()) !== null) {
-      tempArray.push(byte);
-    }
-    let bytes = Uint8Array.from(tempArray);
-    assertEquals(bytes, fixture);
+    const serverResponse = context.response.toServerResponse();
+    const bodyReader = (await serverResponse).body;
+    assert(isDenoReader(bodyReader));
+    const body = await Deno.readAll(bodyReader);
+    assertEquals(body, fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEq(context.response.headers.get("content-encoding"), null);
     assertEquals(
       context.response.headers.get("content-length"),
       String(fixture.length),
     );
+    context.response.destroy();
   },
 });
 

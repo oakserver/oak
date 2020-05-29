@@ -224,6 +224,7 @@ export class Application<AS extends State = Record<string, any>>
     }
     try {
       await request.respond(await context.response.toServerResponse());
+      context.response.destroy();
       if (state.closing) {
         state.server.close();
         state.closed = true;

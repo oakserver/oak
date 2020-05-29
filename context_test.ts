@@ -34,6 +34,11 @@ function createMockServerRequest(url = "/", proto = "HTTP/1.1"): ServerRequest {
   } as any;
 }
 
+function isDenoReader(value: any): value is Deno.Reader {
+  return value && typeof value === "object" && "read" in value &&
+    typeof value.read === "function";
+}
+
 test({
   name: "context",
   fn() {
@@ -90,13 +95,11 @@ test({
     );
     const fixture = await Deno.readFile("./fixtures/test.html");
     await context.send({ root: "./fixtures" });
-    let tempArray = new Array();
-    let byte;
-    while ((byte = await context.response.body.readByte()) !== null) {
-      tempArray.push(byte);
-    }
-    let bytes = Uint8Array.from(tempArray);
-    assertEquals(bytes, fixture);
+    const serverResponse = context.response.toServerResponse();
+    const bodyReader = (await serverResponse).body;
+    assert(isDenoReader(bodyReader));
+    const body = await Deno.readAll(bodyReader);
+    assertEquals(body, fixture);
     assertEquals(context.response.type, ".html");
     assertEquals(
       context.response.headers.get("content-length"),
@@ -104,6 +107,7 @@ test({
     );
     assert(context.response.headers.get("last-modified") != null);
     assertEquals(context.response.headers.get("cache-control"), "max-age=0");
+    context.response.destroy();
   },
 });
 
@@ -116,13 +120,11 @@ test({
     );
     const fixture = await Deno.readFile("./fixtures/test.html");
     await context.send({ path: "/test.html", root: "./fixtures" });
-    let tempArray = new Array();
-    let byte;
-    while ((byte = await context.response.body.readByte()) !== null) {
-      tempArray.push(byte);
-    }
-    let bytes = Uint8Array.from(tempArray);
-    assertEquals(bytes, fixture);
+    const serverResponse = context.response.toServerResponse();
+    const bodyReader = (await serverResponse).body;
+    assert(isDenoReader(bodyReader));
+    const body = await Deno.readAll(bodyReader);
+    assertEquals(body, fixture);
     assertEquals(context.response.type, ".html");
     assertEquals(
       context.response.headers.get("content-length"),
@@ -130,5 +132,6 @@ test({
     );
     assert(context.response.headers.get("last-modified") != null);
     assertEquals(context.response.headers.get("cache-control"), "max-age=0");
+    context.response.destroy();
   },
 });
