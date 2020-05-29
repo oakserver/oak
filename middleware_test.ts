@@ -88,3 +88,32 @@ test({
     assert(caught instanceof httpErrors.InternalServerError);
   },
 });
+
+test({
+  name: "composed middleware accepts next middleware",
+  async fn() {
+    const callStack: number[] = [];
+    const mockContext = createMockContext();
+
+    const mw0: Middleware = async (context, next) => {
+      assertEquals(typeof next, "function");
+      callStack.push(3);
+      await next();
+    };
+
+    const mw1: Middleware = async (context, next) => {
+      assertEquals(typeof next, "function");
+      callStack.push(1);
+      await next();
+    };
+    const mw2: Middleware = async (context, next) => {
+      assertEquals(typeof next, "function");
+      callStack.push(2);
+      await next();
+    };
+    
+    await compose([mw1, mw2])(mockContext, mw0);
+    assertEquals(callStack, [1, 2, 3]);
+  },
+});
+
