@@ -65,6 +65,7 @@ export class Response {
   #body?: Body | BodyFunction;
   #headers = new Headers();
   #request: Request;
+  #resources: number[] = [];
   #serverResponse?: ServerResponse;
   #status?: Status;
   #type?: string;
@@ -163,6 +164,22 @@ export class Response {
 
   constructor(request: Request) {
     this.#request = request;
+  }
+
+  /** Add a resource to the list of resources that will be closed when the
+   * request is destroyed. */
+  addResource(rid: number): void {
+    this.#resources.push(rid);
+  }
+
+  /** Release any resources that are being tracked by the response. */
+  destroy(): void {
+    this.#writable = false;
+    this.#body = undefined;
+    this.#serverResponse = undefined;
+    for (const rid of this.#resources) {
+      Deno.close(rid);
+    }
   }
 
   /** Sets the response to redirect to the supplied `url`.
