@@ -9,7 +9,7 @@ import {
   cyan,
   bold,
   yellow,
-} from "https://deno.land/std@0.53.0/fmt/colors.ts";
+} from "https://deno.land/std@0.54.0/fmt/colors.ts";
 
 import { Application } from "../mod.ts";
 
