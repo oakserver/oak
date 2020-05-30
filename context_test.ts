@@ -180,3 +180,29 @@ test({
     assertEquals(context.respond, true);
   },
 });
+
+test({
+  name: "context.isUpgradable true",
+  async fn() {
+    const context = new Context(
+      createMockApp(),
+      createMockServerRequest({
+        headers: [["Upgrade", "websocket"], ["Sec-WebSocket-Key", "abc"]],
+      }),
+    );
+    assertEquals(context.isUpgradable, true);
+  },
+});
+
+test({
+  name: "context.isUpgradable false",
+  async fn() {
+    const context = new Context(
+      createMockApp(),
+      createMockServerRequest({
+        headers: [["Upgrade", "websocket"]],
+      }),
+    );
+    assertEquals(context.isUpgradable, false);
+  },
+});

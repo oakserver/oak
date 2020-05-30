@@ -2,7 +2,12 @@
 
 import { Application, State } from "./application.ts";
 import { Cookies } from "./cookies.ts";
-import { acceptWebSocket, ServerRequest, WebSocket } from "./deps.ts";
+import {
+  acceptable,
+  acceptWebSocket,
+  ServerRequest,
+  WebSocket,
+} from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
 import { KeyStack } from "./keyStack.ts";
 import { Request } from "./request.ts";
@@ -25,6 +30,13 @@ export class Context<S extends State = Record<string, any>> {
 
   /** The cookies object. */
   cookies: Cookies;
+
+  /** Is `true` if the current connection is upgradeable to a web socket.
+   * Otherwise the value is `false`.  Use `.upgrade()` to upgrade the connection
+   * and return the web socket. */
+  get isUpgradable(): boolean {
+    return acceptable(this.request);
+  }
 
   /** Determines if the request should be responded to.  If `false` when the
    * middleware completes processing, the response will not be sent back to the
