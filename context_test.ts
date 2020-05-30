@@ -6,6 +6,7 @@ import {
   assertEquals,
   assertStrictEq,
   assertThrows,
+  assertThrowsAsync,
   BufReader,
   BufWriter,
 } from "./test_deps.ts";
@@ -16,7 +17,7 @@ import { ServerRequest } from "./deps.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { httpErrors } from "./httpError.ts";
-import { assertThrowsAsync } from "https://deno.land/std@0.53.0/testing/asserts.ts";
+
 function createMockApp<S extends State = Record<string, any>>(
   state = {} as S,
 ): Application<S> {
