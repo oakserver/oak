@@ -6,6 +6,8 @@ import {
   assertEquals,
   assertStrictEq,
   assertThrows,
+  BufReader,
+  BufWriter,
 } from "./test_deps.ts";
 import { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
@@ -14,7 +16,7 @@ import { ServerRequest } from "./deps.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { httpErrors } from "./httpError.ts";
-
+import { assertThrowsAsync } from "https://deno.land/std@0.53.0/testing/asserts.ts";
 function createMockApp<S extends State = Record<string, any>>(
   state = {} as S,
 ): Application<S> {
@@ -23,9 +25,23 @@ function createMockApp<S extends State = Record<string, any>>(
   } as any;
 }
 
-function createMockServerRequest(url = "/", proto = "HTTP/1.1"): ServerRequest {
-  const headers = new Headers();
+interface MockServerOptions {
+  headers?: [string, string][];
+  proto?: string;
+  url?: string;
+}
+
+function createMockServerRequest(
+  { url = "/", proto = "HTTP/1.1", headers: headersInit = [] }:
+    MockServerOptions = {},
+): ServerRequest {
+  const headers = new Headers(headersInit);
   return {
+    conn: {
+      close() {},
+    },
+    r: new BufReader(new Deno.Buffer(new Uint8Array())),
+    w: new BufWriter(new Deno.Buffer(new Uint8Array())),
     headers,
     method: "GET",
     proto,
@@ -91,10 +107,33 @@ test({
   async fn() {
     const context = new Context(
       createMockApp(),
-      createMockServerRequest("/test.html"),
+      createMockServerRequest({ url: "/test.html" }),
     );
     const fixture = await Deno.readFile("./fixtures/test.html");
     await context.send({ root: "./fixtures" });
+    const serverResponse = await context.response.toServerResponse();
+    const bodyReader = serverResponse.body;
+    console.log(bodyReader);
+    assert(isDenoReader(bodyReader));
+    const body = await Deno.readAll(bodyReader);
+    assertEquals(body, fixture);
+    assertEquals(context.response.type, ".html");
+    assertEquals(
+      context.response.headers.get("content-length"),
+      String(fixture.length),
+    );
+    assert(context.response.headers.get("last-modified") != null);
+    assertEquals(context.response.headers.get("cache-control"), "max-age=0");
+    context.response.destroy();
+  },
+});
+
+test({
+  name: "context.send() specified path",
+  async fn() {
+    const context = new Context(createMockApp(), createMockServerRequest());
+    const fixture = await Deno.readFile("./fixtures/test.html");
+    await context.send({ path: "/test.html", root: "./fixtures" });
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
@@ -112,26 +151,31 @@ test({
 });
 
 test({
-  name: "context.send() default path",
+  name: "context.upgrade()",
   async fn() {
     const context = new Context(
       createMockApp(),
-      createMockServerRequest(),
+      createMockServerRequest({
+        headers: [["Upgrade", "websocket"], ["Sec-WebSocket-Key", "abc"]],
+      }),
     );
-    const fixture = await Deno.readFile("./fixtures/test.html");
-    await context.send({ path: "/test.html", root: "./fixtures" });
-    const serverResponse = context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await Deno.readAll(bodyReader);
-    assertEquals(body, fixture);
-    assertEquals(context.response.type, ".html");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
-    assert(context.response.headers.get("last-modified") != null);
-    assertEquals(context.response.headers.get("cache-control"), "max-age=0");
-    context.response.destroy();
+    assert(context.socket === undefined);
+    const ws = await context.upgrade();
+    assert(ws);
+    assert(context.socket === ws);
+    assertEquals(context.respond, false);
+  },
+});
+
+test({
+  name: "context.upgrade() failure does not set socket/respond",
+  async fn() {
+    const context = new Context(createMockApp(), createMockServerRequest());
+    assert(context.socket === undefined);
+    await assertThrowsAsync(async () => {
+      await context.upgrade();
+    });
+    assert(context.socket === undefined);
+    assertEquals(context.respond, true);
   },
 });

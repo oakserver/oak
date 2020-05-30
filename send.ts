@@ -70,7 +70,7 @@ async function exists(path: string): Promise<boolean> {
  * 
  * Requires Deno read permission. */
 export async function send(
-  { request, response }: Context,
+  { request, response }: Context<any>,
   path: string,
   options: SendOptions = { root: "" },
 ): Promise<string | undefined> {

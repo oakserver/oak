@@ -210,7 +210,7 @@ export class Application<AS extends State = Record<string, any>>
     closed: boolean;
     middleware: (context: Context<AS>) => Promise<void>;
     server: Server;
-  }) => {
+  }): Promise<void> => {
     const context = new Context(this, request);
     if (!state.closing && !state.closed) {
       state.handling = true;
@@ -221,6 +221,10 @@ export class Application<AS extends State = Record<string, any>>
       } finally {
         state.handling = false;
       }
+    }
+    if (context.respond === false) {
+      context.response.destroy();
+      return;
     }
     try {
       await request.respond(await context.response.toServerResponse());

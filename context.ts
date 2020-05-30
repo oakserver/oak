@@ -2,7 +2,7 @@
 
 import { Application, State } from "./application.ts";
 import { Cookies } from "./cookies.ts";
-import { ServerRequest } from "./deps.ts";
+import { acceptWebSocket, ServerRequest, WebSocket } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
 import { KeyStack } from "./keyStack.ts";
 import { Request } from "./request.ts";
@@ -18,17 +18,35 @@ export interface ContextSendOptions extends SendOptions {
 }
 
 export class Context<S extends State = Record<string, any>> {
-  /** A reference to the current application */
-  app: Application<any>;
+  #socket?: WebSocket;
 
-  /** The cookies object */
+  /** A reference to the current application. */
+  app: Application<State>;
+
+  /** The cookies object. */
   cookies: Cookies;
 
-  /** The request object */
+  /** Determines if the request should be responded to.  If `false` when the
+   * middleware completes processing, the response will not be sent back to the
+   * requestor.  Typically this is used if the middleware will take over low
+   * level processing of requests and responses, for example if using web
+   * sockets.  This automatically gets set to `false` when the context is
+   * upgraded to a web socket via the `.upgrade()` method.
+   * 
+   * The default is `true`. */
+  respond: boolean;
+
+  /** The request object. */
   request: Request;
 
-  /** The response object */
+  /** The response object. */
   response: Response;
+
+  /** If the the current context has been upgraded, then this will be set to
+   * with the web socket, otherwise it is `undefined`. */
+  get socket(): WebSocket | undefined {
+    return this.#socket;
+  }
 
   /** The object to pass state to front-end views.  This can be typed by
    * supplying the generic state argument when creating a new app.  For
@@ -47,6 +65,7 @@ export class Context<S extends State = Record<string, any>> {
     this.app = app;
     this.state = app.state;
     this.request = new Request(serverRequest);
+    this.respond = true;
     this.response = new Response(this.request);
     this.cookies = new Cookies(this.request, this.response, {
       keys: this.app.keys as KeyStack | undefined,
@@ -97,5 +116,20 @@ export class Context<S extends State = Record<string, any>> {
       Object.assign(err, props);
     }
     throw err;
+  }
+
+  /** Take the current request and upgrade it to a web socket, resolving with
+   * the web socket object. This will set `.respond` to `false`. */
+  async upgrade(): Promise<WebSocket> {
+    if (this.#socket) {
+      return this.#socket;
+    }
+    const { conn, r: bufReader, w: bufWriter, headers } =
+      this.request.serverRequest;
+    this.#socket = await acceptWebSocket(
+      { conn, bufReader, bufWriter, headers },
+    );
+    this.respond = false;
+    return this.#socket;
   }
 }
