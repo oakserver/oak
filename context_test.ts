@@ -114,7 +114,6 @@ test({
     await context.send({ root: "./fixtures" });
     const serverResponse = await context.response.toServerResponse();
     const bodyReader = serverResponse.body;
-    console.log(bodyReader);
     assert(isDenoReader(bodyReader));
     const body = await Deno.readAll(bodyReader);
     assertEquals(body, fixture);
