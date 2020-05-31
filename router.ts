@@ -133,7 +133,7 @@ export interface RouterOptions {
   /** Override the default set of methods supported by the router. */
   methods?: HTTPMethods[];
 
-  /** Only handle routes where. */
+  /** Only handle routes where the requested path starts with the prefix. */
   prefix?: string;
 
   /** Override the `request.url.pathname` when matching middleware to run. */
@@ -324,6 +324,9 @@ class Layer<
   }
 }
 
+/** An interface for registering middleware that will run when certain HTTP
+ * methods and paths are requested, as well as provides a way to parameterize
+ * parts of the requested path. */
 export class Router<
   RP extends RouteParams = RouteParams,
   RS extends State = Record<string, any>,

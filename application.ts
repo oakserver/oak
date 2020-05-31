@@ -234,18 +234,25 @@ export class Application<AS extends State = Record<string, any>>
     }
   };
 
+  /** Add an event listener for an `"error"` event which occurs when an
+   * un-caught error occurs when processing the middleware or during processing
+   * of the response. */
   addEventListener(
     type: "error",
     listener: ApplicationErrorEventListenerOrEventListenerObject<AS> | null,
     options?: boolean | AddEventListenerOptions,
   ): void;
+  /** Add an event listener for a `"listen"` event which occurs when the server
+   * has successfully opened but before any requests start being processed. */
   addEventListener(
     type: "listen",
     listener: ApplicationListenEventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
   ): void;
+  /** Add an event listener for an event.  Currently valid event types are
+   * `"error"` and `"listen"`. */
   addEventListener(
-    type: string,
+    type: "error" | "listen",
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
   ): void {
@@ -317,7 +324,28 @@ export class Application<AS extends State = Record<string, any>>
     }
   }
 
-  /** Register middleware to be used with the application. */
+  /** Register middleware to be used with the application.  Middleware will
+   * be processed in the order it is added, but middleware can control the flow
+   * of execution via the use of the `next()` function that the middleware
+   * function will be called with.  The `context` object provides information
+   * about the current state of the application.
+   * 
+   * Basic usage:
+   * 
+   * ```ts
+   * const import { Application } from "https://deno.land/x/oak/mod.ts";
+   * 
+   * const app = new Application();
+   * 
+   * app.use((ctx, next) => {
+   *   ctx.request; // contains request information
+   *   ctx.response; // setups up information to use in the response;
+   *   await next(); // manages the flow control of the middleware execution
+   * });
+   * 
+   * await app.listen({ port: 80 });
+   * ```
+   */
   use<S extends State = AS>(
     ...middleware: Middleware<S, Context<S>>[]
   ): Application<S extends AS ? S : (S & AS)> {
