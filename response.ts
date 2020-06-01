@@ -21,6 +21,23 @@ interface ServerResponse {
   body: Uint8Array | Deno.Reader | undefined;
 }
 
+/** A symbol that indicates to `response.redirect()` to attempt to redirect
+ * back to the request referrer.  For example:
+ * 
+ * ```ts
+ * import { Application, REDIRECT_BACK } from "https://deno.land/x/oak/mod.ts";
+ * 
+ * const app = new Application();
+ * 
+ * app.use((ctx) => {
+ *   if (ctx.request.url.pathName === "/back") {
+ *     ctx.response.redirect(REDIRECT_BACK, "/");
+ *   }
+ * });
+ * 
+ * await app.listen({ port: 80 });
+ * ```
+ */
 export const REDIRECT_BACK = Symbol("redirect backwards");
 
 const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
@@ -61,6 +78,8 @@ async function convertBody(
   return [result, type];
 }
 
+/** An interface to control what response will be sent when the middleware
+ * finishes processing the request. */
 export class Response {
   #body?: Body | BodyFunction;
   #headers = new Headers();
@@ -149,6 +168,8 @@ export class Response {
   get type(): string | undefined {
     return this.#type;
   }
+  /** The media type, or extension of the response.  Setting this value will
+   * ensure an appropriate `Content-Type` header is added to the response. */
   set type(value: string | undefined) {
     if (!this.#writable) {
       throw new Error("The response is not writable.");
@@ -225,7 +246,9 @@ export class Response {
   }
 
   /** Take this response and convert it to the response used by the Deno net
-   * server.  Calling this will set the response to not be writable. */
+   * server.  Calling this will set the response to not be writable.
+   * 
+   * Most users will have no need to call this method. */
   async toServerResponse(): Promise<ServerResponse> {
     if (this.#serverResponse) {
       return this.#serverResponse;

@@ -51,6 +51,7 @@ export interface BodyOptions {
 }
 
 export interface BodyOptionsAsReader extends BodyOptions {
+  /** If `true`, return a body value of `Deno.Reader`. */
   asReader: true;
 }
 
@@ -68,6 +69,7 @@ const defaultBodyContentTypes = {
   text: ["text"],
 };
 
+/** An interface which provides information about the current request. */
 export class Request {
   #body?: Body | BodyReader;
   #rawBodyPromise?: Promise<Uint8Array>;
@@ -97,7 +99,7 @@ export class Request {
     return this.url.protocol === "https:";
   }
 
-  /** Returns the _original_ Deno server request. */
+  /** Set to the value of the _original_ Deno server request. */
   get serverRequest(): ServerRequest {
     return this.#serverRequest;
   }

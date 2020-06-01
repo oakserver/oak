@@ -22,13 +22,16 @@ export interface ContextSendOptions extends SendOptions {
   path?: string;
 }
 
+/** Provides context about the current request and response to middleware
+ * functions. */
 export class Context<S extends State = Record<string, any>> {
   #socket?: WebSocket;
 
   /** A reference to the current application. */
   app: Application<State>;
 
-  /** The cookies object. */
+  /** An object which allows access to cookies, mediating both the request and
+   * response. */
   cookies: Cookies;
 
   /** Is `true` if the current connection is upgradeable to a web socket.
@@ -48,10 +51,11 @@ export class Context<S extends State = Record<string, any>> {
    * The default is `true`. */
   respond: boolean;
 
-  /** The request object. */
+  /** An object which contains information about the current request. */
   request: Request;
 
-  /** The response object. */
+  /** An object which contains information about the response that will be sent
+   * when the middleware finishes processing. */
   response: Response;
 
   /** If the the current context has been upgraded, then this will be set to
@@ -64,12 +68,15 @@ export class Context<S extends State = Record<string, any>> {
    * supplying the generic state argument when creating a new app.  For
    * example:
    *
-   *       const app = new Application<{ foo: string }>();
+   * ```ts
+   * const app = new Application<{ foo: string }>();
+   * ```
    * 
    * Or can be contextually inferred based on setting an initial state object:
    * 
-   *       const app = new Application({ state: { foo: "bar" } });
-   * 
+   * ```ts
+   * const app = new Application({ state: { foo: "bar" } });
+   * ```
    */
   state: S;
 

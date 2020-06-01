@@ -30,10 +30,13 @@ export {
   RouteParams,
   Route,
   Router,
+  RouterAllowedMethodsOptions,
   RouterContext,
   RouterMiddleware,
+  RouterOptions,
+  RouterParamMiddleware,
 } from "./router.ts";
-export { send } from "./send.ts";
+export { send, SendOptions } from "./send.ts";
 export { ErrorStatus, HTTPMethods, RedirectStatus } from "./types.d.ts";
 export { isErrorStatus, isRedirectStatus } from "./util.ts";
 

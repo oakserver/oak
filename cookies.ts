@@ -143,6 +143,8 @@ class Cookie implements CookieAttributes {
   }
 }
 
+/** An interface which allows setting and accessing cookies related to both the
+ * current request and response. */
 export class Cookies {
   #cookieKeys?: string[];
   #keys?: KeyStack;

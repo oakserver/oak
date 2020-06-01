@@ -71,8 +71,16 @@ const errorStatusMap = {
   "NetworkAuthenticationRequired": 511,
 };
 
+/** A base class for individual classes of HTTP errors. */
 export class HttpError extends Error {
+  /** Determines if details about the error should be automatically exposed
+   * in a response.  This is automatically set to `true` for 4XX errors, as
+   * they represent errors in the request, while 5XX errors are set to `false`
+   * as they are internal server errors and exposing details could leak
+   * important server security information. */
   expose = false;
+
+  /** The HTTP error status associated with this class of error. */
   status = Status.InternalServerError;
 }
 
@@ -97,6 +105,11 @@ function createHttpErrorConstructor<E extends typeof HttpError>(
   return Ctor as E;
 }
 
+/** An object which contains an individual HTTP Error for each HTTP status
+ * error code (4XX and 5XX).  When errors are raised related to a particular
+ * HTTP status code, they will be of the appropriate instance located on this
+ * object.  Also, context's `.throw()` will throw errors based on the passed
+ * status code. */
 export const httpErrors: Record<keyof typeof errorStatusMap, typeof HttpError> =
   {} as any;
 
