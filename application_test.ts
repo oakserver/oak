@@ -397,5 +397,20 @@ test({
     });
     await app.listen({ hostname: "localhost", port: 80 });
     assertEquals(called, 1);
+    teardown();
+  },
+});
+
+test({
+  name: "application doesn't respond on ctx.respond === false",
+  async fn() {
+    const app = new Application({ serve });
+    serverRequestStack.push(createMockRequest());
+    app.use((ctx) => {
+      ctx.respond = false;
+    });
+    await app.listen({ port: 8000 });
+    assertEquals(requestResponseStack.length, 0);
+    teardown();
   },
 });
