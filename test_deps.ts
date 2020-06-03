@@ -2,11 +2,11 @@
 
 export const test = Deno.test;
 
-export { BufReader, BufWriter } from "https://deno.land/std@0.54.0/io/bufio.ts";
+export { BufReader, BufWriter } from "https://deno.land/std@0.55.0/io/bufio.ts";
 export {
   assert,
   assertEquals,
   assertStrictEq,
   assertThrows,
   assertThrowsAsync,
-} from "https://deno.land/std@0.54.0/testing/asserts.ts";
+} from "https://deno.land/std@0.55.0/testing/asserts.ts";
