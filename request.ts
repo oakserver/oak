@@ -3,6 +3,7 @@
 import { ServerRequest } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { isMediaType } from "./isMediaType.ts";
+import { FormDataReader } from "./multipart.ts";
 import { HTTPMethods } from "./types.d.ts";
 import { preferredCharsets } from "./negotiation/charset.ts";
 import { preferredEncodings } from "./negotiation/encoding.ts";
@@ -12,6 +13,7 @@ import { preferredMediaTypes } from "./negotiation/mediaType.ts";
 export type BodyType =
   | "json"
   | "form"
+  | "form-data"
   | "text"
   | "raw"
   | "undefined"
@@ -19,6 +21,7 @@ export type BodyType =
 
 export type BodyJson = { type: "json"; value: any };
 export type BodyForm = { type: "form"; value: URLSearchParams };
+export type BodyFormData = { type: "form-data"; value: FormDataReader };
 export type BodyText = { type: "text"; value: string };
 export type BodyRaw = { type: "raw"; value: Uint8Array };
 export type BodyUndefined = { type: "undefined"; value: undefined };
@@ -28,6 +31,7 @@ export type BodyReader = { type: "reader"; value: Deno.Reader };
 export type Body =
   | BodyJson
   | BodyForm
+  | BodyFormData
   | BodyText
   | BodyRaw
   | BodyUndefined;
@@ -45,6 +49,9 @@ export interface BodyOptions {
     /** Content types listed here will be parsed as form data and return
      * `URLSearchParameters` as the value of the body. */
     form?: string[];
+    /** Content types listed here will be parsed as from data and return a
+     * `FormDataBody` interface as the value of the body. */
+    formData?: string[];
     /** Content types listed here will be parsed as text. */
     text?: string[];
   };
@@ -66,6 +73,7 @@ export interface BodyContentTypes {
 const defaultBodyContentTypes = {
   json: ["json", "application/*+json", "application/csp-report"],
   form: ["urlencoded"],
+  formData: ["multipart"],
   text: ["text"],
 };
 
@@ -274,6 +282,16 @@ export class Request {
           value: this.#serverRequest.body,
         });
       }
+      const contentTypesFormData = [
+        ...defaultBodyContentTypes.formData,
+        ...(contentTypes.formData ?? []),
+      ];
+      if (isMediaType(contentType, contentTypesFormData)) {
+        return (this.#body = {
+          type: "form-data",
+          value: new FormDataReader(contentType, this.#serverRequest.body),
+        });
+      }
       const rawBody = await (this.#rawBodyPromise ??
         (this.#rawBodyPromise = Deno.readAll(this.#serverRequest.body)));
       const value = decoder.decode(rawBody);
@@ -290,6 +308,7 @@ export class Request {
         ...defaultBodyContentTypes.text,
         ...(contentTypes.text ?? []),
       ];
+      console.log("contentType", contentType);
       if (contentTypesRaw && isMediaType(contentType, contentTypesRaw)) {
         return (this.#body = { type: "raw", value: rawBody });
       } else if (isMediaType(contentType, contentTypesJson)) {

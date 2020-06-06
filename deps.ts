@@ -4,6 +4,8 @@
 
 // `std` dependencies
 
+export { equal } from "https://deno.land/std@0.56.0/bytes/mod.ts";
+export { Sha1 } from "https://deno.land/std@0.56.0/hash/sha1.ts";
 export { HmacSha256 } from "https://deno.land/std@0.56.0/hash/sha256.ts";
 export {
   Response,
@@ -23,6 +25,7 @@ export {
   getCookies,
   delCookie,
 } from "https://deno.land/std@0.56.0/http/cookie.ts";
+export { copyBytes } from "https://deno.land/std@0.56.0/io/util.ts";
 export {
   basename,
   extname,
@@ -44,6 +47,7 @@ export {
 
 export {
   contentType,
+  extension,
   lookup,
 } from "https://deno.land/x/media_types@v2.3.5/mod.ts";
 export {

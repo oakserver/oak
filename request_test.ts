@@ -309,7 +309,7 @@ test({
       createMockServerRequest({
         body: "blah",
         headerValues: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/graphql",
         },
       }),
     );

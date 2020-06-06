@@ -18,11 +18,23 @@ export {
 export { HttpError, httpErrors, isHttpError } from "./httpError.ts";
 export { compose as composeMiddleware, Middleware } from "./middleware.ts";
 export {
+  FormDataBody,
+  FormDataFile,
+  FormDataReader,
+  FormDataReadOptions,
+} from "./multipart.ts";
+export {
   Body,
+  BodyForm,
+  BodyFormData,
+  BodyJson,
   BodyOptions,
   BodyOptionsAsReader,
+  BodyRaw,
   BodyReader,
+  BodyText,
   BodyType,
+  BodyUndefined,
   Request,
 } from "./request.ts";
 export { Response, REDIRECT_BACK } from "./response.ts";

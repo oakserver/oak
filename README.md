@@ -248,14 +248,24 @@ And several methods:
 
   When the option `asReader` is false or not passed, the method resolves with an
   object which contains a `type` property set to `"json"`, `"text"`, `"form"`,
-  `"undefined"`, or `"raw"` and a `value` property set with the parsed value of
-  the property. For JSON it will be the parsed value of the JSON string. For
-  text, it will simply be a string and for a form, it will be an instance of
-  `URLSearchParams`. For an undefined body, the value will be `undefined`. If
-  the content type is not supported, the body will be returned with a `type` of
-  `"raw"` and the `value` will be set to a `Uint8Array` containing the raw bytes
-  for the request. If the application cannot handle the content type, it should
-  throw a 415 HTTP Error.
+  `"form-data"`, `"undefined"`, or `"raw"` and a `value` property set with the
+  parsed value of the property. For JSON it will be the parsed value of the
+  JSON string. For text, it will simply be a string and for a form, it will be
+  an instance of `URLSearchParams`. For an undefined body, the value will be
+  `undefined`. If the content type is not supported, the body will be returned
+  with a `type` of `"raw"` and the `value` will be set to a `Uint8Array`
+  containing the raw bytes for the request. If the application cannot handle
+  the content type, it should throw a 415 HTTP Error.
+
+  For multipart form data, the `value` property will be set to a
+  `FormDataReader` interface which provides two methods to access the parts of
+  the multipart form. There is `.read()` which will asynchronously resolve with
+  an object containing the `.fields` property which is a record of key value
+  pairs of the form data, and optionally a `.files` property which will be an
+  array of files that were part of the multipart form. There is also
+  `.stream()` which will asynchronously yield a tuple containing the name of
+  the part, and the value of the part which is either a string or a
+  `FormDataFile` object.
 
   When option `asReader` is true, the method resolves with an object who's
   `type` property is `"reader"` and who's `value` property is a `Deno.Reader`
