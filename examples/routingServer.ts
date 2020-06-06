@@ -61,6 +61,9 @@ router
       for (const [key, value] of body.value) {
         book[key as keyof Book] = value;
       }
+    } else if (body.type === "form-data") {
+      const formData = await body.value.read();
+      book = formData.fields;
     }
     if (book) {
       context.assert(book.id && typeof book.id === "string", Status.BadRequest);

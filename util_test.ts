@@ -1,8 +1,10 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, assertThrows, test } from "./test_deps.ts";
+import { assert, assertEquals, assertThrows, test } from "./test_deps.ts";
 import { httpErrors } from "./httpError.ts";
-import { decodeComponent, resolvePath } from "./util.ts";
+import { decodeComponent, getRandomFilename, resolvePath } from "./util.ts";
+
+const encoder = new TextEncoder();
 
 test({
   name: "decodeComponent",
@@ -67,5 +69,15 @@ test({
   name: "resolvePath from root",
   fn() {
     assertEquals(resolvePath("/public", "./foo/bar"), "/public/foo/bar");
+  },
+});
+
+test({
+  name: "getRandomFilename()",
+  fn() {
+    const actual = getRandomFilename("foo", "bar");
+    assert(actual.startsWith("foo"));
+    assert(actual.endsWith(".bar"));
+    assert(actual.length > 7);
   },
 });

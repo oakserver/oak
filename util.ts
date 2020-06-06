@@ -1,15 +1,25 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { isAbsolute, join, normalize, resolve, sep, Status } from "./deps.ts";
+import {
+  isAbsolute,
+  join,
+  normalize,
+  resolve,
+  sep,
+  Sha1,
+  Status,
+} from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
 import { ErrorStatus, RedirectStatus } from "./types.d.ts";
 
 const ENCODE_CHARS_REGEXP =
   /(?:[^\x21\x25\x26-\x3B\x3D\x3F-\x5B\x5D\x5F\x61-\x7A\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g;
-
+const HTAB = "\t".charCodeAt(0);
+const SPACE = " ".charCodeAt(0);
+const CR = "\r".charCodeAt(0);
+const LF = "\n".charCodeAt(0);
 const UNMATCHED_SURROGATE_PAIR_REGEXP =
   /(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF]([^\uDC00-\uDFFF]|$)/g;
-
 const UNMATCHED_SURROGATE_PAIR_REPLACE = "$1\uFFFD$2";
 
 /** Safely decode a URI component, where if it fails, instead of throwing,
@@ -28,6 +38,12 @@ export function encodeUrl(url: string) {
   return String(url)
     .replace(UNMATCHED_SURROGATE_PAIR_REGEXP, UNMATCHED_SURROGATE_PAIR_REPLACE)
     .replace(ENCODE_CHARS_REGEXP, encodeURI);
+}
+
+export function getRandomFilename(prefix = "", extension = ""): string {
+  return `${prefix}${
+    new Sha1().update(crypto.getRandomValues(new Uint8Array(256))).hex()
+  }${extension ? `.${extension}` : ""}`;
 }
 
 /** Determines if a HTTP `Status` is an `ErrorStatus` (4XX or 5XX). */
@@ -91,6 +107,28 @@ export function isRedirectStatus(value: Status): value is RedirectStatus {
 /** Determines if a string "looks" like HTML */
 export function isHtml(value: string): boolean {
   return /^\s*<(?:!DOCTYPE|html|body)/i.test(value);
+}
+
+/** Returns `u8` with leading white space removed. */
+export function skipLWSPChar(u8: Uint8Array): Uint8Array {
+  const result = new Uint8Array(u8.length);
+  let j = 0;
+  for (let i = 0; i < u8.length; i++) {
+    if (u8[i] === SPACE || u8[i] === HTAB) continue;
+    result[j++] = u8[i];
+  }
+  return result.slice(0, j);
+}
+
+export function stripEol(value: Uint8Array): Uint8Array {
+  if (value[value.byteLength - 1] == LF) {
+    let drop = 1;
+    if (value.byteLength > 1 && value[value.byteLength - 2] === CR) {
+      drop = 2;
+    }
+    return value.subarray(0, value.byteLength - drop);
+  }
+  return value;
 }
 
 /*!
