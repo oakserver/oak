@@ -24,7 +24,7 @@ oak off of `master`, though in practice you should _pin_ to a specific version
 of oak in order to ensure compatibility.
 
 For example if you wanted to use version 4.0.0 of oak, you would want to import
-oak from `https://deno.land/x/oak@4.0.0/mod.ts`.
+oak from `https://deno.land/x/oak@v4.0.0/mod.ts`.
 
 All of the parts of oak that are intended to be used in creating a server are
 exported from `mod.ts` and most of the time, you will simply want to import the
