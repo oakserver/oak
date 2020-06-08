@@ -38,7 +38,7 @@ import {
   TokensToRegexpOptions,
 } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
-import { Middleware, compose } from "./middleware.ts";
+import { Middleware, compose, Next } from "./middleware.ts";
 import { HTTPMethods, RedirectStatus } from "./types.d.ts";
 import { decodeComponent } from "./util.ts";
 
@@ -121,9 +121,8 @@ export interface RouterMiddleware<
   P extends RouteParams = RouteParams,
   S extends State = Record<string, any>,
 > {
-  (context: RouterContext<P, S>, next: () => Promise<void>):
-    | Promise<void>
-    | void;
+  (context: RouterContext<P, S>, next: () => Promise<Next>): Promise<Next>;
+
   /** For route parameter middleware, the `param` key for this parameter will
    * be set. */
   param?: keyof P;
@@ -158,8 +157,8 @@ export interface RouterParamMiddleware<
   (
     param: string,
     context: RouterContext<P, S>,
-    next: () => Promise<void>,
-  ): Promise<void> | void;
+    next: () => Promise<Next>,
+  ): Promise<Next>;
 }
 
 export type RouteParams = Record<string | number, string | undefined>;
@@ -279,7 +278,7 @@ class Layer<
       this: Router,
       ctx,
       next,
-    ): Promise<void> | void {
+    ): Promise<Next> {
       const p = ctx.params[param];
       assert(p);
       return fn.call(this, p, ctx, next);
@@ -481,7 +480,7 @@ export class Router<
 
     const allowedMethods: Middleware = async (context, next) => {
       const ctx = context as RouterContext;
-      await next();
+      const result = await next();
       if (!ctx.response.status || ctx.response.status === Status.NotFound) {
         assert(ctx.matched);
         const allowed = new Set<HTTPMethods>();
@@ -517,6 +516,7 @@ export class Router<
           }
         }
       }
+      return Promise.resolve(next);
     };
 
     return allowedMethods;
@@ -789,9 +789,10 @@ export class Router<
       destination = d;
     }
 
-    this.all(source, (ctx) => {
+    this.all(source, (ctx, next) => {
       ctx.response.redirect(destination);
       ctx.response.status = status;
+      return next();
     });
     return this;
   }
@@ -815,8 +816,8 @@ export class Router<
   routes(): Middleware {
     const dispatch = (
       context: Context,
-      next: () => Promise<void>,
-    ): Promise<void> => {
+      next: () => Promise<Next>,
+    ): Promise<Next> => {
       const ctx = context as RouterContext;
       const { url: { pathname }, method } = ctx.request;
       const path = this.#opts.routerPath ?? ctx.routerPath ?? pathname;
@@ -837,7 +838,7 @@ export class Router<
       const chain = matchedRoutes.reduce(
         (prev, route) => [
           ...prev,
-          (ctx: RouterContext, next: () => Promise<void>): Promise<void> => {
+          (ctx: RouterContext, next: () => Promise<Next>): Promise<Next> => {
             ctx.captures = route.captures(path);
             ctx.params = route.params(ctx.captures, ctx.params);
             ctx.routeName = route.name;

@@ -8,8 +8,14 @@ export interface Middleware<
   S extends State = Record<string, any>,
   T extends Context = Context<S>,
 > {
-  (context: T, next: () => Promise<void>): Promise<void> | void;
+  (context: T, next: () => Promise<Next>): Promise<Next>;
 }
+
+/**
+ * This type is to stricten the middleware return type,
+ * such that user are forced to call `next()` to prevent unwanted errors.
+ */
+export class Next {}
 
 /** Compose multiple middleware functions into a single middleware function. */
 export function compose<
@@ -17,11 +23,11 @@ export function compose<
   T extends Context = Context<S>,
 >(
   middleware: Middleware<S, T>[],
-): (context: T, next?: () => Promise<void>) => Promise<void> {
-  return function composedMiddleware(context: T, next?: () => Promise<void>) {
+): (context: T, next?: () => Promise<Next>) => Promise<Next> {
+  return function composedMiddleware(context: T, next?: () => Promise<Next>) {
     let index = -1;
 
-    function dispatch(i: number): Promise<void> {
+    function dispatch(i: number): Promise<Next> {
       if (i <= index) {
         Promise.reject(new Error("next() called multiple times."));
       }
@@ -31,7 +37,7 @@ export function compose<
         fn = next;
       }
       if (!fn) {
-        return Promise.resolve();
+        return Promise.resolve(new Next());
       }
       try {
         return Promise.resolve(fn(context, dispatch.bind(null, i + 1)));

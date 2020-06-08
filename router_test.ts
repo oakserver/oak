@@ -1,6 +1,7 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
 import {
+  assert,
   assertEquals,
   assertStrictEq,
   assertThrowsAsync,
@@ -11,6 +12,7 @@ import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { Router, RouterContext } from "./router.ts";
+import { Next } from "./middleware.ts";
 
 function createMockApp<
   S extends Record<string | number | symbol, any> = Record<string, any>,
@@ -54,7 +56,9 @@ function createMockContext<
 }
 
 function createMockNext() {
-  return async function next() {};
+  return async function next() {
+    return new Next();
+  };
 }
 
 function setup<
@@ -65,7 +69,7 @@ function setup<
 ): {
   app: Application<S>;
   context: Context<S>;
-  next: () => Promise<void>;
+  next: () => Promise<Next>;
 } {
   const app = createMockApp<S>();
   const context = createMockContext<S>(app, path, method);
@@ -80,7 +84,7 @@ test({
 
     const router = new Router();
     const mw = router.routes();
-    assertEquals(await mw(context, next), undefined);
+    assert(await mw(context, next) instanceof Next);
   },
 });
 
@@ -91,10 +95,11 @@ test({
 
     const callStack: number[] = [];
     const router = new Router();
-    router.get("/", (context) => {
+    router.get("/", (context, next) => {
       assertStrictEq(context.router, router);
       assertStrictEq(context.app, app);
       callStack.push(1);
+      return next();
     });
     const mw = router.routes();
     await mw(context, next);
@@ -109,15 +114,18 @@ test({
 
     const callStack: number[] = [];
     const router = new Router();
-    router.get("/", (context) => {
+    router.get("/", (context, next) => {
       callStack.push(1);
+      return next();
     });
-    router.get("/foo", (context) => {
+    router.get("/foo", (context, next) => {
       callStack.push(2);
+      return next();
     });
-    router.get<{ id: string }>("/foo/:id", (context) => {
+    router.get<{ id: string }>("/foo/:id", (context, next) => {
       callStack.push(3);
       assertEquals(context.params.id, "bar");
+      return next();
     });
     const mw = router.routes();
     await mw(context, next);
@@ -132,18 +140,17 @@ test({
 
     const callStack: number[] = [];
     const router = new Router();
-    router.get("/", (_context) => {
+    router.get("/", (_context, next) => {
       callStack.push(1);
+      return next();
     });
     router.get("/foo", async (_context, next) => {
       callStack.push(2);
-      await next();
+      return next();
     });
-    router.get("/foo", () => {
+    router.get("/foo", async (_context, next) => {
       callStack.push(3);
-    });
-    router.get("/foo", () => {
-      callStack.push(4);
+      return next();
     });
     const mw = router.routes();
     await mw(context, next);
@@ -160,28 +167,35 @@ test({
     const router = new Router();
     router.all("/", async (_context, next) => {
       callStack.push(0);
-      await next();
+      return next();
     });
-    router.delete("/", () => {
+    router.delete("/", (_context, next) => {
       callStack.push(1);
+      return next();
     });
-    router.get("/", () => {
+    router.get("/", (_context, next) => {
       callStack.push(2);
+      return next();
     });
-    router.head("/", () => {
+    router.head("/", (_context, next) => {
       callStack.push(3);
+      return next();
     });
-    router.options("/", () => {
+    router.options("/", (_context, next) => {
       callStack.push(4);
+      return next();
     });
-    router.patch("/", () => {
+    router.patch("/", (_context, next) => {
       callStack.push(5);
+      return next();
     });
-    router.post("/", () => {
+    router.post("/", (_context, next) => {
       callStack.push(6);
+      return next();
     });
-    router.put("/", () => {
+    router.put("/", (_context, next) => {
       callStack.push(7);
+      return next();
     });
     const mw = router.routes();
     await mw(context, next);
@@ -198,28 +212,35 @@ test({
     const router = new Router();
     router.all("/", async (_context, next) => {
       callStack.push(0);
-      await next();
+      return next();
     });
-    router.delete("/", () => {
+    router.delete("/", (_context, next) => {
       callStack.push(1);
+      return next();
     });
-    router.get("/", () => {
+    router.get("/", (_context, next) => {
       callStack.push(2);
+      return next();
     });
-    router.head("/", () => {
+    router.head("/", (_context, next) => {
       callStack.push(3);
+      return next();
     });
-    router.options("/", () => {
+    router.options("/", (_context, next) => {
       callStack.push(4);
+      return next();
     });
-    router.patch("/", () => {
+    router.patch("/", (_context, next) => {
       callStack.push(5);
+      return next();
     });
-    router.post("/", () => {
+    router.post("/", (_context, next) => {
       callStack.push(6);
+      return next();
     });
-    router.put("/", () => {
+    router.put("/", (_context, next) => {
       callStack.push(7);
+      return next();
     });
     const mw = router.routes();
     await mw(context, next);
@@ -236,32 +257,39 @@ test({
     const router = new Router();
     router.all("/", async (_context, next) => {
       callStack.push(0);
-      await next();
+      return next();
     });
-    router.delete("/", () => {
+    router.delete("/", (_context, next) => {
       callStack.push(1);
+      return next();
     });
-    router.head("/", () => {
+    router.head("/", (_context, next) => {
       callStack.push(3);
+      return next();
     });
-    router.get("/", () => {
+    router.get("/", (_context, next) => {
       callStack.push(2);
+      return next();
     });
-    router.options("/", () => {
+    router.options("/", (_context, next) => {
       callStack.push(4);
+      return next();
     });
-    router.patch("/", () => {
+    router.patch("/", (_context, next) => {
       callStack.push(5);
+      return next();
     });
-    router.post("/", () => {
+    router.post("/", (_context, next) => {
       callStack.push(6);
+      return next();
     });
-    router.put("/", () => {
+    router.put("/", (_context, next) => {
       callStack.push(7);
+      return next();
     });
     const mw = router.routes();
     await mw(context, next);
-    assertEquals(callStack, [0, 3]);
+    assertEquals(callStack, [0, 3, 2]);
   },
 });
 
@@ -274,28 +302,35 @@ test({
     const router = new Router();
     router.all("/", async (_context, next) => {
       callStack.push(0);
-      await next();
+      return next();
     });
-    router.delete("/", () => {
+    router.delete("/", (_context, next) => {
       callStack.push(1);
+      return next();
     });
-    router.get("/", () => {
+    router.get("/", (_context, next) => {
       callStack.push(2);
+      return next();
     });
-    router.head("/", () => {
+    router.head("/", (_context, next) => {
       callStack.push(3);
+      return next();
     });
-    router.options("/", () => {
+    router.options("/", (_context, next) => {
       callStack.push(4);
+      return next();
     });
-    router.patch("/", () => {
+    router.patch("/", (_context, next) => {
       callStack.push(5);
+      return next();
     });
-    router.post("/", () => {
+    router.post("/", (_context, next) => {
       callStack.push(6);
+      return next();
     });
-    router.put("/", () => {
+    router.put("/", (_context, next) => {
       callStack.push(7);
+      return next();
     });
     const mw = router.routes();
     await mw(context, next);
@@ -312,28 +347,35 @@ test({
     const router = new Router();
     router.all("/", async (_context, next) => {
       callStack.push(0);
-      await next();
+      return next();
     });
-    router.delete("/", () => {
+    router.delete("/", (_context, next) => {
       callStack.push(1);
+      return next();
     });
-    router.get("/", () => {
+    router.get("/", (_context, next) => {
       callStack.push(2);
+      return next();
     });
-    router.head("/", () => {
+    router.head("/", (_context, next) => {
       callStack.push(3);
+      return next();
     });
-    router.options("/", () => {
+    router.options("/", (_context, next) => {
       callStack.push(4);
+      return next();
     });
-    router.patch("/", () => {
+    router.patch("/", (_context, next) => {
       callStack.push(5);
+      return next();
     });
-    router.post("/", () => {
+    router.post("/", (_context, next) => {
       callStack.push(6);
+      return next();
     });
-    router.put("/", () => {
+    router.put("/", (_context, next) => {
       callStack.push(7);
+      return next();
     });
     const mw = router.routes();
     await mw(context, next);
@@ -350,28 +392,35 @@ test({
     const router = new Router();
     router.all("/", async (_context, next) => {
       callStack.push(0);
-      await next();
+      return next();
     });
-    router.delete("/", () => {
+    router.delete("/", (_context, next) => {
       callStack.push(1);
+      return next();
     });
-    router.get("/", () => {
+    router.get("/", (_context, next) => {
       callStack.push(2);
+      return next();
     });
-    router.head("/", () => {
+    router.head("/", (_context, next) => {
       callStack.push(3);
+      return next();
     });
-    router.options("/", () => {
+    router.options("/", (_context, next) => {
       callStack.push(4);
+      return next();
     });
-    router.patch("/", () => {
+    router.patch("/", (_context, next) => {
       callStack.push(5);
+      return next();
     });
-    router.post("/", () => {
+    router.post("/", (_context, next) => {
       callStack.push(6);
+      return next();
     });
-    router.put("/", () => {
+    router.put("/", (_context, next) => {
       callStack.push(7);
+      return next();
     });
     const mw = router.routes();
     await mw(context, next);
@@ -388,28 +437,35 @@ test({
     const router = new Router();
     router.all("/", async (_context, next) => {
       callStack.push(0);
-      await next();
+      return next();
     });
-    router.delete("/", () => {
+    router.delete("/", (_context, next) => {
       callStack.push(1);
+      return next();
     });
-    router.get("/", () => {
+    router.get("/", (_context, next) => {
       callStack.push(2);
+      return next();
     });
-    router.head("/", () => {
+    router.head("/", (_context, next) => {
       callStack.push(3);
+      return next();
     });
-    router.options("/", () => {
+    router.options("/", (_context, next) => {
       callStack.push(4);
+      return next();
     });
-    router.patch("/", () => {
+    router.patch("/", (_context, next) => {
       callStack.push(5);
+      return next();
     });
-    router.post("/", () => {
+    router.post("/", (_context, next) => {
       callStack.push(6);
+      return next();
     });
-    router.put("/", () => {
+    router.put("/", (_context, next) => {
       callStack.push(7);
+      return next();
     });
     const mw = router.routes();
     await mw(context, next);
@@ -423,8 +479,9 @@ test({
     const { context, next } = setup("/route1/action1", "GET");
     const callStack: number[] = [];
     const router = new Router({ prefix: "/route1" });
-    router.get("/action1", () => {
+    router.get("/action1", (_context, next) => {
       callStack.push(0);
+      return next();
     });
     const mw = router.routes();
     await mw(context, next);
@@ -438,11 +495,13 @@ test({
     const { context, next } = setup("/route", "GET");
     const callStack: number[] = [];
     const router = new Router({ strict: true });
-    router.get("/route", () => {
+    router.get("/route", (_context, next) => {
       callStack.push(0);
+      return next();
     });
-    router.get("/route/", () => {
+    router.get("/route/", (_context, next) => {
       callStack.push(1);
+      return next();
     });
     const mw = router.routes();
     await mw(context, next);
@@ -454,9 +513,9 @@ test({
   name: "router as iterator",
   fn() {
     const router = new Router();
-    router.all("/route", () => {});
-    router.delete("/route/:id", () => {});
-    router.patch("/route/:id", () => {});
+    router.all("/route", (_context, next) => next());
+    router.delete("/route/:id", (_context, next) => next());
+    router.patch("/route/:id", (_context, next) => next());
     const routes = [...router];
     assertEquals(routes.length, 3);
     assertEquals(routes[0].path, "/route");
@@ -470,8 +529,9 @@ test({
   async fn() {
     const { context, next } = setup();
     const router = new Router();
-    router.all("/", (ctx) => {
+    router.all("/", (ctx, next) => {
       ctx.throw(404);
+      return next();
     });
     const mw = router.routes();
     await assertThrowsAsync(async () => {
@@ -488,8 +548,9 @@ test({
     const router = new Router({
       prefix: "/foo",
     });
-    router.all("/", () => {
+    router.all("/", (_context, next) => {
       called++;
+      return next();
     });
     const mw = router.routes();
     await mw(context, next);
@@ -654,24 +715,29 @@ test({
     app.use(
       router.get(
         "/:id",
-        (ctx: RouterContext<{ id: string }, { session: number }>) => {
+        (ctx: RouterContext<{ id: string }, { session: number }>, next) => {
           ctx.params.id;
           ctx.state.session;
+          return next();
         },
-      ).get("/:id/names", (ctx) => {
+      ).get("/:id/names", (ctx, next) => {
         ctx.params.id;
         ctx.state.session;
-      }).put("/:page", (ctx: RouterContext<{ page: string }>) => {
+        return next();
+      }).put("/:page", (ctx: RouterContext<{ page: string }>, next) => {
         ctx.params.page;
-      }).put("/value", (ctx) => {
+        return next();
+      }).put("/value", (ctx, next) => {
         ctx.params.id;
         ctx.params.page;
         ctx.state.session;
         // @ts-expect-error
         ctx.params.foo;
+        return next();
       }).routes(),
-    ).use((ctx) => {
+    ).use((ctx, next) => {
       ctx.state.id;
+      return next();
     });
   },
 });
@@ -685,19 +751,21 @@ test({
 
     async function next() {
       callStack.push(4);
+      return new Next();
     }
 
     const router = new Router();
-    router.get("/", (_context) => {
+    router.get("/", (_context, next) => {
       callStack.push(1);
+      return next();
     });
     router.get("/foo", async (_context, next) => {
       callStack.push(2);
-      await next();
+      return next();
     });
     router.get("/foo", async (_context, next) => {
       callStack.push(3);
-      await next();
+      return next();
     });
 
     const mw = router.routes();

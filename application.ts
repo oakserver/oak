@@ -10,7 +10,7 @@ import {
   STATUS_TEXT,
 } from "./deps.ts";
 import { Key, KeyStack } from "./keyStack.ts";
-import { compose, Middleware } from "./middleware.ts";
+import { compose, Middleware, Next } from "./middleware.ts";
 export interface ListenOptionsBase {
   hostname?: string;
   port: number;
@@ -208,7 +208,7 @@ export class Application<AS extends State = Record<string, any>>
     handling: boolean;
     closing: boolean;
     closed: boolean;
-    middleware: (context: Context<AS>) => Promise<void>;
+    middleware: (context: Context<AS>) => Promise<Next>;
     server: Server;
   }): Promise<void> => {
     const context = new Context(this, request);

@@ -91,6 +91,7 @@ test({
       assert(context instanceof Context);
       assertEquals(typeof next, "function");
       called++;
+      return next();
     });
 
     await app.listen(":8000");
@@ -105,16 +106,18 @@ test({
     serverRequestStack.push(createMockRequest());
     const app = new Application({ serve });
     const callStack: number[] = [];
-    app.use(() => {
+    app.use((_context, next) => {
       callStack.push(1);
+      return next();
     });
 
-    app.use(() => {
+    app.use((_context, next) => {
       callStack.push(2);
+      return next();
     });
 
     await app.listen(":8000");
-    assertEquals(callStack, [1]);
+    assertEquals(callStack, [1, 2]);
     teardown();
   },
 });
@@ -127,11 +130,12 @@ test({
     const callStack: number[] = [];
     app.use((_context, next) => {
       callStack.push(1);
-      next();
+      return next();
     });
 
-    app.use(() => {
+    app.use((_context, next) => {
       callStack.push(2);
+      return next();
     });
 
     await app.listen(":8000");
@@ -146,16 +150,21 @@ test({
     serverRequestStack.push(createMockRequest());
     const app = new Application({ serve });
     const callStack: number[] = [];
-    app.use((_context, next) => {
+    app.use(async (_context, next) => {
       callStack.push(1);
-      next();
-      callStack.push(2);
+      return next().then((next) => {
+        callStack.push(4);
+        return next;
+      });
     });
 
-    app.use(async () => {
+    app.use(async (context, next) => {
       callStack.push(3);
       await Promise.resolve();
-      callStack.push(4);
+      return next().then((next) => {
+        callStack.push(2);
+        return next;
+      });
     });
 
     await app.listen(":8000");
@@ -172,14 +181,17 @@ test({
     const callStack: number[] = [];
     app.use(async (_context, next) => {
       callStack.push(1);
-      await next();
-      callStack.push(2);
+      return next().then((next) => {
+        callStack.push(2);
+        return next;
+      });
     });
 
-    app.use(async () => {
+    app.use(async (context, next) => {
       callStack.push(3);
       await Promise.resolve();
       callStack.push(4);
+      return next();
     });
 
     await app.listen(":8000");
@@ -192,7 +204,7 @@ test({
   name: "app.listen",
   async fn() {
     const app = new Application({ serve });
-    app.use(() => {});
+    app.use((_ctx, next) => next());
     await app.listen("127.0.0.1:8080");
     assertEquals(addrStack, [{ hostname: "127.0.0.1", port: 8080 }]);
     teardown();
@@ -203,7 +215,7 @@ test({
   name: "app.listen IPv6 Loopback",
   async fn() {
     const app = new Application({ serve });
-    app.use(() => {});
+    app.use((_ctx, next) => next());
     await app.listen("[::1]:8080");
     assertEquals(addrStack, [{ hostname: "::1", port: 8080 }]);
     teardown();
@@ -214,7 +226,7 @@ test({
   name: "app.listen(options)",
   async fn() {
     const app = new Application({ serve });
-    app.use(() => {});
+    app.use((_ctx, next) => next());
     await app.listen({ port: 8000 });
     assertEquals(addrStack, [{ port: 8000 }]);
     teardown();
@@ -225,7 +237,7 @@ test({
   name: "app.listenTLS",
   async fn() {
     const app = new Application({ serve, serveTls });
-    app.use(() => {});
+    app.use((_ctx, next) => next());
     await app.listen({
       port: 8000,
       secure: true,
@@ -251,10 +263,11 @@ test({
     const app = new Application<{ foo?: string }>({ state: {}, serve });
     app.state.foo = "bar";
     let called = false;
-    app.use((context) => {
+    app.use((context, next) => {
       assertEquals(context.state, { foo: "bar" });
       assertStrictEq(app.state, context.state);
       called = true;
+      return next();
     });
     await app.listen(":8000");
     assert(called);
@@ -314,8 +327,9 @@ test({
     serverRequestStack.push(createMockRequest());
     serverRequestStack.push(createMockRequest());
     let count = 0;
-    app.use(() => {
+    app.use((_ctx, next) => {
       count++;
+      return next();
     });
     const p = app.listen("localhost:8000");
     abortController.abort();
@@ -333,8 +347,9 @@ test({
       assert(evt.error instanceof httpErrors.InternalServerError);
     });
     serverRequestStack.push(createMockRequest());
-    app.use((ctx) => {
+    app.use((ctx, next) => {
       ctx.throw(500, "oops!");
+      return next();
     });
     await app.listen({ port: 8000 });
     teardown();
@@ -346,8 +361,9 @@ test({
   async fn() {
     const app = new Application({ serve });
     serverRequestStack.push(createMockRequest());
-    app.use((ctx) => {
+    app.use((ctx, next) => {
       ctx.throw(404, "File Not Found");
+      return next();
     });
     await app.listen({ port: 8000 });
     const [response] = requestResponseStack;
@@ -370,13 +386,15 @@ test({
   name: "app.state type handling",
   fn() {
     const app = new Application({ state: { id: 1 } });
-    app.use((ctx: Context<{ session: number }>) => {
+    app.use((ctx: Context<{ session: number }>, next) => {
       ctx.state.session = 0;
-    }).use((ctx) => {
+      return next();
+    }).use((ctx, next) => {
       ctx.state.id = 1;
       ctx.state.session = 2;
       // @ts-expect-error
       ctx.state.bar = 3;
+      return next();
     });
   },
 });
@@ -392,8 +410,9 @@ test({
       assertEquals(evt.port, 80);
       assertEquals(evt.secure, false);
     });
-    app.use((ctx) => {
+    app.use((ctx, next) => {
       ctx.response.body = "hello world";
+      return next();
     });
     await app.listen({ hostname: "localhost", port: 80 });
     assertEquals(called, 1);
@@ -406,8 +425,9 @@ test({
   async fn() {
     const app = new Application({ serve });
     serverRequestStack.push(createMockRequest());
-    app.use((ctx) => {
+    app.use((ctx, next) => {
       ctx.respond = false;
+      return next();
     });
     await app.listen({ port: 8000 });
     assertEquals(requestResponseStack.length, 0);
