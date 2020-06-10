@@ -393,3 +393,12 @@ test({
     }, Error);
   },
 });
+
+test({
+  name: "response.body handles null",
+  async fn() {
+    const response = new Response(createMockRequest());
+    response.body = null;
+    await response.toServerResponse();
+  },
+});

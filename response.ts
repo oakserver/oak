@@ -46,7 +46,7 @@ const encoder = new TextEncoder();
 
 /** Guard for `Deno.Reader`. */
 function isReader(value: any): value is Deno.Reader {
-  return typeof value === "object" && "read" in value &&
+  return value && typeof value === "object" && "read" in value &&
     typeof value.read === "function";
 }
 
