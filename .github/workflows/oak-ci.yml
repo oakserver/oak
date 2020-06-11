@@ -9,15 +9,13 @@ jobs:
     steps:
       - name: clone repository
         uses: actions/checkout@v2
+      - name: download deno
+        uses: denolib/setup-deno@master
+        with:
+         deno-version: v1.0.5
 
       - name: check format
-        run: |
-          curl -L https://deno.land/x/install/install.sh | sh -s "v1.0.5"
-          export PATH="$HOME/.deno/bin:$PATH"
-          deno fmt --check
+        run: deno fmt --check
 
       - name: run tests
-        run: |
-          curl -L https://deno.land/x/install/install.sh | sh -s "v1.0.5"
-          export PATH="$HOME/.deno/bin:$PATH"
-          deno test --allow-read --allow-write
+        run: deno test --allow-read --allow-write
