@@ -16,7 +16,7 @@ export function toParamRegExp(
   flags?: string,
 ): RegExp {
   // deno-fmt-ignore
-  return new RegExp(
+return new RegExp(
     `(?:^|;)\\s*${attributePattern}\\s*=\\s*` +
     `(` +
       `[^";\\s][^;\\s]*` +

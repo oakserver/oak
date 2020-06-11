@@ -10,6 +10,12 @@ jobs:
       - name: clone repository
         uses: actions/checkout@v2
 
+      - name: check format
+        run: |
+          curl -L https://deno.land/x/install/install.sh | sh -s "v1.0.5"
+          export PATH="$HOME/.deno/bin:$PATH"
+          deno format --check
+
       - name: run tests
         run: |
           curl -L https://deno.land/x/install/install.sh | sh -s "v1.0.5"

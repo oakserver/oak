@@ -181,13 +181,16 @@ async function* parts(
           if (file) {
             file.close();
           }
-          yield [name, {
-            content: buf,
-            contentType,
+          yield [
             name,
-            filename,
-            originalName,
-          } as FormDataFile];
+            {
+              content: buf,
+              contentType,
+              name,
+              filename,
+              originalName,
+            } as FormDataFile,
+          ];
           if (isEqual(strippedBytes, final)) {
             return;
           }
