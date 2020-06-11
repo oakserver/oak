@@ -14,7 +14,7 @@ jobs:
         run: |
           curl -L https://deno.land/x/install/install.sh | sh -s "v1.0.5"
           export PATH="$HOME/.deno/bin:$PATH"
-          deno format --check
+          deno fmt --check
 
       - name: run tests
         run: |
