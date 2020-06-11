@@ -49,6 +49,11 @@ export {
   RouterParamMiddleware,
 } from "./router.ts";
 export { send, SendOptions } from "./send.ts";
+export {
+  ServerSentEvent,
+  ServerSentEventInit,
+  ServerSentEventTarget,
+} from "./server_sent_event.ts";
 export { ErrorStatus, HTTPMethods, RedirectStatus } from "./types.d.ts";
 export { isErrorStatus, isRedirectStatus } from "./util.ts";
 

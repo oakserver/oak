@@ -25,6 +25,7 @@ export {
   getCookies,
   delCookie,
 } from "https://deno.land/std@0.56.0/http/cookie.ts";
+export { BufWriter } from "https://deno.land/std@0.56.0/io/bufio.ts";
 export { copyBytes } from "https://deno.land/std@0.56.0/io/util.ts";
 export {
   basename,

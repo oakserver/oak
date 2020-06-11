@@ -23,6 +23,7 @@ function createMockApp<S extends State = Record<string, any>>(
 ): Application<S> {
   return {
     state,
+    dispatchEvent() {},
   } as any;
 }
 
@@ -203,5 +204,15 @@ test({
       }),
     );
     assertEquals(context.isUpgradable, false);
+  },
+});
+
+test({
+  name: "context.getSSETarget()",
+  async fn() {
+    const context = new Context(createMockApp(), createMockServerRequest());
+    const sse = context.sendEvents();
+    sse.dispatchComment(`hello world`);
+    await sse.close();
   },
 });

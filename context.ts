@@ -13,6 +13,10 @@ import { KeyStack } from "./keyStack.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
+import {
+  ServerSentEventTarget,
+  ServerSentEventTargetOptions,
+} from "./server_sent_event.ts";
 import { ErrorStatus } from "./types.d.ts";
 
 export interface ContextSendOptions extends SendOptions {
@@ -26,6 +30,7 @@ export interface ContextSendOptions extends SendOptions {
  * functions. */
 export class Context<S extends State = Record<string, any>> {
   #socket?: WebSocket;
+  #sse?: ServerSentEventTarget;
 
   /** A reference to the current application. */
   app: Application<State>;
@@ -122,6 +127,24 @@ export class Context<S extends State = Record<string, any>> {
   send(options: ContextSendOptions): Promise<string | undefined> {
     const { path = this.request.url.pathname, ...sendOptions } = options;
     return send(this, path, sendOptions);
+  }
+
+  /** Convert the connection to stream events, returning an event target for
+   * sending server sent events.  Events dispatched on the returned target will
+   * be sent to the client and be available in the client's `EventSource` that
+   * initiated the connection.
+   * 
+   * This will set `.respond` to `false`. */
+  sendEvents(options?: ServerSentEventTargetOptions): ServerSentEventTarget {
+    if (this.#sse) {
+      return this.#sse;
+    }
+    this.respond = false;
+    return this.#sse = new ServerSentEventTarget(
+      this.app,
+      this.request.serverRequest,
+      options,
+    );
   }
 
   /** Create and throw an HTTP Error, which can be used to pass status
