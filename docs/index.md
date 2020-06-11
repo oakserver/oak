@@ -15,6 +15,7 @@ and middleware router inspired by
 - [oak_middleware](https://oakserver.github.io/middleware/) - A collection of
   middleware maintained by us.
 - [Getting Started](#getting-started)
+- [Server Sent Events](./sse)
 
 ## Getting started
 

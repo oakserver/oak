@@ -122,10 +122,23 @@ The context passed to middleware has several properties:
 
   The `Request` object which contains details about the request.
 
+- `.respond`
+
+  Determines if when middleware finishes processing, the application should
+  send the `.response` to the client. If `true` the response will be sent, and
+  if `false` the response will not be send. The default is `true` but certain
+  methods, like `.upgrade()` and `.sendEvents()` will set this to `false`.
+
 - `.response`
 
   The `Response` object which will be used to form the response sent back to
   the requestor.
+
+- `.socket`
+
+  This will be `undefined` if the connection has not been upgraded to a web
+  socket. If the connection has been upgraded, the `.socket` interface will
+  be set.
 
 - `.state`
 
@@ -133,7 +146,7 @@ The context passed to middleware has several properties:
   generic argument when constructing an `Application()`, or inferred by passing
   a state object (e.g. `Application({ state })`).
 
-The context passed to middleware has two methods:
+The context passed to middleware has some methods:
 
 - `.assert()`
 
@@ -141,10 +154,26 @@ The context passed to middleware has two methods:
   is identified by the second argument, with the message being the third
   argument.
 
+- `.send()`
+
+  Stream a file to the requesting client. See [Static content](#static-content)
+  below for more information.
+
+- `.sendEvents()`
+
+  Convert the current connection into a server-sent event response and return
+  a `ServerSentEventTarget` where messages and events can be streamed to the
+  client. This will set `.respond` to `false`.
+
 - `.throw()`
 
   Throws an `HTTPError`, which subclass is identified by the first argument,
   with the message being passed as the second.
+
+- `.upgrade()`
+
+  Attempt to upgrade the connection to a web socket connection, and resolve with
+  an web socket interface. This will set `.respond` to `false`.
 
 Unlike other middleware frameworks, `context` does not have a significant
 amount of aliases. The information about the request is only located in

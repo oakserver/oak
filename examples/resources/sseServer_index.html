@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head></head>
+  <body>
+    <h1>Hello world!</h1>
+    <ul id="events"></ul>
+    <script>
+      const sse = new EventSource("/sse");
+      const ul = document.getElementById("events");
+      sse.onmessage = (evt) => {
+        const li = document.createElement("li");
+        li.textContent = `message: ${evt.data}`;
+        ul.appendChild(li);
+      };
+    </script>
+  </body>
+</html>
