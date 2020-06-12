@@ -4,7 +4,7 @@ import {
   test,
   assert,
   assertEquals,
-  assertStrictEq,
+  assertStrictEquals,
 } from "./test_deps.ts";
 import { ServerRequest } from "./deps.ts";
 import { Request } from "./request.ts";
@@ -101,7 +101,7 @@ test({
   fn() {
     const mockServerRequest = createMockServerRequest();
     const request = new Request(mockServerRequest);
-    assertStrictEq(request.serverRequest, mockServerRequest);
+    assertStrictEquals(request.serverRequest, mockServerRequest);
   },
 });
 

@@ -1,6 +1,6 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { assert, assertEquals, assertStrictEq, test } from "./test_deps.ts";
+import { assert, assertEquals, assertStrictEquals, test } from "./test_deps.ts";
 
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
@@ -181,7 +181,7 @@ test({
     const body = await Deno.readAll(bodyReader);
     assertEquals(body, fixture);
     assertEquals(context.response.type, ".json");
-    assertStrictEq(context.response.headers.get("content-encoding"), null);
+    assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
       context.response.headers.get("content-length"),
       String(fixture.length),

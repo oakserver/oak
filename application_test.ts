@@ -4,7 +4,7 @@ import {
   test,
   assert,
   assertEquals,
-  assertStrictEq,
+  assertStrictEquals,
   assertThrowsAsync,
 } from "./test_deps.ts";
 import { Application, ListenOptions, ListenOptionsTls } from "./application.ts";
@@ -253,7 +253,7 @@ test({
     let called = false;
     app.use((context) => {
       assertEquals(context.state, { foo: "bar" });
-      assertStrictEq(app.state, context.state);
+      assertStrictEquals(app.state, context.state);
       called = true;
     });
     await app.listen(":8000");

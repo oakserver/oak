@@ -2,7 +2,7 @@
 
 import {
   assertEquals,
-  assertStrictEq,
+  assertStrictEquals,
   assertThrowsAsync,
   test,
 } from "./test_deps.ts";
@@ -92,8 +92,8 @@ test({
     const callStack: number[] = [];
     const router = new Router();
     router.get("/", (context) => {
-      assertStrictEq(context.router, router);
-      assertStrictEq(context.app, app);
+      assertStrictEquals(context.router, router);
+      assertStrictEquals(context.app, app);
       callStack.push(1);
     });
     const mw = router.routes();

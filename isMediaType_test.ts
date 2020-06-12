@@ -1,6 +1,6 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { test, assertEquals, assertStrictEq } from "./test_deps.ts";
+import { test, assertEquals, assertStrictEquals } from "./test_deps.ts";
 import { isMediaType } from "./isMediaType.ts";
 
 test({
@@ -85,13 +85,13 @@ test({
       "image/png",
     );
 
-    assertStrictEq(isMediaType("image/png", ["jpeg"]), false);
-    assertStrictEq(isMediaType("image/png", [".jpeg"]), false);
-    assertStrictEq(
+    assertStrictEquals(isMediaType("image/png", ["jpeg"]), false);
+    assertStrictEquals(isMediaType("image/png", [".jpeg"]), false);
+    assertStrictEquals(
       isMediaType("image/png", ["text/*", "application/*"]),
       false,
     );
-    assertStrictEq(
+    assertStrictEquals(
       isMediaType("image/png", ["text/html", "text/plain", "application/json"]),
       false,
     );
@@ -117,11 +117,14 @@ test({
       isMediaType("application/vnd+json", ["*/vnd+json"]),
       "application/vnd+json",
     );
-    assertStrictEq(
+    assertStrictEquals(
       isMediaType("application/vnd+json", ["application/json"]),
       false,
     );
-    assertStrictEq(isMediaType("application/vnd+json", ["text/*+json"]), false);
+    assertStrictEquals(
+      isMediaType("application/vnd+json", ["text/*+json"]),
+      false,
+    );
   },
 });
 
@@ -141,7 +144,7 @@ test({
 test({
   name: "isMediaType start with invalid media type returns false",
   fn() {
-    assertStrictEq(isMediaType("bogus", ["*/*"]), false);
+    assertStrictEquals(isMediaType("bogus", ["*/*"]), false);
   },
 });
 

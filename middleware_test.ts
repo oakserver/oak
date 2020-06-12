@@ -1,6 +1,6 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { test, assert, assertEquals, assertStrictEq } from "./test_deps.ts";
+import { test, assert, assertEquals, assertStrictEquals } from "./test_deps.ts";
 import { State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
@@ -53,13 +53,13 @@ test({
     const callStack: number[] = [];
     const mockContext = createMockContext();
     const mw1: Middleware = async (context, next) => {
-      assertStrictEq(context, mockContext);
+      assertStrictEquals(context, mockContext);
       assertEquals(typeof next, "function");
       callStack.push(1);
       await next();
     };
     const mw2: Middleware = async (context, next) => {
-      assertStrictEq(context, mockContext);
+      assertStrictEquals(context, mockContext);
       assertEquals(typeof next, "function");
       callStack.push(2);
       await next();

@@ -2,7 +2,7 @@
 
 import {
   assertEquals,
-  assertStrictEq,
+  assertStrictEquals,
   assertThrows,
   test,
 } from "./test_deps.ts";
@@ -12,7 +12,7 @@ test({
   name: "format basic type",
   fn() {
     const actual = format({ type: "text", subtype: "html" });
-    assertStrictEq(actual, "text/html");
+    assertStrictEquals(actual, "text/html");
   },
 });
 
@@ -20,7 +20,7 @@ test({
   name: "format type with suffic",
   fn() { // formatWithSuffix() {
     const actual = format({ type: "image", subtype: "svg", suffix: "xml" });
-    assertStrictEq(actual, "image/svg+xml");
+    assertStrictEquals(actual, "image/svg+xml");
   },
 });
 

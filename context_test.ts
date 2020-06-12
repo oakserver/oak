@@ -4,7 +4,7 @@ import {
   test,
   assert,
   assertEquals,
-  assertStrictEq,
+  assertStrictEquals,
   assertThrows,
   assertThrowsAsync,
   BufReader,
@@ -64,8 +64,8 @@ test({
     const serverRequest = createMockServerRequest();
     const context = new Context(app, serverRequest);
     assert(context instanceof Context);
-    assertStrictEq(context.state, app.state);
-    assertStrictEq(context.app, app);
+    assertStrictEquals(context.state, app.state);
+    assertStrictEquals(context.app, app);
     assert(context.cookies instanceof Cookies);
     assert(context.request instanceof Request);
     assert(context.response instanceof Response);
