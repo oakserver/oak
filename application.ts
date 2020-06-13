@@ -11,6 +11,7 @@ import {
 } from "./deps.ts";
 import { Key, KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
+
 export interface ListenOptionsBase {
   hostname?: string;
   port: number;
@@ -71,6 +72,10 @@ export interface ApplicationOptions<S> {
   /** An initial set of keys (or instance of `KeyGrip`) to be used for signing
    * cookies produced by the application. */
   keys?: KeyStack | Key[];
+
+  /** If set to `true`, proxy headers will be trusted when processing requests.
+   * This defaults to `false`. */
+  proxy?: boolean;
 
   /** The `server()` function to be used to read requests.
    * 
@@ -145,6 +150,10 @@ export class Application<AS extends State = Record<string, any>>
     }
   }
 
+  /** If `true`, proxy headers will be trusted when processing requests.  This
+   * defaults to `false`. */
+  proxy: boolean;
+
   /** Generic state of the application, which can be specified by passing the
    * generic argument when constructing:
    *
@@ -162,10 +171,12 @@ export class Application<AS extends State = Record<string, any>>
     const {
       state,
       keys,
+      proxy,
       serve = defaultServe,
       serveTls = defaultServeTls,
     } = options;
 
+    this.proxy = proxy ?? false;
     this.keys = keys;
     this.state = state ?? {} as AS;
     this.#serve = serve;
@@ -204,14 +215,14 @@ export class Application<AS extends State = Record<string, any>>
   };
 
   /** Processing registered middleware on each request. */
-  #handleRequest = async (request: ServerRequest, state: {
+  #handleRequest = async (request: ServerRequest, secure: boolean, state: {
     handling: boolean;
     closing: boolean;
     closed: boolean;
     middleware: (context: Context<AS>) => Promise<void>;
     server: Server;
   }): Promise<void> => {
-    const context = new Context(this, request);
+    const context = new Context(this, request, secure);
     if (!state.closing && !state.closed) {
       state.handling = true;
       try {
@@ -316,7 +327,7 @@ export class Application<AS extends State = Record<string, any>>
     );
     try {
       for await (const request of server) {
-        this.#handleRequest(request, state);
+        this.#handleRequest(request, secure, state);
       }
     } catch (error) {
       const message = error instanceof Error

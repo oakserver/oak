@@ -34,8 +34,11 @@ interface MockServerOptions {
 }
 
 function createMockServerRequest(
-  { url = "/", proto = "HTTP/1.1", headers: headersInit = [] }:
-    MockServerOptions = {},
+  {
+    url = "/",
+    proto = "HTTP/1.1",
+    headers: headersInit = [["host", "localhost"]],
+  }: MockServerOptions = {},
 ): ServerRequest {
   const headers = new Headers(headersInit);
   return {
@@ -214,5 +217,17 @@ test({
     const sse = context.sendEvents();
     sse.dispatchComment(`hello world`);
     await sse.close();
+  },
+});
+
+test({
+  name: "context create secure",
+  fn() {
+    const context = new Context(
+      createMockApp(),
+      createMockServerRequest(),
+      true,
+    );
+    assertEquals(context.request.secure, true);
   },
 });

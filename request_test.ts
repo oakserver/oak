@@ -34,6 +34,11 @@ interface MockServerRequestOptions {
   body?: string;
   headerValues?: Record<string, string>;
   proto?: string;
+  conn?: {
+    remoteAddr: {
+      hostname: string;
+    };
+  };
 }
 
 function createMockServerRequest(
@@ -43,6 +48,11 @@ function createMockServerRequest(
     body = "",
     headerValues = {},
     proto = "HTTP/1.1",
+    conn = {
+      remoteAddr: {
+        hostname: "127.0.0.1",
+      },
+    },
   }: MockServerRequestOptions = {},
 ): ServerRequest {
   const headers = new Headers();
@@ -85,9 +95,9 @@ test({
     const mockServerRequest = createMockServerRequest({
       host: "oakserver.github.io:8080",
       url: "/foo/bar/baz?up=down",
-      proto: "HTTPS/1.1",
+      proto: "HTTP/1.1",
     });
-    const request = new Request(mockServerRequest);
+    const request = new Request(mockServerRequest, false, true);
     assert(request.url instanceof URL);
     assertEquals(request.url.protocol, "https:");
     assertEquals(request.url.hostname, "oakserver.github.io");
@@ -331,8 +341,37 @@ test({
   name: "request.secure is true",
   fn() {
     const request = new Request(
-      createMockServerRequest({ proto: "HTTPS/1.1" }),
+      createMockServerRequest(),
+      false,
+      true,
     );
     assertEquals(request.secure, true);
+  },
+});
+
+test({
+  name: "request with proxy true",
+  fn() {
+    const request = new Request(
+      createMockServerRequest({
+        headerValues: {
+          "x-forwarded-host": "10.10.10.10",
+          "x-forwarded-proto": "http",
+          "x-forwarded-for": "10.10.10.10, 192.168.1.1, 10.255.255.255",
+        },
+        conn: {
+          remoteAddr: {
+            hostname: "10.255.255.255",
+          },
+        },
+      }),
+      true,
+      true,
+    );
+    assertEquals(request.secure, true);
+    assertEquals(request.url.hostname, "10.10.10.10");
+    assertEquals(request.url.protocol, "http:");
+    assertEquals(request.ip, "10.10.10.10");
+    assertEquals(request.ips, ["10.10.10.10", "192.168.1.1", "10.255.255.255"]);
   },
 });

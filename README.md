@@ -99,6 +99,14 @@ An instance of application has some properties as well:
   passed, oak will manage the keys via `KeyStack` which allows easy key rotation
   without requiring re-signing of data values.
 
+- `.proxy`
+
+  This defaults to `false`, but can be set via the `Application` constructor
+  options. This is intended to indicate the application is behind a proxy and
+  will use `X-Forwarded-Proto`, `X-Forwarded-Host`, and `X-Forwarded-For` when
+  processing the request, which should provide more accurate information about
+  the request.
+
 - `.state`
 
   A record of application state, which can be strongly typed by specifying a

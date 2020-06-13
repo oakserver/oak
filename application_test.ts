@@ -60,12 +60,13 @@ interface ServerResponse {
 }
 
 function createMockRequest(
-  url = "https://example.com/",
+  url = "/index.html",
   proto = "HTTP/1.1",
+  headersInit: string[][] = [["host", "example.com"]],
 ): ServerRequest {
   return {
     url,
-    headers: new Headers(),
+    headers: new Headers(headersInit),
     async respond(response: ServerResponse) {
       requestResponseStack.push(response);
     },
@@ -411,6 +412,33 @@ test({
     });
     await app.listen({ port: 8000 });
     assertEquals(requestResponseStack.length, 0);
+    teardown();
+  },
+});
+
+test({
+  name: "application passes proxy",
+  async fn() {
+    const app = new Application({ serve, proxy: true });
+    serverRequestStack.push(
+      createMockRequest(
+        "/index.html",
+        "HTTP/1.1",
+        [
+          ["host", "10.255.255.255"],
+          ["x-forwarded-proto", "https"],
+          ["x-forwarded-for", "10.10.10.10, 192.168.1.1, 10.255.255.255"],
+          ["x-forwarded-host", "10.10.10.10"],
+        ],
+      ),
+    );
+    let called = false;
+    app.use((ctx) => {
+      called = true;
+      assertEquals(String(ctx.request.url), "https://10.10.10.10/index.html");
+    });
+    await app.listen({ port: 8000 });
+    assertEquals(requestResponseStack.length, 1);
     teardown();
   },
 });

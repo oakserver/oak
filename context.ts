@@ -85,10 +85,14 @@ export class Context<S extends State = Record<string, any>> {
    */
   state: S;
 
-  constructor(app: Application<S>, serverRequest: ServerRequest) {
+  constructor(
+    app: Application<S>,
+    serverRequest: ServerRequest,
+    secure = false,
+  ) {
     this.app = app;
     this.state = app.state;
-    this.request = new Request(serverRequest);
+    this.request = new Request(serverRequest, app.proxy, secure);
     this.respond = true;
     this.response = new Response(this.request);
     this.cookies = new Cookies(this.request, this.response, {

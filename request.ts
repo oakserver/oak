@@ -80,7 +80,9 @@ const defaultBodyContentTypes = {
 /** An interface which provides information about the current request. */
 export class Request {
   #body?: Body | BodyReader;
+  #proxy: boolean;
   #rawBodyPromise?: Promise<Uint8Array>;
+  #secure: boolean;
   #serverRequest: ServerRequest;
   #url?: URL;
 
@@ -97,14 +99,35 @@ export class Request {
     return this.#serverRequest.headers;
   }
 
+  /** Request remote address. When the application's `.proxy` is true, the
+   * `X-Forwarded-For` will be used to determine the requesting remote address.
+   */
+  get ip(): string {
+    return this.#proxy
+      ? this.ips[0]
+      : (this.#serverRequest.conn.remoteAddr as Deno.NetAddr).hostname;
+  }
+
+  /** When the application's `.proxy` is `true`, this will be set to an array of
+   * IPs, ordered from upstream to downstream, based on the value of the header 
+   * `X-Forwarded-For`.  When `false` an empty array is returned. */
+  get ips(): string[] {
+    return this.#proxy
+      ? (this.#serverRequest.headers.get("x-forwarded-for") ??
+        (this.#serverRequest.conn.remoteAddr as Deno.NetAddr).hostname).split(
+          /\s*,\s*/,
+        )
+      : [];
+  }
+
   /** The HTTP Method used by the request. */
   get method(): HTTPMethods {
     return this.#serverRequest.method as HTTPMethods;
   }
 
-  /** Shortcut to `request.url.protocol === "https"`. */
+  /** Shortcut to `request.url.protocol === "https:"`. */
   get secure(): boolean {
-    return this.url.protocol === "https:";
+    return this.#secure;
   }
 
   /** Set to the value of the _original_ Deno server request. */
@@ -112,21 +135,33 @@ export class Request {
     return this.#serverRequest;
   }
 
-  /** A parsed URL for the request which complies with the browser standards. */
+  /** A parsed URL for the request which complies with the browser standards.
+   * When the application's `.proxy` is `true`, this value will be based off of
+   * the `X-Forwarded-Proto` and `X-Forwarded-Host` header values if present in
+   * the request. */
   get url(): URL {
     if (!this.#url) {
       const serverRequest = this.#serverRequest;
-      const proto = serverRequest.proto.split("/")[0].toLowerCase();
-      this.#url = new URL(
-        `${proto}://${serverRequest.headers.get("host")}${serverRequest.url}`,
-      );
+      let proto: string;
+      let host: string;
+      if (this.#proxy) {
+        proto = serverRequest
+          .headers.get("x-forwarded-proto")?.split(/\s*,\s*/, 1)[0] ??
+          "http";
+        host = serverRequest.headers.get("x-forwarded-host") ??
+          serverRequest.headers.get("host") ?? "";
+      } else {
+        proto = this.#secure ? "https" : "http";
+        host = serverRequest.headers.get("host") ?? "";
+      }
+      this.#url = new URL(`${proto}://${host}${serverRequest.url}`);
     }
     return this.#url;
   }
 
-  constructor(
-    serverRequest: ServerRequest,
-  ) {
+  constructor(serverRequest: ServerRequest, proxy = false, secure = false) {
+    this.#proxy = proxy;
+    this.#secure = secure;
     this.#serverRequest = serverRequest;
   }
 
