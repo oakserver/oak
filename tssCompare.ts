@@ -29,7 +29,7 @@ export function compare(
   b: string | number[] | ArrayBuffer | Uint8Array,
 ): boolean {
   const key = new Uint8Array(32);
-  window.crypto.getRandomValues(key);
+  globalThis.crypto.getRandomValues(key);
   const ah = (new HmacSha256(key)).update(a).arrayBuffer();
   const bh = (new HmacSha256(key)).update(b).arrayBuffer();
   return compareArrayBuffer(ah, bh);
