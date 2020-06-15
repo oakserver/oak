@@ -21,7 +21,7 @@ Also, check out our [FAQs](https://oakserver.github.io/oak/FAQ) and the
 [awesome-oak](https://oakserver.github.io/awesome-oak/) site of community
 resources.
 
-_Warning_ The examples in this README pull from `master`, which may not make
+_Warning_ The examples in this README pull from `main`, which may not make
 sense to do when you are looking to actually deploy a workload. You would want
 to "pin" to a particular version which is compatible with the version of Deno
 you are using and has a fixed set of APIs you would expect. `https://deno.land/x/`

@@ -21,7 +21,7 @@ and middleware router inspired by
 
 Oak is designed with Deno in mind, and versions of oak are tagged for specific
 versions of Deno in mind. In the examples here, we will be referring to using
-oak off of `master`, though in practice you should _pin_ to a specific version
+oak off of `main`, though in practice you should _pin_ to a specific version
 of oak in order to ensure compatibility.
 
 For example if you wanted to use version 4.0.0 of oak, you would want to import
