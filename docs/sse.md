@@ -15,7 +15,7 @@ The server will respond by keeping open an HTTP connection which will be used
 to send messages:
 
 ```ts
-import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import { Application, Router } from "https://deno.land/x/oak@main/mod.ts";
 
 const app = new Application();
 const router = new Router();

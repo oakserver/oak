@@ -39,7 +39,7 @@ processing requests with the registered middleware.
 A basic usage, responding to every request with _Hello World!_:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "https://deno.land/x/oak@main/mod.ts";
 
 const app = new Application();
 
@@ -57,7 +57,7 @@ a context and reference to the "next" method in the stack.
 A more complex example:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "https://deno.land/x/oak@main/mod.ts";
 
 const app = new Application();
 
@@ -418,7 +418,7 @@ will fire a `"listen"` event, which can be listened for via the
 `.addEventListener()` method. For example:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "https://deno.land/x/oak@main/mod.ts";
 
 const app = new Application();
 
@@ -442,7 +442,7 @@ an [abort signal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
 Here is an example of using the signal:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "https://deno.land/x/oak@main/mod.ts";
 
 const app = new Application();
 
@@ -473,7 +473,7 @@ import {
   Application,
   isHttpError,
   Status,
-} from "https://deno.land/x/oak/mod.ts";
+} from "https://deno.land/x/oak@main/mod.ts";
 
 const app = new Application();
 
@@ -504,7 +504,7 @@ application. To listen for these errors, you would add an event handler to the
 application instance:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "https://deno.land/x/oak@main/mod.ts";
 
 const app = new Application();
 
@@ -533,7 +533,7 @@ The following example serves up a _RESTful_ service of a map of books, where
 `http://localhost:8000/book/1` would return the book with ID `"1"`:
 
 ```ts
-import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import { Application, Router } from "https://deno.land/x/oak@main/mod.ts";
 
 const books = new Map<string, any>();
 books.set("1", {
@@ -573,7 +573,7 @@ file system relative to the root from the requested path.
 A basic usage would look something like this:
 
 ```ts
-import { Application, send } from "https://deno.land/x/oak/mod.ts";
+import { Application, send } from "https://deno.land/x/oak@main/mod.ts";
 
 const app = new Application();
 

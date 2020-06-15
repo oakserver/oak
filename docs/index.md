@@ -35,7 +35,7 @@ To create a very basic "hello world" server, you would want to create a
 `server.ts` file with the following content:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "https://deno.land/x/oak@main/mod.ts";
 
 const app = new Application();
 

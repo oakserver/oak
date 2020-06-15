@@ -348,7 +348,7 @@ export class Application<AS extends State = Record<string, any>>
    * Basic usage:
    * 
    * ```ts
-   * const import { Application } from "https://deno.land/x/oak/mod.ts";
+   * const import { Application } from "https://deno.land/x/oak@main/mod.ts";
    * 
    * const app = new Application();
    * 

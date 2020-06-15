@@ -193,7 +193,7 @@ export class ServerSentEventTarget extends EventTarget {
    * connection is kept alive.
    * 
    * ```ts
-   * import { Application } from "https://deno.land/x/oak/mod.ts";
+   * import { Application } from "https://deno.land/x/oak@main/mod.ts";
    * 
    * const app = new Application();
    * 
@@ -226,7 +226,7 @@ export class ServerSentEventTarget extends EventTarget {
    * is cancelled, it will not be sent to the client.
    * 
    * ```ts
-   * import { Application, ServerSentEvent } from "https://deno.land/x/oak/mod.ts";
+   * import { Application, ServerSentEvent } from "https://deno.land/x/oak@main/mod.ts";
    * 
    * const app = new Application();
    * 

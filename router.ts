@@ -800,7 +800,7 @@ export class Router<
    * has been configured to handle.  Typical usage would be something like this:
    * 
    * ```ts
-   * import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+   * import { Application, Router } from "https://deno.land/x/oak@main/mod.ts";
    * 
    * const app = new Application();
    * const router = new Router();
