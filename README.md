@@ -4,10 +4,10 @@
 [![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/oak/mod.ts)
 
 A middleware framework for Deno's
-[http](https://github.com/denoland/deno_std/tree/master/http#http) server,
+[http](https://doc.deno.land/https/deno.land/std/http/mod.ts) server,
 including a router middleware.
 
-This middleware framework is inspired by [Koa](https://github.com/koajs/koa)
+This middleware framework is inspired by [Koa](https://github.com/koajs/koa/)
 and middleware router inspired by
 [@koa/router](https://github.com/koajs/router/).
 
@@ -15,7 +15,7 @@ This README focuses on the mechanics of the oak APIs and is intended for those
 who are familiar with JavaScript middleware frameworks like Express and Koa as
 well as a decent understanding of Deno. If you aren't familiar with these,
 please check out documentation on
-[oakserver.github.io/oak](https://oakserver.github.io/oak).
+[oakserver.github.io/oak](https://oakserver.github.io/oak/).
 
 Also, check out our [FAQs](https://oakserver.github.io/oak/FAQ) and the
 [awesome-oak](https://oakserver.github.io/awesome-oak/) site of community
@@ -24,9 +24,9 @@ resources.
 _Warning_ The examples in this README pull from `main`, which may not make
 sense to do when you are looking to actually deploy a workload. You would want
 to "pin" to a particular version which is compatible with the version of Deno
-you are using and has a fixed set of APIs you would expect. `https://deno.land/x/`
-supports using git tags in the URL to direct you at a particular version. So to
-use version 3.0.0 of oak, you would want to import
+you are using and has a fixed set of APIs you would expect.
+`https://deno.land/x/` supports using git tags in the URL to direct you at a
+particular version. So to use version 3.0.0 of oak, you would want to import
 `https://deno.land/x/oak@v3.0.0/mod.ts`.
 
 ## Application, middleware, and context
