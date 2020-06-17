@@ -215,12 +215,18 @@ export class Application<AS extends State = Record<string, any>>
   };
 
   /** Processing registered middleware on each request. */
-  #handleRequest = async (request: ServerRequest, secure: boolean, state: {
+  handleRequest = async (request: ServerRequest, secure = false, state: {
     handling: boolean;
     closing: boolean;
     closed: boolean;
     middleware: (context: Context<AS>) => Promise<void>;
-    server: Server;
+    server: Server | null;
+  } = {
+    handling: false,
+    closing: false,
+    closed: false,
+    middleware: compose(this.#middleware),
+    server: null
   }): Promise<void> => {
     const context = new Context(this, request, secure);
     if (!state.closing && !state.closed) {
@@ -241,7 +247,9 @@ export class Application<AS extends State = Record<string, any>>
       await request.respond(await context.response.toServerResponse());
       context.response.destroy();
       if (state.closing) {
-        state.server.close();
+        if (state.server) {
+          state.server.close();
+        }
         state.closed = true;
       }
     } catch (err) {
@@ -327,7 +335,7 @@ export class Application<AS extends State = Record<string, any>>
     );
     try {
       for await (const request of server) {
-        this.#handleRequest(request, secure, state);
+        this.handleRequest(request, secure, state);
       }
     } catch (error) {
       const message = error instanceof Error
