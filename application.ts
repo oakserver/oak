@@ -226,7 +226,7 @@ export class Application<AS extends State = Record<string, any>>
     closing: false,
     closed: false,
     middleware: compose(this.#middleware),
-    server: null
+    server: null,
   }): Promise<void> => {
     const context = new Context(this, request, secure);
     if (!state.closing && !state.closed) {
