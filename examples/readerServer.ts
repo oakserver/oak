@@ -7,8 +7,8 @@
 import {
   bold,
   yellow,
-} from "https://deno.land/std@0.57.0/fmt/colors.ts";
-import { StringReader } from "https://deno.land/std@0.57.0/io/readers.ts";
+} from "https://deno.land/std@0.58.0/fmt/colors.ts";
+import { StringReader } from "https://deno.land/std@0.58.0/io/readers.ts";
 
 import { Application } from "../mod.ts";
 
