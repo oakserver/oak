@@ -1,10 +1,9 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { ServerRequest } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { isMediaType } from "./isMediaType.ts";
 import { FormDataReader } from "./multipart.ts";
-import { HTTPMethods } from "./types.d.ts";
+import { HTTPMethods, ServerRequest } from "./types.d.ts";
 import { preferredCharsets } from "./negotiation/charset.ts";
 import { preferredEncodings } from "./negotiation/encoding.ts";
 import { preferredLanguages } from "./negotiation/language.ts";

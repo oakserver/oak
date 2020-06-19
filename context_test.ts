@@ -13,10 +13,10 @@ import {
 import { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Cookies } from "./cookies.ts";
-import { ServerRequest } from "./deps.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { httpErrors } from "./httpError.ts";
+import { ServerRequest } from "./types.d.ts";
 
 function createMockApp<S extends State = Record<string, any>>(
   state = {} as S,

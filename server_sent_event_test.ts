@@ -9,8 +9,8 @@ import {
 } from "./test_deps.ts";
 
 import { Application } from "./application.ts";
-import { ServerRequest } from "./deps.ts";
 import { ServerSentEvent, ServerSentEventTarget } from "./server_sent_event.ts";
+import { ServerRequest } from "./types.d.ts";
 
 const preamble = `HTTP/1.1 200 OK
 connection: Keep-Alive

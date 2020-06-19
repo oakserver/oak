@@ -6,8 +6,8 @@ import {
   assertEquals,
   assertStrictEquals,
 } from "./test_deps.ts";
-import { ServerRequest } from "./deps.ts";
 import { Request } from "./request.ts";
+import { ServerRequest } from "./types.d.ts";
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();

@@ -1,7 +1,8 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
 import { Application } from "./application.ts";
-import { assert, BufWriter, ServerRequest } from "./deps.ts";
+import { assert, BufWriter } from "./deps.ts";
+import { ServerRequest } from "./types.d.ts";
 
 const encoder = new TextEncoder();
 

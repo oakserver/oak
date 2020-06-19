@@ -4,13 +4,18 @@ import { Context } from "./context.ts";
 import {
   serve as defaultServe,
   serveTLS as defaultServeTls,
-  Server,
-  ServerRequest,
   Status,
   STATUS_TEXT,
 } from "./deps.ts";
 import { Key, KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
+import {
+  Serve,
+  Server,
+  ServerRequest,
+  ServerResponse,
+  ServeTls,
+} from "./types.d.ts";
 
 export interface ListenOptionsBase {
   hostname?: string;
@@ -80,12 +85,12 @@ export interface ApplicationOptions<S> {
   /** The `server()` function to be used to read requests.
    * 
    * _Not used generally, as this is just for mocking for test purposes_ */
-  serve?: typeof defaultServe;
+  serve?: Serve;
 
   /** The `server()` function to be used to read requests.
    * 
    * _Not used generally, as this is just for mocking for test purposes_ */
-  serveTls?: typeof defaultServeTls;
+  serveTls?: ServeTls;
 
   /** The initial state object for the application, of which the type can be
    * used to infer the type of the state for both the application and any of the
@@ -127,10 +132,11 @@ export class ApplicationListenEvent extends Event {
  */
 export class Application<AS extends State = Record<string, any>>
   extends EventTarget {
+  #composedMiddleware?: (context: Context<AS>) => Promise<void>;
   #keys?: KeyStack;
   #middleware: Middleware<State, Context<State>>[] = [];
-  #serve: typeof defaultServe;
-  #serveTls: typeof defaultServeTls;
+  #serve: Serve;
+  #serveTls: ServeTls;
 
   /** A set of keys, or an instance of `KeyStack` which will be used to sign
    * cookies read and set by the application to avoid tampering with the
@@ -183,6 +189,13 @@ export class Application<AS extends State = Record<string, any>>
     this.#serveTls = serveTls;
   }
 
+  #getComposed = (): ((context: Context<AS>) => Promise<void>) => {
+    if (!this.#composedMiddleware) {
+      this.#composedMiddleware = compose(this.#middleware);
+    }
+    return this.#composedMiddleware;
+  };
+
   /** Deal with uncaught errors in either the middleware or sending the
    * response. */
   #handleError = (context: Context<AS>, error: any): void => {
@@ -219,14 +232,13 @@ export class Application<AS extends State = Record<string, any>>
     handling: boolean;
     closing: boolean;
     closed: boolean;
-    middleware: (context: Context<AS>) => Promise<void>;
     server: Server;
   }): Promise<void> => {
     const context = new Context(this, request, secure);
     if (!state.closing && !state.closed) {
       state.handling = true;
       try {
-        await state.middleware(context);
+        await this.#getComposed()(context);
       } catch (err) {
         this.#handleError(context, err);
       } finally {
@@ -274,6 +286,39 @@ export class Application<AS extends State = Record<string, any>>
     super.addEventListener(type, listener, options);
   }
 
+  /** Handle an individual server request, returning the server response.  This
+   * is similar to `.listen()`, but opening the connection and retrieving
+   * requests are not the responsibility of the application.  If the generated
+   * context gets set to not to respond, then the method resolves with
+   * `undefined`, otherwise it resolves with a request that is compatible with
+   * `std/http/server`. */
+  async handle(
+    request: ServerRequest,
+    secure = false,
+  ): Promise<ServerResponse | undefined> {
+    if (!this.#middleware.length) {
+      throw new TypeError("There is no middleware to process requests.");
+    }
+    const context = new Context(this, request, secure);
+    try {
+      await this.#getComposed()(context);
+    } catch (err) {
+      this.#handleError(context, err);
+    }
+    if (context.respond === false) {
+      context.response.destroy();
+      return;
+    }
+    try {
+      const response = await context.response.toServerResponse();
+      context.response.destroy();
+      return response;
+    } catch (err) {
+      this.#handleError(context, err);
+      throw err;
+    }
+  }
+
   /** Start listening for requests, processing registered middleware on each
    * request.  If the options `.secure` is undefined or `false`, the listening
    * will be over HTTP.  If the options `.secure` property is `true`, a
@@ -288,9 +333,7 @@ export class Application<AS extends State = Record<string, any>>
   async listen(options: ListenOptions): Promise<void>;
   async listen(options: string | ListenOptions): Promise<void> {
     if (!this.#middleware.length) {
-      return Promise.reject(
-        new TypeError("There is no middleware to process requests."),
-      );
+      throw new TypeError("There is no middleware to process requests.");
     }
     if (typeof options === "string") {
       const match = ADDR_REGEXP.exec(options);
@@ -300,7 +343,6 @@ export class Application<AS extends State = Record<string, any>>
       const [, hostname, portStr] = match;
       options = { hostname, port: parseInt(portStr, 10) };
     }
-    const middleware = compose(this.#middleware);
     const server = isOptionsTls(options)
       ? this.#serveTls(options)
       : this.#serve(options);
@@ -309,7 +351,6 @@ export class Application<AS extends State = Record<string, any>>
       closed: false,
       closing: false,
       handling: false,
-      middleware,
       server,
     };
     if (signal) {
@@ -365,6 +406,7 @@ export class Application<AS extends State = Record<string, any>>
     ...middleware: Middleware<S, Context<S>>[]
   ): Application<S extends AS ? S : (S & AS)> {
     this.#middleware.push(...middleware);
+    this.#composedMiddleware = undefined;
     return this as Application<any>;
   }
 }

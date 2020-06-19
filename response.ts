@@ -2,6 +2,7 @@
 
 import { contentType, Status } from "./deps.ts";
 import { Request } from "./request.ts";
+import { ServerResponse } from "./types.d.ts";
 import { isHtml, isRedirectStatus, encodeUrl } from "./util.ts";
 
 type Body =
@@ -14,12 +15,6 @@ type Body =
   | undefined
   | null;
 type BodyFunction = () => Body | Promise<Body>;
-
-interface ServerResponse {
-  status: number;
-  headers: Headers;
-  body: Uint8Array | Deno.Reader | undefined;
-}
 
 /** A symbol that indicates to `response.redirect()` to attempt to redirect
  * back to the request referrer.  For example:

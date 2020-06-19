@@ -7,16 +7,20 @@ import {
   assertStrictEquals,
   assertThrowsAsync,
 } from "./test_deps.ts";
+
 import { Application, ListenOptions, ListenOptionsTls } from "./application.ts";
 import { Context } from "./context.ts";
+import { Status } from "./deps.ts";
+import { httpErrors } from "./httpError.ts";
+import { Data, KeyStack } from "./keyStack.ts";
 import {
-  serve as denoServe,
-  serveTLS as denoServeTls,
+  Serve,
   Server,
   ServerRequest,
-} from "./deps.ts";
-import { Data, KeyStack } from "./keyStack.ts";
-import { httpErrors } from "./httpError.ts";
+  ServerResponse,
+  ServeTls,
+} from "./types.d.ts";
+
 let serverRequestStack: ServerRequest[] = [];
 let requestResponseStack: ServerResponse[] = [];
 let addrStack: Array<string | ListenOptions> = [];
@@ -39,25 +43,19 @@ class MockServer {
   }
 }
 
-const serve: typeof denoServe = function (
+const serve: Serve = function (
   addr: string | ListenOptions,
 ): Server {
   addrStack.push(addr);
   return new MockServer() as Server;
 };
 
-const serveTls: typeof denoServeTls = function (
+const serveTls: ServeTls = function (
   options: Omit<ListenOptionsTls, "secure">,
 ): Server {
   httpsOptionsStack.push(options);
   return new MockServer() as Server;
 };
-
-interface ServerResponse {
-  status?: number;
-  headers?: Headers;
-  body?: Uint8Array;
-}
 
 function createMockRequest(
   url = "/index.html",
@@ -440,5 +438,46 @@ test({
     await app.listen({ port: 8000 });
     assertEquals(requestResponseStack.length, 1);
     teardown();
+  },
+});
+
+test({
+  name: "application .handle()",
+  async fn() {
+    const app = new Application();
+    let called = 0;
+    app.use((context, next) => {
+      assert(context instanceof Context);
+      assertEquals(typeof next, "function");
+      called++;
+    });
+    const actual = await app.handle(createMockRequest());
+    assertEquals(called, 1);
+    assert(actual);
+    assertEquals(actual.body, undefined);
+    assertEquals(actual.status, Status.NotFound);
+    assertEquals([...actual.headers], [["content-length", "0"]]);
+  },
+});
+
+test({
+  name: "application .handle() no response",
+  async fn() {
+    const app = new Application();
+    app.use((context) => {
+      context.respond = false;
+    });
+    const actual = await app.handle(createMockRequest());
+    assertEquals(actual, undefined);
+  },
+});
+
+test({
+  name: "application .handle() no middleware throws",
+  async fn() {
+    const app = new Application();
+    await assertThrowsAsync(async () => {
+      await app.handle(createMockRequest());
+    }, TypeError);
   },
 });

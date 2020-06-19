@@ -8,17 +8,14 @@ export { equal } from "https://deno.land/std@0.57.0/bytes/mod.ts";
 export { Sha1 } from "https://deno.land/std@0.57.0/hash/sha1.ts";
 export { HmacSha256 } from "https://deno.land/std@0.57.0/hash/sha256.ts";
 export {
-  Response,
   serve,
-  Server,
-  ServerRequest,
   serveTLS,
 } from "https://deno.land/std@0.57.0/http/server.ts";
 export {
   Status,
   STATUS_TEXT,
 } from "https://deno.land/std@0.57.0/http/http_status.ts";
-export { BufWriter } from "https://deno.land/std@0.57.0/io/bufio.ts";
+export { BufReader, BufWriter } from "https://deno.land/std@0.57.0/io/bufio.ts";
 export { copyBytes } from "https://deno.land/std@0.57.0/io/util.ts";
 export {
   basename,

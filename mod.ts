@@ -54,7 +54,13 @@ export {
   ServerSentEventInit,
   ServerSentEventTarget,
 } from "./server_sent_event.ts";
-export { ErrorStatus, HTTPMethods, RedirectStatus } from "./types.d.ts";
+export {
+  ErrorStatus,
+  HTTPMethods,
+  RedirectStatus,
+  ServerRequest,
+  ServerResponse,
+} from "./types.d.ts";
 export { isErrorStatus, isRedirectStatus } from "./util.ts";
 
 // Re-exported from `net`

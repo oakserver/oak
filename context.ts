@@ -5,7 +5,6 @@ import { Cookies } from "./cookies.ts";
 import {
   acceptable,
   acceptWebSocket,
-  ServerRequest,
   WebSocket,
 } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
@@ -17,7 +16,7 @@ import {
   ServerSentEventTarget,
   ServerSentEventTargetOptions,
 } from "./server_sent_event.ts";
-import { ErrorStatus } from "./types.d.ts";
+import { ErrorStatus, ServerRequest } from "./types.d.ts";
 
 export interface ContextSendOptions extends SendOptions {
   /** The filename to send, which will be resolved based on the other options.

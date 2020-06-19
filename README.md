@@ -461,6 +461,44 @@ await listenPromise;
 // and you can do something after the close to shutdown
 ```
 
+### Just handling requests
+
+In situations where you don't want the application to listen for requests on the
+`std/http/server`, but you still want the application to process requests, you
+can use the `.handle()` method. For example if you are in a serverless function
+where the requests are arriving in a different way.
+
+The `.handle()` method will invoke the middleware, just like the middleware gets
+invoked for each request that is processed by `.listen()`. It take up to two
+arguments, one being the request which conforms to the `std/http/server`'s
+`ServerRequest` interface and an optional second argument which is if the
+request is "secure" in the sense it originated from a TLS connection to the
+remote client. The method resolves with a response that conforms to the
+`ServerResponse` interface (which can be used with the `std/http/server`'s
+`request.respond()` method) or `undefined` if the `ctx.respond === true` (e.g.
+the connection was upgraded to a web socket or is sending back server sent
+events).
+
+An example:
+
+```ts
+import { listenAndServe } from "https://deno.land/std/http/server.ts";
+import { Application } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application();
+
+app.use((ctx) => {
+  ctx.response.body = "Hello World!";
+});
+
+await listenAndServe({ port: 8000 }, async (request) => {
+  const response = await app.handle(request);
+  if (response) {
+    request.respond(response);
+  }
+});
+```
+
 ### Error handling
 
 Middleware can be used to handle other errors with middleware. Awaiting other
