@@ -234,6 +234,7 @@ test({
     assertEquals(httpsOptionsStack, [
       {
         port: 8000,
+        //@ts-ignore
         secure: true,
         certFile: "",
         keyFile: "",
