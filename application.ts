@@ -317,7 +317,7 @@ export class Application<AS extends State = Record<string, any>>
       this.#handleError(context, err);
       throw err;
     }
-  }
+  };
 
   /** Start listening for requests, processing registered middleware on each
    * request.  If the options `.secure` is undefined or `false`, the listening
