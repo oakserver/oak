@@ -342,7 +342,6 @@ export class Request {
         ...defaultBodyContentTypes.text,
         ...(contentTypes.text ?? []),
       ];
-      console.log("contentType", contentType);
       if (contentTypesRaw && isMediaType(contentType, contentTypesRaw)) {
         return (this.#body = { type: "raw", value: rawBody });
       } else if (isMediaType(contentType, contentTypesJson)) {
