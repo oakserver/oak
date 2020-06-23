@@ -292,10 +292,10 @@ export class Application<AS extends State = Record<string, any>>
    * context gets set to not to respond, then the method resolves with
    * `undefined`, otherwise it resolves with a request that is compatible with
    * `std/http/server`. */
-  async handle(
+  handle = async (
     request: ServerRequest,
     secure = false,
-  ): Promise<ServerResponse | undefined> {
+  ): Promise<ServerResponse | undefined> => {
     if (!this.#middleware.length) {
       throw new TypeError("There is no middleware to process requests.");
     }
@@ -317,7 +317,7 @@ export class Application<AS extends State = Record<string, any>>
       this.#handleError(context, err);
       throw err;
     }
-  }
+  };
 
   /** Start listening for requests, processing registered middleware on each
    * request.  If the options `.secure` is undefined or `false`, the listening
