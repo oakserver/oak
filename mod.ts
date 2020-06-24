@@ -1,29 +1,30 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-export {
-  Application,
+export { Application } from "./application.ts";
+export type {
   ApplicationOptions,
   ListenOptions,
   ListenOptionsBase,
   ListenOptionsTls,
   State,
 } from "./application.ts";
-export { Context, ContextSendOptions } from "./context.ts";
+export { Context } from "./context.ts";
+export type { ContextSendOptions } from "./context.ts";
 export * as helpers from "./helpers.ts";
-export {
-  Cookies,
-  CookiesGetOptions,
-  CookiesSetDeleteOptions,
-} from "./cookies.ts";
+export { Cookies } from "./cookies.ts";
+export type { CookiesGetOptions, CookiesSetDeleteOptions } from "./cookies.ts";
 export { HttpError, httpErrors, isHttpError } from "./httpError.ts";
-export { compose as composeMiddleware, Middleware } from "./middleware.ts";
-export {
+export { compose as composeMiddleware } from "./middleware.ts";
+export type { Middleware } from "./middleware.ts";
+export { FormDataReader } from "./multipart.ts";
+export type {
   FormDataBody,
   FormDataFile,
-  FormDataReader,
   FormDataReadOptions,
 } from "./multipart.ts";
-export {
+
+export { Request } from "./request.ts";
+export type {
   Body,
   BodyForm,
   BodyFormData,
@@ -35,26 +36,23 @@ export {
   BodyText,
   BodyType,
   BodyUndefined,
-  Request,
 } from "./request.ts";
 export { Response, REDIRECT_BACK } from "./response.ts";
-export {
+export { Router } from "./router.ts";
+export type {
   RouteParams,
   Route,
-  Router,
   RouterAllowedMethodsOptions,
   RouterContext,
   RouterMiddleware,
   RouterOptions,
   RouterParamMiddleware,
 } from "./router.ts";
-export { send, SendOptions } from "./send.ts";
-export {
-  ServerSentEvent,
-  ServerSentEventInit,
-  ServerSentEventTarget,
-} from "./server_sent_event.ts";
-export {
+export { send } from "./send.ts";
+export type { SendOptions } from "./send.ts";
+export { ServerSentEvent, ServerSentEventTarget } from "./server_sent_event.ts";
+export type { ServerSentEventInit } from "./server_sent_event.ts";
+export type {
   ErrorStatus,
   HTTPMethods,
   RedirectStatus,

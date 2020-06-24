@@ -31,8 +31,8 @@ export { assert } from "https://deno.land/std@0.58.0/testing/asserts.ts";
 export {
   acceptable,
   acceptWebSocket,
-  WebSocket,
 } from "https://deno.land/std@0.58.0/ws/mod.ts";
+export type { WebSocket } from "https://deno.land/std@0.58.0/ws/mod.ts";
 
 // 3rd party dependencies
 
@@ -43,9 +43,11 @@ export {
 } from "https://deno.land/x/media_types@v2.3.7/mod.ts";
 export {
   compile,
-  Key,
   parse as pathParse,
-  ParseOptions,
   pathToRegexp,
+} from "https://raw.githubusercontent.com/pillarjs/path-to-regexp/v6.1.0/src/index.ts";
+export type {
+  Key,
+  ParseOptions,
   TokensToRegexpOptions,
 } from "https://raw.githubusercontent.com/pillarjs/path-to-regexp/v6.1.0/src/index.ts";
