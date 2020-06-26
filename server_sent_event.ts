@@ -211,12 +211,22 @@ export class ServerSentEventTarget extends EventTarget {
     return true;
   }
 
+  async dispatchCommentAsync(comment: string): Promise<boolean> {
+    await this.#send(`: ${comment.split("\n").join("\n: ")}\n\n`);
+    return true;
+  }
+
   /** Dispatch a message to the client.  This message will contain `data: ` only
    * and be available on the client `EventSource` on the `onmessage` or an event
    * listener of type `"message"`. */
   dispatchMessage(data: any): boolean {
     const event = new ServerSentEvent("__message", data);
     return this.dispatchEvent(event);
+  }
+
+  async dispatchMessageAsync(data: any): Promise<boolean> {
+    const event = new ServerSentEvent("__message", data);
+    return this.dispatchEventAsync(event);
   }
 
   /** Dispatch a server sent event to the client.  The event `type` will be
@@ -246,6 +256,14 @@ export class ServerSentEventTarget extends EventTarget {
     let dispatched = super.dispatchEvent(event);
     if (dispatched) {
       this.#send(String(event));
+    }
+    return dispatched;
+  }
+
+  async dispatchEventAsync(event: ServerSentEvent | CloseEvent | ErrorEvent): Promise<boolean> {
+    let dispatched = super.dispatchEvent(event);
+    if (dispatched) {
+      await this.#send(String(event));
     }
     return dispatched;
   }
