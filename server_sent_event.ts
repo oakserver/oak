@@ -260,7 +260,9 @@ export class ServerSentEventTarget extends EventTarget {
     return dispatched;
   }
 
-  async dispatchEventAsync(event: ServerSentEvent | CloseEvent | ErrorEvent): Promise<boolean> {
+  async dispatchEventAsync(
+    event: ServerSentEvent | CloseEvent | ErrorEvent,
+  ): Promise<boolean> {
     let dispatched = super.dispatchEvent(event);
     if (dispatched) {
       await this.#send(String(event));
