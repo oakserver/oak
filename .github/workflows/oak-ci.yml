@@ -12,7 +12,7 @@ jobs:
       - name: download deno
         uses: denolib/setup-deno@master
         with:
-          deno-version: v1.1.1
+          deno-version: v1.1.2
 
       - name: check format
         run: deno fmt --check
