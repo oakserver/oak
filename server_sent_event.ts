@@ -96,12 +96,12 @@ const responseHeaders = new Headers(
 export class ServerSentEventTarget extends EventTarget {
   #app: Application<any>;
   #closed = false;
+  #prev = Promise.resolve();
   #ready: Promise<void> | true;
   #serverRequest: ServerRequest;
   #writer: BufWriter;
-  #writing?: Promise<any>;
 
-  #send = async (payload: string): Promise<void> => {
+  #send = async (payload: string, prev: Promise<void>): Promise<void> => {
     if (this.#closed) {
       return;
     }
@@ -110,10 +110,10 @@ export class ServerSentEventTarget extends EventTarget {
       this.#ready = true;
     }
     try {
-      await (this.#writing = this.#writer.write(encoder.encode(payload)));
-      await (this.#writing = this.#writer.flush());
+      await prev;
+      await this.#writer.write(encoder.encode(payload));
+      await this.#writer.flush();
     } catch (error) {
-      this.#writing = undefined;
       this.dispatchEvent(new CloseEvent({ cancelable: false }));
       const errorEvent = new ErrorEvent("error", { error });
       this.dispatchEvent(errorEvent);
@@ -183,9 +183,7 @@ export class ServerSentEventTarget extends EventTarget {
     if (this.#ready !== true) {
       await this.#ready;
     }
-    if (this.#writing) {
-      await this.#writing;
-    }
+    await this.#prev;
     this.dispatchEvent(new CloseEvent({ cancelable: false }));
   }
 
@@ -207,7 +205,10 @@ export class ServerSentEventTarget extends EventTarget {
    * ```
    */
   dispatchComment(comment: string): boolean {
-    this.#send(`: ${comment.split("\n").join("\n: ")}\n\n`);
+    this.#prev = this.#send(
+      `: ${comment.split("\n").join("\n: ")}\n\n`,
+      this.#prev,
+    );
     return true;
   }
 
@@ -244,8 +245,8 @@ export class ServerSentEventTarget extends EventTarget {
   dispatchEvent(event: CloseEvent | ErrorEvent): boolean;
   dispatchEvent(event: ServerSentEvent | CloseEvent | ErrorEvent): boolean {
     let dispatched = super.dispatchEvent(event);
-    if (dispatched) {
-      this.#send(String(event));
+    if (dispatched && event instanceof ServerSentEvent) {
+      this.#prev = this.#send(String(event), this.#prev);
     }
     return dispatched;
   }

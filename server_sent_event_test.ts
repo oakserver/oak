@@ -194,3 +194,22 @@ test({
     assertEquals(env.appErrorEvents.length, 0);
   },
 });
+
+test({
+  name: "ServerSentEVentTarget - synchronous dispatch",
+  async fn() {
+    const sse = new ServerSentEventTarget(
+      createMockApp(),
+      createMockServerRequest(),
+    );
+    sse.dispatchComment("1");
+    sse.dispatchComment("2");
+    sse.dispatchComment("3");
+    sse.dispatchComment("4");
+    await sse.close();
+    assert(env.connCloseCalled);
+    const actual = env.outWriter.toString();
+    assert(actual.endsWith(`\n\n: 1\n\n: 2\n\n: 3\n\n: 4\n\n`));
+    assertEquals(env.appErrorEvents.length, 0);
+  },
+});
