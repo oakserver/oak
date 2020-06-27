@@ -257,29 +257,29 @@ export class Request {
   }
 
   /** If there is a body in the request, resolves with an object which
-   * describes the body.  The `type` provides what type the body is and `body`
+   * describes the body.  The `type` provides what type the body is and `value`
    * provides the actual body.
    * 
    * If you need access to the "raw" interface for the body, pass `true` as the
-   * first argument and the method will resolve if the `Deno.Reader`.
+   * first argument and the method will resolve with the `Deno.Reader`.
    * 
    *       app.use(async (ctx) => {
-   *         const result = await ctx.request.body(true);
-   *         const body = await Deno.readAll(result.body);
+   *         const result = await ctx.request.body({asReader: true});
+   *         const body = await Deno.readAll(result.value);
    *       });
    * 
    */
   async body(options: BodyOptionsAsReader): Promise<BodyReader>;
   /** If there is a body in the request, resolves with an object which
-   * describes the body.  The `type` provides what type the body is and `body`
+   * describes the body.  The `type` provides what type the body is and `value`
    * provides the actual body.
    * 
    * If you need access to the "raw" interface for the body, pass `true` as the
-   * first argument and the method will resolve if the `Deno.Reader`.
+   * first argument and the method will resolve with the `Deno.Reader`.
    * 
    *       app.use(async (ctx) => {
-   *         const result = await ctx.request.body(true);
-   *         const body = await Deno.readAll(result.body);
+   *         const result = await ctx.request.body({asReader: true});           
+   *         const body = await Deno.readAll(result.value);
    *       });
    * 
    */
