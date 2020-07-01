@@ -601,6 +601,14 @@ app.use(router.allowedMethods());
 await app.listen({ port: 8000 });
 ```
 
+A route passed is converted to a regular expression using
+[path-to-regexp](https://github.com/pillarjs/path-to-regexp), which means
+parameters expressed in the pattern will be converted. `path-to-regexp` has
+advanced usage which can create complex patterns which can be used for matching.
+Check out the
+[documentation for that library](https://github.com/pillarjs/path-to-regexp#parameters)
+if you have advanced use cases.
+
 ## Static content
 
 The function `send()` is designed to serve static content as part of a
