@@ -705,3 +705,26 @@ test({
     assertEquals(callStack, [2, 3, 4]);
   },
 });
+
+test({
+  name: "router routes decode pathname before matching",
+  async fn() {
+    const path = encodeURIComponent("chêne");
+    const { context } = setup(`/${path}`, "GET");
+
+    const callStack: number[] = [];
+
+    async function next() {
+      callStack.push(3);
+    }
+
+    const router = new Router();
+    router.get("/chêne", () => {
+      callStack.push(2);
+    });
+
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [2]);
+  },
+});

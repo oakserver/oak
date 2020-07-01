@@ -44,7 +44,7 @@ router
   .get("/", (context) => {
     context.response.body = "Hello world!";
   })
-  .get("/book", async (context) => {
+  .get("/book", (context) => {
     context.response.body = Array.from(books.values());
   })
   .post("/book", async (context: RouterContext) => {
@@ -90,7 +90,9 @@ app.use(async (context, next) => {
   await next();
   const rt = context.response.headers.get("X-Response-Time");
   console.log(
-    `${green(context.request.method)} ${cyan(context.request.url.pathname)} - ${
+    `${green(context.request.method)} ${
+      cyan(decodeURIComponent(context.request.url.pathname))
+    } - ${
       bold(
         String(rt),
       )
