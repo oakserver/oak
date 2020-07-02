@@ -52,13 +52,13 @@ router
     if (!context.request.hasBody) {
       context.throw(Status.BadRequest, "Bad Request");
     }
-    const body = await context.request.body();
+    const body = context.request.body();
     let book: Partial<Book> | undefined;
     if (body.type === "json") {
-      book = body.value;
+      book = await body.value;
     } else if (body.type === "form") {
       book = {};
-      for (const [key, value] of body.value) {
+      for (const [key, value] of await body.value) {
         book[key as keyof Book] = value;
       }
     } else if (body.type === "form-data") {
