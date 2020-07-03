@@ -36,6 +36,10 @@ export { printHello } from "./print_hello.ts";
 trailing to be ignored
 `;
 
+const fixtureNoFields = `
+--OAK-SERVER-BOUNDARY--
+`;
+
 function createBody(value: string): Deno.Buffer {
   return new Deno.Buffer(encoder.encode(value));
 }
@@ -178,5 +182,16 @@ test({
     await assertThrowsAsync(async () => {
       await fdr.read({ maxFileSize: 100000 });
     }, httpErrors.RequestEntityTooLarge);
+  },
+});
+
+test({
+  name: "multipart - FormDataReader - body with no fields",
+  async fn() {
+    const body = createBody(fixtureNoFields);
+    const fdr = new FormDataReader(fixtureContentType, body);
+    const value = await fdr.read();
+    assertEquals(Object.keys(value.fields).length, 0);
+    assertEquals(value.files, undefined);
   },
 });

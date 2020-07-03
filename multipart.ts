@@ -101,20 +101,23 @@ function isEqual(a: Uint8Array, b: Uint8Array): boolean {
   return equal(skipLWSPChar(a), b);
 }
 
-async function readToStart(body: BufReader, part: Uint8Array): Promise<void> {
+async function readToStartOrEnd(
+  body: BufReader,
+  start: Uint8Array,
+  end: Uint8Array,
+): Promise<boolean> {
   let lineResult: ReadLineResult | null;
-  let started = false;
   while ((lineResult = await body.readLine())) {
-    if (isEqual(lineResult.bytes, part)) {
-      started = true;
-      break;
+    if (isEqual(lineResult.bytes, start)) {
+      return true;
+    }
+    if (isEqual(lineResult.bytes, end)) {
+      return false;
     }
   }
-  if (!started) {
-    throw new httpErrors.BadRequest(
-      "Unable to find start of multi-part body.",
-    );
-  }
+  throw new httpErrors.BadRequest(
+    "Unable to find multi-part boundary.",
+  );
 }
 
 /** Yield up individual parts by reading the body and parsing out the ford
@@ -283,8 +286,12 @@ export class FormDataReader {
       bufferSize = DEFAULT_BUFFER_SIZE,
     } = options;
     const body = new BufReader(this.#body, bufferSize);
-    await readToStart(body, this.#boundaryPart);
     const result: FormDataBody = { fields: {} };
+    if (
+      !(await readToStartOrEnd(body, this.#boundaryPart, this.#boundaryFinal))
+    ) {
+      return result;
+    }
     try {
       for await (
         const part of parts({
@@ -334,7 +341,11 @@ export class FormDataReader {
       bufferSize = 32000,
     } = options;
     const body = new BufReader(this.#body, bufferSize);
-    await readToStart(body, this.#boundaryPart);
+    if (
+      !(await readToStartOrEnd(body, this.#boundaryPart, this.#boundaryFinal))
+    ) {
+      return;
+    }
     try {
       for await (
         const part of parts({
