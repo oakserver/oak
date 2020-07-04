@@ -1,6 +1,6 @@
 # oak
 
-[![oak ci](https://github.com/oakserver/oak/workflows/oak%20ci/badge.svg)](https://github.com/oakserver/oak)
+[![oak ci](https://github.com/oakserver/oak/workflows/ci/badge.svg)](https://github.com/oakserver/oak)
 [![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/oak/mod.ts)
 
 A middleware framework for Deno's
