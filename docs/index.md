@@ -178,7 +178,7 @@ There is also currently a couple methods available on context:
 
 - `.assert()`
 
-  Makes an assertion. If the assertion is not valid, throws and HTTP error
+  Makes an assertion. If the assertion is not valid, throws an HTTP error
   based on the HTTP status code passed.
 
 - `.throw()`
