@@ -16,7 +16,8 @@ import {
   ServerResponse,
   ServeTls,
 } from "./types.d.ts";
-
+import { reset } from "https://deno.land/std@0.60.0/fmt/colors.ts";
+import { resolve } from "https://deno.land/std@0.60.0/path/win32.ts";
 export interface ListenOptionsBase {
   hostname?: string;
   port: number;
@@ -96,6 +97,13 @@ export interface ApplicationOptions<S> {
    * used to infer the type of the state for both the application and any of the
    * application's context. */
   state?: S;
+}
+
+interface RequestState {
+  handling: Set<Promise<void>>;
+  closing: boolean;
+  closed: boolean;
+  server: Server;
 }
 
 export type State = Record<string | number | symbol, any>;
@@ -228,36 +236,40 @@ export class Application<AS extends State = Record<string, any>>
   };
 
   /** Processing registered middleware on each request. */
-  #handleRequest = async (request: ServerRequest, secure: boolean, state: {
-    handling: boolean;
-    closing: boolean;
-    closed: boolean;
-    server: Server;
-  }): Promise<void> => {
+  #handleRequest = async (
+    request: ServerRequest,
+    secure: boolean,
+    state: RequestState,
+  ): Promise<void> => {
     const context = new Context(this, request, secure);
+    let resolve: () => void;
+    const handlingPromise = new Promise<void>((res) => resolve = res);
+    state.handling.add(handlingPromise);
     if (!state.closing && !state.closed) {
-      state.handling = true;
       try {
         await this.#getComposed()(context);
       } catch (err) {
         this.#handleError(context, err);
-      } finally {
-        state.handling = false;
       }
     }
     if (context.respond === false) {
       context.response.destroy();
+      resolve!();
+      state.handling.delete(handlingPromise);
       return;
     }
     try {
       await request.respond(await context.response.toServerResponse());
-      context.response.destroy();
       if (state.closing) {
         state.server.close();
         state.closed = true;
       }
     } catch (err) {
       this.#handleError(context, err);
+    } finally {
+      context.response.destroy();
+      resolve!();
+      state.handling.delete(handlingPromise);
     }
   };
 
@@ -350,7 +362,7 @@ export class Application<AS extends State = Record<string, any>>
     const state = {
       closed: false,
       closing: false,
-      handling: false,
+      handling: new Set<Promise<void>>(),
       server,
     };
     if (signal) {
@@ -370,6 +382,7 @@ export class Application<AS extends State = Record<string, any>>
       for await (const request of server) {
         this.#handleRequest(request, secure, state);
       }
+      await Promise.all(state.handling);
     } catch (error) {
       const message = error instanceof Error
         ? error.message

@@ -18,12 +18,15 @@ export function compose<
 >(
   middleware: Middleware<S, T>[],
 ): (context: T, next?: () => Promise<void>) => Promise<void> {
-  return function composedMiddleware(context: T, next?: () => Promise<void>) {
+  return function composedMiddleware(
+    context: T,
+    next?: () => Promise<void>,
+  ): Promise<void> {
     let index = -1;
 
-    function dispatch(i: number): Promise<void> {
+    async function dispatch(i: number): Promise<void> {
       if (i <= index) {
-        Promise.reject(new Error("next() called multiple times."));
+        throw new Error("next() called multiple times.");
       }
       index = i;
       let fn: Middleware<S, T> | undefined = middleware[i];
@@ -31,13 +34,9 @@ export function compose<
         fn = next;
       }
       if (!fn) {
-        return Promise.resolve();
+        return;
       }
-      try {
-        return Promise.resolve(fn(context, dispatch.bind(null, i + 1)));
-      } catch (err) {
-        return Promise.reject(err);
-      }
+      await fn(context, dispatch.bind(null, i + 1));
     }
 
     return dispatch(0);

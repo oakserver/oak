@@ -45,11 +45,6 @@ function isReader(value: any): value is Deno.Reader {
     typeof value.read === "function";
 }
 
-function isPromiseLike(value: any): value is PromiseLike<any> {
-  return value && typeof value === "object" && "then" in value &&
-    typeof value.then === "function";
-}
-
 async function convertBody(
   body: Body | BodyFunction,
   type?: string,
@@ -66,7 +61,7 @@ async function convertBody(
     type = type ?? "json";
   } else if (typeof body === "function") {
     const result = body.call(null);
-    return convertBody(isPromiseLike(result) ? await result : result, type);
+    return convertBody(await result, type);
   } else if (body) {
     throw new TypeError("Response body was set but could not convert.");
   }

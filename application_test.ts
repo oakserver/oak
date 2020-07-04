@@ -65,8 +65,9 @@ function createMockRequest(
   return {
     url,
     headers: new Headers(headersInit),
-    async respond(response: ServerResponse) {
+    respond(response: ServerResponse) {
       requestResponseStack.push(response);
+      return Promise.resolve();
     },
     proto,
   } as any;
@@ -436,6 +437,7 @@ test({
       assertEquals(String(ctx.request.url), "https://10.10.10.10/index.html");
     });
     await app.listen({ port: 8000 });
+    assert(called);
     assertEquals(requestResponseStack.length, 1);
     teardown();
   },
