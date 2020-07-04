@@ -18,8 +18,8 @@ test({
   name: "resolvePath",
   fn() {
     assertEquals(
-      resolvePath("./foo/bar").replace("\\", "/"),
-      `${Deno.cwd().replace("\\", "/")}/foo/bar`,
+      resolvePath("./foo/bar").replace(/\\/g, "/"),
+      `${Deno.cwd().replace(/\\/g, "/")}/foo/bar`,
     );
   },
 });
@@ -72,7 +72,7 @@ test({
   name: "resolvePath from root",
   fn() {
     assert(
-      resolvePath("/public", "./foo/bar").replace("\\", "/").endsWith(
+      resolvePath("/public", "./foo/bar").replace(/\\/g, "/").endsWith(
         "/public/foo/bar",
       ),
     );
