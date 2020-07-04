@@ -1,10 +1,10 @@
-name: oak ci
+name: ci
 
 on: [push, pull_request]
 
 jobs:
   build:
-    name: oak server tests (${{ matrix.os }})
+    name: tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -17,6 +17,7 @@ jobs:
         with:
           deno-version: v1.1.2
       - name: check format
+        if: matrix.os == 'ubuntu-latest'
         run: deno fmt --check
       - name: run tests
         run: deno test --allow-read --allow-write
