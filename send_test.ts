@@ -207,3 +207,26 @@ test({
     assert(didThrow);
   },
 });
+
+test({
+  name: "send file with spaces",
+  async fn() {
+    const { context } = setup("/test%20file.json");
+    const fixture = await Deno.readFile("./fixtures/test file.json");
+    await send(context, context.request.url.pathname, {
+      root: "./fixtures",
+    });
+    const serverResponse = context.response.toServerResponse();
+    const bodyReader = (await serverResponse).body;
+    assert(isDenoReader(bodyReader));
+    const body = await Deno.readAll(bodyReader);
+    assertEquals(body, fixture);
+    assertEquals(context.response.type, ".json");
+    assertStrictEquals(context.response.headers.get("content-encoding"), null);
+    assertEquals(
+      context.response.headers.get("content-length"),
+      String(fixture.length),
+    );
+    context.response.destroy();
+  },
+});
