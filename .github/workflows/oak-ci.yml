@@ -4,18 +4,19 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: oak server tests
-    runs-on: ubuntu-latest
+    name: oak server tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+      fail-fast: true
     steps:
-      - name: clone repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
       - name: download deno
         uses: denolib/setup-deno@master
         with:
           deno-version: v1.1.2
-
       - name: check format
         run: deno fmt --check
-
       - name: run tests
         run: deno test --allow-read --allow-write
