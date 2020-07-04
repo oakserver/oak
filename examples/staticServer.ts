@@ -4,7 +4,7 @@ import {
   bold,
   yellow,
   red,
-} from "https://deno.land/std@0.59.0/fmt/colors.ts";
+} from "https://deno.land/std@0.60.0/fmt/colors.ts";
 
 import { Application, HttpError, send, Status } from "../mod.ts";
 
