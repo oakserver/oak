@@ -25,7 +25,7 @@ router.get("/sse", (ctx) => {
   target.dispatchMessage({ hello: "world" });
 });
 
-app.use(router.router());
+app.use(router.routes());
 await app.listen({ port: 80 });
 ```
 
