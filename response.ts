@@ -136,7 +136,7 @@ export class Response {
     }
     const typeofbody = typeof this.body;
     return this.body &&
-      (BODY_TYPES.includes(typeofbody) || typeofbody === "object")
+        (BODY_TYPES.includes(typeofbody) || typeofbody === "object")
       ? Status.OK
       : Status.NotFound;
   }
