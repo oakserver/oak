@@ -279,34 +279,62 @@ And several methods:
 
 - `.body(options?: BodyOptions)`
 
-  The method resolves to a version of the request body. Currently oak supports
-  request body types of JSON, text and URL encoded form data. If the content
-  type is missing, the request will be rejected with a 415 HTTP Error.
+  The method returns a representation of the request body. When no options are
+  passed, the request headers are used to determine the type of the body, which
+  will be parsed and returned. The returned object contains two properties.
+  `type` contains the type of `"json"`, `"text"`, `"form"`, `"form-data"`,
+  `"raw"` or `"undefined"`.
 
-  When the option `asReader` is false or not passed, the method resolves with an
-  object which contains a `type` property set to `"json"`, `"text"`, `"form"`,
-  `"form-data"`, `"undefined"`, or `"raw"` and a `value` property set with the
-  parsed value of the property. For JSON it will be the parsed value of the
-  JSON string. For text, it will simply be a string and for a form, it will be
-  an instance of `URLSearchParams`. For an undefined body, the value will be
-  `undefined`. If the content type is not supported, the body will be returned
-  with a `type` of `"raw"` and the `value` will be set to a `Uint8Array`
-  containing the raw bytes for the request. If the application cannot handle
-  the content type, it should throw a 415 HTTP Error.
+  The type of the `value` can be determined by the value of the `type` property:
 
-  For multipart form data, the `value` property will be set to a
-  `FormDataReader` interface which provides two methods to access the parts of
-  the multipart form. There is `.read()` which will asynchronously resolve with
-  an object containing the `.fields` property which is a record of key value
-  pairs of the form data, and optionally a `.files` property which will be an
-  array of files that were part of the multipart form. There is also
-  `.stream()` which will asynchronously yield a tuple containing the name of
-  the part, and the value of the part which is either a string or a
-  `FormDataFile` object.
+  | `type`        | `value`                    |
+  | ------------- | -------------------------- |
+  | `"form"`      | `Promise<URLSearchParams>` |
+  | `"form-data"` | `FormDataReader`           |
+  | `"json"`      | `Promise<unknown>`         |
+  | `"raw"`       | `Promise<Uint8Array>`      |
+  | `"text"`      | `Promise<string>`          |
+  | `"undefined"` | `undefined`                |
 
-  When option `asReader` is true, the method resolves with an object who's
-  `type` property is `"reader"` and who's `value` property is a `Deno.Reader`
-  which is the HTTP server request's native response.
+  If there is no body, the `type` of `"undefined"` is returned. If the content
+  type of the request is not recognised, then the `type` of `"raw"` is returned.
+
+  You can use the option `type` to specifically request the body to be returned
+  in a particular format. If you need access to the Deno HTTP server's body,
+  then you can use the `type` of `"reader"` which will return the body object
+  of type `"reader"` with a `value` as a `Deno.Reader`:
+
+  ```ts
+  app.use(async (ctx) => {
+    const result = ctx.request.body({ type: "reader" });
+    result.type; // "reader"
+    await Deno.readAll(result.value); // a "raw" Uint8Array of the body
+  });
+  ```
+
+  Another use case for the `type` option is if certain middleware always needs
+  the body in a particular format, but wants other middleware to consume it in
+  a content type resolved way:
+
+  ```ts
+  app.use(async (ctx) => {
+    if (ctx.request.hasBody) {
+      const result = ctx.request.body({ type: "text" });
+      const text = await result.value;
+      // do some validation of the body as a string
+    }
+  });
+
+  app.use(async (ctx) => {
+    const result = ctx.request.body(); // content type automatically detected
+    if (result.type === "json") {
+      const value = await result.value; // an object of parsed JSON
+    }
+  });
+  ```
+
+  When specifying a `type`, it is always good to check that `.request.hasBody`
+  is `true`, as the `.request.body()` will throw if the body is undefined.
 
   You can use the option `contentTypes` to set additional media types that when
   present as the content type for the request, the body will be parsed
@@ -316,15 +344,24 @@ And several methods:
 
   ```ts
   app.use(async (ctx) => {
-    const result = await ctx.request.body({
+    const result = ctx.request.body({
       contentTypes: {
         text: ["application/javascript"],
       },
     });
     result.type; // "text"
-    result.value; // a string containing the text
+    await result.value; // a string containing the text
   });
   ```
+
+  Because of the nature of how the body is parsed, once the body is requested
+  and returned in a particular format, it can't be requested in certain other
+  ones, and `.request.body()` will throw if an incompatible type is requested.
+  The type `"reader"` is incompatible with all other types, bodies which are
+  resolved as type `"form-data"` or `"undefined"` are incompatible with all
+  other types. While `"json"`, `"form"`, `"raw"`, `"text"` are all compatible
+  with each other, although if there are invalid data for that type, they may
+  throw if coerced into that type.
 
   In particular the `contentTypes.raw` can be used to override default types
   that are supported that you would want the middleware to handle itself. For
@@ -333,13 +370,13 @@ And several methods:
 
   ```ts
   app.use(async (ctx) => {
-    const result = await ctx.request.body({
+    const result = ctx.request.body({
       contentTypes: {
         raw: ["text"],
       },
     });
     result.type; // "raw"
-    result.value; // a Uint8Array of all of the bytes read from the request
+    await result.value; // a Uint8Array of all of the bytes read from the request
   });
   ```
 

@@ -1,96 +1,35 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { httpErrors } from "./httpError.ts";
-import { isMediaType } from "./isMediaType.ts";
-import { FormDataReader } from "./multipart.ts";
+import type {
+  Body,
+  BodyForm,
+  BodyFormData,
+  BodyOptions,
+  BodyJson,
+  BodyRaw,
+  BodyReader,
+  BodyText,
+} from "./body.ts";
+import { RequestBody } from "./body.ts";
 import { HTTPMethods, ServerRequest } from "./types.d.ts";
 import { preferredCharsets } from "./negotiation/charset.ts";
 import { preferredEncodings } from "./negotiation/encoding.ts";
 import { preferredLanguages } from "./negotiation/language.ts";
 import { preferredMediaTypes } from "./negotiation/mediaType.ts";
 
-export type BodyType =
-  | "json"
-  | "form"
-  | "form-data"
-  | "text"
-  | "raw"
-  | "undefined"
-  | "reader";
-
-export type BodyJson = { type: "json"; value: any };
-export type BodyForm = { type: "form"; value: URLSearchParams };
-export type BodyFormData = { type: "form-data"; value: FormDataReader };
-export type BodyText = { type: "text"; value: string };
-export type BodyRaw = { type: "raw"; value: Uint8Array };
-export type BodyUndefined = { type: "undefined"; value: undefined };
-
-export type BodyReader = { type: "reader"; value: Deno.Reader };
-
-export type Body =
-  | BodyJson
-  | BodyForm
-  | BodyFormData
-  | BodyText
-  | BodyRaw
-  | BodyUndefined;
-
-export interface BodyOptions {
-  /** If `true`, return a body value of `Deno.Reader`. */
-  asReader?: boolean;
-
-  /** A map of extra content types to determine how to parse the body. */
-  contentTypes?: {
-    /** Content types listed here will always return a "raw" Uint8Array. */
-    raw?: string[];
-    /** Content types listed here will be parsed as a JSON string. */
-    json?: string[];
-    /** Content types listed here will be parsed as form data and return
-     * `URLSearchParameters` as the value of the body. */
-    form?: string[];
-    /** Content types listed here will be parsed as from data and return a
-     * `FormDataBody` interface as the value of the body. */
-    formData?: string[];
-    /** Content types listed here will be parsed as text. */
-    text?: string[];
-  };
-}
-
-export interface BodyOptionsAsReader extends BodyOptions {
-  /** If `true`, return a body value of `Deno.Reader`. */
-  asReader: true;
-}
-
 const decoder = new TextDecoder();
-
-export interface BodyContentTypes {
-  json?: string[];
-  form?: string[];
-  text?: string[];
-}
-
-const defaultBodyContentTypes = {
-  json: ["json", "application/*+json", "application/csp-report"],
-  form: ["urlencoded"],
-  formData: ["multipart"],
-  text: ["text"],
-};
 
 /** An interface which provides information about the current request. */
 export class Request {
-  #body?: Body | BodyReader;
+  #body: RequestBody;
   #proxy: boolean;
-  #rawBodyPromise?: Promise<Uint8Array>;
   #secure: boolean;
   #serverRequest: ServerRequest;
   #url?: URL;
 
   /** Is `true` if the request has a body, otherwise `false`. */
   get hasBody(): boolean {
-    return (
-      this.headers.get("transfer-encoding") !== null ||
-      !!parseInt(this.headers.get("content-length") ?? "")
-    );
+    return this.#body.has();
   }
 
   /** The `Headers` supplied in the request. */
@@ -162,6 +101,7 @@ export class Request {
     this.#proxy = proxy;
     this.#secure = secure;
     this.#serverRequest = serverRequest;
+    this.#body = new RequestBody(serverRequest);
   }
 
   /** Returns an array of media types, accepted by the requestor, in order of
@@ -256,111 +196,14 @@ export class Request {
     return preferredLanguages(acceptLanguageValue);
   }
 
-  /** If there is a body in the request, resolves with an object which
-   * describes the body.  The `type` provides what type the body is and `value`
-   * provides the actual body.
-   * 
-   * If you need access to the "raw" interface for the body, pass `true` as the
-   * first argument and the method will resolve with the `Deno.Reader`.
-   * 
-   *       app.use(async (ctx) => {
-   *         const result = await ctx.request.body({asReader: true});
-   *         const body = await Deno.readAll(result.value);
-   *       });
-   * 
-   */
-  async body(options: BodyOptionsAsReader): Promise<BodyReader>;
-  /** If there is a body in the request, resolves with an object which
-   * describes the body.  The `type` provides what type the body is and `value`
-   * provides the actual body.
-   * 
-   * If you need access to the "raw" interface for the body, pass `true` as the
-   * first argument and the method will resolve with the `Deno.Reader`.
-   * 
-   *       app.use(async (ctx) => {
-   *         const result = await ctx.request.body({asReader: true});           
-   *         const body = await Deno.readAll(result.value);
-   *       });
-   * 
-   */
-  async body(options?: BodyOptions): Promise<Body>;
-  async body(
-    { asReader, contentTypes = {} }: BodyOptions = {},
-  ): Promise<Body | BodyReader> {
-    if (this.#body) {
-      if (asReader && this.#body.type !== "reader") {
-        return Promise.reject(
-          new TypeError(`Body already consumed as type: "${this.#body.type}".`),
-        );
-      } else if (this.#body.type === "reader") {
-        return Promise.reject(
-          new TypeError(`Body already consumed as type: "reader".`),
-        );
-      }
-      return this.#body;
-    }
-    const encoding = this.headers.get("content-encoding") || "identity";
-    if (encoding !== "identity") {
-      throw new httpErrors.UnsupportedMediaType(
-        `Unsupported content-encoding: ${encoding}`,
-      );
-    }
-    if (!this.hasBody) {
-      return (this.#body = { type: "undefined", value: undefined });
-    }
-    const contentType = this.headers.get("content-type");
-    if (contentType) {
-      if (asReader) {
-        return (this.#body = {
-          type: "reader",
-          value: this.#serverRequest.body,
-        });
-      }
-      const contentTypesFormData = [
-        ...defaultBodyContentTypes.formData,
-        ...(contentTypes.formData ?? []),
-      ];
-      if (isMediaType(contentType, contentTypesFormData)) {
-        return (this.#body = {
-          type: "form-data",
-          value: new FormDataReader(contentType, this.#serverRequest.body),
-        });
-      }
-      const rawBody = await (this.#rawBodyPromise ??
-        (this.#rawBodyPromise = Deno.readAll(this.#serverRequest.body)));
-      const value = decoder.decode(rawBody);
-      const contentTypesRaw = contentTypes.raw;
-      const contentTypesJson = [
-        ...defaultBodyContentTypes.json,
-        ...(contentTypes.json ?? []),
-      ];
-      const contentTypesForm = [
-        ...defaultBodyContentTypes.form,
-        ...(contentTypes.form ?? []),
-      ];
-      const contentTypesText = [
-        ...defaultBodyContentTypes.text,
-        ...(contentTypes.text ?? []),
-      ];
-      if (contentTypesRaw && isMediaType(contentType, contentTypesRaw)) {
-        return (this.#body = { type: "raw", value: rawBody });
-      } else if (isMediaType(contentType, contentTypesJson)) {
-        return (this.#body = { type: "json", value: JSON.parse(value) });
-      } else if (isMediaType(contentType, contentTypesForm)) {
-        return (this.#body = {
-          type: "form",
-          value: new URLSearchParams(value.replace(/\+/g, " ")),
-        });
-      } else if (isMediaType(contentType, contentTypesText)) {
-        return (this.#body = { type: "text", value });
-      } else {
-        return (this.#body = { type: "raw", value: rawBody });
-      }
-    }
-    throw new httpErrors.UnsupportedMediaType(
-      contentType
-        ? `Unsupported content-type: ${contentType}`
-        : "Missing content-type",
-    );
+  body(options: BodyOptions<"form">): BodyForm;
+  body(options: BodyOptions<"form-data">): BodyFormData;
+  body(options: BodyOptions<"json">): BodyJson;
+  body(options: BodyOptions<"raw">): BodyRaw;
+  body(options: BodyOptions<"reader">): BodyReader;
+  body(options: BodyOptions<"text">): BodyText;
+  body(options?: BodyOptions): Body;
+  body(options: BodyOptions = {}): Body | BodyReader {
+    return this.#body.get(options);
   }
 }

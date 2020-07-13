@@ -8,6 +8,18 @@ export type {
   ListenOptionsTls,
   State,
 } from "./application.ts";
+export type {
+  Body,
+  BodyForm,
+  BodyFormData,
+  BodyJson,
+  BodyOptions,
+  BodyRaw,
+  BodyReader,
+  BodyText,
+  BodyType,
+  BodyUndefined,
+} from "./body.ts";
 export { Context } from "./context.ts";
 export type { ContextSendOptions } from "./context.ts";
 export * as helpers from "./helpers.ts";
@@ -24,19 +36,6 @@ export type {
 } from "./multipart.ts";
 
 export { Request } from "./request.ts";
-export type {
-  Body,
-  BodyForm,
-  BodyFormData,
-  BodyJson,
-  BodyOptions,
-  BodyOptionsAsReader,
-  BodyRaw,
-  BodyReader,
-  BodyText,
-  BodyType,
-  BodyUndefined,
-} from "./request.ts";
 export { Response, REDIRECT_BACK } from "./response.ts";
 export { Router } from "./router.ts";
 export type {

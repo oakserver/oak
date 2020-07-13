@@ -1,6 +1,6 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-export const test = Deno.test;
+export const { test } = Deno;
 
 export { BufReader, BufWriter } from "https://deno.land/std@0.61.0/io/bufio.ts";
 export { StringReader } from "https://deno.land/std@0.61.0/io/readers.ts";

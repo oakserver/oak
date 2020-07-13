@@ -9,7 +9,6 @@ import {
 import { Request } from "./request.ts";
 import { ServerRequest } from "./types.d.ts";
 
-const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
 function createMockBodyReader(body: string): Deno.Reader {
@@ -48,11 +47,6 @@ function createMockServerRequest(
     body = "",
     headerValues = {},
     proto = "HTTP/1.1",
-    conn = {
-      remoteAddr: {
-        hostname: "127.0.0.1",
-      },
-    },
   }: MockServerRequestOptions = {},
 ): ServerRequest {
   const headers = new Headers();
@@ -176,156 +170,37 @@ test({
 });
 
 test({
-  name: "request.body JSON",
-  async fn() {
-    const request = new Request(
-      createMockServerRequest({
-        body: `{"foo":"bar"}`,
-        headerValues: {
-          "Content-Type": "application/json",
-        },
-      }),
-    );
-    assertEquals(await request.body(), {
-      type: "json",
-      value: { foo: "bar" },
-    });
-  },
-});
-
-test({
-  name: "request.body Form URLEncoded",
+  name: "request.body()",
   async fn() {
     const request = new Request(
       createMockServerRequest(
         {
-          body: `foo=bar&bar=1&baz=qux+%2B+quux`,
-          headerValues: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
+          body: JSON.stringify({ hello: "world" }),
+          headerValues: { "content-type": "application/json" },
         },
       ),
     );
-    const actual = await request.body();
-    assertEquals(actual.type, "form");
-    if (actual && actual.type === "form") {
-      assertEquals(Array.from(actual.value.entries()), [
-        ["foo", "bar"],
-        ["bar", "1"],
-        ["baz", "qux + quux"],
-      ]);
-    } else {
-      throw Error("Unexpected response");
-    }
+    assert(request.hasBody);
+    const actual = request.body();
+    assertEquals(actual.type, "json");
+    assertEquals(await actual.value, { hello: "world" });
   },
 });
 
 test({
-  name: "request.body text",
+  name: "request.body() passes args",
   async fn() {
     const request = new Request(
-      createMockServerRequest({
-        body: "hello world!",
-        headerValues: {
-          "Content-Type": "text/plain",
+      createMockServerRequest(
+        {
+          body: JSON.stringify({ hello: "world" }),
+          headerValues: { "content-type": "text/plain" },
         },
-      }),
-    );
-    assertEquals(await request.body(), {
-      type: "text",
-      value: "hello world!",
-    });
-  },
-});
-
-test({
-  name: "request.body({ asReader: true })",
-  async fn() {
-    const request = new Request(
-      createMockServerRequest({
-        body: "foo",
-        headerValues: {
-          "Content-Type": "text/plain",
-        },
-      }),
-    );
-    const actual = await request.body({ asReader: true });
-    assertEquals(actual.type, "reader");
-    assertEquals(decoder.decode(await Deno.readAll(actual.value)), "foo");
-  },
-});
-
-test({
-  name: "request.body(contentTypes)",
-  async fn() {
-    const request = new Request(
-      createMockServerRequest({
-        body: "console.log('hello world!');",
-        headerValues: {
-          "Content-Type": "application/javascript",
-        },
-      }),
-    );
-    assertEquals(
-      await request.body(
-        { contentTypes: { text: ["application/javascript"] } },
       ),
-      {
-        type: "text",
-        value: "console.log('hello world!');",
-      },
     );
-  },
-});
-
-test({
-  name: "request.body(contentTypes) does not overwrite",
-  async fn() {
-    const request = new Request(
-      createMockServerRequest({
-        body: "hello world!",
-        headerValues: {
-          "Content-Type": "text/plain",
-        },
-      }),
-    );
-    assertEquals(
-      await request.body(
-        { contentTypes: { text: ["application/javascript"] } },
-      ),
-      {
-        type: "text",
-        value: "hello world!",
-      },
-    );
-  },
-});
-
-test({
-  name: "request.body resolves undefined",
-  async fn() {
-    const request = new Request(createMockServerRequest());
-    assertEquals(await request.body(), {
-      type: "undefined",
-      value: undefined,
-    });
-  },
-});
-
-test({
-  name: "request.body unsupported media type",
-  async fn() {
-    const request = new Request(
-      createMockServerRequest({
-        body: "blah",
-        headerValues: {
-          "Content-Type": "application/graphql",
-        },
-      }),
-    );
-    const actual = await request.body();
-    assertEquals(actual.type, "raw");
-    assert(actual.value instanceof Uint8Array);
+    const actual = request.body({ type: "json" });
+    assertEquals(actual.type, "json");
+    assertEquals(await actual.value, { hello: "world" });
   },
 });
 

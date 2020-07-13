@@ -1,3 +1,8 @@
+/*
+ * This is an example of a server that will serve static content out of the
+ * $CWD/examples/static path.
+ */
+
 import {
   green,
   cyan,

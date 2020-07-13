@@ -43,7 +43,7 @@ console.log("Server closed.");
 
 ## How to get access to the "raw" request body?
 
-When requesting a body, use `await ctx.request.body({ asReader: true })`. This
+When requesting a body, use `ctx.request.body({ type: "reader" })`. This
 will resolve with the
 [`Deno.Reader`](https://doc.deno.land/https/github.com/denoland/deno/releases/latest/download/lib.deno.d.ts#Deno.Reader)
 interface in the `value` property of the response. You can then read from this
