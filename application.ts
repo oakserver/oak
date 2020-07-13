@@ -16,8 +16,8 @@ import {
   ServerResponse,
   ServeTls,
 } from "./types.d.ts";
-import { reset } from "https://deno.land/std@0.60.0/fmt/colors.ts";
-import { resolve } from "https://deno.land/std@0.60.0/path/win32.ts";
+import { reset } from "https://deno.land/std@0.61.0/fmt/colors.ts";
+import { resolve } from "https://deno.land/std@0.61.0/path/win32.ts";
 export interface ListenOptionsBase {
   hostname?: string;
   port: number;
