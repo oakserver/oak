@@ -134,7 +134,7 @@ The context passed to middleware has several properties:
 
   Determines if when middleware finishes processing, the application should
   send the `.response` to the client. If `true` the response will be sent, and
-  if `false` the response will not be send. The default is `true` but certain
+  if `false` the response will not be sent. The default is `true` but certain
   methods, like `.upgrade()` and `.sendEvents()` will set this to `false`.
 
 - `.response`
