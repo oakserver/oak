@@ -25,16 +25,20 @@ let serverRequestStack: ServerRequest[] = [];
 let requestResponseStack: ServerResponse[] = [];
 let addrStack: Array<string | ListenOptions> = [];
 let httpsOptionsStack: Array<Omit<ListenOptionsTls, "secure">> = [];
+let serverClosed = false;
 
 function teardown() {
   serverRequestStack = [];
   requestResponseStack = [];
   addrStack = [];
   httpsOptionsStack = [];
+  serverClosed = false;
 }
 
 class MockServer {
-  close(): void {}
+  close(): void {
+    serverClosed = true;
+  }
 
   async *[Symbol.asyncIterator]() {
     for await (const request of serverRequestStack) {
@@ -307,20 +311,39 @@ test({
 });
 
 test({
-  name: "app.listen({ signal })",
+  name: "app.listen({ signal }) no requests in flight",
+  async fn() {
+    const app = new Application({ serve });
+    const abortController = new AbortController();
+    app.use(() => {});
+    const p = app.listen({ port: 8000, signal: abortController.signal });
+    abortController.abort();
+    await p;
+    assertEquals(serverClosed, true);
+    teardown();
+  },
+});
+
+test({
+  name: "app.listen({ signal }) requests in flight",
   async fn() {
     const app = new Application({ serve });
     const abortController = new AbortController();
     serverRequestStack.push(createMockRequest());
     serverRequestStack.push(createMockRequest());
+    serverRequestStack.push(createMockRequest());
+    serverRequestStack.push(createMockRequest());
     let count = 0;
     app.use(() => {
+      assertEquals(serverClosed, false);
       count++;
+      if (count === 2) {
+        abortController.abort();
+      }
     });
-    const p = app.listen("localhost:8000");
-    abortController.abort();
-    await p;
+    await app.listen({ port: 8000, signal: abortController.signal });
     assertEquals(count, 2);
+    assertEquals(serverClosed, true);
     teardown();
   },
 });
