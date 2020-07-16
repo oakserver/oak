@@ -367,7 +367,7 @@ export class Application<AS extends State = Record<string, any>>
     };
     if (signal) {
       signal.addEventListener("abort", () => {
-        if (!state.handling) {
+        if (!state.handling.size) {
           server.close();
           state.closed = true;
         }
