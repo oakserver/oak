@@ -19,7 +19,7 @@ test({
   fn() {
     assertEquals(
       resolvePath("./foo/bar").replace(/\\/g, "/"),
-      `${Deno.cwd().replace(/\\/g, "/")}/foo/bar`,
+      `foo/bar`,
     );
   },
 });

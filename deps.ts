@@ -23,7 +23,6 @@ export {
   isAbsolute,
   normalize,
   parse,
-  resolve,
   sep,
 } from "https://deno.land/std@0.61.0/path/mod.ts";
 export { assert } from "https://deno.land/std@0.61.0/testing/asserts.ts";
