@@ -171,7 +171,7 @@ export function resolvePath(rootPath: string, relativePath?: string): string {
   // root is optional, similar to root.resolve
   if (arguments.length === 1) {
     path = rootPath;
-    root = Deno.cwd();
+    root = '.';
   }
 
   if (path == null) {
@@ -194,5 +194,5 @@ export function resolvePath(rootPath: string, relativePath?: string): string {
   }
 
   // join the relative path
-  return normalize(join(resolve(root), path));
+  return normalize(join(root, path));
 }
