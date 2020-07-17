@@ -29,8 +29,10 @@ export function toParamRegExp(
 
 /** Asynchronously read the headers out of body request and resolve with them as
  * a `Headers` object. */
-export async function readHeaders(body: BufReader): Promise<Headers> {
-  const headers = new Headers();
+export async function readHeaders(
+  body: BufReader,
+): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {};
   let readResult = await body.readLine();
   while (readResult) {
     const { bytes } = readResult;
@@ -43,7 +45,7 @@ export async function readHeaders(body: BufReader): Promise<Headers> {
         `Malformed header: ${decoder.decode(bytes)}`,
       );
     }
-    const key = decoder.decode(bytes.subarray(0, i));
+    const key = decoder.decode(bytes.subarray(0, i)).trim().toLowerCase();
     if (key === "") {
       throw new httpErrors.BadRequest("Invalid header key.");
     }
@@ -51,10 +53,8 @@ export async function readHeaders(body: BufReader): Promise<Headers> {
     while (i < bytes.byteLength && (bytes[i] === SPACE || bytes[i] === HTAB)) {
       i++;
     }
-    const value = decoder.decode(bytes.subarray(i));
-    try {
-      headers.append(key, value);
-    } catch {}
+    const value = decoder.decode(bytes.subarray(i)).trim();
+    headers[key] = value;
     readResult = await body.readLine();
   }
   throw new httpErrors.BadRequest("Unexpected end of body reached.");

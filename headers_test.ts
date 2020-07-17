@@ -30,10 +30,10 @@ test({
     );
     const actual = await readHeaders(body);
     assertEquals(
-      actual.get("content-disposition"),
+      actual["content-disposition"],
       `form-data; name="foo"; filename="foo.ts"`,
     );
-    assertEquals(actual.get("content-type"), `application/typescript`);
+    assertEquals(actual["content-type"], `application/typescript`);
     assertEquals(
       new TextDecoder().decode((await body.readLine())?.bytes),
       `console.log("hello");`,

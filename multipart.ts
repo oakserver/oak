@@ -140,8 +140,8 @@ async function* parts(
 
   while (true) {
     const headers = await readHeaders(body);
-    const contentType = headers.get("content-type");
-    const contentDisposition = headers.get("content-disposition");
+    const contentType = headers["content-type"];
+    const contentDisposition = headers["content-disposition"];
     if (!contentDisposition) {
       throw new httpErrors.BadRequest(
         "Form data part missing content-disposition header",

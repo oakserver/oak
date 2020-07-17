@@ -40,6 +40,19 @@ const fixtureNoFields = `
 --OAK-SERVER-BOUNDARY--
 `;
 
+const fixtureUtf8Filename = `
+--OAK-SERVER-BOUNDARY
+Content-Disposition: form-data; name="id"
+
+555
+--OAK-SERVER-BOUNDARY
+Content-Disposition: form-data; name="filea"; filename="编写软件很难.ts"
+Content-Type: video/mp2t
+
+export { printHello } from "./print_hello.ts";
+--OAK-SERVER-BOUNDARY--
+`;
+
 function createBody(value: string): Deno.Buffer {
   return new Deno.Buffer(encoder.encode(value));
 }
@@ -193,5 +206,20 @@ test({
     const value = await fdr.read();
     assertEquals(Object.keys(value.fields).length, 0);
     assertEquals(value.files, undefined);
+  },
+});
+
+test({
+  name: "multipart - FormDataReader - body with mbc filename part",
+  async fn() {
+    const body = createBody(fixtureUtf8Filename);
+    const fdr = new FormDataReader(fixtureContentType, body);
+    const actual = await fdr.read();
+    assertEquals(actual.fields, { id: "555" });
+    assert(actual.files);
+    assertEquals(actual.files.length, 1);
+    assertEquals(actual.files[0].contentType, "video/mp2t");
+    assertEquals(actual.files[0].name, "filea");
+    assertEquals(actual.files[0].originalName, "编写软件很难.ts");
   },
 });
