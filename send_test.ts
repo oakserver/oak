@@ -274,7 +274,7 @@ test({
     const fixture = await Deno.readFile("./fixtures/.test.json");
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
-      hidden: true
+      hidden: true,
     });
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;

@@ -171,7 +171,7 @@ export function resolvePath(rootPath: string, relativePath?: string): string {
   // root is optional, similar to root.resolve
   if (arguments.length === 1) {
     path = rootPath;
-    root = '.';
+    root = ".";
   }
 
   if (path == null) {

@@ -48,9 +48,9 @@ export interface SendOptions {
 }
 
 function isHidden(path: string) {
-  const pathArr = path.split('/');
+  const pathArr = path.split("/");
   for (const segment of pathArr) {
-    if (segment[0] === "." && segment !== '.' && segment !== '..') {
+    if (segment[0] === "." && segment !== "." && segment !== "..") {
       return true;
     }
     return false;
@@ -67,7 +67,7 @@ async function exists(path: string): Promise<boolean> {
 
 /** Asynchronously fulfill a response with a file from the local file
  * system.
- * 
+ *
  * Requires Deno read permission for the `root` directory. */
 export async function send(
   { request, response }: Context<any>,
@@ -92,7 +92,7 @@ export async function send(
   }
 
   if (!hidden && isHidden(path)) {
-    throw createHttpError(403)
+    throw createHttpError(403);
   }
 
   path = resolvePath(root, path);
