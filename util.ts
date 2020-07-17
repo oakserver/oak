@@ -4,7 +4,6 @@ import {
   isAbsolute,
   join,
   normalize,
-  resolve,
   sep,
   Sha1,
   Status,
