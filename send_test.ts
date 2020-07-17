@@ -230,3 +230,86 @@ test({
     context.response.destroy();
   },
 });
+
+test({
+  name: "send hidden file throws 403",
+  async fn() {
+    const { context } = setup("/.test.json");
+    encodingsAccepted = "identity";
+    let didThrow = false;
+    try {
+      await send(context, context.request.url.pathname, {
+        root: "./fixtures",
+      });
+    } catch (e) {
+      assert(e instanceof httpErrors.Forbidden);
+      didThrow = true;
+    }
+    assert(didThrow);
+  },
+});
+
+test({
+  name: "send file from hidden dir throws 403",
+  async fn() {
+    const { context } = setup("/.test/test.json");
+    encodingsAccepted = "identity";
+    let didThrow = false;
+    try {
+      await send(context, context.request.url.pathname, {
+        root: "./fixtures",
+      });
+    } catch (e) {
+      assert(e instanceof httpErrors.Forbidden);
+      didThrow = true;
+    }
+    assert(didThrow);
+  },
+});
+
+test({
+  name: "send hidden file succeeds when hidden:true",
+  async fn() {
+    const { context } = setup("/.test.json");
+    const fixture = await Deno.readFile("./fixtures/.test.json");
+    await send(context, context.request.url.pathname, {
+      root: "./fixtures",
+      hidden: true
+    });
+    const serverResponse = context.response.toServerResponse();
+    const bodyReader = (await serverResponse).body;
+    assert(isDenoReader(bodyReader));
+    const body = await Deno.readAll(bodyReader);
+    assertEquals(body, fixture);
+    assertEquals(context.response.type, ".json");
+    assertStrictEquals(context.response.headers.get("content-encoding"), null);
+    assertEquals(
+      context.response.headers.get("content-length"),
+      String(fixture.length),
+    );
+    context.response.destroy();
+  },
+});
+
+test({
+  name: "send file from hidden root succeeds",
+  async fn() {
+    const { context } = setup("/test.json");
+    const fixture = await Deno.readFile("./fixtures/.test/test.json");
+    await send(context, context.request.url.pathname, {
+      root: "./fixtures/.test",
+    });
+    const serverResponse = context.response.toServerResponse();
+    const bodyReader = (await serverResponse).body;
+    assert(isDenoReader(bodyReader));
+    const body = await Deno.readAll(bodyReader);
+    assertEquals(body, fixture);
+    assertEquals(context.response.type, ".json");
+    assertStrictEquals(context.response.headers.get("content-encoding"), null);
+    assertEquals(
+      context.response.headers.get("content-length"),
+      String(fixture.length),
+    );
+    context.response.destroy();
+  },
+});
