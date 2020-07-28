@@ -20,6 +20,7 @@ function createMockRequest({
   headers?: [string, string][];
   accepts?: (contentType: string) => boolean;
 } = {}): Request {
+  // deno-lint-ignore no-explicit-any
   return { accepts, headers: new Headers(headers) } as any;
 }
 

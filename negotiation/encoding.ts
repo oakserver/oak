@@ -61,7 +61,7 @@ function parseEncoding(str: string, i: number): EncodingSpecificty | undefined {
 function specify(
   encoding: string,
   spec: EncodingSpecificty,
-  i: number = -1,
+  i = -1,
 ): Specificity | undefined {
   if (!spec.encoding) {
     return;

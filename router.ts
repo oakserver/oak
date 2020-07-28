@@ -51,10 +51,12 @@ interface Matches {
 export interface RouterAllowedMethodsOptions {
   /** Use the value returned from this function instead of an HTTP error
    * `MethodNotAllowed`. */
+  // deno-lint-ignore no-explicit-any
   methodNotAllowed?(): any;
 
   /** Use the value returned from this function instead of an HTTP error
    * `NotImplemented`. */
+  // deno-lint-ignore no-explicit-any
   notImplemented?(): any;
 
   /** When dealing with a non-implemented method or a method not allowed, throw
@@ -64,6 +66,7 @@ export interface RouterAllowedMethodsOptions {
 
 export interface Route<
   P extends RouteParams = RouteParams,
+  // deno-lint-ignore no-explicit-any
   S extends State = Record<string, any>,
 > {
   /** The HTTP methods that this route handles. */
@@ -93,6 +96,7 @@ export interface Route<
 /** The context passed router middleware.  */
 export interface RouterContext<
   P extends RouteParams = RouteParams,
+  // deno-lint-ignore no-explicit-any
   S extends State = Record<string, any>,
 > extends Context<S> {
   /** When matching the route, an array of the capturing groups from the regular
@@ -119,6 +123,7 @@ export interface RouterContext<
 
 export interface RouterMiddleware<
   P extends RouteParams = RouteParams,
+  // deno-lint-ignore no-explicit-any
   S extends State = Record<string, any>,
 > {
   (context: RouterContext<P, S>, next: () => Promise<void>):
@@ -153,6 +158,7 @@ export interface RouterOptions {
  * route parameter. */
 export interface RouterParamMiddleware<
   P extends RouteParams = RouteParams,
+  // deno-lint-ignore no-explicit-any
   S extends State = Record<string, any>,
 > {
   (
@@ -208,6 +214,7 @@ function toUrl(url: string, params: RouteParams = {}, options?: UrlOptions) {
 
 class Layer<
   P extends RouteParams = RouteParams,
+  // deno-lint-ignore no-explicit-any
   S extends State = Record<string, any>,
 > {
   #opts: LayerOptions;
@@ -271,6 +278,7 @@ class Layer<
 
   param(
     param: string,
+    // deno-lint-ignore no-explicit-any
     fn: RouterParamMiddleware<any, any>,
   ) {
     const stack = this.stack;
@@ -312,6 +320,7 @@ class Layer<
     return this;
   }
 
+  // deno-lint-ignore no-explicit-any
   toJSON(): Route<any, any> {
     return {
       methods: [...this.methods],
@@ -329,10 +338,12 @@ class Layer<
  * parts of the requested path. */
 export class Router<
   RP extends RouteParams = RouteParams,
+  // deno-lint-ignore no-explicit-any
   RS extends State = Record<string, any>,
 > {
   #opts: RouterOptions;
   #methods: HTTPMethods[];
+  // deno-lint-ignore no-explicit-any
   #params: Record<string, RouterParamMiddleware<any, any>> = {};
   #stack: Layer[] = [];
 
@@ -455,6 +466,7 @@ export class Router<
       middleware as RouterMiddleware[],
       ["DELETE", "GET", "POST", "PUT"],
     );
+    // deno-lint-ignore no-explicit-any
     return this as Router<any, any>;
   }
 
@@ -546,6 +558,7 @@ export class Router<
       middleware as RouterMiddleware[],
       ["DELETE"],
     );
+    // deno-lint-ignore no-explicit-any
     return this as Router<any, any>;
   }
 
@@ -563,6 +576,7 @@ export class Router<
    * `callback` function for each value. */
   forEach(
     callback: (value1: Route, value2: Route, router: this) => void,
+    // deno-lint-ignore no-explicit-any
     thisArg: any = null,
   ): void {
     for (const route of this.#stack) {
@@ -595,6 +609,7 @@ export class Router<
       middleware as RouterMiddleware[],
       ["GET"],
     );
+    // deno-lint-ignore no-explicit-any
     return this as Router<any, any>;
   }
 
@@ -622,6 +637,7 @@ export class Router<
       middleware as RouterMiddleware[],
       ["HEAD"],
     );
+    // deno-lint-ignore no-explicit-any
     return this as Router<any, any>;
   }
 
@@ -657,6 +673,7 @@ export class Router<
       middleware as RouterMiddleware[],
       ["OPTIONS"],
     );
+    // deno-lint-ignore no-explicit-any
     return this as Router<any, any>;
   }
 
@@ -697,6 +714,7 @@ export class Router<
       middleware as RouterMiddleware[],
       ["PATCH"],
     );
+    // deno-lint-ignore no-explicit-any
     return this as Router<any, any>;
   }
 
@@ -724,6 +742,7 @@ export class Router<
       middleware as RouterMiddleware[],
       ["POST"],
     );
+    // deno-lint-ignore no-explicit-any
     return this as Router<any, any>;
   }
 
@@ -761,6 +780,7 @@ export class Router<
       middleware as RouterMiddleware[],
       ["PUT"],
     );
+    // deno-lint-ignore no-explicit-any
     return this as Router<any, any>;
   }
 
@@ -829,6 +849,7 @@ export class Router<
         ctx.matched = [...matches.path];
       }
 
+      // deno-lint-ignore no-explicit-any
       ctx.router = this as Router<any, any>;
 
       if (!matches.route) return next();
@@ -898,6 +919,7 @@ export class Router<
       { end: false, ignoreCaptures: !path },
     );
 
+    // deno-lint-ignore no-explicit-any
     return this as Router<any, any>;
   }
 

@@ -37,6 +37,7 @@ export class KeyStack {
     return btoa(
       String.fromCharCode.apply(
         undefined,
+        // deno-lint-ignore no-explicit-any
         new Uint8Array(new HmacSha256(key).update(data).arrayBuffer()) as any,
       ),
     )

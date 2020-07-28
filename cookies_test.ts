@@ -1,5 +1,7 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
+// deno-lint-ignore-file
+
 import { test, assertEquals } from "./test_deps.ts";
 
 import { Cookies } from "./cookies.ts";

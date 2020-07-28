@@ -27,6 +27,7 @@ export interface ContextSendOptions extends SendOptions {
 
 /** Provides context about the current request and response to middleware
  * functions. */
+// deno-lint-ignore no-explicit-any
 export class Context<S extends State = Record<string, any>> {
   #socket?: WebSocket;
   #sse?: ServerSentEventTarget;
@@ -105,6 +106,7 @@ export class Context<S extends State = Record<string, any>> {
    * default will be set on the `.response.status`.
    */
   assert(
+    // deno-lint-ignore no-explicit-any
     condition: any,
     errorStatus: ErrorStatus = 500,
     message?: string,

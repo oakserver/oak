@@ -66,6 +66,7 @@ function createMockServerRequest(
     proto,
     body: body && createMockBodyReader(body),
     async respond() {},
+    // deno-lint-ignore no-explicit-any
   } as any;
 }
 

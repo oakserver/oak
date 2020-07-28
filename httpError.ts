@@ -91,6 +91,7 @@ function createHttpErrorConstructor<E extends typeof HttpError>(
   const Ctor = class extends HttpError {
     constructor(message?: string) {
       super();
+      // deno-lint-ignore no-explicit-any
       this.message = message || STATUS_TEXT.get(status as any)!;
       this.status = status;
       this.expose = status >= 400 && status < 500 ? true : false;
@@ -111,6 +112,7 @@ function createHttpErrorConstructor<E extends typeof HttpError>(
  * object.  Also, context's `.throw()` will throw errors based on the passed
  * status code. */
 export const httpErrors: Record<keyof typeof errorStatusMap, typeof HttpError> =
+  // deno-lint-ignore no-explicit-any
   {} as any;
 
 for (const [key, value] of Object.entries(errorStatusMap)) {
@@ -129,6 +131,7 @@ export function createHttpError(
   return new httpErrors[Status[status] as keyof typeof errorStatusMap](message);
 }
 
+// deno-lint-ignore no-explicit-any
 export function isHttpError(value: any): value is HttpError {
   return value instanceof HttpError;
 }

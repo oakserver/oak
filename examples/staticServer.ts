@@ -21,6 +21,7 @@ app.use(async (context, next) => {
     await next();
   } catch (e) {
     if (e instanceof HttpError) {
+      // deno-lint-ignore no-explicit-any
       context.response.status = e.status as any;
       if (e.expose) {
         context.response.body = `<!DOCTYPE html>

@@ -15,6 +15,7 @@ export interface ServerSentEventInit extends EventInit {
    * property to a JSON string. */
   replacer?:
     | (string | number)[]
+    // deno-lint-ignore no-explicit-any
     | ((this: any, key: string, value: any) => any);
 
   /** Space is passed to `JSON.stringify` when converting the `data` property
@@ -43,6 +44,7 @@ export class ServerSentEvent extends Event {
 
   constructor(
     type: string,
+    // deno-lint-ignore no-explicit-any
     data: any,
     { replacer, space, ...eventInit }: ServerSentEventInit = {},
   ) {
@@ -94,7 +96,7 @@ const responseHeaders = new Headers(
 );
 
 export class ServerSentEventTarget extends EventTarget {
-  #app: Application<any>;
+  #app: Application;
   #closed = false;
   #prev = Promise.resolve();
   #ready: Promise<void> | true;
@@ -155,7 +157,7 @@ export class ServerSentEventTarget extends EventTarget {
   }
 
   constructor(
-    app: Application<any>,
+    app: Application,
     serverRequest: ServerRequest,
     { headers }: ServerSentEventTargetOptions = {},
   ) {
@@ -215,6 +217,7 @@ export class ServerSentEventTarget extends EventTarget {
   /** Dispatch a message to the client.  This message will contain `data: ` only
    * and be available on the client `EventSource` on the `onmessage` or an event
    * listener of type `"message"`. */
+  // deno-lint-ignore no-explicit-any
   dispatchMessage(data: any): boolean {
     const event = new ServerSentEvent("__message", data);
     return this.dispatchEvent(event);

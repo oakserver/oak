@@ -106,6 +106,7 @@ interface RequestState {
   server: Server;
 }
 
+// deno-lint-ignore no-explicit-any
 export type State = Record<string | number | symbol, any>;
 
 const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
@@ -138,6 +139,7 @@ export class ApplicationListenEvent extends Event {
  * The `context.state` can be typed via passing a generic argument when
  * constructing an instance of `Application`.
  */
+// deno-lint-ignore no-explicit-any
 export class Application<AS extends State = Record<string, any>>
   extends EventTarget {
   #composedMiddleware?: (context: Context<AS>) => Promise<void>;
@@ -206,6 +208,7 @@ export class Application<AS extends State = Record<string, any>>
 
   /** Deal with uncaught errors in either the middleware or sending the
    * response. */
+  // deno-lint-ignore no-explicit-any
   #handleError = (context: Context<AS>, error: any): void => {
     if (!(error instanceof Error)) {
       error = new Error(`non-error thrown: ${JSON.stringify(error)}`);
@@ -420,6 +423,7 @@ export class Application<AS extends State = Record<string, any>>
   ): Application<S extends AS ? S : (S & AS)> {
     this.#middleware.push(...middleware);
     this.#composedMiddleware = undefined;
+    // deno-lint-ignore no-explicit-any
     return this as Application<any>;
   }
 }

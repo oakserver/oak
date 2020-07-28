@@ -15,6 +15,7 @@ export type BodyType =
   | "reader"
   | "undefined";
 
+// deno-lint-ignore no-explicit-any
 export type BodyJson = { type: "json"; readonly value: Promise<any> };
 export type BodyForm = {
   type: "form";

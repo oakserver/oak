@@ -50,8 +50,8 @@ app.use(async (ctx) => {
         }
         ctx.response.body += `</tbody></table>`;
         break;
-      case "form-data":
-        const { files, fields } = await body.value.read();
+      case "form-data": {
+        const { fields } = await body.value.read();
         ctx.response.body +=
           `<table><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody>`;
         for (const [key, value] of Object.entries(fields)) {
@@ -59,6 +59,7 @@ app.use(async (ctx) => {
         }
         ctx.response.body += `</tbody></table>`;
         break;
+      }
       case "text":
         ctx.response.body += `<pre>${body.value}</pre>`;
         break;

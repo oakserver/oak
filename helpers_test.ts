@@ -1,5 +1,7 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
+// deno-lint-ignore-file
+
 import { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { getQuery } from "./helpers.ts";

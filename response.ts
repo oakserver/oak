@@ -40,6 +40,7 @@ const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
 const encoder = new TextEncoder();
 
 /** Guard for `Deno.Reader`. */
+// deno-lint-ignore no-explicit-any
 function isReader(value: any): value is Deno.Reader {
   return value && typeof value === "object" && "read" in value &&
     typeof value.read === "function";
@@ -249,6 +250,7 @@ export class Response {
     // If there is a response type, set the content type header
     this.#setContentType();
 
+    // deno-lint-ignore no-this-alias
     const { headers } = this;
 
     // If there is no body and no content type and no set length, then set the

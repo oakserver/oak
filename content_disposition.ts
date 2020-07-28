@@ -47,6 +47,7 @@ function rfc2047decode(value: string): string {
       }
       try {
         text = atob(text);
+        // deno-lint-ignore no-empty
       } catch {}
       return textDecode(charset, text);
     },
@@ -104,6 +105,7 @@ function textDecode(encoding: string, value: string): string {
         value = decoder.decode(new Uint8Array(bytes));
         needsEncodingFixup = false;
       }
+      // deno-lint-ignore no-empty
     } catch {}
   }
   return value;

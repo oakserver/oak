@@ -11,22 +11,26 @@ import { send } from "./send.ts";
 let encodingsAccepted = "identity";
 
 function createMockApp<
+  // deno-lint-ignore no-explicit-any
   S extends Record<string | number | symbol, any> = Record<string, any>,
 >(
   state = {} as S,
 ): Application<S> {
   return {
     state,
+    // deno-lint-ignore no-explicit-any
   } as any;
 }
 
 function createMockContext<
+  // deno-lint-ignore no-explicit-any
   S extends Record<string | number | symbol, any> = Record<string, any>,
 >(
   app: Application<S>,
   path = "/",
   method = "GET",
 ) {
+  // deno-lint-ignore no-explicit-any
   let body: any;
   let status = Status.OK;
   const headers = new Headers();
@@ -51,9 +55,11 @@ function createMockContext<
       set status(value: Status) {
         status = value;
       },
+      // deno-lint-ignore no-explicit-any
       get body(): any {
         return body;
       },
+      // deno-lint-ignore no-explicit-any
       set body(value: any) {
         body = value;
       },
@@ -79,12 +85,14 @@ function createMockContext<
   } as unknown) as Context<S>;
 }
 
+// deno-lint-ignore no-explicit-any
 function isDenoReader(value: any): value is Deno.Reader {
   return value && typeof value === "object" && "read" in value &&
     typeof value.read === "function";
 }
 
 function setup<
+  // deno-lint-ignore no-explicit-any
   S extends Record<string | number | symbol, any> = Record<string, any>,
 >(
   path = "/",

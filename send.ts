@@ -70,6 +70,7 @@ async function exists(path: string): Promise<boolean> {
  *
  * Requires Deno read permission for the `root` directory. */
 export async function send(
+  // deno-lint-ignore no-explicit-any
   { request, response }: Context<any>,
   path: string,
   options: SendOptions = { root: "" },

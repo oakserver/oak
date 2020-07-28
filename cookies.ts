@@ -73,7 +73,7 @@ class Cookie implements CookieAttributes {
   maxAge?: number;
   name: string;
   overwrite = false;
-  path: string = "/";
+  path = "/";
   sameSite: "strict" | "lax" | "none" | boolean = false;
   secure = false;
   signed?: boolean;
@@ -205,6 +205,7 @@ export class Cookies {
 
   forEach(
     callback: (key: string, value: string, cookies: this) => void,
+    // deno-lint-ignore no-explicit-any
     thisArg: any = null,
   ): void {
     const keys = this.#requestKeys();
