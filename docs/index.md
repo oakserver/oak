@@ -10,9 +10,9 @@ and middleware router inspired by
 
 - [deno doc for oak](https://doc.deno.land/https/deno.land/x/oak/mod.ts)
 - [Frequently Asked Questions](./FAQ)
-- [Awesome oak](https://oakserver.github.com/awesome-oak) - Community resources
+- [Awesome oak](https://oakserver.github.io/awesome-oak/) - Community resources
   for oak.
-- [oak_middleware](https://oakserver.github.io/middleware) - A collection of
+- [oak_middleware](https://oakserver.github.io/middleware/) - A collection of
   middleware maintained by us.
 - [Getting Started](#getting-started)
 - [Server Sent Events](./sse)
