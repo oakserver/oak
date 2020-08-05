@@ -10,7 +10,7 @@ import {
 } from "./test_deps.ts";
 import { Request } from "./request.ts";
 import { ServerRequest } from "./types.d.ts";
-
+import { assertThrowsAsync } from "https://deno.land/std@0.62.0/testing/asserts.ts";
 const encoder = new TextEncoder();
 
 function createMockBodyReader(body: string): Deno.Reader {
@@ -250,5 +250,29 @@ test({
     assertEquals(request.url.protocol, "http:");
     assertEquals(request.ip, "10.10.10.10");
     assertEquals(request.ips, ["10.10.10.10", "192.168.1.1", "10.255.255.255"]);
+  },
+});
+
+test({
+  name: "request with invalid JSON",
+  async fn() {
+    const request = new Request(
+      createMockServerRequest(
+        {
+          body: "random text, but not JSON",
+          headerValues: { "content-type": "application/json" },
+        },
+      ),
+    );
+    assert(request.hasBody, "should have body");
+    const actual = request.body();
+    assert(actual.type === "json", "should be a JSON body");
+    await assertThrowsAsync(
+      async () => {
+        await actual.value;
+      },
+      SyntaxError,
+      "Unexpected token r in JSON at position 0",
+    );
   },
 });
