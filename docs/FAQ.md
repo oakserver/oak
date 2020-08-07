@@ -80,3 +80,39 @@ app.use((ctx) => {
 
 await app.listen({ port: 8000 });
 ```
+
+## How do I pass custom properties/state around?
+
+The Application and the Context share an object property named `.state`.  This
+is designed for making custom application state available when processing
+requests.
+
+It can also be strongly typed in TypeScript by using generics.
+
+For example, if you wanted to create middleware that set a user ID in requests,
+you would do something like this:
+
+```ts
+import { Application } from "https://deno.land/x/oak/mod.ts";
+
+interface MyState {
+  userId: number;
+}
+
+const app = new Application<MyState>();
+
+app.use(async (ctx, next) => {
+  // do whatever checks to determine the user ID
+  ctx.state.userId = userId;
+  await next();
+  delete ctx.state.userId; // cleanup
+});
+
+app.use(async (ctx, next) => {
+  // now the state.userId will be set for the rest of the middleware
+  ctx.state.userId;
+  await next();
+});
+
+await app.listen();
+```
