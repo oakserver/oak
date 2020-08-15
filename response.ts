@@ -18,18 +18,18 @@ type BodyFunction = () => Body | Promise<Body>;
 
 /** A symbol that indicates to `response.redirect()` to attempt to redirect
  * back to the request referrer.  For example:
- * 
+ *
  * ```ts
  * import { Application, REDIRECT_BACK } from "https://deno.land/x/oak/mod.ts";
- * 
+ *
  * const app = new Application();
- * 
+ *
  * app.use((ctx) => {
  *   if (ctx.request.url.pathName === "/back") {
  *     ctx.response.redirect(REDIRECT_BACK, "/");
  *   }
  * });
- * 
+ *
  * await app.listen({ port: 80 });
  * ```
  */
@@ -195,20 +195,20 @@ export class Response {
   }
 
   /** Sets the response to redirect to the supplied `url`.
-   * 
+   *
    * If the `.status` is not currently a redirect status, the status will be set
    * to `302 Found`.
-   * 
+   *
    * The body will be set to a message indicating the redirection is occurring.
    */
   redirect(url: string | URL): void;
   /** Sets the response to redirect back to the referrer if available, with an
    * optional `alt` URL if there is no referrer header on the request.  If there
    * is no referrer header, nor an `alt` parameter, the redirect is set to `/`.
-   * 
+   *
    * If the `.status` is not currently a redirect status, the status will be set
    * to `302 Found`.
-   * 
+   *
    * The body will be set to a message indicating the redirection is occurring.
    */
   redirect(url: typeof REDIRECT_BACK, alt?: string | URL): void;
@@ -238,7 +238,7 @@ export class Response {
 
   /** Take this response and convert it to the response used by the Deno net
    * server.  Calling this will set the response to not be writable.
-   * 
+   *
    * Most users will have no need to call this method. */
   async toServerResponse(): Promise<ServerResponse> {
     if (this.#serverResponse) {
@@ -250,7 +250,6 @@ export class Response {
     // If there is a response type, set the content type header
     this.#setContentType();
 
-    // deno-lint-ignore no-this-alias
     const { headers } = this;
 
     // If there is no body and no content type and no set length, then set the
