@@ -23,4 +23,4 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: deno lint --unstable
       - name: run tests
-        run: deno test --allow-read --allow-write
+        run: deno test --config tsconfig.json --allow-read --allow-write

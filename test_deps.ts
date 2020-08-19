@@ -2,13 +2,16 @@
 
 export const { test } = Deno;
 
-export { BufReader, BufWriter } from "https://deno.land/std@0.62.0/io/bufio.ts";
-export { StringReader } from "https://deno.land/std@0.62.0/io/readers.ts";
-export { StringWriter } from "https://deno.land/std@0.62.0/io/writers.ts";
+export {
+  BufReader,
+  BufWriter,
+} from "https://deno.land/std@0.65.0/io/bufio.ts";
+export { StringReader } from "https://deno.land/std@0.65.0/io/readers.ts";
+export { StringWriter } from "https://deno.land/std@0.65.0/io/writers.ts";
 export {
   assert,
   assertEquals,
   assertStrictEquals,
   assertThrows,
   assertThrowsAsync,
-} from "https://deno.land/std@0.62.0/testing/asserts.ts";
+} from "https://deno.land/std@0.65.0/testing/asserts.ts";

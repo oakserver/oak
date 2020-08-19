@@ -9,8 +9,8 @@ import {
   test,
 } from "./test_deps.ts";
 import type { ServerRequest } from "./types.d.ts";
-import { decoder } from "https://deno.land/std@0.59.0/encoding/utf8.ts";
 
+const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
 function createMockBodyReader(body: string): Deno.Reader {
