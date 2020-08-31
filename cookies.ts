@@ -32,6 +32,7 @@ type CookieAttributes = CookiesSetDeleteOptions;
 
 const matchCache: Record<string, RegExp> = {};
 
+// deno-lint-ignore no-control-regex
 const FIELD_CONTENT_REGEXP = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
 const KEY_REGEXP = /(?:^|;) *([^=]*)=[^;]*/g;
 const SAME_SITE_REGEXP = /^(?:lax|none|strict)$/i;

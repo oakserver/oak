@@ -110,7 +110,7 @@ export class Context<S extends State = Record<string, any>> {
     condition: any,
     errorStatus: ErrorStatus = 500,
     message?: string,
-    props?: object,
+    props?: Record<string, unknown>,
   ): asserts condition {
     if (condition) {
       return;
@@ -157,7 +157,11 @@ export class Context<S extends State = Record<string, any>> {
    * meaningful error messages back to the client.  The passed error status will
    * be set on the `.response.status` by default as well.
    */
-  throw(errorStatus: ErrorStatus, message?: string, props?: object): never {
+  throw(
+    errorStatus: ErrorStatus,
+    message?: string,
+    props?: Record<string, unknown>,
+  ): never {
     const err = createHttpError(errorStatus, message);
     if (props) {
       Object.assign(err, props);

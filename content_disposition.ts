@@ -31,6 +31,7 @@ const FILENAME_START_ITER_REGEX = toParamRegExp(
 const FILENAME_REGEX = toParamRegExp("filename", "i");
 
 function rfc2047decode(value: string): string {
+  // deno-lint-ignore no-control-regex
   if (!value.startsWith("=?") || /[\x00-\x19\x80-\xff]/.test(value)) {
     return value;
   }

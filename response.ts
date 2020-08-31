@@ -11,6 +11,7 @@ type Body =
   | bigint
   | boolean
   | symbol
+  // deno-lint-ignore ban-types
   | object
   | undefined
   | null;
