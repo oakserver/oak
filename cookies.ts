@@ -112,7 +112,7 @@ class Cookie implements CookieAttributes {
   toHeader(): string {
     let header = this.toString();
     if (this.maxAge) {
-      this.expires = new Date(Date.now() + this.maxAge);
+      this.expires = new Date(Date.now() + (this.maxAge * 1000));
     }
 
     if (this.path) {
