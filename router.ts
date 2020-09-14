@@ -25,8 +25,8 @@
  * THE SOFTWARE.
  */
 
-import { State } from "./application.ts";
-import { Context } from "./context.ts";
+import type { State } from "./application.ts";
+import type { Context } from "./context.ts";
 import {
   assert,
   compile,
@@ -39,7 +39,7 @@ import {
 } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { Middleware, compose } from "./middleware.ts";
-import { HTTPMethods, RedirectStatus } from "./types.d.ts";
+import type { HTTPMethods, RedirectStatus } from "./types.d.ts";
 import { decodeComponent } from "./util.ts";
 
 interface Matches {

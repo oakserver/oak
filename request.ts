@@ -11,7 +11,7 @@ import type {
   BodyText,
 } from "./body.ts";
 import { RequestBody } from "./body.ts";
-import { HTTPMethods, ServerRequest } from "./types.d.ts";
+import type { HTTPMethods, ServerRequest } from "./types.d.ts";
 import { preferredCharsets } from "./negotiation/charset.ts";
 import { preferredEncodings } from "./negotiation/encoding.ts";
 import { preferredLanguages } from "./negotiation/language.ts";

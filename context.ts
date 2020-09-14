@@ -1,6 +1,6 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { Application, State } from "./application.ts";
+import type { Application, State } from "./application.ts";
 import { Cookies } from "./cookies.ts";
 import {
   acceptable,
@@ -8,7 +8,7 @@ import {
   WebSocket,
 } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
-import { KeyStack } from "./keyStack.ts";
+import type { KeyStack } from "./keyStack.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
@@ -16,7 +16,7 @@ import {
   ServerSentEventTarget,
   ServerSentEventTargetOptions,
 } from "./server_sent_event.ts";
-import { ErrorStatus, ServerRequest } from "./types.d.ts";
+import type { ErrorStatus, ServerRequest } from "./types.d.ts";
 
 export interface ContextSendOptions extends SendOptions {
   /** The filename to send, which will be resolved based on the other options.

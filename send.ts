@@ -3,7 +3,7 @@
  * with the MIT license.
  */
 
-import { Context } from "./context.ts";
+import type { Context } from "./context.ts";
 import { createHttpError } from "./httpError.ts";
 import { basename, extname, parse, sep } from "./deps.ts";
 import { decodeComponent, resolvePath } from "./util.ts";
