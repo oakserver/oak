@@ -8,7 +8,7 @@ import {
   cyan,
   bold,
   yellow,
-} from "https://deno.land/std@0.67.0/fmt/colors.ts";
+} from "https://deno.land/std@0.69.0/fmt/colors.ts";
 
 import {
   Application,

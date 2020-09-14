@@ -45,17 +45,13 @@ function mimeMatch(expected: string | undefined, actual: string): boolean {
 }
 
 function normalize(type: string): string | undefined {
-  switch (type) {
-    case "urlencoded":
-      return "application/x-www-form-urlencoded";
-    case "multipart":
-      return "multipart/*";
-  }
-
-  if (type[0] === "+") {
+  if (type === "urlencoded") {
+    return "application/x-www-form-urlencoded";
+  } else if (type === "multipart") {
+    return "multipart/*";
+  } else if (type[0] === "+") {
     return `*/*${type}`;
   }
-
   return type.includes("/") ? type : lookup(type);
 }
 

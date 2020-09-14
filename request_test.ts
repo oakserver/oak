@@ -10,7 +10,7 @@ import {
 } from "./test_deps.ts";
 import { Request } from "./request.ts";
 import { ServerRequest } from "./types.d.ts";
-import { assertThrowsAsync } from "https://deno.land/std@0.67.0/testing/asserts.ts";
+import { assertThrowsAsync } from "https://deno.land/std@0.69.0/testing/asserts.ts";
 const encoder = new TextEncoder();
 
 function createMockBodyReader(body: string): Deno.Reader {
