@@ -1,6 +1,6 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { BufReader } from "./buf_reader.ts";
+import type { BufReader } from "./buf_reader.ts";
 import { httpErrors } from "./httpError.ts";
 
 const COLON = ":".charCodeAt(0);

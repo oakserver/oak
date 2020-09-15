@@ -2,8 +2,8 @@
 
 // deno-lint-ignore-file
 
-import { State } from "./application.ts";
-import { Context } from "./context.ts";
+import type { State } from "./application.ts";
+import type { Context } from "./context.ts";
 
 /** Middleware are functions which are chained together to deal with requests. */
 export interface Middleware<

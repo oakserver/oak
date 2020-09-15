@@ -1,8 +1,8 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
 import { contentType, Status } from "./deps.ts";
-import { Request } from "./request.ts";
-import { ServerResponse } from "./types.d.ts";
+import type { Request } from "./request.ts";
+import type { ServerResponse } from "./types.d.ts";
 import { isHtml, isRedirectStatus, encodeUrl } from "./util.ts";
 
 type Body =

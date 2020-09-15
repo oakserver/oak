@@ -18,7 +18,7 @@ import { Cookies } from "./cookies.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { httpErrors } from "./httpError.ts";
-import { ServerRequest } from "./types.d.ts";
+import type { ServerRequest } from "./types.d.ts";
 
 function createMockApp<S extends State = Record<string, any>>(
   state = {} as S,

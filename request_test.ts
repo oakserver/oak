@@ -9,7 +9,7 @@ import {
   assertStrictEquals,
 } from "./test_deps.ts";
 import { Request } from "./request.ts";
-import { ServerRequest } from "./types.d.ts";
+import type { ServerRequest } from "./types.d.ts";
 import { assertThrowsAsync } from "https://deno.land/std@0.69.0/testing/asserts.ts";
 const encoder = new TextEncoder();
 

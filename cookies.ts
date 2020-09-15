@@ -3,9 +3,9 @@
 // This was heavily influenced by
 // [cookies](https://github.com/pillarjs/cookies/blob/master/index.js)
 
-import { KeyStack } from "./keyStack.ts";
-import { Request } from "./request.ts";
-import { Response } from "./response.ts";
+import type { KeyStack } from "./keyStack.ts";
+import type { Request } from "./request.ts";
+import type { Response } from "./response.ts";
 
 export interface CookiesOptions {
   keys?: KeyStack;

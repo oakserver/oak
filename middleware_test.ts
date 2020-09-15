@@ -7,7 +7,7 @@ import { State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { createHttpError, httpErrors } from "./httpError.ts";
-import { ErrorStatus } from "./types.d.ts";
+import type { ErrorStatus } from "./types.d.ts";
 import { compose, Middleware } from "./middleware.ts";
 function createMockContext<S extends State = Record<string, any>>() {
   return ({

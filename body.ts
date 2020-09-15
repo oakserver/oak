@@ -4,7 +4,7 @@ import { assert } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { isMediaType } from "./isMediaType.ts";
 import { FormDataReader } from "./multipart.ts";
-import { ServerRequest } from "./types.d.ts";
+import type { ServerRequest } from "./types.d.ts";
 
 export type BodyType =
   | "form"

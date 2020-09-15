@@ -27,7 +27,7 @@
  */
 
 import { Status, STATUS_TEXT } from "./deps.ts";
-import { ErrorStatus } from "./types.d.ts";
+import type { ErrorStatus } from "./types.d.ts";
 
 const errorStatusMap = {
   "BadRequest": 400,

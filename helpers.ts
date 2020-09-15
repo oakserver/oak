@@ -1,7 +1,7 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { Context } from "./context.ts";
-import { RouterContext } from "./router.ts";
+import type { Context } from "./context.ts";
+import type { RouterContext } from "./router.ts";
 
 function isRouterContext(value: Context): value is RouterContext {
   return "params" in value;

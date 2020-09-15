@@ -9,7 +9,7 @@ import {
 } from "./deps.ts";
 import { Key, KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
-import {
+import type {
   Serve,
   Server,
   ServerRequest,

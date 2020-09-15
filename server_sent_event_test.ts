@@ -12,7 +12,7 @@ import {
 
 import { Application } from "./application.ts";
 import { ServerSentEvent, ServerSentEventTarget } from "./server_sent_event.ts";
-import { ServerRequest } from "./types.d.ts";
+import type { ServerRequest } from "./types.d.ts";
 
 const preamble = `HTTP/1.1 200 OK
 connection: Keep-Alive
