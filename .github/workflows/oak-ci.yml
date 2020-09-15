@@ -24,3 +24,5 @@ jobs:
         run: deno lint --unstable
       - name: run tests
         run: deno test --config tsconfig.json --allow-read --allow-write
+      - name: run tests unstable
+        run: deno test --config tsconfig.json --allow-read --allow-write --unstable
