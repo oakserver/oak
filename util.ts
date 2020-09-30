@@ -1,13 +1,6 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import {
-  isAbsolute,
-  join,
-  normalize,
-  sep,
-  Sha1,
-  Status,
-} from "./deps.ts";
+import { isAbsolute, join, normalize, sep, Sha1, Status } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
 import type { ErrorStatus, RedirectStatus } from "./types.d.ts";
 

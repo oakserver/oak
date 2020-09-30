@@ -2,9 +2,9 @@
 
 // deno-lint-ignore-file
 
-import { test, assert, assertEquals, assertStrictEquals } from "./test_deps.ts";
-import { State } from "./application.ts";
-import { Context } from "./context.ts";
+import { assert, assertEquals, assertStrictEquals, test } from "./test_deps.ts";
+import type { State } from "./application.ts";
+import type { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { createHttpError, httpErrors } from "./httpError.ts";
 import type { ErrorStatus } from "./types.d.ts";

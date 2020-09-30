@@ -8,7 +8,7 @@
  */
 
 import { lookup } from "./deps.ts";
-import { parse, format } from "./mediaTyper.ts";
+import { format, parse } from "./mediaTyper.ts";
 
 function mimeMatch(expected: string | undefined, actual: string): boolean {
   if (expected === undefined) {

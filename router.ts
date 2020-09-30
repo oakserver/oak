@@ -38,7 +38,7 @@ import {
   TokensToRegexpOptions,
 } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
-import { Middleware, compose } from "./middleware.ts";
+import { compose, Middleware } from "./middleware.ts";
 import type { HTTPMethods, RedirectStatus } from "./types.d.ts";
 import { decodeComponent } from "./util.ts";
 

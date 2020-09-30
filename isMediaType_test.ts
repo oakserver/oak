@@ -1,6 +1,6 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { test, assertEquals, assertStrictEquals } from "./test_deps.ts";
+import { assertEquals, assertStrictEquals, test } from "./test_deps.ts";
 import { isMediaType } from "./isMediaType.ts";
 
 test({

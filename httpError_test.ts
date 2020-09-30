@@ -1,8 +1,8 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import { test, assert, assertEquals } from "./test_deps.ts";
+import { assert, assertEquals, test } from "./test_deps.ts";
 
-import { httpErrors, createHttpError } from "./httpError.ts";
+import { createHttpError, httpErrors } from "./httpError.ts";
 
 test({
   name: "createHttpError",

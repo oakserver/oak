@@ -3,7 +3,6 @@
 // deno-lint-ignore-file
 
 import {
-  test,
   assert,
   assertEquals,
   assertStrictEquals,
@@ -11,8 +10,9 @@ import {
   assertThrowsAsync,
   BufReader,
   BufWriter,
+  test,
 } from "./test_deps.ts";
-import { Application, State } from "./application.ts";
+import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Cookies } from "./cookies.ts";
 import { Request } from "./request.ts";

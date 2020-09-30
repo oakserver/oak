@@ -2,8 +2,8 @@
 
 import { assert, assertEquals, assertStrictEquals, test } from "./test_deps.ts";
 
-import { Application } from "./application.ts";
-import { Context } from "./context.ts";
+import type { Application } from "./application.ts";
+import type { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { send } from "./send.ts";

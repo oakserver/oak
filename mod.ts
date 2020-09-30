@@ -36,11 +36,11 @@ export type {
 } from "./multipart.ts";
 
 export { Request } from "./request.ts";
-export { Response, REDIRECT_BACK } from "./response.ts";
+export { REDIRECT_BACK, Response } from "./response.ts";
 export { Router } from "./router.ts";
 export type {
-  RouteParams,
   Route,
+  RouteParams,
   RouterAllowedMethodsOptions,
   RouterContext,
   RouterMiddleware,

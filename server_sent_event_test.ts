@@ -10,7 +10,7 @@ import {
   test,
 } from "./test_deps.ts";
 
-import { Application } from "./application.ts";
+import type { Application } from "./application.ts";
 import { ServerSentEvent, ServerSentEventTarget } from "./server_sent_event.ts";
 import type { ServerRequest } from "./types.d.ts";
 

@@ -4,12 +4,12 @@
  */
 
 import {
-  green,
-  cyan,
   bold,
-  yellow,
+  cyan,
+  green,
   red,
-} from "https://deno.land/std@0.69.0/fmt/colors.ts";
+  yellow,
+} from "https://deno.land/std@0.71.0/fmt/colors.ts";
 
 import { Application, HttpError, Status } from "../mod.ts";
 

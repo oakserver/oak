@@ -3,11 +3,11 @@
 // deno-lint-ignore-file
 
 import {
-  test,
   assert,
   assertEquals,
   assertStrictEquals,
   assertThrowsAsync,
+  test,
 } from "./test_deps.ts";
 
 import { Application, ListenOptions, ListenOptionsTls } from "./application.ts";
@@ -15,7 +15,7 @@ import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { Data, KeyStack } from "./keyStack.ts";
-import {
+import type {
   Serve,
   Server,
   ServerRequest,

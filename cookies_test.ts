@@ -2,12 +2,12 @@
 
 // deno-lint-ignore-file
 
-import { test, assertEquals } from "./test_deps.ts";
+import { assertEquals, test } from "./test_deps.ts";
 
 import { Cookies } from "./cookies.ts";
 import { KeyStack } from "./keyStack.ts";
-import { Request } from "./request.ts";
-import { Response } from "./response.ts";
+import type { Request } from "./request.ts";
+import type { Response } from "./response.ts";
 
 function createMockRequest(cookieValue?: string[]): Request {
   return {

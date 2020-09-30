@@ -1,9 +1,9 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
 import { Status } from "./deps.ts";
-import { test, assert, assertEquals, assertThrows } from "./test_deps.ts";
-import { Request } from "./request.ts";
-import { Response, REDIRECT_BACK } from "./response.ts";
+import { assert, assertEquals, assertThrows, test } from "./test_deps.ts";
+import type { Request } from "./request.ts";
+import { REDIRECT_BACK, Response } from "./response.ts";
 
 const decoder = new TextDecoder();
 

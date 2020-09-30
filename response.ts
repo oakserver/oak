@@ -3,7 +3,7 @@
 import { contentType, Status } from "./deps.ts";
 import type { Request } from "./request.ts";
 import type { ServerResponse } from "./types.d.ts";
-import { isHtml, isRedirectStatus, encodeUrl } from "./util.ts";
+import { encodeUrl, isHtml, isRedirectStatus } from "./util.ts";
 
 type Body =
   | string

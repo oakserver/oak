@@ -2,8 +2,8 @@
 
 // deno-lint-ignore-file
 
-import { Application } from "./application.ts";
-import { Context } from "./context.ts";
+import type { Application } from "./application.ts";
+import type { Context } from "./context.ts";
 import { getQuery } from "./helpers.ts";
 import { assertEquals } from "./test_deps.ts";
 

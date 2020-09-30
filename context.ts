@@ -2,11 +2,7 @@
 
 import type { Application, State } from "./application.ts";
 import { Cookies } from "./cookies.ts";
-import {
-  acceptable,
-  acceptWebSocket,
-  WebSocket,
-} from "./deps.ts";
+import { acceptable, acceptWebSocket, WebSocket } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
 import type { KeyStack } from "./keyStack.ts";
 import { Request } from "./request.ts";
