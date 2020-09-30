@@ -40,9 +40,9 @@ export {
   compile,
   parse as pathParse,
   pathToRegexp,
-} from "https://raw.githubusercontent.com/pillarjs/path-to-regexp/v6.1.0/src/index.ts";
+} from "https://deno.land/x/path_to_regexp@v6.2.0/index.ts";
 export type {
   Key,
   ParseOptions,
   TokensToRegexpOptions,
-} from "https://raw.githubusercontent.com/pillarjs/path-to-regexp/v6.1.0/src/index.ts";
+} from "https://deno.land/x/path_to_regexp@v6.2.0/index.ts";
