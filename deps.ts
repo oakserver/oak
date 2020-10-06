@@ -4,15 +4,15 @@
 
 // `std` dependencies
 
-export { copyBytes, equal } from "https://deno.land/std@0.71.0/bytes/mod.ts";
-export { Sha1 } from "https://deno.land/std@0.71.0/hash/sha1.ts";
-export { HmacSha256 } from "https://deno.land/std@0.71.0/hash/sha256.ts";
-export { serve, serveTLS } from "https://deno.land/std@0.71.0/http/server.ts";
+export { copyBytes, equal } from "https://deno.land/std@0.73.0/bytes/mod.ts";
+export { Sha1 } from "https://deno.land/std@0.73.0/hash/sha1.ts";
+export { HmacSha256 } from "https://deno.land/std@0.73.0/hash/sha256.ts";
+export { serve, serveTLS } from "https://deno.land/std@0.73.0/http/server.ts";
 export {
   Status,
   STATUS_TEXT,
-} from "https://deno.land/std@0.71.0/http/http_status.ts";
-export { BufReader, BufWriter } from "https://deno.land/std@0.71.0/io/bufio.ts";
+} from "https://deno.land/std@0.73.0/http/http_status.ts";
+export { BufReader, BufWriter } from "https://deno.land/std@0.73.0/io/bufio.ts";
 export {
   basename,
   extname,
@@ -21,13 +21,13 @@ export {
   normalize,
   parse,
   sep,
-} from "https://deno.land/std@0.71.0/path/mod.ts";
-export { assert } from "https://deno.land/std@0.71.0/testing/asserts.ts";
+} from "https://deno.land/std@0.73.0/path/mod.ts";
+export { assert } from "https://deno.land/std@0.73.0/testing/asserts.ts";
 export {
   acceptable,
   acceptWebSocket,
-} from "https://deno.land/std@0.71.0/ws/mod.ts";
-export type { WebSocket } from "https://deno.land/std@0.71.0/ws/mod.ts";
+} from "https://deno.land/std@0.73.0/ws/mod.ts";
+export type { WebSocket } from "https://deno.land/std@0.73.0/ws/mod.ts";
 
 // 3rd party dependencies
 
@@ -35,14 +35,14 @@ export {
   contentType,
   extension,
   lookup,
-} from "https://deno.land/x/media_types@v2.5.0/mod.ts";
+} from "https://deno.land/x/media_types@v2.5.1/mod.ts";
 export {
   compile,
   parse as pathParse,
   pathToRegexp,
-} from "https://raw.githubusercontent.com/pillarjs/path-to-regexp/v6.1.0/src/index.ts";
+} from "https://deno.land/x/path_to_regexp@v6.2.0/index.ts";
 export type {
   Key,
   ParseOptions,
   TokensToRegexpOptions,
-} from "https://raw.githubusercontent.com/pillarjs/path-to-regexp/v6.1.0/src/index.ts";
+} from "https://deno.land/x/path_to_regexp@v6.2.0/index.ts";

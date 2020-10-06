@@ -2,10 +2,15 @@
 
 // deno-lint-ignore-file
 
-import { assert, assertEquals, assertStrictEquals, test } from "./test_deps.ts";
+import {
+  assert,
+  assertEquals,
+  assertStrictEquals,
+  assertThrowsAsync,
+  test,
+} from "./test_deps.ts";
 import { Request } from "./request.ts";
 import type { ServerRequest } from "./types.d.ts";
-import { assertThrowsAsync } from "https://deno.land/std@0.71.0/testing/asserts.ts";
 const encoder = new TextEncoder();
 
 function createMockBodyReader(body: string): Deno.Reader {
