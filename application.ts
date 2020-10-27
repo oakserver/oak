@@ -132,6 +132,9 @@ export class ApplicationListenEvent extends Event {
   }
 }
 
+// TODO any
+export type RequestStateCache = Map<string, { resolver: (ctx: Context) => any, cache: WeakMap<Context, any> }>
+
 /** A class which registers middleware (via `.use()`) and then processes
  * inbound requests against that middleware (via `.listen()`).
  *
@@ -146,6 +149,7 @@ export class Application<AS extends State = Record<string, any>>
   #middleware: Middleware<State, Context<State>>[] = [];
   #serve: Serve;
   #serveTls: ServeTls;
+  #requestStateCache: RequestStateCache; 
 
   /** A set of keys, or an instance of `KeyStack` which will be used to sign
    * cookies read and set by the application to avoid tampering with the
@@ -196,6 +200,7 @@ export class Application<AS extends State = Record<string, any>>
     this.state = state ?? {} as AS;
     this.#serve = serve;
     this.#serveTls = serveTls;
+    this.#requestStateCache = new Map();
   }
 
   #getComposed = (): ((context: Context<AS>) => Promise<void>) => {
@@ -230,8 +235,8 @@ export class Application<AS extends State = Record<string, any>>
       error instanceof Deno.errors.NotFound
         ? 404
         : error.status && typeof error.status === "number"
-        ? error.status
-        : 500;
+          ? error.status
+          : 500;
     context.response.body = error.expose
       ? error.message
       : STATUS_TEXT.get(status);
@@ -243,7 +248,7 @@ export class Application<AS extends State = Record<string, any>>
     secure: boolean,
     state: RequestState,
   ): Promise<void> => {
-    const context = new Context(this, request, secure);
+    const context = new Context(this, request, secure, this.#requestStateCache);
     let resolve: () => void;
     const handlingPromise = new Promise<void>((res) => resolve = res);
     state.handling.add(handlingPromise);
@@ -274,6 +279,14 @@ export class Application<AS extends State = Record<string, any>>
       state.handling.delete(handlingPromise);
     }
   };
+
+  /** Register a function that will resolve T given a context. Once registered
+   * middleware can compute and access the value under `ctx.requestState.*name*`
+   * value is cached */
+  registerSource<T>(name: string, resolver: (ctx: Context) => T): void {
+    const cache = new WeakMap<Context, T>();
+    this.#requestStateCache.set(name, { resolver, cache });
+  }
 
   /** Add an event listener for an `"error"` event which occurs when an
    * un-caught error occurs when processing the middleware or during processing
@@ -313,7 +326,7 @@ export class Application<AS extends State = Record<string, any>>
     if (!this.#middleware.length) {
       throw new TypeError("There is no middleware to process requests.");
     }
-    const context = new Context(this, request, secure);
+    const context = new Context(this, request, secure, this.#requestStateCache);
     try {
       await this.#getComposed()(context);
     } catch (err) {

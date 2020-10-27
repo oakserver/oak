@@ -1,6 +1,6 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
-import type { Application, State } from "./application.ts";
+import type { Application, RequestStateCache, State } from "./application.ts";
 import { Cookies } from "./cookies.ts";
 import { acceptable, acceptWebSocket, WebSocket } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
@@ -79,15 +79,17 @@ export class Context<S extends State = Record<string, any>> {
    * const app = new Application({ state: { foo: "bar" } });
    * ```
    */
-  state: S;
+  applicationState: S;
+  requestState: {};
 
   constructor(
     app: Application<S>,
     serverRequest: ServerRequest,
     secure = false,
+    requestState: RequestStateCache
   ) {
     this.app = app;
-    this.state = app.state;
+    this.applicationState = app.state;
     this.request = new Request(serverRequest, app.proxy, secure);
     this.respond = true;
     this.response = new Response(this.request);
@@ -95,6 +97,21 @@ export class Context<S extends State = Record<string, any>> {
       keys: this.app.keys as KeyStack | undefined,
       secure: this.request.secure,
     });
+    this.requestState = {};
+    for (const [name, {resolver, cache}] of requestState) {
+      Object.defineProperty(this.requestState, name, {
+        enumerable: true,
+        get: () => {
+          if (cache.has(this)) {
+            return cache.get(this)!;
+          } else {
+            const value = resolver(this);
+            cache.set(this, value);
+            return value;
+          }
+        }
+      });
+    } 
   }
 
   /** Asserts the condition and if the condition fails, creates an HTTP error
