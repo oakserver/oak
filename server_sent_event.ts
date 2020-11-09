@@ -247,7 +247,7 @@ export class ServerSentEventTarget extends EventTarget {
   dispatchEvent(event: ServerSentEvent): boolean;
   dispatchEvent(event: CloseEvent | ErrorEvent): boolean;
   dispatchEvent(event: ServerSentEvent | CloseEvent | ErrorEvent): boolean {
-    let dispatched = super.dispatchEvent(event);
+    const dispatched = super.dispatchEvent(event);
     if (dispatched && event instanceof ServerSentEvent) {
       this.#prev = this.#send(String(event), this.#prev);
     }

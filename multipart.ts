@@ -178,7 +178,7 @@ async function* parts(
         if (!readResult) {
           throw new httpErrors.BadRequest("Unexpected EOF reached");
         }
-        let { bytes } = readResult;
+        const { bytes } = readResult;
         const strippedBytes = stripEol(bytes);
         if (isEqual(strippedBytes, part) || isEqual(strippedBytes, final)) {
           if (file) {

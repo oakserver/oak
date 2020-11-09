@@ -74,6 +74,7 @@ function rfc2231getParam(header: string): string {
     if (!(n in matches)) {
       break;
     }
+    // deno-lint-ignore prefer-const
     let [quote, part] = matches[n];
     part = unquote(part);
     if (quote) {

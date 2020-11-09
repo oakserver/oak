@@ -194,7 +194,7 @@ function toUrl(url: string, params: RouteParams = {}, options?: UrlOptions) {
   }
 
   const toPath = compile(url, options);
-  let replaced = toPath(replace);
+  const replaced = toPath(replace);
 
   if (options && options.query) {
     const url = new URL(replaced, "http://oak");
