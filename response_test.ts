@@ -148,7 +148,7 @@ test({
   name: "response.body as async function",
   async fn() {
     const response = new Response(createMockRequest());
-    response.body = async () => "Hello world!";
+    response.body = () => Promise.resolve("Hello world!");
     const serverResponse = await response.toServerResponse();
     assertEquals(decodeBody(serverResponse.body), "Hello world!");
     assertEquals(serverResponse.status, 200);

@@ -4,7 +4,7 @@ import { assert, assertEquals, assertThrowsAsync, test } from "./test_deps.ts";
 
 import { httpErrors } from "./httpError.ts";
 import { FormDataFile, FormDataReader } from "./multipart.ts";
-import { equal, lookup, parse } from "./deps.ts";
+import { equals, lookup, parse } from "./deps.ts";
 import { stripEol } from "./util.ts";
 
 // const decoder = new TextDecoder();
@@ -138,7 +138,7 @@ test({
     assert(actualItem.filename);
     assert(actualItem.filename.endsWith(".jpeg"));
     const actualFileData = await Deno.readFile(actualItem.filename);
-    assert(equal(stripEol(actualFileData), expected));
+    assert(equals(stripEol(actualFileData), expected));
   },
 });
 
@@ -159,7 +159,7 @@ test({
     assertEquals(actualItem.name, "fileA");
     assertEquals(actualItem.originalName, "test.jpg");
     assert(actualItem.content);
-    assert(equal(stripEol(actualItem.content), expected));
+    assert(equals(stripEol(actualItem.content), expected));
   },
 });
 
@@ -183,7 +183,7 @@ test({
     assert(actualItem.filename);
     assert(actualItem.filename.endsWith(".jpeg"));
     const actualFileData = await Deno.readFile(actualItem.filename);
-    assert(equal(stripEol(actualFileData), expected));
+    assert(equals(stripEol(actualFileData), expected));
   },
 });
 

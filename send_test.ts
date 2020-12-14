@@ -73,12 +73,12 @@ function createMockContext<
         }
       },
       headers,
-      async toServerResponse() {
-        return {
+      toServerResponse() {
+        return Promise.resolve({
           status,
           body,
           headers,
-        };
+        });
       },
     },
     state: app.state,

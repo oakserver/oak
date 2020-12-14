@@ -17,14 +17,14 @@ function createMockBodyReader(body: string): Deno.Reader {
   const buf = encoder.encode(body);
   let offset = 0;
   return {
-    async read(p: Uint8Array): Promise<number | null> {
+    read(p: Uint8Array): Promise<number | null> {
       if (offset >= buf.length) {
-        return null;
+        return Promise.resolve(null);
       }
       const chunkSize = Math.min(p.length, buf.length - offset);
       p.set(buf);
       offset += chunkSize;
-      return chunkSize;
+      return Promise.resolve(chunkSize);
     },
   };
 }

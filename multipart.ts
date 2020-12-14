@@ -2,7 +2,7 @@
 
 import { BufReader, ReadLineResult } from "./buf_reader.ts";
 import { getFilename } from "./content_disposition.ts";
-import { equal, extension } from "./deps.ts";
+import { equals, extension } from "./deps.ts";
 import { readHeaders, toParamRegExp, unquote } from "./headers.ts";
 import { httpErrors } from "./httpError.ts";
 import { getRandomFilename, skipLWSPChar, stripEol } from "./util.ts";
@@ -98,7 +98,7 @@ function append(a: Uint8Array, b: Uint8Array): Uint8Array {
 }
 
 function isEqual(a: Uint8Array, b: Uint8Array): boolean {
-  return equal(skipLWSPChar(a), b);
+  return equals(skipLWSPChar(a), b);
 }
 
 async function readToStartOrEnd(

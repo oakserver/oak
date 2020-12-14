@@ -8,7 +8,7 @@ import {
   cyan,
   green,
   yellow,
-} from "https://deno.land/std@0.77.0/fmt/colors.ts";
+} from "https://deno.land/std@0.80.0/fmt/colors.ts";
 
 import {
   Application,
@@ -75,7 +75,7 @@ router
     }
     context.throw(Status.BadRequest, "Bad Request");
   })
-  .get<{ id: string }>("/book/:id", async (context, next) => {
+  .get<{ id: string }>("/book/:id", (context) => {
     if (context.params && books.has(context.params.id)) {
       context.response.body = books.get(context.params.id);
     } else {

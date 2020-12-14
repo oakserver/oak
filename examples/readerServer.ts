@@ -4,14 +4,14 @@
  */
 
 // Importing some console colors
-import { bold, yellow } from "https://deno.land/std@0.77.0/fmt/colors.ts";
-import { StringReader } from "https://deno.land/std@0.77.0/io/readers.ts";
+import { bold, yellow } from "https://deno.land/std@0.80.0/fmt/colors.ts";
+import { StringReader } from "https://deno.land/std@0.80.0/io/readers.ts";
 
 import { Application } from "../mod.ts";
 
 const app = new Application();
 
-app.use(async (ctx) => {
+app.use((ctx) => {
   ctx.response.body = new StringReader("Hello, Reader!");
   ctx.response.type = "text/plain";
 });
