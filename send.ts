@@ -150,8 +150,6 @@ export async function send(
     throw createHttpError(500, err.message);
   }
 
-  response.headers.set("Content-Length", String(stats.size));
-
   let mtime: Date | null = null;
   if (response.headers.has("Last-Modified")) {
     mtime = new Date(response.headers.get("Last-Modified")!);
@@ -180,6 +178,8 @@ export async function send(
       return path;
     }
   }
+
+  response.headers.set("Content-Length", String(stats.size));
 
   const file = await Deno.open(path, { read: true });
   response.addResource(file.rid);
