@@ -391,7 +391,10 @@ test({
   async fn() {
     const { context } = setup("/test.json");
     const fixtureStat = await Deno.stat("./fixtures/test.json");
-    context.request.headers.set("If-Modified-Since", fixtureStat.mtime!.toUTCString());
+    context.request.headers.set(
+      "If-Modified-Since",
+      fixtureStat.mtime!.toUTCString(),
+    );
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
     });
