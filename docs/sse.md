@@ -4,15 +4,15 @@ Oak has built in support for server-sent events. Server-sent events are a one
 way communication protocol which is part of the
 [web standards](https://html.spec.whatwg.org/multipage/server-sent-events.html#server-sent-events).
 
-The typical flow of establishing a connection is that the client will create
-an `EventSource` object that points at a path on the server:
+The typical flow of establishing a connection is that the client will create an
+`EventSource` object that points at a path on the server:
 
 ```js
 const eventSource = new EventSource("/sse");
 ```
 
-The server will respond by keeping open an HTTP connection which will be used
-to send messages:
+The server will respond by keeping open an HTTP connection which will be used to
+send messages:
 
 ```ts
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
@@ -88,8 +88,8 @@ event, which will then not be sent so the client.
 In addition to `.dispatchEvent()` there are also `.dispatchMessage()` and
 `.dispatchComment()`. `.dispatchMessage()` will send a "data only" message to
 the client. The `EventSource` in the client makes these events available on the
-`.onmessage` property and the event type of `"message"`. `.dispatchComment()`
-is sent to the client, but does not raise itself in the `EventSource`. It is
+`.onmessage` property and the event type of `"message"`. `.dispatchComment()` is
+sent to the client, but does not raise itself in the `EventSource`. It is
 intended to be used for debugging purposes as well as a potential mechanism to
 help keep the connection alive.
 
@@ -97,8 +97,8 @@ help keep the connection alive.
 
 Typically a client will utilise an `EventSource` to make a connection to the
 endpoint, but server-sent events are a standard of transferring information, so
-it is possible that a client might not be using an `EventSource` or a client
-has accidentally called an endpoint and implementations might want to ensure the
+it is possible that a client might not be using an `EventSource` or a client has
+accidentally called an endpoint and implementations might want to ensure the
 client request intends to support server-sent events:
 
 ```ts
@@ -114,7 +114,6 @@ Connection: Keep-Alive
 Content-Type: text/event-stream
 Cache-Control: no-cache
 Keep-Alive: timeout=9007199254740991
-
 ```
 
 This should be sufficient for most scenarios, but if you require additional

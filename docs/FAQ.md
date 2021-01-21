@@ -20,9 +20,8 @@ of the parts of the requested URL in a single object.
 ## How do I close a server?
 
 Oak uses the browser standard `AbortController` for closing a server. You pass
-the `.signal` of the controller as one of the listen options, and you would
-then `.abort()` on the controller when you want the server to close. For
-example:
+the `.signal` of the controller as one of the listen options, and you would then
+`.abort()` on the controller when you want the server to close. For example:
 
 ```ts
 import { Application } from "https://deno.land/x/oak/mod.ts";
@@ -43,8 +42,8 @@ console.log("Server closed.");
 
 ## How to get access to the "raw" request body?
 
-When requesting a body, use `ctx.request.body({ type: "reader" })`. This
-will resolve with the
+When requesting a body, use `ctx.request.body({ type: "reader" })`. This will
+resolve with the
 [`Deno.Reader`](https://doc.deno.land/https/github.com/denoland/deno/releases/latest/download/lib.deno.d.ts#Deno.Reader)
 interface in the `value` property of the response. You can then read from this
 interface the "raw" body content.
@@ -83,9 +82,8 @@ await app.listen({ port: 8000 });
 
 ## How do I pass custom properties/state around?
 
-The Application and the Context share an object property named `.state`.  This
-is designed for making custom application state available when processing
-requests.
+The Application and the Context share an object property named `.state`. This is
+designed for making custom application state available when processing requests.
 
 It can also be strongly typed in TypeScript by using generics.
 

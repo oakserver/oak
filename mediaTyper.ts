@@ -69,7 +69,6 @@ export function parse(str: string): MediaType {
     throw new TypeError("Invalid media type.");
   }
 
-  // deno-lint-ignore prefer-const
   let [, type, subtype] = match;
   let suffix: string | undefined;
 

@@ -7,15 +7,15 @@
 export {
   copy as copyBytes,
   equals,
-} from "https://deno.land/std@0.82.0/bytes/mod.ts";
-export { Sha1 } from "https://deno.land/std@0.82.0/hash/sha1.ts";
-export { HmacSha256 } from "https://deno.land/std@0.82.0/hash/sha256.ts";
-export { serve, serveTLS } from "https://deno.land/std@0.82.0/http/server.ts";
+} from "https://deno.land/std@0.84.0/bytes/mod.ts";
+export { Sha1 } from "https://deno.land/std@0.84.0/hash/sha1.ts";
+export { HmacSha256 } from "https://deno.land/std@0.84.0/hash/sha256.ts";
+export { serve, serveTLS } from "https://deno.land/std@0.84.0/http/server.ts";
 export {
   Status,
   STATUS_TEXT,
-} from "https://deno.land/std@0.82.0/http/http_status.ts";
-export { BufReader, BufWriter } from "https://deno.land/std@0.82.0/io/bufio.ts";
+} from "https://deno.land/std@0.84.0/http/http_status.ts";
+export { BufReader, BufWriter } from "https://deno.land/std@0.84.0/io/bufio.ts";
 export {
   basename,
   extname,
@@ -24,13 +24,13 @@ export {
   normalize,
   parse,
   sep,
-} from "https://deno.land/std@0.82.0/path/mod.ts";
-export { assert } from "https://deno.land/std@0.82.0/testing/asserts.ts";
+} from "https://deno.land/std@0.84.0/path/mod.ts";
+export { assert } from "https://deno.land/std@0.84.0/testing/asserts.ts";
 export {
   acceptable,
   acceptWebSocket,
-} from "https://deno.land/std@0.82.0/ws/mod.ts";
-export type { WebSocket } from "https://deno.land/std@0.82.0/ws/mod.ts";
+} from "https://deno.land/std@0.84.0/ws/mod.ts";
+export type { WebSocket } from "https://deno.land/std@0.84.0/ws/mod.ts";
 
 // 3rd party dependencies
 
@@ -38,7 +38,7 @@ export {
   contentType,
   extension,
   lookup,
-} from "https://deno.land/x/media_types@v2.6.1/mod.ts";
+} from "https://deno.land/x/media_types@v2.7.1/mod.ts";
 export {
   compile,
   parse as pathParse,
