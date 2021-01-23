@@ -150,10 +150,14 @@ export async function send(
     throw createHttpError(500, err.message);
   }
 
-  response.headers.set("Content-Length", String(stats.size));
-  if (!response.headers.has("Last-Modified") && stats.mtime) {
+  let mtime: Date | null = null;
+  if (response.headers.has("Last-Modified")) {
+    mtime = new Date(response.headers.get("Last-Modified")!);
+  } else if (stats.mtime) {
+    mtime = stats.mtime;
     response.headers.set("Last-Modified", stats.mtime.toUTCString());
   }
+
   if (!response.headers.has("Cache-Control")) {
     const directives = [`max-age=${(maxage / 1000) | 0}`];
     if (immutable) {
@@ -166,6 +170,17 @@ export async function send(
       ? extname(basename(path, encodingExt))
       : extname(path);
   }
+
+  if (request.headers.has("If-Modified-Since") && mtime) {
+    const ifModifiedSince = new Date(request.headers.get("If-Modified-Since")!);
+    if (ifModifiedSince.getTime() < mtime.getTime()) {
+      response.status = 304;
+      return path;
+    }
+  }
+
+  response.headers.set("Content-Length", String(stats.size));
+
   const file = await Deno.open(path, { read: true });
   response.addResource(file.rid);
   response.body = file;

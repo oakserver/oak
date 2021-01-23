@@ -385,3 +385,28 @@ test({
     context.response.destroy();
   },
 });
+
+test({
+  name: "send 304",
+  async fn() {
+    const { context } = setup("/test.json");
+    const fixtureStat = await Deno.stat("./fixtures/test.json");
+    context.request.headers.set(
+      "If-Modified-Since",
+      fixtureStat.mtime!.toUTCString(),
+    );
+    await send(context, context.request.url.pathname, {
+      root: "./fixtures",
+    });
+    const serverResponse = await context.response.toServerResponse();
+    assertStrictEquals(serverResponse.body, undefined);
+    assertEquals(serverResponse.status, 304);
+    assertEquals(context.response.type, ".json");
+    assertStrictEquals(context.response.headers.get("content-encoding"), null);
+    assertEquals(
+      context.response.headers.get("content-length"),
+      null,
+    );
+    context.response.destroy();
+  },
+});
