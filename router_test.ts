@@ -730,3 +730,47 @@ test({
     assertEquals(callStack, [2]);
   },
 });
+
+test({
+  name: "router handling of bad request urls",
+  async fn() {
+    const headers = new Headers();
+    const app = createMockApp<{ id: string }>();
+    let context = ({
+      app,
+      request: {
+        headers: new Headers(),
+        method: "GET",
+        get url() {
+          throw new TypeError("bad url");
+        },
+      },
+      response: {
+        status: undefined,
+        body: undefined,
+        redirect(url: string | URL) {
+          headers.set("Location", encodeURI(String(url)));
+        },
+        headers,
+      },
+      state: app.state,
+    } as unknown) as Context<{ id: string }>;
+
+    const callStack: number[] = [];
+    async function next() {
+      callStack.push(1);
+    }
+
+    const router = new Router();
+    router.get("/a", () => {
+      callStack.push(2);
+    });
+
+    const mw = router.routes();
+    assertThrowsAsync(
+      async () => await mw(context, next),
+      TypeError,
+      "bad url",
+    );
+  },
+});

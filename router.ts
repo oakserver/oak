@@ -838,7 +838,15 @@ export class Router<
       next: () => Promise<void>,
     ): Promise<void> => {
       const ctx = context as RouterContext;
-      const { url: { pathname }, method } = ctx.request;
+      let pathname: string;
+      let method: HTTPMethods;
+      try {
+        const { url: { pathname: p }, method: m } = ctx.request;
+        pathname = p;
+        method = m;
+      } catch (e) {
+        return Promise.reject(e);
+      }
       const path = this.#opts.routerPath ?? ctx.routerPath ??
         decodeURIComponent(pathname);
       const matches = this.#match(path, method);

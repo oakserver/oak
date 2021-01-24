@@ -6,6 +6,7 @@ import {
   assert,
   assertEquals,
   assertStrictEquals,
+  assertThrows,
   assertThrowsAsync,
   test,
 } from "./test_deps.ts";
@@ -250,6 +251,22 @@ test({
     assertEquals(request.url.protocol, "http:");
     assertEquals(request.ip, "10.10.10.10");
     assertEquals(request.ips, ["10.10.10.10", "192.168.1.1", "10.255.255.255"]);
+  },
+});
+
+test({
+  name: "request with bad url",
+  fn() {
+    const request = new Request(createMockServerRequest({
+      url: " a ",
+    }));
+    assertThrows(
+      () => {
+        request.url;
+      },
+      TypeError,
+      `The server request URL of "http://localhost a " is invalid.`,
+    );
   },
 });
 

@@ -92,7 +92,13 @@ export class Request {
         proto = this.#secure ? "https" : "http";
         host = serverRequest.headers.get("host") ?? "";
       }
-      this.#url = new URL(`${proto}://${host}${serverRequest.url}`);
+      try {
+        this.#url = new URL(`${proto}://${host}${serverRequest.url}`);
+      } catch {
+        throw new TypeError(
+          `The server request URL of "${proto}://${host}${serverRequest.url}" is invalid.`,
+        );
+      }
     }
     return this.#url;
   }
