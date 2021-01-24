@@ -387,7 +387,7 @@ test({
 });
 
 test({
-  name: "send 304",
+  name: "send If-Modified-Since and it doesn't modified",
   async fn() {
     const { context } = setup("/test.json");
     const fixtureStat = await Deno.stat("./fixtures/test.json");
@@ -406,6 +406,35 @@ test({
     assertEquals(
       context.response.headers.get("content-length"),
       null,
+    );
+    context.response.destroy();
+  },
+});
+
+test({
+  name: "send If-Modified-Since and it does modified",
+  async fn() {
+    const { context } = setup("/test.json");
+    const fixture = await Deno.readFile("./fixtures/test.json");
+    const fixtureStat = await Deno.stat("./fixtures/test.json");
+    context.request.headers.set(
+      "If-Modified-Since",
+      new Date(fixtureStat.mtime!.getTime() - 10000).toUTCString(),
+    );
+    await send(context, context.request.url.pathname, {
+      root: "./fixtures",
+    });
+    const serverResponse = await context.response.toServerResponse();
+    const bodyReader = (await serverResponse).body;
+    assert(isDenoReader(bodyReader));
+    const body = await Deno.readAll(bodyReader);
+    assertEquals(body, fixture);
+    assertEquals(serverResponse.status, 200);
+    assertEquals(context.response.type, ".json");
+    assertStrictEquals(context.response.headers.get("content-encoding"), null);
+    assertEquals(
+      context.response.headers.get("content-length"),
+      String(fixture.length),
     );
     context.response.destroy();
   },
