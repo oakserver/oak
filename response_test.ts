@@ -11,6 +11,11 @@ function decodeBody(body: Uint8Array | Deno.Reader | undefined): string {
   return decoder.decode(body as Uint8Array);
 }
 
+function isReader(value: unknown): value is Deno.Reader {
+  return typeof value === "object" && value !== null && "read" in value &&
+    typeof (value as Record<string, unknown>).read === "function";
+}
+
 function createMockRequest({
   headers,
   accepts = (_contentType: string) => {
@@ -141,6 +146,26 @@ test({
       "text/plain; charset=utf-8",
     );
     assertEquals(Array.from(serverResponse.headers.entries()).length, 1);
+  },
+});
+
+test({
+  name: "response.body as async iterator",
+  async fn() {
+    const response = new Response(createMockRequest());
+    response.body = new ReadableStream<string>({
+      start(controller) {
+        controller.enqueue("hello deno");
+        controller.close();
+      },
+    });
+    const serverResponse = await response.toServerResponse();
+    assert(isReader(serverResponse.body));
+    const p = new Uint8Array(1000);
+    const len = await serverResponse.body.read(p);
+    assert(decoder.decode(p).startsWith("hello deno"));
+    assertEquals(len, 10);
+    assertEquals(serverResponse.status, 200);
   },
 });
 

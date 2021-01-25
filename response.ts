@@ -1,5 +1,6 @@
 // Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
 
+import { AsyncIterableReader } from "./async_iterable_reader.ts";
 import { contentType, Status } from "./deps.ts";
 import type { Request } from "./request.ts";
 import type { ServerResponse } from "./types.d.ts";
@@ -40,11 +41,29 @@ const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
 
 const encoder = new TextEncoder();
 
-/** Guard for `Deno.Reader`. */
+/** Guard for Async Iterables */
 // deno-lint-ignore no-explicit-any
-function isReader(value: any): value is Deno.Reader {
-  return value && typeof value === "object" && "read" in value &&
-    typeof value.read === "function";
+function isAsyncIterable(value: unknown): value is AsyncIterable<any> {
+  return typeof value === "object" && value !== null &&
+    Symbol.asyncIterator in value &&
+    // deno-lint-ignore no-explicit-any
+    typeof (value as any)[Symbol.asyncIterator] === "function";
+}
+
+/** Guard for `Deno.Reader`. */
+function isReader(value: unknown): value is Deno.Reader {
+  return typeof value === "object" && value !== null && "read" in value &&
+    typeof (value as Record<string, unknown>).read === "function";
+}
+
+function toUint8Array(body: Body): Uint8Array {
+  let bodyText: string;
+  if (BODY_TYPES.includes(typeof body)) {
+    bodyText = String(body);
+  } else {
+    bodyText = JSON.stringify(body);
+  }
+  return encoder.encode(bodyText);
 }
 
 async function convertBody(
@@ -58,6 +77,8 @@ async function convertBody(
     type = type ?? (isHtml(bodyText) ? "html" : "text/plain");
   } else if (body instanceof Uint8Array || isReader(body)) {
     result = body;
+  } else if (isAsyncIterable(body)) {
+    result = new AsyncIterableReader(body, toUint8Array);
   } else if (body && typeof body === "object") {
     result = encoder.encode(JSON.stringify(body));
     type = type ?? "json";
@@ -99,14 +120,18 @@ export class Response {
 
   /** The body of the response.  The body will be automatically processed when
    * the response is being sent and converted to a `Uint8Array` or a
-   * `Deno.Reader`. */
+   * `Deno.Reader`.
+   * 
+   * Automatic conversion to a `Deno.Reader` occurs for async iterables. */
   get body(): Body | BodyFunction {
     return this.#body;
   }
 
   /** The body of the response.  The body will be automatically processed when
    * the response is being sent and converted to a `Uint8Array` or a
-   * `Deno.Reader`. */
+   * `Deno.Reader`.
+   * 
+   * Automatic conversion to a `Deno.Reader` occurs for async iterables. */
   set body(value: Body | BodyFunction) {
     if (!this.#writable) {
       throw new Error("The response is not writable.");
