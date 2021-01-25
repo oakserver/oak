@@ -1,4 +1,4 @@
-// Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 // This was inspired by https://github.com/suryagh/tsscmp which provides a
 // timing safe string comparison to avoid timing attacks as described in

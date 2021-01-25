@@ -1,4 +1,4 @@
-// Copyright 2018-2020 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 // This was heavily influenced by
 // [cookies](https://github.com/pillarjs/cookies/blob/master/index.js)

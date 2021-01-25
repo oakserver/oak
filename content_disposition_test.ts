@@ -1,3 +1,5 @@
+// Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
+
 import { getFilename } from "./content_disposition.ts";
 import { assertEquals } from "./test_deps.ts";
 
