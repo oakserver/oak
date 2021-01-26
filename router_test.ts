@@ -797,8 +797,8 @@ test({
       assertStrictEquals(context.app, app);
       callStack.push(1);
     });
-    subRouter.get("/bar", subSubRouter.routes());
-    router.get("/foo", subRouter.routes());
+    subRouter.use("/bar", subSubRouter.routes());
+    router.use("/foo", subRouter.routes());
     const mw = router.routes();
     await mw(context, next);
     assertEquals(callStack, [1]);
@@ -832,12 +832,12 @@ test({
       callStack.push(2);
       await next();
     });
-    subRouter.get("/bar", subSubRouter.routes());
+    subRouter.use("/bar", subSubRouter.routes());
     router.get("/foo/(.*)", async (ctx, next) => {
       callStack.push(1);
       await next();
     });
-    router.get("/foo", subRouter.routes());
+    router.use("/foo", subRouter.routes());
     const mw = router.routes();
     await mw(context, next);
     assertEquals(callStack, [1, 2, 4, 5]);
@@ -861,11 +861,11 @@ test({
     subRouter.get<{ name: string }>("/baz", () => {
       callStack.push(2);
     });
-    subRouter.get<{ name: string }>("/baz/:name", subSubRouter.routes());
+    subRouter.use<{ name: string }>("/baz/:name", subSubRouter.routes());
     router.get<{ id: string }>("/foo", () => {
       callStack.push(3);
     });
-    router.get<{ id: string }>("/foo/:id", subRouter.routes());
+    router.use<{ id: string }>("/foo/:id", subRouter.routes());
     const mw = router.routes();
     await mw(context, next);
     assertEquals(callStack, [1]);
