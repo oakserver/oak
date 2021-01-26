@@ -132,6 +132,7 @@ export interface RouterMiddleware<
   /** For route parameter middleware, the `param` key for this parameter will
    * be set. */
   param?: keyof P;
+  router?: Router;
 }
 
 export interface RouterOptions {
@@ -241,6 +242,15 @@ class Layer<
     this.stack = Array.isArray(middleware) ? middleware : [middleware];
     this.path = path;
     this.#regexp = pathToRegexp(path, this.#paramNames, this.#opts);
+  }
+
+  clone(): Layer<P, S> {
+    return new Layer(
+      this.path,
+      this.methods,
+      this.stack,
+      { name: this.name, ...this.#opts },
+    );
   }
 
   match(path: string): boolean {
@@ -371,19 +381,66 @@ export class Router<
 
   #register = (
     path: string | string[],
-    middleware: RouterMiddleware[],
+    middlewares: RouterMiddleware[],
     methods: HTTPMethods[],
     options: LayerOptions = {},
   ): void => {
     if (Array.isArray(path)) {
       for (const p of path) {
-        this.#register(p, middleware, methods, options);
+        this.#register(p, middlewares, methods, options);
       }
       return;
     }
 
+    let layerMiddlewares = [];
+    for (let i = 0; i < middlewares.length; i++) {
+      const middleware = middlewares[i];
+      if (!middleware.router) {
+        layerMiddlewares.push(middleware);
+        continue;
+      }
+
+      if (layerMiddlewares.length) {
+        this.#addLayer(path, layerMiddlewares, methods, options);
+        layerMiddlewares = [];
+      }
+
+      const router: Router = middleware.router.#clone();
+      for (let j = 0; j < router.#stack.length; j++) {
+        const layer = router.#stack[j];
+        if (path) {
+          layer.setPrefix(path);
+        }
+        if (this.#opts.prefix) {
+          layer.setPrefix(this.#opts.prefix);
+        }
+        this.#stack.push(layer);
+        router.#stack[j] = layer;
+      }
+
+      if (this.#params) {
+        const paramArr: Array<string> = Object.keys(this.#params);
+        const routerParams = paramArr;
+        for (let j = 0; j < routerParams.length; j++) {
+          const key = routerParams[j];
+          router.param(key, this.#params[key]);
+        }
+      }
+    }
+
+    if (layerMiddlewares.length) {
+      this.#addLayer(path, layerMiddlewares, methods, options);
+    }
+  };
+
+  #addLayer = (
+    path: string,
+    middlewares: RouterMiddleware[],
+    methods: HTTPMethods[],
+    options: LayerOptions = {},
+  ) => {
     const { end, name, sensitive, strict, ignoreCaptures } = options;
-    const route = new Layer(path, methods, middleware, {
+    const route = new Layer(path, methods, middlewares, {
       end: end === false ? end : true,
       name,
       sensitive: sensitive ?? this.#opts.sensitive ?? false,
@@ -427,6 +484,14 @@ export class Router<
     }
 
     this.#register(path, middleware, methods, { name });
+  };
+
+  #clone = (): Router<RP, RS> => {
+    const router = new Router<RP, RS>(this.#opts);
+    router.#methods = router.#methods.slice();
+    router.#params = Object.assign({}, this.#params);
+    router.#stack = this.#stack.map((layer) => layer.clone());
+    return router;
   };
 
   constructor(opts: RouterOptions = {}) {
