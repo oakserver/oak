@@ -709,6 +709,32 @@ Check out the
 [documentation for that library](https://github.com/pillarjs/path-to-regexp#parameters)
 if you have advanced use cases.
 
+### Nested routers
+
+Nesting routers is supported. The following example responds to
+`http://localhost:8000/forums/oak/posts` and
+`http://localhost:8000/forums/oak/posts/nested-routers`.
+
+```typescript
+import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+
+const posts = new Router()
+  .get("/", (ctx) => {
+    ctx.response.body = `Forum: ${ctx.params.forumId}`;
+  })
+  .get("/:postId", (ctx) => {
+    ctx.response.body =
+      `Forum: ${ctx.params.forumId}, Post: ${ctx.params.postId}`;
+  });
+
+const forums = new Router()
+  .get("/forums/:forumId/posts", posts.routes(), posts.allowedMethods());
+
+await new Application()
+  .use(forums.routes())
+  .listen({ port: 8000 });
+```
+
 ## Static content
 
 The function `send()` is designed to serve static content as part of a
