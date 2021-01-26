@@ -807,6 +807,44 @@ test({
 });
 
 test({
+  name: "sub router match with next",
+  async fn() {
+    const { context, next } = setup("/foo/bar/baz", "GET");
+
+    const callStack: number[] = [];
+    const router = new Router();
+    const subRouter = new Router();
+    const subSubRouter = new Router();
+    subSubRouter.get("/", (_context) => {
+      callStack.push(3);
+    });
+    subSubRouter.get("/baz", async (_context, next) => {
+      callStack.push(4);
+      await next();
+    });
+    subSubRouter.get("/baz", () => {
+      callStack.push(5);
+    });
+    subSubRouter.get("/baz", () => {
+      callStack.push(6);
+    });
+    subRouter.get("/bar/(.*)", async (ctx, next) => {
+      callStack.push(2);
+      await next();
+    });
+    subRouter.get("/bar", subSubRouter.routes());
+    router.get("/foo/(.*)", async (ctx, next) => {
+      callStack.push(1);
+      await next();
+    });
+    router.get("/foo", subRouter.routes());
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [1, 2, 4, 5]);
+  },
+});
+
+test({
   name: "sub router match single param",
   async fn() {
     const { context, next } = setup("/foo/bar/baz/beep", "GET");
@@ -815,7 +853,7 @@ test({
     const router = new Router();
     const subRouter = new Router();
     const subSubRouter = new Router();
-    subSubRouter.get("/", (context) => {
+    subSubRouter.get<{ id: string; name: string }>("/", (context) => {
       assertEquals(context.params.id, "bar");
       assertEquals(context.params.name, "beep");
       callStack.push(1);
