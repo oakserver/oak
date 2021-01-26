@@ -239,7 +239,7 @@ class Layer<
     if (this.methods.includes("GET")) {
       this.methods.unshift("HEAD");
     }
-    this.stack = Array.isArray(middleware) ? middleware : [middleware];
+    this.stack = Array.isArray(middleware) ? middleware.slice() : [middleware];
     this.path = path;
     this.#regexp = pathToRegexp(path, this.#paramNames, this.#opts);
   }
@@ -406,8 +406,8 @@ export class Router<
       }
 
       const router: Router = middleware.router.#clone();
-      for (let j = 0; j < router.#stack.length; j++) {
-        const layer = router.#stack[j];
+
+      for (const layer of router.#stack) {
         if (path) {
           layer.setPrefix(path);
         }
@@ -415,14 +415,10 @@ export class Router<
           layer.setPrefix(this.#opts.prefix);
         }
         this.#stack.push(layer);
-        router.#stack[j] = layer;
       }
 
       if (this.#params) {
-        const paramArr: Array<string> = Object.keys(this.#params);
-        const routerParams = paramArr;
-        for (let j = 0; j < routerParams.length; j++) {
-          const key = routerParams[j];
+        for (const key of Object.keys(this.#params)) {
           router.param(key, this.#params[key]);
         }
       }
@@ -489,7 +485,7 @@ export class Router<
   #clone = (): Router<RP, RS> => {
     const router = new Router<RP, RS>(this.#opts);
     router.#methods = router.#methods.slice();
-    router.#params = Object.assign({}, this.#params);
+    router.#params = {...this.#params};
     router.#stack = this.#stack.map((layer) => layer.clone());
     return router;
   };
