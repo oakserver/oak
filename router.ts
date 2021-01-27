@@ -485,7 +485,7 @@ export class Router<
   #clone = (): Router<RP, RS> => {
     const router = new Router<RP, RS>(this.#opts);
     router.#methods = router.#methods.slice();
-    router.#params = {...this.#params};
+    router.#params = { ...this.#params };
     router.#stack = this.#stack.map((layer) => layer.clone());
     return router;
   };
