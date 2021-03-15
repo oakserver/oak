@@ -1,6 +1,6 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import type { Application, State } from "./application.ts";
+import type { Application, State, Locals } from "./application.ts";
 import { Cookies } from "./cookies.ts";
 import { acceptable, acceptWebSocket, WebSocket } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
@@ -24,12 +24,15 @@ export interface ContextSendOptions extends SendOptions {
 /** Provides context about the current request and response to middleware
  * functions. */
 // deno-lint-ignore no-explicit-any
-export class Context<S extends State = Record<string, any>> {
+export class Context<
+  S extends State = Record<string, any>,
+  L extends Locals = Record<string, any>
+> {
   #socket?: WebSocket;
   #sse?: ServerSentEventTarget;
 
   /** A reference to the current application. */
-  app: Application<State>;
+  app: Application<State, Locals>;
 
   /** An object which allows access to cookies, mediating both the request and
    * response. */
@@ -48,7 +51,7 @@ export class Context<S extends State = Record<string, any>> {
    * level processing of requests and responses, for example if using web
    * sockets.  This automatically gets set to `false` when the context is
    * upgraded to a web socket via the `.upgrade()` method.
-   * 
+   *
    * The default is `true`. */
   respond: boolean;
 
@@ -65,21 +68,24 @@ export class Context<S extends State = Record<string, any>> {
     return this.#socket;
   }
 
-  /** The object to pass state to front-end views.  This can be typed by
-   * supplying the generic state argument when creating a new app.  For
-   * example:
+  /** Global state of the application, which can be specified by passing the
+   * generic argument when constructing:
    *
-   * ```ts
-   * const app = new Application<{ foo: string }>();
-   * ```
-   * 
+   *       const app = new Application<{ foo: string }>();
+   *
    * Or can be contextually inferred based on setting an initial state object:
-   * 
-   * ```ts
-   * const app = new Application({ state: { foo: "bar" } });
-   * ```
+   *
+   *       const app = new Application({ state: { foo: "bar" } });
+   *
    */
   state: S;
+
+  /** Temporary state of a single request, that can be passed to front-end views.
+   * The type can be specified by passing the generic argument when constructing:
+   *
+   *       const app = new Application<MyState, { foo: string }>();
+   */
+  locals: L;
 
   constructor(
     app: Application<S>,
@@ -88,6 +94,7 @@ export class Context<S extends State = Record<string, any>> {
   ) {
     this.app = app;
     this.state = app.state;
+    this.locals = {} as Locals;
     this.request = new Request(serverRequest, app.proxy, secure);
     this.respond = true;
     this.response = new Response(this.request);
@@ -98,7 +105,7 @@ export class Context<S extends State = Record<string, any>> {
   }
 
   /** Asserts the condition and if the condition fails, creates an HTTP error
-   * with the provided status (which defaults to `500`).  The error status by 
+   * with the provided status (which defaults to `500`).  The error status by
    * default will be set on the `.response.status`.
    */
   assert(
@@ -120,10 +127,10 @@ export class Context<S extends State = Record<string, any>> {
 
   /** Asynchronously fulfill a response with a file from the local file
    * system.
-   * 
+   *
    * If the `options.path` is not supplied, the file to be sent will default
    * to this `.request.url.pathname`.
-   * 
+   *
    * Requires Deno read permission. */
   send(options: ContextSendOptions): Promise<string | undefined> {
     const { path = this.request.url.pathname, ...sendOptions } = options;
@@ -134,7 +141,7 @@ export class Context<S extends State = Record<string, any>> {
    * sending server sent events.  Events dispatched on the returned target will
    * be sent to the client and be available in the client's `EventSource` that
    * initiated the connection.
-   * 
+   *
    * This will set `.respond` to `false`. */
   sendEvents(options?: ServerSentEventTargetOptions): ServerSentEventTarget {
     if (this.#sse) {

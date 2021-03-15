@@ -12,7 +12,7 @@ import {
   BufWriter,
   test,
 } from "./test_deps.ts";
-import type { Application, State } from "./application.ts";
+import type { Application, Locals, State } from "./application.ts"
 import { Context } from "./context.ts";
 import { Cookies } from "./cookies.ts";
 import { Request } from "./request.ts";
@@ -20,9 +20,12 @@ import { Response } from "./response.ts";
 import { httpErrors } from "./httpError.ts";
 import type { ServerRequest } from "./types.d.ts";
 
-function createMockApp<S extends State = Record<string, any>>(
-  state = {} as S,
-): Application<S> {
+function createMockApp<
+  S extends State = Record<string, any>,
+  L extends Locals = Record<string, any>
+>(
+  state = {} as S
+): Application<S, L> {
   return {
     state,
     dispatchEvent() {},
@@ -70,6 +73,7 @@ test({
     const context = new Context(app, serverRequest);
     assert(context instanceof Context);
     assertStrictEquals(context.state, app.state);
+    assertEquals(context.locals, {});
     assertStrictEquals(context.app, app);
     assert(context.cookies instanceof Cookies);
     assert(context.request instanceof Request);

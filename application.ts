@@ -83,12 +83,12 @@ export interface ApplicationOptions<S> {
   proxy?: boolean;
 
   /** The `server()` function to be used to read requests.
-   * 
+   *
    * _Not used generally, as this is just for mocking for test purposes_ */
   serve?: Serve;
 
   /** The `server()` function to be used to read requests.
-   * 
+   *
    * _Not used generally, as this is just for mocking for test purposes_ */
   serveTls?: ServeTls;
 
@@ -107,6 +107,9 @@ interface RequestState {
 
 // deno-lint-ignore no-explicit-any
 export type State = Record<string | number | symbol, any>;
+
+// deno-lint-ignore no-explicit-any
+export type Locals = Record<string | number | symbol, any>;
 
 const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 
@@ -139,8 +142,10 @@ export class ApplicationListenEvent extends Event {
  * constructing an instance of `Application`.
  */
 // deno-lint-ignore no-explicit-any
-export class Application<AS extends State = Record<string, any>>
-  extends EventTarget {
+export class Application<
+  AS extends State = Record<string, any>,
+  AL extends Locals = Record<string, any>
+> extends EventTarget {
   #composedMiddleware?: (context: Context<AS>) => Promise<void>;
   #keys?: KeyStack;
   #middleware: Middleware<State, Context<State>>[] = [];
@@ -169,17 +174,24 @@ export class Application<AS extends State = Record<string, any>>
    * defaults to `false`. */
   proxy: boolean;
 
-  /** Generic state of the application, which can be specified by passing the
+  /** Global state of the application, which can be specified by passing the
    * generic argument when constructing:
    *
    *       const app = new Application<{ foo: string }>();
-   * 
+   *
    * Or can be contextually inferred based on setting an initial state object:
-   * 
+   *
    *       const app = new Application({ state: { foo: "bar" } });
-   * 
+   *
    */
   state: AS;
+
+  /** Temporary state of a single request, that can be passed to front-end views.
+   * The type can be specified by passing the generic argument when constructing:
+   *
+   *       const app = new Application<MyState, { foo: string }>();
+   */
+  locals: AL;
 
   constructor(options: ApplicationOptions<AS> = {}) {
     super();
@@ -194,6 +206,7 @@ export class Application<AS extends State = Record<string, any>>
     this.proxy = proxy ?? false;
     this.keys = keys;
     this.state = state ?? {} as AS;
+    this.locals = {} as AL;
     this.#serve = serve;
     this.#serveTls = serveTls;
   }
@@ -400,20 +413,20 @@ export class Application<AS extends State = Record<string, any>>
    * of execution via the use of the `next()` function that the middleware
    * function will be called with.  The `context` object provides information
    * about the current state of the application.
-   * 
+   *
    * Basic usage:
-   * 
+   *
    * ```ts
    * const import { Application } from "https://deno.land/x/oak/mod.ts";
-   * 
+   *
    * const app = new Application();
-   * 
+   *
    * app.use((ctx, next) => {
    *   ctx.request; // contains request information
    *   ctx.response; // setups up information to use in the response;
    *   await next(); // manages the flow control of the middleware execution
    * });
-   * 
+   *
    * await app.listen({ port: 80 });
    * ```
    */
