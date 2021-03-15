@@ -23,9 +23,10 @@ export interface ContextSendOptions extends SendOptions {
 
 /** Provides context about the current request and response to middleware
  * functions. */
-// deno-lint-ignore no-explicit-any
 export class Context<
+  // deno-lint-ignore no-explicit-any
   S extends State = Record<string, any>,
+  // deno-lint-ignore no-explicit-any
   L extends Locals = Record<string, any>,
 > {
   #socket?: WebSocket;

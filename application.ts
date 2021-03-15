@@ -141,9 +141,10 @@ export class ApplicationListenEvent extends Event {
  * The `context.state` can be typed via passing a generic argument when
  * constructing an instance of `Application`.
  */
-// deno-lint-ignore no-explicit-any
 export class Application<
+  // deno-lint-ignore no-explicit-any
   AS extends State = Record<string, any>,
+  // deno-lint-ignore no-explicit-any
   AL extends Locals = Record<string, any>,
 > extends EventTarget {
   #composedMiddleware?: (context: Context<AS>) => Promise<void>;
