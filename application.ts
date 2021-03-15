@@ -144,7 +144,7 @@ export class ApplicationListenEvent extends Event {
 // deno-lint-ignore no-explicit-any
 export class Application<
   AS extends State = Record<string, any>,
-  AL extends Locals = Record<string, any>
+  AL extends Locals = Record<string, any>,
 > extends EventTarget {
   #composedMiddleware?: (context: Context<AS>) => Promise<void>;
   #keys?: KeyStack;

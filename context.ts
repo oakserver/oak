@@ -1,6 +1,6 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import type { Application, State, Locals } from "./application.ts";
+import type { Application, Locals, State } from "./application.ts";
 import { Cookies } from "./cookies.ts";
 import { acceptable, acceptWebSocket, WebSocket } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
@@ -26,7 +26,7 @@ export interface ContextSendOptions extends SendOptions {
 // deno-lint-ignore no-explicit-any
 export class Context<
   S extends State = Record<string, any>,
-  L extends Locals = Record<string, any>
+  L extends Locals = Record<string, any>,
 > {
   #socket?: WebSocket;
   #sse?: ServerSentEventTarget;

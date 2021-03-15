@@ -12,7 +12,7 @@ import {
   BufWriter,
   test,
 } from "./test_deps.ts";
-import type { Application, Locals, State } from "./application.ts"
+import type { Application, Locals, State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Cookies } from "./cookies.ts";
 import { Request } from "./request.ts";
@@ -22,9 +22,9 @@ import type { ServerRequest } from "./types.d.ts";
 
 function createMockApp<
   S extends State = Record<string, any>,
-  L extends Locals = Record<string, any>
+  L extends Locals = Record<string, any>,
 >(
-  state = {} as S
+  state = {} as S,
 ): Application<S, L> {
   return {
     state,

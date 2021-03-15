@@ -154,15 +154,15 @@ The context passed to middleware has several properties:
 
 - `.state`
 
-  A record of global application state, which can be strongly typed by specifying 
-  a generic argument when constructing an `Application<MyState>()`, or inferred 
-  by passing a state object (e.g. `Application({ state })`).
-  
+  A record of global application state, which can be strongly typed by
+  specifying a generic argument when constructing an `Application<MyState>()`,
+  or inferred by passing a state object (e.g. `Application({ state })`).
+
 - `.locals`
 
-  A record of temporary request state that can be passed to front-end views. 
-  The type can be specified by passing the generic argument when constructing 
-  an `Application<MyState, MyLocals>()`.
+  A record of temporary request state that can be passed to front-end views. The
+  type can be specified by passing the generic argument when constructing an
+  `Application<MyState, MyLocals>()`.
 
 The context passed to middleware has some methods:
 
