@@ -858,11 +858,11 @@ test({
       assertEquals(context.params.name, "beep");
       callStack.push(1);
     });
-    subRouter.get<{ name: string }>("/baz", () => {
+    subRouter.get("/baz", () => {
       callStack.push(2);
     });
     subRouter.use<{ name: string }>("/baz/:name", subSubRouter.routes());
-    router.get<{ id: string }>("/foo", () => {
+    router.get("/foo", () => {
       callStack.push(3);
     });
     router.use<{ id: string }>("/foo/:id", subRouter.routes());
