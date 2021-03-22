@@ -183,6 +183,11 @@ export async function send(
 
   response.headers.set("Content-Length", String(stats.size));
 
+  // Return the Accept-Ranges header so that browsers know they can request ranges. 
+  // This is useful for videos/resuming larger files etc. For more info see: 
+  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests
+  response.headers.set("Accept-Ranges", "bytes")
+
   const file = await Deno.open(path, { read: true });
   response.addResource(file.rid);
   response.body = file;
