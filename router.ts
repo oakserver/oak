@@ -392,9 +392,8 @@ export class Router<
       return;
     }
 
-    let layerMiddlewares = [];
-    for (let i = 0; i < middlewares.length; i++) {
-      const middleware = middlewares[i];
+    let layerMiddlewares: RouterMiddleware[] = [];
+    for (const middleware of middlewares) {
       if (!middleware.router) {
         layerMiddlewares.push(middleware);
         continue;
@@ -417,10 +416,8 @@ export class Router<
         this.#stack.push(layer);
       }
 
-      if (this.#params) {
-        for (const key of Object.keys(this.#params)) {
-          router.param(key, this.#params[key]);
-        }
+      for (const [param, mw] of Object.entries(this.#params)) {
+        router.param(param, mw);
       }
     }
 
