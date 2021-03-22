@@ -815,10 +815,10 @@ test({
     const router = new Router();
     const subRouter = new Router();
     const subSubRouter = new Router();
-    subSubRouter.get("/", (_context) => {
+    subSubRouter.get("/", () => {
       callStack.push(3);
     });
-    subSubRouter.get("/baz", async (_context, next) => {
+    subSubRouter.get("/baz", async (ctx, next) => {
       callStack.push(4);
       await next();
     });
