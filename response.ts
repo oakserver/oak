@@ -66,6 +66,28 @@ function toUint8Array(body: Body): Uint8Array {
   return encoder.encode(bodyText);
 }
 
+function jsonStringifyBigInt(
+  obj: Record<string | number | symbol, unknown>,
+): string {
+  Object.keys(obj).forEach((key) => {
+    switch (typeof obj[key]) {
+      case "bigint":
+        obj[key] = (obj[key] as BigInt).toString();
+        break;
+      case "object": {
+        if (obj[key] !== null) {
+          jsonStringifyBigInt(
+            obj[key] as Record<string | number | symbol, unknown>,
+          );
+        }
+        break;
+      }
+    }
+  });
+
+  return JSON.stringify(obj);
+}
+
 async function convertBody(
   body: Body | BodyFunction,
   type?: string,
@@ -80,7 +102,20 @@ async function convertBody(
   } else if (isAsyncIterable(body)) {
     result = new AsyncIterableReader(body, toUint8Array);
   } else if (body && typeof body === "object") {
-    result = encoder.encode(JSON.stringify(body));
+    // This first statement covers the null value as well
+    try {
+      result = encoder.encode(JSON.stringify(body));
+    } catch (e) {
+      if (e.message.includes("BigInt")) {
+        result = encoder.encode(
+          jsonStringifyBigInt(
+            body as Record<string | number | symbol, unknown>,
+          ),
+        );
+      } else {
+        throw e;
+      }
+    }
     type = type ?? "json";
   } else if (typeof body === "function") {
     const result = body.call(null);

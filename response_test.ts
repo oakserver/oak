@@ -93,9 +93,12 @@ test({
   name: "response.body as JSON",
   async fn() {
     const response = new Response(createMockRequest());
-    response.body = { foo: "bar" };
+    response.body = { foo: "bar", x: null, y: 17n, z: ["a", 2, 3n] };
     const serverResponse = await response.toServerResponse();
-    assertEquals(decodeBody(serverResponse.body), `{"foo":"bar"}`);
+    assertEquals(
+      decodeBody(serverResponse.body),
+      `{"foo":"bar","x":null,"y":"17","z":["a",2,"3"]}`,
+    );
     assertEquals(serverResponse.status, 200);
     assertEquals(
       serverResponse.headers.get("content-type"),
