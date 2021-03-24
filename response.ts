@@ -110,11 +110,7 @@ async function convertBody(
       json = JSON.stringify(body);
     } catch (e) {
       if (e.message.includes("BigInt")) {
-        json = JSON.stringify(
-          stringifyBigIntInObject(
-            body as JsonObject,
-          ),
-        );
+        json = JSON.stringify(stringifyBigIntInObject(body as JsonObject));
       } else {
         throw e;
       }
