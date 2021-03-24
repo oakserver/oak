@@ -66,9 +66,9 @@ function toUint8Array(body: Body): Uint8Array {
   return encoder.encode(bodyText);
 }
 
-function jsonStringifyBigInt(
+function stringifyBigIntInObject(
   obj: Record<string | number | symbol, unknown>,
-): string {
+): Record<string | number | symbol, unknown> {
   Object.keys(obj).forEach((key) => {
     switch (typeof obj[key]) {
       case "bigint":
@@ -76,7 +76,7 @@ function jsonStringifyBigInt(
         break;
       case "object": {
         if (obj[key] !== null) {
-          jsonStringifyBigInt(
+          stringifyBigIntInObject(
             obj[key] as Record<string | number | symbol, unknown>,
           );
         }
@@ -85,7 +85,7 @@ function jsonStringifyBigInt(
     }
   });
 
-  return JSON.stringify(obj);
+  return obj;
 }
 
 async function convertBody(
@@ -102,14 +102,17 @@ async function convertBody(
   } else if (isAsyncIterable(body)) {
     result = new AsyncIterableReader(body, toUint8Array);
   } else if (body && typeof body === "object") {
-    // This first statement covers the null value as well
+    // The object will only be transformed JSON.stringify
+    // fails the first time around because of bigint
     try {
       result = encoder.encode(JSON.stringify(body));
     } catch (e) {
       if (e.message.includes("BigInt")) {
         result = encoder.encode(
-          jsonStringifyBigInt(
-            body as Record<string | number | symbol, unknown>,
+          JSON.stringify(
+            stringifyBigIntInObject(
+              body as Record<string | number | symbol, unknown>,
+            ),
           ),
         );
       } else {
