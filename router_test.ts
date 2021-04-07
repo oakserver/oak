@@ -872,3 +872,64 @@ test({
     assertStrictEquals((context as RouterContext).router, router);
   },
 });
+
+test({
+  name: "sub router patch prefix with param",
+  async fn() {
+    const { context, next } = setup("/foo/bar/baz", "GET");
+    const callStack: number[] = [];
+    const router = new Router();
+    const subRouter = new Router({ prefix: "/:bar" });
+    subRouter.get("/baz", (ctx) => {
+      assertEquals(ctx.params.bar, "bar");
+      callStack.push(0);
+    });
+    router.use("/foo", subRouter.routes());
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [0]);
+  },
+});
+
+test({
+  name: "sub router match layer prefix",
+  async fn() {
+    let callStack: number[] = [];
+    let matches: string[] = [];
+    const router = new Router();
+    const subRouter = new Router();
+    const subSubRouter = new Router();
+
+    subSubRouter.get("/bar", async (ctx, next) => {
+      callStack.push(1);
+      matches.push(...(ctx.matched?.map((layer) => layer.path) ?? []));
+      await next();
+    });
+    subRouter.use(subSubRouter.routes());
+    subRouter.use("(.*)", subSubRouter.routes());
+    router.use("/foo", subRouter.routes());
+    const mw = router.routes();
+
+    const { context, next } = setup("/foo/bar", "GET");
+    await mw(context, next);
+    assertEquals(callStack, [1, 1]);
+    assertEquals(matches, [
+      "/foo/bar",
+      "/foo(.*)/bar",
+      "/foo/bar",
+      "/foo(.*)/bar",
+    ]);
+    assertStrictEquals((context as RouterContext).router, router);
+
+    callStack = [];
+    matches = [];
+
+    const { context: context2, next: next2 } = setup("/foo/123/bar", "GET");
+    await mw(context2, next2);
+    assertEquals(callStack, [1]);
+    assertEquals(matches, [
+      "/foo(.*)/bar",
+    ]);
+    assertStrictEquals((context2 as RouterContext).router, router);
+  },
+});

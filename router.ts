@@ -380,7 +380,7 @@ export class Router<
   };
 
   #register = (
-    path: string | string[],
+    path: string | string[] | null,
     middlewares: RouterMiddleware[],
     methods: HTTPMethods[],
     options: LayerOptions = {},
@@ -400,7 +400,7 @@ export class Router<
       }
 
       if (layerMiddlewares.length) {
-        this.#addLayer(path, layerMiddlewares, methods, options);
+        this.#addLayer(path ?? "(.*)", layerMiddlewares, methods, options);
         layerMiddlewares = [];
       }
 
@@ -422,7 +422,7 @@ export class Router<
     }
 
     if (layerMiddlewares.length) {
-      this.#addLayer(path, layerMiddlewares, methods, options);
+      this.#addLayer(path ?? "(.*)", layerMiddlewares, methods, options);
     }
   };
 
@@ -982,7 +982,7 @@ export class Router<
     }
 
     this.#register(
-      path ?? "(.*)",
+      path ?? null,
       middleware as RouterMiddleware[],
       [],
       { end: false, ignoreCaptures: !path },
