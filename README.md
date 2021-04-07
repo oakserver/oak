@@ -728,7 +728,7 @@ const posts = new Router()
   });
 
 const forums = new Router()
-  .get("/forums/:forumId/posts", posts.routes(), posts.allowedMethods());
+  .use("/forums/:forumId/posts", posts.routes(), posts.allowedMethods());
 
 await new Application()
   .use(forums.routes())

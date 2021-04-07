@@ -11,7 +11,7 @@ const posts = new Router()
   });
 
 const forums = new Router()
-  .get("/forums/:forumId/posts", posts.routes(), posts.allowedMethods());
+  .use("/forums/:forumId/posts", posts.routes(), posts.allowedMethods());
 
 console.log(
   `Responds to "http://localhost:8000/forums/oak/posts" and "http://localhost:8000/forums/oak/posts/nested-routers"`,
