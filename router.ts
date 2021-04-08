@@ -380,10 +380,10 @@ export class Router<
   };
 
   #register = (
-    path: string | string[] | null,
+    path: string | string[],
     middlewares: RouterMiddleware[],
     methods: HTTPMethods[],
-    options: LayerOptions = {},
+    options: LayerOptions & { ignorePrefix?: boolean } = {},
   ): void => {
     if (Array.isArray(path)) {
       for (const p of path) {
@@ -400,14 +400,14 @@ export class Router<
       }
 
       if (layerMiddlewares.length) {
-        this.#addLayer(path ?? "(.*)", layerMiddlewares, methods, options);
+        this.#addLayer(path, layerMiddlewares, methods, options);
         layerMiddlewares = [];
       }
 
       const router: Router = middleware.router.#clone();
 
       for (const layer of router.#stack) {
-        if (path) {
+        if (!options.ignorePrefix) {
           layer.setPrefix(path);
         }
         if (this.#opts.prefix) {
@@ -422,7 +422,7 @@ export class Router<
     }
 
     if (layerMiddlewares.length) {
-      this.#addLayer(path ?? "(.*)", layerMiddlewares, methods, options);
+      this.#addLayer(path, layerMiddlewares, methods, options);
     }
   };
 
@@ -982,10 +982,10 @@ export class Router<
     }
 
     this.#register(
-      path ?? null,
+      path ?? "(.*)",
       middleware as RouterMiddleware[],
       [],
-      { end: false, ignoreCaptures: !path },
+      { end: false, ignoreCaptures: !path, ignorePrefix: !path },
     );
 
     // deno-lint-ignore no-explicit-any
