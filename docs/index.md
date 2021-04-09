@@ -72,7 +72,7 @@ that can add functionality to your application in a very loosely coupled way.
 To get an application to use a middleware function, an instance of an
 application has a `.use()` method. Middleware functions are provided with two
 parameters, a context object, and a `next()` function. Because the processing of
-middleware is asynchronous by nature, middleware function can return a promise
+middleware is asynchronous by nature, middleware functions can return a promise
 to indicate when they are done processing.
 
 ### Control the execution of middleware
