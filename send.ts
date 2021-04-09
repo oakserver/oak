@@ -5,7 +5,7 @@
 
 import type { Context } from "./context.ts";
 import { createHttpError } from "./httpError.ts";
-import { basename, extname, parse, sep } from "./deps.ts";
+import { basename, extname, parse } from "./deps.ts";
 import { decodeComponent, resolvePath } from "./util.ts";
 
 export interface SendOptions {
