@@ -69,7 +69,7 @@ test({
     const serverRequest = createMockServerRequest();
     const context = new Context(app, serverRequest);
     assert(context instanceof Context);
-    assertStrictEquals(context.state, app.state);
+    assertEquals(context.state, app.state);
     assertStrictEquals(context.app, app);
     assert(context.cookies instanceof Cookies);
     assert(context.request instanceof Request);
@@ -231,5 +231,22 @@ test({
       true,
     );
     assertEquals(context.request.secure, true);
+  },
+});
+
+test({
+  name: "context.state mutations don't apply to app.state",
+  fn() {
+    const app = createMockApp();
+    app.state.a = "a";
+    let context = new Context(app, createMockServerRequest());
+    assertEquals(context.state, { a: "a" });
+    context.state.a = "b";
+    assertEquals(context.state, { a: "b" });
+    assertEquals(app.state, { a: "a" });
+    app.state.b = "b";
+    assertEquals(context.state, { a: "b" });
+    context = new Context(app, createMockServerRequest());
+    assertEquals(context.state, { a: "a", b: "b" });
   },
 });

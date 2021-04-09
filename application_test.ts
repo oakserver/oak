@@ -2,13 +2,7 @@
 
 // deno-lint-ignore-file
 
-import {
-  assert,
-  assertEquals,
-  assertStrictEquals,
-  assertThrowsAsync,
-  test,
-} from "./test_deps.ts";
+import { assert, assertEquals, assertThrowsAsync, test } from "./test_deps.ts";
 
 import { Application, ListenOptions, ListenOptionsTls } from "./application.ts";
 import { Context } from "./context.ts";
@@ -259,7 +253,6 @@ test({
     let called = false;
     app.use((context) => {
       assertEquals(context.state, { foo: "bar" });
-      assertStrictEquals(app.state, context.state);
       called = true;
     });
     await app.listen(":8000");

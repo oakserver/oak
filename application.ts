@@ -178,6 +178,9 @@ export class Application<AS extends State = Record<string, any>>
    * 
    *       const app = new Application({ state: { foo: "bar" } });
    * 
+   * When a new context is created, the application's state is cloned and the
+   * state is unique to that request/response.  Changes can be made to the
+   * application state that will be shared with all contexts.
    */
   state: AS;
 

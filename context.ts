@@ -12,6 +12,7 @@ import {
   ServerSentEventTarget,
   ServerSentEventTargetOptions,
 } from "./server_sent_event.ts";
+import { structuredClone } from "./structured_clone.ts";
 import type { ErrorStatus, ServerRequest } from "./types.d.ts";
 
 export interface ContextSendOptions extends SendOptions {
@@ -78,6 +79,12 @@ export class Context<S extends State = Record<string, any>> {
    * ```ts
    * const app = new Application({ state: { foo: "bar" } });
    * ```
+   * 
+   * On each request/response cycle, the context's state is cloned from the
+   * application state. This means changes to the context's `.state` will be
+   * dropped when the request drops, but "defaults" can be applied to the
+   * application's state.  Changes to the application's state though won't be
+   * reflected until the next request in the context's state.
    */
   state: S;
 
@@ -87,7 +94,7 @@ export class Context<S extends State = Record<string, any>> {
     secure = false,
   ) {
     this.app = app;
-    this.state = app.state;
+    this.state = structuredClone(app.state);
     this.request = new Request(serverRequest, app.proxy, secure);
     this.respond = true;
     this.response = new Response(this.request);
