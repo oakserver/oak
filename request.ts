@@ -17,8 +17,6 @@ import { preferredEncodings } from "./negotiation/encoding.ts";
 import { preferredLanguages } from "./negotiation/language.ts";
 import { preferredMediaTypes } from "./negotiation/mediaType.ts";
 
-const decoder = new TextDecoder();
-
 /** An interface which provides information about the current request. */
 export class Request {
   #body: RequestBody;

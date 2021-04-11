@@ -25,6 +25,7 @@ export type { ContextSendOptions } from "./context.ts";
 export * as helpers from "./helpers.ts";
 export { Cookies } from "./cookies.ts";
 export type { CookiesGetOptions, CookiesSetDeleteOptions } from "./cookies.ts";
+export * as etag from "./etag.ts";
 export { HttpError, httpErrors, isHttpError } from "./httpError.ts";
 export { compose as composeMiddleware } from "./middleware.ts";
 export type { Middleware } from "./middleware.ts";

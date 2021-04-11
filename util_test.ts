@@ -4,8 +4,6 @@ import { assert, assertEquals, assertThrows, test } from "./test_deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { decodeComponent, getRandomFilename, resolvePath } from "./util.ts";
 
-const encoder = new TextEncoder();
-
 test({
   name: "decodeComponent",
   fn() {

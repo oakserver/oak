@@ -674,6 +674,49 @@ app.use(async (context) => {
 await app.listen({ port: 8000 });
 ```
 
+### ETag support
+
+The `send()` method automatically supports generating an `ETag` header for
+static assets. The header allows the client to determine if it needs to
+re-download an asset or not, but it can be useful to calculate `ETag`s for other
+scenarios, and oak supplies the `etag` object to provide these functions.
+
+There are two main use cases, first, a middleware function that assesses the
+`context.reponse.body` and determines if it can create an `ETag` header for that
+body type, and if so sets the `ETag` header on the response. Basic usage would
+look something like this:
+
+```ts
+import { Application, etag } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application();
+
+app.use(etag.factory());
+
+// ... other middleware for the application
+```
+
+The second use case is lower-level, where you have an entity which you want to
+calculate an `ETag` value for, like implementing custom response logic based on
+other header information. The `etag.calculate()` method is provided for this,
+and it supports calculating `ETag`s for `string`s, `Uint8Array`s, and
+`Deno.FileInfo` structures. Basic usage would look something like this:
+
+```ts
+import { etag } from "https://deno.land/x/oak/mod.ts";
+
+export async function mw(context, next) {
+  await next();
+  const value = etag.calculate("hello deno");
+  context.response.headers.set("ETag", value);
+}
+```
+
+By default, `etag` will calculate weak tags for `Deno.FileInfo` (or `Deno.File`
+bodies in the middleware) and strong tags for `string`s and `Uint8Array`s. This
+can be changed by passing a `weak` property in the `options` parameter to either
+the `factory` or `calculate` methods.
+
 ## Helpers
 
 The `mod.ts` also exports a variable named `helpers` which contains functions
