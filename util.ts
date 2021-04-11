@@ -14,6 +14,9 @@ const UNMATCHED_SURROGATE_PAIR_REGEXP =
   /(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF]([^\uDC00-\uDFFF]|$)/g;
 const UNMATCHED_SURROGATE_PAIR_REPLACE = "$1\uFFFD$2";
 
+/** Body types which will be coerced into strings before being sent. */
+export const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
+
 /** Safely decode a URI component, where if it fails, instead of throwing,
  * just returns the original string
  */
@@ -36,6 +39,21 @@ export function getRandomFilename(prefix = "", extension = ""): string {
   return `${prefix}${
     new Sha1().update(crypto.getRandomValues(new Uint8Array(256))).hex()
   }${extension ? `.${extension}` : ""}`;
+}
+
+/** Guard for Async Iterables */
+// deno-lint-ignore no-explicit-any
+export function isAsyncIterable(value: unknown): value is AsyncIterable<any> {
+  return typeof value === "object" && value !== null &&
+    Symbol.asyncIterator in value &&
+    // deno-lint-ignore no-explicit-any
+    typeof (value as any)[Symbol.asyncIterator] === "function";
+}
+
+/** Guard for `Deno.Reader`. */
+export function isReader(value: unknown): value is Deno.Reader {
+  return typeof value === "object" && value !== null && "read" in value &&
+    typeof (value as Record<string, unknown>).read === "function";
 }
 
 /** Determines if a HTTP `Status` is an `ErrorStatus` (4XX or 5XX). */

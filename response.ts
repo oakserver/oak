@@ -4,7 +4,14 @@ import { AsyncIterableReader } from "./async_iterable_reader.ts";
 import { contentType, Status } from "./deps.ts";
 import type { Request } from "./request.ts";
 import type { ServerResponse } from "./types.d.ts";
-import { encodeUrl, isHtml, isRedirectStatus } from "./util.ts";
+import {
+  BODY_TYPES,
+  encodeUrl,
+  isAsyncIterable,
+  isHtml,
+  isReader,
+  isRedirectStatus,
+} from "./util.ts";
 
 type Body =
   | string
@@ -37,24 +44,7 @@ type BodyFunction = () => Body | Promise<Body>;
  */
 export const REDIRECT_BACK = Symbol("redirect backwards");
 
-const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
-
 const encoder = new TextEncoder();
-
-/** Guard for Async Iterables */
-// deno-lint-ignore no-explicit-any
-function isAsyncIterable(value: unknown): value is AsyncIterable<any> {
-  return typeof value === "object" && value !== null &&
-    Symbol.asyncIterator in value &&
-    // deno-lint-ignore no-explicit-any
-    typeof (value as any)[Symbol.asyncIterator] === "function";
-}
-
-/** Guard for `Deno.Reader`. */
-function isReader(value: unknown): value is Deno.Reader {
-  return typeof value === "object" && value !== null && "read" in value &&
-    typeof (value as Record<string, unknown>).read === "function";
-}
 
 function toUint8Array(body: Body): Uint8Array {
   let bodyText: string;

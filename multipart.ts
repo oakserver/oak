@@ -2,7 +2,7 @@
 
 import { BufReader, ReadLineResult } from "./buf_reader.ts";
 import { getFilename } from "./content_disposition.ts";
-import { equals, extension } from "./deps.ts";
+import { equals, extension, writeAll } from "./deps.ts";
 import { readHeaders, toParamRegExp, unquote } from "./headers.ts";
 import { httpErrors } from "./httpError.ts";
 import { getRandomFilename, skipLWSPChar, stripEol } from "./util.ts";
@@ -213,14 +213,14 @@ async function* parts(
             const result = await getFile(contentType);
             filename = result[0];
             file = result[1];
-            await Deno.writeAll(file, buf);
+            await writeAll(file, buf);
             buf = undefined;
           } else {
             buf = append(buf, bytes);
           }
         }
         if (file) {
-          await Deno.writeAll(file, bytes);
+          await writeAll(file, bytes);
         }
       }
     } else {

@@ -1,7 +1,13 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 import { Status } from "./deps.ts";
-import { assert, assertEquals, assertThrows, test } from "./test_deps.ts";
+import {
+  assert,
+  assertEquals,
+  assertThrows,
+  Buffer,
+  test,
+} from "./test_deps.ts";
 import type { Request } from "./request.ts";
 import { REDIRECT_BACK, Response } from "./response.ts";
 
@@ -369,7 +375,7 @@ test({
   name: "response.body() passes Deno.Reader",
   async fn() {
     const response = new Response(createMockRequest());
-    const body = new Deno.Buffer();
+    const body = new Buffer();
     response.body = body;
     const serverResponse = await response.toServerResponse();
     assert(serverResponse.body === body);

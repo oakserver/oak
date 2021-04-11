@@ -4,7 +4,7 @@ import { assert, assertEquals, assertStrictEquals, test } from "./test_deps.ts";
 
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
-import { Status } from "./deps.ts";
+import { readAll, Status } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { send } from "./send.ts";
 
@@ -116,7 +116,7 @@ test({
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
-    const body = await Deno.readAll(bodyReader);
+    const body = await readAll(bodyReader);
     assertEquals(body, fixture);
     assertEquals(context.response.type, ".html");
     assertEquals(
@@ -141,7 +141,7 @@ test({
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
-    const body = await Deno.readAll(bodyReader);
+    const body = await readAll(bodyReader);
     assertEquals(body, fixture);
     assertEquals(context.response.type, ".json");
     assertEquals(context.response.headers.get("content-encoding"), "gzip");
@@ -163,7 +163,7 @@ test({
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
-    const body = await Deno.readAll(bodyReader);
+    const body = await readAll(bodyReader);
     assertEquals(body, fixture);
     assertEquals(context.response.type, ".json");
     assertEquals(context.response.headers.get("content-encoding"), "br");
@@ -186,7 +186,7 @@ test({
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
-    const body = await Deno.readAll(bodyReader);
+    const body = await readAll(bodyReader);
     assertEquals(body, fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
@@ -227,7 +227,7 @@ test({
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
-    const body = await Deno.readAll(bodyReader);
+    const body = await readAll(bodyReader);
     assertEquals(body, fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
@@ -287,7 +287,7 @@ test({
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
-    const body = await Deno.readAll(bodyReader);
+    const body = await readAll(bodyReader);
     assertEquals(body, fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
@@ -310,7 +310,7 @@ test({
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
-    const body = await Deno.readAll(bodyReader);
+    const body = await readAll(bodyReader);
     assertEquals(body, fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
@@ -333,7 +333,7 @@ test({
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
-    const body = await Deno.readAll(bodyReader);
+    const body = await readAll(bodyReader);
     assertEquals(body, fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
@@ -374,7 +374,7 @@ test({
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
-    const body = await Deno.readAll(bodyReader);
+    const body = await readAll(bodyReader);
     assertEquals(body, fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
@@ -427,7 +427,7 @@ test({
     const serverResponse = await context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
-    const body = await Deno.readAll(bodyReader);
+    const body = await readAll(bodyReader);
     assertEquals(body, fixture);
     assertEquals(serverResponse.status, 200);
     assertEquals(context.response.type, ".json");

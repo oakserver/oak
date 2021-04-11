@@ -1,6 +1,6 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assert } from "./deps.ts";
+import { assert, readAll } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { isMediaType } from "./isMediaType.ts";
 import { FormDataReader } from "./multipart.ts";
@@ -84,7 +84,7 @@ export class RequestBody {
   #type?: "form-data" | "raw" | "reader" | "undefined";
 
   #valuePromise = () => {
-    return this.#readAllBody ?? (this.#readAllBody = Deno.readAll(this.#body));
+    return this.#readAllBody ?? (this.#readAllBody = readAll(this.#body));
   };
 
   constructor(request: ServerRequest) {

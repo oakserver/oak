@@ -1,6 +1,7 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 import { RequestBody } from "./body.ts";
+import { readAll } from "./deps.ts";
 import {
   assert,
   assertEquals,
@@ -196,7 +197,7 @@ test({
     }));
     const body = requestBody.get({ type: "reader" });
     assert(body.type === "reader");
-    const actual = await Deno.readAll(body.value);
+    const actual = await readAll(body.value);
     assertEquals(decoder.decode(actual), "hello world");
   },
 });

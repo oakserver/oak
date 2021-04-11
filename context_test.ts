@@ -15,6 +15,7 @@ import {
 import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Cookies } from "./cookies.ts";
+import { readAll } from "./deps.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { httpErrors } from "./httpError.ts";
@@ -121,7 +122,7 @@ test({
     const serverResponse = await context.response.toServerResponse();
     const bodyReader = serverResponse.body;
     assert(isDenoReader(bodyReader));
-    const body = await Deno.readAll(bodyReader);
+    const body = await readAll(bodyReader);
     assertEquals(body, fixture);
     assertEquals(context.response.type, ".html");
     assertEquals(
@@ -143,7 +144,7 @@ test({
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
-    const body = await Deno.readAll(bodyReader);
+    const body = await readAll(bodyReader);
     assertEquals(body, fixture);
     assertEquals(context.response.type, ".html");
     assertEquals(

@@ -1,6 +1,6 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, test } from "./test_deps.ts";
+import { assertEquals, Buffer, test } from "./test_deps.ts";
 
 import { BufReader } from "./buf_reader.ts";
 import { readHeaders, toParamRegExp, unquote } from "./headers.ts";
@@ -26,7 +26,7 @@ test({
   name: "headers - readHeaders()",
   async fn() {
     const body = new BufReader(
-      new Deno.Buffer(new TextEncoder().encode(fixture)),
+      new Buffer(new TextEncoder().encode(fixture)),
     );
     const actual = await readHeaders(body);
     assertEquals(

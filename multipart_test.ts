@@ -1,6 +1,13 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assert, assertEquals, assertThrowsAsync, test } from "./test_deps.ts";
+import {
+  assert,
+  assertEquals,
+  assertThrowsAsync,
+  Buffer,
+  test,
+  writeAllSync,
+} from "./test_deps.ts";
 
 import { httpErrors } from "./httpError.ts";
 import { FormDataFile, FormDataReader } from "./multipart.ts";
@@ -53,14 +60,14 @@ export { printHello } from "./print_hello.ts";
 --OAK-SERVER-BOUNDARY--
 `;
 
-function createBody(value: string): Deno.Buffer {
-  return new Deno.Buffer(encoder.encode(value));
+function createBody(value: string): Buffer {
+  return new Buffer(encoder.encode(value));
 }
 
 function createBodyFile(
   name: string,
   filename: string,
-): [Uint8Array, Deno.Buffer] {
+): [Uint8Array, Buffer] {
   const fileData = Deno.readFileSync(filename);
   const mediaType = lookup(filename);
   const basename = parse(filename).base;
@@ -71,10 +78,10 @@ Content-Type: ${mediaType}
 
 `;
   const post = `\r\n--OAK-SERVER-BOUNDARY--\r\n`;
-  const buffer = new Deno.Buffer();
-  Deno.writeAllSync(buffer, encoder.encode(pre));
-  Deno.writeAllSync(buffer, fileData);
-  Deno.writeAllSync(buffer, encoder.encode(post));
+  const buffer = new Buffer();
+  writeAllSync(buffer, encoder.encode(pre));
+  writeAllSync(buffer, fileData);
+  writeAllSync(buffer, encoder.encode(post));
   return [fileData, buffer];
 }
 

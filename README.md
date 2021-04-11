@@ -309,10 +309,12 @@ And several methods:
   type `"reader"` with a `value` as a `Deno.Reader`:
 
   ```ts
+  import { readAll } from "https://deno.land/x/std/io/util.ts";
+
   app.use(async (ctx) => {
     const result = ctx.request.body({ type: "reader" });
     result.type; // "reader"
-    await Deno.readAll(result.value); // a "raw" Uint8Array of the body
+    await readAll(result.value); // a "raw" Uint8Array of the body
   });
   ```
 
