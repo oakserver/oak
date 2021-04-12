@@ -6,7 +6,7 @@ import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 
-import { calculate, factory } from "./etag.ts";
+import { calculate, factory, ifMatch, ifNoneMatch } from "./etag.ts";
 
 let encodingsAccepted = "identity";
 
@@ -290,6 +290,46 @@ test({
     assertEquals(
       context.response.headers.get("etag"),
       null,
+    );
+  },
+});
+
+test({
+  name: "etag - ifMatch",
+  fn() {
+    assert(!ifMatch(`"abcdefg"`, "hello deno"));
+    assert(ifMatch(`"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"));
+    assert(ifMatch(`"abcdefg", "a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"));
+    assert(ifMatch("*", "hello deno"));
+    assert(
+      !ifMatch("*", {
+        size: 1024,
+        mtime: new Date(Date.UTC(96, 1, 2, 3, 4, 5, 6)),
+      }),
+    );
+  },
+});
+
+test({
+  name: "etag - ifNoneMatch",
+  fn() {
+    assert(ifNoneMatch(`"abcdefg"`, "hello deno"));
+    assert(!ifNoneMatch(`"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"));
+    assert(
+      !ifNoneMatch(`"abcdefg", "a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"),
+    );
+    assert(!ifNoneMatch("*", "hello deno"));
+    assert(
+      !ifNoneMatch(`W/"400-bfac58a88e"`, {
+        size: 1024,
+        mtime: new Date(Date.UTC(96, 1, 2, 3, 4, 5, 6)),
+      }),
+    );
+    assert(
+      ifNoneMatch(`"400-bfac58a88e"`, {
+        size: 1024,
+        mtime: new Date(Date.UTC(96, 1, 2, 3, 4, 5, 6)),
+      }),
     );
   },
 });

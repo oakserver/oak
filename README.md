@@ -674,6 +674,12 @@ app.use(async (context) => {
 await app.listen({ port: 8000 });
 ```
 
+`send()` automatically supports features like providing `ETag` and
+`Last-Modified` headers in the response as well as processing `If-None-Match`
+and `If-Modified-Since` headers in the request. This means when serving up
+static content, clients will be able to rely upon their cached versions of
+assets instead of re-downloading them.
+
 ### ETag support
 
 The `send()` method automatically supports generating an `ETag` header for
@@ -716,6 +722,17 @@ By default, `etag` will calculate weak tags for `Deno.FileInfo` (or `Deno.File`
 bodies in the middleware) and strong tags for `string`s and `Uint8Array`s. This
 can be changed by passing a `weak` property in the `options` parameter to either
 the `factory` or `calculate` methods.
+
+There are also to helper functions which can be used in conjunction with
+requests. There is `ifNoneMatch()` and `ifMatch()`. Both take the value of a
+header and an entity to compare to.
+
+`ifNoneMatch()` validates if the entities `ETag` doesn't match the supplied
+tags, while `ifMatch()` does the opposite. Check out MDN's
+[`If-None-Match`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match)
+and
+[`If-Match`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Match)
+header articles for more information how these headers are used with `ETag`s.
 
 ## Helpers
 

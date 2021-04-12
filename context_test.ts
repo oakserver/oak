@@ -118,7 +118,7 @@ test({
       createMockServerRequest({ url: "/test.html" }),
     );
     const fixture = await Deno.readFile("./fixtures/test.html");
-    await context.send({ root: "./fixtures" });
+    await context.send({ root: "./fixtures", maxbuffer: 0 });
     const serverResponse = await context.response.toServerResponse();
     const bodyReader = serverResponse.body;
     assert(isDenoReader(bodyReader));
@@ -140,7 +140,11 @@ test({
   async fn() {
     const context = new Context(createMockApp(), createMockServerRequest());
     const fixture = await Deno.readFile("./fixtures/test.html");
-    await context.send({ path: "/test.html", root: "./fixtures" });
+    await context.send({
+      path: "/test.html",
+      root: "./fixtures",
+      maxbuffer: 0,
+    });
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));

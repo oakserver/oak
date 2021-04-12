@@ -4,9 +4,13 @@
  */
 
 import type { Context } from "./context.ts";
+import { calculate, FileInfo, ifNoneMatch } from "./etag.ts";
 import { createHttpError } from "./httpError.ts";
-import { basename, extname, parse } from "./deps.ts";
+import { basename, extname, parse, readAll } from "./deps.ts";
+import type { Response } from "./response.ts";
 import { decodeComponent, resolvePath } from "./util.ts";
+
+const MAXBUFFER_DEFAULT = 1048576;
 
 export interface SendOptions {
   /** Try to serve the brotli version of a file automatically when brotli is
@@ -43,6 +47,14 @@ export interface SendOptions {
   /** Browser cache max-age in milliseconds. (defaults to `0`) */
   maxage?: number;
 
+  /** A size in bytes where if the file is less than this size, the file will
+   * be read into memory by send instead of returning a file handle.  Files less
+   * than the byte size will send an "strong" `ETag` header while those larger
+   * than the bytes size will only be able to send a "weak" `ETag` header (as
+   * they cannot hash the contents of the file). (defaults to 1MiB)
+   */
+  maxbuffer?: number;
+
   /** Root directory to restrict file access. */
   root: string;
 }
@@ -65,6 +77,31 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
+async function getEntity(
+  path: string,
+  mtime: number,
+  stats: Deno.FileInfo,
+  maxbuffer: number,
+  response: Response,
+): Promise<[Uint8Array | Deno.File, Uint8Array | FileInfo]> {
+  let body: Uint8Array | Deno.File;
+  let entity: Uint8Array | FileInfo;
+  const file = await Deno.open(path, { read: true });
+  if (stats.size < maxbuffer) {
+    const buffer = await readAll(file);
+    file.close();
+    body = entity = buffer;
+  } else {
+    response.addResource(file.rid);
+    body = file;
+    entity = {
+      mtime: new Date(mtime!),
+      size: stats.size,
+    };
+  }
+  return [body, entity];
+}
+
 /** Asynchronously fulfill a response with a file from the local file
  * system.
  *
@@ -83,6 +120,7 @@ export async function send(
     hidden = false,
     immutable = false,
     index,
+    maxbuffer = MAXBUFFER_DEFAULT,
     maxage = 0,
     root,
   } = options;
@@ -173,6 +211,18 @@ export async function send(
       : extname(path);
   }
 
+  let entity: Uint8Array | FileInfo | null = null;
+  let body: Uint8Array | Deno.File | null = null;
+
+  if (request.headers.has("If-None-Match") && mtime) {
+    [body, entity] = await getEntity(path, mtime, stats, maxbuffer, response);
+    if (!ifNoneMatch(request.headers.get("If-None-Match")!, entity)) {
+      response.headers.set("ETag", calculate(entity));
+      response.status = 304;
+      return path;
+    }
+  }
+
   if (request.headers.has("If-Modified-Since") && mtime) {
     const ifModifiedSince = new Date(request.headers.get("If-Modified-Since")!);
     if (ifModifiedSince.getTime() >= mtime) {
@@ -183,9 +233,21 @@ export async function send(
 
   response.headers.set("Content-Length", String(stats.size));
 
-  const file = await Deno.open(path, { read: true });
-  response.addResource(file.rid);
-  response.body = file;
+  if (!body || !entity) {
+    [body, entity] = await getEntity(
+      path,
+      mtime ?? 0,
+      stats,
+      maxbuffer,
+      response,
+    );
+  }
+
+  if (!response.headers.has("ETag")) {
+    response.headers.set("ETag", calculate(entity));
+  }
+
+  response.body = body;
 
   return path;
 }

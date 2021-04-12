@@ -7,16 +7,27 @@ import type { Middleware } from "./middleware.ts";
 import { BODY_TYPES, isAsyncIterable, isReader } from "./util.ts";
 
 export interface ETagOptions {
+  /** Override the default behavior of calculating the `ETag`, either forcing
+   * a tag to be labelled weak or not. */
   weak?: boolean;
 }
 
-function isFileInfo(value: unknown): value is Deno.FileInfo {
+/**
+ * Just the part of `Deno.FileInfo` that is required to calculate an `ETag`,
+ * so partial or user generated file information can be passed.
+ */
+export interface FileInfo {
+  mtime: Date | null;
+  size: number;
+}
+
+function isFileInfo(value: unknown): value is FileInfo {
   return Boolean(
     value && typeof value === "object" && "mtime" in value && "size" in value,
   );
 }
 
-function calcStatTag(entity: Deno.FileInfo): string {
+function calcStatTag(entity: FileInfo): string {
   const mtime = entity.mtime?.getTime().toString(16) ?? "0";
   const size = entity.size.toString(16);
 
@@ -83,7 +94,7 @@ export function getEntity<S extends State = Record<string, any>>(
  * @param options 
  */
 export function calculate(
-  entity: string | Uint8Array | Deno.FileInfo,
+  entity: string | Uint8Array | FileInfo,
   options: ETagOptions = {},
 ): string {
   const weak = options.weak ?? isFileInfo(entity);
@@ -94,9 +105,9 @@ export function calculate(
 
 /** 
  * Create middleware that will attempt to decode the response.body into
- * something that can be used to generate an ETag and add the ETag header to
+ * something that can be used to generate an `ETag` and add the `ETag` header to
  * the response.
- * */
+ */
 // deno-lint-ignore no-explicit-any
 export function factory<S extends State = Record<string, any>>(
   options?: ETagOptions,
@@ -110,4 +121,50 @@ export function factory<S extends State = Record<string, any>>(
       }
     }
   };
+}
+
+/**
+ * A helper function that takes the value from the `If-Match` header and an
+ * entity and returns `true` if the `ETag` for the entity matches the supplied
+ * value, otherwise `false`. 
+ * 
+ * See MDN's [`If-Match`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Match)
+ * article for more information on how to use this function.
+ */
+export function ifMatch(
+  value: string,
+  entity: string | Uint8Array | FileInfo,
+  options: ETagOptions = {},
+): boolean {
+  const etag = calculate(entity, options);
+  // Weak tags cannot be matched and return false.
+  if (etag.startsWith("W/")) {
+    return false;
+  }
+  if (value.trim() === "*") {
+    return true;
+  }
+  const tags = value.split(/\s*,\s*/);
+  return tags.includes(etag);
+}
+
+/**
+ * A helper function that takes the value from the `If-No-Match` header and
+ * an entity and returns `false` if the `ETag` for the entity matches the
+ * supplied value, otherwise `false`.
+ * 
+ * See MDN's [`If-None-Match`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match)
+ * article for more information on how to use this function.
+ */
+export function ifNoneMatch(
+  value: string,
+  entity: string | Uint8Array | FileInfo,
+  options: ETagOptions = {},
+): boolean {
+  if (value.trim() === "*") {
+    return false;
+  }
+  const etag = calculate(entity, options);
+  const tags = value.split(/\s*,\s*/);
+  return !tags.includes(etag);
 }

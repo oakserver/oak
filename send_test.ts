@@ -5,6 +5,7 @@ import { assert, assertEquals, assertStrictEquals, test } from "./test_deps.ts";
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
 import { readAll, Status } from "./deps.ts";
+import * as etag from "./etag.ts";
 import { httpErrors } from "./httpError.ts";
 import { send } from "./send.ts";
 
@@ -112,7 +113,10 @@ test({
   async fn() {
     const { context } = setup("/test.html");
     const fixture = await Deno.readFile("./fixtures/test.html");
-    await send(context, context.request.url.pathname, { root: "./fixtures" });
+    await send(context, context.request.url.pathname, {
+      root: "./fixtures",
+      maxbuffer: 0,
+    });
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
@@ -137,6 +141,7 @@ test({
     encodingsAccepted = "gzip";
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
+      maxbuffer: 0,
     });
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
@@ -159,7 +164,10 @@ test({
     const { context } = setup("/test.json");
     const fixture = await Deno.readFile("./fixtures/test.json.br");
     encodingsAccepted = "br";
-    await send(context, context.request.url.pathname, { root: "./fixtures" });
+    await send(context, context.request.url.pathname, {
+      root: "./fixtures",
+      maxbuffer: 0,
+    });
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
     assert(isDenoReader(bodyReader));
@@ -182,6 +190,7 @@ test({
     const fixture = await Deno.readFile("./fixtures/test.json");
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
+      maxbuffer: 0,
     });
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
@@ -223,6 +232,7 @@ test({
     const fixture = await Deno.readFile("./fixtures/test file.json");
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
+      maxbuffer: 0,
     });
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
@@ -283,6 +293,7 @@ test({
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
       hidden: true,
+      maxbuffer: 0,
     });
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
@@ -306,6 +317,7 @@ test({
     const fixture = await Deno.readFile("./fixtures/.test/test.json");
     await send(context, context.request.url.pathname, {
       root: "./fixtures/.test",
+      maxbuffer: 0,
     });
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
@@ -329,6 +341,7 @@ test({
     const fixture = await Deno.readFile("./fixtures/test.json");
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
+      maxbuffer: 0,
     });
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
@@ -370,6 +383,7 @@ test({
     const fixture = await Deno.readFile("./fixtures/test.json");
     await send(context, context.request.url.pathname, {
       root: "../oak/fixtures",
+      maxbuffer: 0,
     });
     const serverResponse = context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
@@ -397,6 +411,7 @@ test({
     );
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
+      maxbuffer: 0,
     });
     const serverResponse = await context.response.toServerResponse();
     assertStrictEquals(serverResponse.body, undefined);
@@ -423,6 +438,7 @@ test({
     );
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
+      maxbuffer: 0,
     });
     const serverResponse = await context.response.toServerResponse();
     const bodyReader = (await serverResponse).body;
@@ -437,5 +453,89 @@ test({
       String(fixture.length),
     );
     context.response.destroy();
+  },
+});
+
+test({
+  name: "send sets etag header - less than maxbuffer",
+  async fn() {
+    const { context } = setup("/test.json");
+    const fixture = await Deno.readFile("./fixtures/test.json");
+    await send(context, context.request.url.pathname, { root: "./fixtures" });
+    const serverResponse = await context.response.toServerResponse();
+    const body = (await serverResponse).body;
+    assert(body instanceof Uint8Array);
+    assertEquals(body, fixture);
+    assertEquals(serverResponse.status, 200);
+    assertEquals(context.response.type, ".json");
+    assertStrictEquals(context.response.headers.get("content-encoding"), null);
+    assertEquals(
+      context.response.headers.get("content-length"),
+      String(fixture.length),
+    );
+    const etagHeader = context.response.headers.get("etag");
+    assertEquals(etagHeader, etag.calculate(fixture));
+  },
+});
+
+test({
+  name: "send sets etag header - greater than maxbuffer",
+  async fn() {
+    const { context } = setup("/test.jpg");
+    const fixture = await Deno.readFile("./fixtures/test.jpg");
+    await send(context, context.request.url.pathname, {
+      root: "./fixtures",
+      maxbuffer: 300000,
+    });
+    const serverResponse = await context.response.toServerResponse();
+    const bodyReader = (await serverResponse).body;
+    assert(isDenoReader(bodyReader));
+    const body = await readAll(bodyReader);
+    assertEquals(body, fixture);
+    assertEquals(serverResponse.status, 200);
+    assertEquals(context.response.type, ".jpg");
+    assertStrictEquals(context.response.headers.get("content-encoding"), null);
+    assertEquals(
+      context.response.headers.get("content-length"),
+      String(fixture.length),
+    );
+    const etagHeader = context.response.headers.get("etag");
+    assert(etagHeader && etagHeader.startsWith(`W/"4a3b7-`));
+    context.response.destroy();
+  },
+});
+
+test({
+  name: "if-none-match header - not modified",
+  async fn() {
+    const { context } = setup("/test.jpg");
+    const fixture = await Deno.readFile("./fixtures/test.jpg");
+    context.request.headers.set("If-None-Match", etag.calculate(fixture));
+    await send(context, context.request.url.pathname, { root: "./fixtures" });
+    const serverResponse = await context.response.toServerResponse();
+    assertEquals(serverResponse.status, 304);
+    assertEquals(context.response.headers.get("etag"), etag.calculate(fixture));
+  },
+});
+
+test({
+  name: "if-none-match header - modified",
+  async fn() {
+    const { context } = setup("/test.jpg");
+    const fixture = await Deno.readFile("./fixtures/test.jpg");
+    context.request.headers.set(
+      "If-None-Match",
+      `"17-dFpfAd6+866Bo994m4Epzil7k2A"`,
+    );
+    await send(context, context.request.url.pathname, { root: "./fixtures" });
+    const serverResponse = await context.response.toServerResponse();
+    assertEquals(serverResponse.status, 200);
+    assertEquals(context.response.type, ".jpg");
+    assertStrictEquals(context.response.headers.get("content-encoding"), null);
+    assertEquals(
+      context.response.headers.get("content-length"),
+      String(fixture.length),
+    );
+    assertEquals(context.response.headers.get("etag"), etag.calculate(fixture));
   },
 });
