@@ -38,7 +38,7 @@ export {
   contentType,
   extension,
   lookup,
-} from "https://deno.land/x/media_types@v2.7.1/mod.ts";
+} from "https://deno.land/x/media_types@v2.8.0/mod.ts";
 export {
   compile,
   parse as pathParse,
