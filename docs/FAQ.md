@@ -10,6 +10,17 @@ the APIs that are considered "public". You can also get an output of the
 documentation directly via `deno doc https://deno.land/x/oak/mod.ts` to your
 console.
 
+## How do I use the native HTTP server in Deno?
+
+As of Deno 1.9, Deno has a native HTTP server versus the `std/http` previously.
+oak is designed to automatically use the native HTTP server if it detects it.
+Currently the native HTTP server APIs are _unstable_ and therefore require the
+`--unstable` flag on the command line, for example:
+
+```
+> deno run --allow-net --unstable server.ts
+```
+
 ## Where is ctx.host, ctx.path, ctx.querystring, etc.?
 
 Instead of creating "aliases" to lots of different parts of the requested URL,

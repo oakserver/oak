@@ -26,13 +26,13 @@ Also, check out our [FAQs](https://oakserver.github.io/oak/FAQ) and the
 [awesome-oak](https://oakserver.github.io/awesome-oak/) site of community
 resources.
 
-_Warning_ The examples in this README pull from `main`, which may not make sense
-to do when you are looking to actually deploy a workload. You would want to
-"pin" to a particular version which is compatible with the version of Deno you
-are using and has a fixed set of APIs you would expect. `https://deno.land/x/`
-supports using git tags in the URL to direct you at a particular version. So to
-use version 3.0.0 of oak, you would want to import
-`https://deno.land/x/oak@v3.0.0/mod.ts`.
+> ⚠️ _Warning_ The examples in this README pull from `main`, which may not make
+> sense to do when you are looking to actually deploy a workload. You would want
+> to "pin" to a particular version which is compatible with the version of Deno
+> you are using and has a fixed set of APIs you would expect.
+> `https://deno.land/x/` supports using git tags in the URL to direct you at a
+> particular version. So to use version 3.0.0 of oak, you would want to import
+> `https://deno.land/x/oak@v3.0.0/mod.ts`.
 
 ## Application, middleware, and context
 
@@ -502,6 +502,23 @@ await listenPromise;
 // and you can do something after the close to shutdown
 ```
 
+### Deno `std/http` versus native bindings
+
+As of Deno 1.9, Deno has a _native_ HTTP server. oak automatically detects if
+these APIs are available and will listen and process requests using the native
+server. Currently the APIs are marked as _unstable_ so in order to use them, you
+need to start your server with the `--unstable` flag. For example:
+
+```
+> deno run --allow-net --unstable server.ts
+```
+
+Currently there are two features that are not yet supported with the native
+server, those are:
+
+- Server Sent Events
+- Upgrading a request to a WebSocket
+
 ### Just handling requests
 
 In situations where you don't want the application to listen for requests on the
@@ -510,7 +527,49 @@ can use the `.handle()` method. For example if you are in a serverless function
 where the requests are arriving in a different way.
 
 The `.handle()` method will invoke the middleware, just like the middleware gets
-invoked for each request that is processed by `.listen()`. It take up to two
+invoked for each request that is processed by `.listen()`. The method works with
+either `std/http` requests/responses, or it handles the _native_ Deno responses.
+
+#### Handling _native_ requests and responses
+
+When using the native requests, the `.handle()` method accepts up to three
+arguments. The first being a
+[`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) argument,
+and the second being a `Deno.Conn` argument. The third optional argument is a
+flag to indicate if the request was "secure" in the sense it originated from a
+TLS connection to the remote client. The method resolved with a
+[`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object
+or `undefined` if the `ctx.respond === true`.
+
+An example:
+
+```ts
+import { Application } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application();
+
+app.use((ctx) => {
+  ctx.response.body = "Hello World!";
+});
+
+const listener = Deno.listen({ hostname: "localhost", port: 8000 });
+
+for await (const conn of listener) {
+  (async () => {
+    const requests = Deno.serveHttp(conn);
+    for await (const { request, respondWith } of requests) {
+      const response = await app.handle(request, conn);
+      if (response) {
+        respondWith(response);
+      }
+    }
+  });
+}
+```
+
+#### Handling `std/http` requests and responses
+
+When using `std/http` requests the `.handle()` method accepts up to two
 arguments, one being the request which conforms to the `std/http/server`'s
 `ServerRequest` interface and an optional second argument which is if the
 request is "secure" in the sense it originated from a TLS connection to the

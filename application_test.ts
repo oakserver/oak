@@ -7,31 +7,31 @@ import { assert, assertEquals, assertThrowsAsync, test } from "./test_deps.ts";
 import { Application, ListenOptions, ListenOptionsTls } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
+import { NativeRequest } from "./http_server_native.ts";
+import type { ServerRequest, ServerResponse } from "./http_server_std.ts";
 import { httpErrors } from "./httpError.ts";
 import { Data, KeyStack } from "./keyStack.ts";
-import type {
-  Serve,
-  Server,
-  ServerRequest,
-  ServerResponse,
-  ServeTls,
-} from "./types.d.ts";
+import type { Server } from "./types.d.ts";
 
 let serverRequestStack: ServerRequest[] = [];
 let requestResponseStack: ServerResponse[] = [];
-let addrStack: Array<string | ListenOptions> = [];
-let httpsOptionsStack: Array<Omit<ListenOptionsTls, "secure">> = [];
+let nativeRequestStack: NativeRequest[] = [];
+let optionsStack: Array<ListenOptions | ListenOptionsTls> = [];
 let serverClosed = false;
 
 function teardown() {
   serverRequestStack = [];
   requestResponseStack = [];
-  addrStack = [];
-  httpsOptionsStack = [];
+  nativeRequestStack = [];
+  optionsStack = [];
   serverClosed = false;
 }
 
-class MockServer {
+class MockServer implements Server<ServerRequest> {
+  constructor(options: Deno.ListenOptions | Deno.ListenTlsOptions) {
+    optionsStack.push(options);
+  }
+
   close(): void {
     serverClosed = true;
   }
@@ -43,19 +43,21 @@ class MockServer {
   }
 }
 
-const serve: Serve = function (
-  addr: string | ListenOptions,
-): Server {
-  addrStack.push(addr);
-  return new MockServer() as Server;
-};
+class MockNativeServer implements Server<NativeRequest> {
+  constructor(options: Deno.ListenOptions | Deno.ListenTlsOptions) {
+    optionsStack.push(options);
+  }
 
-const serveTls: ServeTls = function (
-  options: Omit<ListenOptionsTls, "secure">,
-): Server {
-  httpsOptionsStack.push(options);
-  return new MockServer() as Server;
-};
+  close(): void {
+    serverClosed = true;
+  }
+
+  async *[Symbol.asyncIterator]() {
+    for await (const request of nativeRequestStack) {
+      yield request;
+    }
+  }
+}
 
 function createMockRequest(
   url = "/index.html",
@@ -85,7 +87,7 @@ test({
   name: "register middleware",
   async fn() {
     serverRequestStack.push(createMockRequest());
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     let called = 0;
     app.use((context, next) => {
       assert(context instanceof Context);
@@ -103,7 +105,7 @@ test({
   name: "middleware execution order 1",
   async fn() {
     serverRequestStack.push(createMockRequest());
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     const callStack: number[] = [];
     app.use(() => {
       callStack.push(1);
@@ -123,7 +125,7 @@ test({
   name: "middleware execution order 2",
   async fn() {
     serverRequestStack.push(createMockRequest());
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     const callStack: number[] = [];
     app.use((_context, next) => {
       callStack.push(1);
@@ -144,7 +146,7 @@ test({
   name: "middleware execution order 3",
   async fn() {
     serverRequestStack.push(createMockRequest());
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     const callStack: number[] = [];
     app.use((_context, next) => {
       callStack.push(1);
@@ -168,7 +170,7 @@ test({
   name: "middleware execution order 4",
   async fn() {
     serverRequestStack.push(createMockRequest());
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     const callStack: number[] = [];
     app.use(async (_context, next) => {
       callStack.push(1);
@@ -191,10 +193,21 @@ test({
 test({
   name: "app.listen",
   async fn() {
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     app.use(() => {});
     await app.listen("127.0.0.1:8080");
-    assertEquals(addrStack, [{ hostname: "127.0.0.1", port: 8080 }]);
+    assertEquals(optionsStack, [{ hostname: "127.0.0.1", port: 8080 }]);
+    teardown();
+  },
+});
+
+test({
+  name: "app.listen native",
+  async fn() {
+    const app = new Application({ serverConstructor: MockNativeServer });
+    app.use(() => {});
+    await app.listen("127.0.0.1:8080");
+    assertEquals(optionsStack, [{ hostname: "127.0.0.1", port: 8080 }]);
     teardown();
   },
 });
@@ -202,10 +215,10 @@ test({
 test({
   name: "app.listen IPv6 Loopback",
   async fn() {
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     app.use(() => {});
     await app.listen("[::1]:8080");
-    assertEquals(addrStack, [{ hostname: "::1", port: 8080 }]);
+    assertEquals(optionsStack, [{ hostname: "::1", port: 8080 }]);
     teardown();
   },
 });
@@ -213,10 +226,10 @@ test({
 test({
   name: "app.listen(options)",
   async fn() {
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     app.use(() => {});
     await app.listen({ port: 8000 });
-    assertEquals(addrStack, [{ port: 8000 }]);
+    assertEquals(optionsStack, [{ port: 8000 }]);
     teardown();
   },
 });
@@ -224,7 +237,7 @@ test({
 test({
   name: "app.listenTLS",
   async fn() {
-    const app = new Application({ serve, serveTls });
+    const app = new Application({ serverConstructor: MockServer });
     app.use(() => {});
     await app.listen({
       port: 8000,
@@ -232,7 +245,7 @@ test({
       certFile: "",
       keyFile: "",
     });
-    assertEquals(httpsOptionsStack, [
+    assertEquals(optionsStack, [
       {
         port: 8000,
         secure: true,
@@ -248,7 +261,10 @@ test({
   name: "app.state",
   async fn() {
     serverRequestStack.push(createMockRequest());
-    const app = new Application<{ foo?: string }>({ state: {}, serve });
+    const app = new Application<{ foo?: string }>({
+      state: {},
+      serverConstructor: MockServer,
+    });
     app.state.foo = "bar";
     let called = false;
     app.use((context) => {
@@ -308,7 +324,7 @@ test({
 test({
   name: "app.listen({ signal }) no requests in flight",
   async fn() {
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     const abortController = new AbortController();
     app.use(() => {});
     const p = app.listen({ port: 8000, signal: abortController.signal });
@@ -322,7 +338,7 @@ test({
 test({
   name: "app.listen({ signal }) requests in flight",
   async fn() {
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     const abortController = new AbortController();
     serverRequestStack.push(createMockRequest());
     serverRequestStack.push(createMockRequest());
@@ -346,7 +362,7 @@ test({
 test({
   name: "app.addEventListener()",
   async fn() {
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     app.addEventListener("error", (evt) => {
       assert(evt.error instanceof httpErrors.InternalServerError);
     });
@@ -362,7 +378,7 @@ test({
 test({
   name: "uncaught errors impact response",
   async fn() {
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     serverRequestStack.push(createMockRequest());
     app.use((ctx) => {
       ctx.throw(404, "File Not Found");
@@ -377,7 +393,7 @@ test({
 test({
   name: "app.listen() without middleware",
   async fn() {
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     await assertThrowsAsync(async () => {
       await app.listen(":8000");
     }, TypeError);
@@ -402,7 +418,7 @@ test({
 test({
   name: "application listen event",
   async fn() {
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     let called = 0;
     app.addEventListener("listen", (evt) => {
       called++;
@@ -422,7 +438,7 @@ test({
 test({
   name: "application doesn't respond on ctx.respond === false",
   async fn() {
-    const app = new Application({ serve });
+    const app = new Application({ serverConstructor: MockServer });
     serverRequestStack.push(createMockRequest());
     app.use((ctx) => {
       ctx.respond = false;
@@ -436,7 +452,7 @@ test({
 test({
   name: "application passes proxy",
   async fn() {
-    const app = new Application({ serve, proxy: true });
+    const app = new Application({ serverConstructor: MockServer, proxy: true });
     serverRequestStack.push(
       createMockRequest(
         "/index.html",
@@ -475,6 +491,34 @@ test({
     assertEquals(called, 1);
     assert(actual);
     assertEquals(actual.body, undefined);
+    assertEquals(actual.status, Status.NotFound);
+    assertEquals([...actual.headers], [["content-length", "0"]]);
+  },
+});
+
+test({
+  name: "application .handle() native request",
+  async fn() {
+    const app = new Application();
+    let called = 0;
+    app.use((context, next) => {
+      assert(context instanceof Context);
+      assertEquals(typeof next, "function");
+      called++;
+    });
+    const request = new Request("http://localhost:8080/", {
+      method: "GET",
+      body: `{"a":"b"}`,
+    });
+    const conn = {
+      localAddr: { transport: "tcp", hostname: "localhost", port: 8000 },
+      remoteAddr: { transport: "tcp", hostname: "example.com", port: 4747 },
+      rid: 1,
+    } as Deno.Conn;
+    const actual = await app.handle(request, conn);
+    assertEquals(called, 1);
+    assert(actual instanceof Response);
+    assertEquals(actual.body, null);
     assertEquals(actual.status, Status.NotFound);
     assertEquals([...actual.headers], [["content-length", "0"]]);
   },

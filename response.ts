@@ -1,9 +1,10 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 import { AsyncIterableReader } from "./async_iterable_reader.ts";
-import { contentType, Status } from "./deps.ts";
+import { contentType, Status, STATUS_TEXT } from "./deps.ts";
+import { DomResponse } from "./http_server_native.ts";
+import type { ServerResponse } from "./http_server_std.ts";
 import type { Request } from "./request.ts";
-import type { ServerResponse } from "./types.d.ts";
 import {
   BODY_TYPES,
   encodeUrl,
@@ -11,6 +12,7 @@ import {
   isHtml,
   isReader,
   isRedirectStatus,
+  readableStreamFromReader,
 } from "./util.ts";
 
 type Body =
@@ -56,7 +58,38 @@ function toUint8Array(body: Body): Uint8Array {
   return encoder.encode(bodyText);
 }
 
-async function convertBody(
+async function convertBodyToBodyInit(
+  body: Body | BodyFunction,
+  type?: string,
+): Promise<[globalThis.BodyInit | undefined, string | undefined]> {
+  let result: globalThis.BodyInit | undefined;
+  if (BODY_TYPES.includes(typeof body)) {
+    result = String(body);
+    type = type ?? (isHtml(result) ? "html" : "text/plain");
+  } else if (isReader(body)) {
+    result = readableStreamFromReader(body);
+  } else if (
+    ArrayBuffer.isView(body) || body instanceof ArrayBuffer ||
+    body instanceof Blob || body instanceof URLSearchParams ||
+    body instanceof ReadableStream
+  ) {
+    result = body;
+  } else if (body instanceof FormData) {
+    result = body;
+    type = "multipart/form-data";
+  } else if (body && typeof body === "object") {
+    result = JSON.stringify(body);
+    type = type ?? "json";
+  } else if (typeof body === "function") {
+    const result = body.call(null);
+    return convertBodyToBodyInit(await result, type);
+  } else if (body) {
+    throw new TypeError("Response body was set but could not be converted.");
+  }
+  return [result, type];
+}
+
+async function convertBodyToStdBody(
   body: Body | BodyFunction,
   type?: string,
 ): Promise<[Uint8Array | Deno.Reader | undefined, string | undefined]> {
@@ -74,9 +107,9 @@ async function convertBody(
     type = type ?? "json";
   } else if (typeof body === "function") {
     const result = body.call(null);
-    return convertBody(await result, type);
+    return convertBodyToStdBody(await result, type);
   } else if (body) {
-    throw new TypeError("Response body was set but could not convert.");
+    throw new TypeError("Response body was set but could not be converted.");
   }
   return [result, type];
 }
@@ -85,6 +118,7 @@ async function convertBody(
  * finishes processing the request. */
 export class Response {
   #body?: Body | BodyFunction;
+  #domResponse?: globalThis.Response;
   #headers = new Headers();
   #request: Request;
   #resources: number[] = [];
@@ -93,8 +127,14 @@ export class Response {
   #type?: string;
   #writable = true;
 
-  #getBody = async (): Promise<Uint8Array | Deno.Reader | undefined> => {
-    const [body, type] = await convertBody(this.body, this.type);
+  #getBodyInit = async (): Promise<globalThis.BodyInit | undefined> => {
+    const [body, type] = await convertBodyToBodyInit(this.body, this.type);
+    this.type = type;
+    return body;
+  };
+
+  #getStdBody = async (): Promise<Uint8Array | Deno.Reader | undefined> => {
+    const [body, type] = await convertBodyToStdBody(this.body, this.type);
     this.type = type;
     return body;
   };
@@ -200,13 +240,19 @@ export class Response {
     this.#resources.push(rid);
   }
 
-  /** Release any resources that are being tracked by the response. */
-  destroy(): void {
+  /** Release any resources that are being tracked by the response.
+   * 
+   * @param closeResources close any resource IDs registered with the response
+   */
+  destroy(closeResources = true): void {
     this.#writable = false;
     this.#body = undefined;
     this.#serverResponse = undefined;
-    for (const rid of this.#resources) {
-      Deno.close(rid);
+    this.#domResponse = undefined;
+    if (closeResources) {
+      for (const rid of this.#resources) {
+        Deno.close(rid);
+      }
     }
   }
 
@@ -252,6 +298,42 @@ export class Response {
     this.body = `Redirecting to ${url}.`;
   }
 
+  async toDomResponse(): Promise<globalThis.Response> {
+    if (this.#domResponse) {
+      return this.#domResponse;
+    }
+
+    const bodyInit = await this.#getBodyInit();
+
+    this.#setContentType();
+
+    const { headers } = this;
+
+    const status = this.#status ?? (bodyInit ? Status.OK : Status.NotFound);
+
+    // If there is no body and no content type and no set length, then set the
+    // content length to 0
+    if (
+      !(
+        bodyInit ||
+        headers.has("Content-Type") ||
+        headers.has("Content-Length")
+      )
+    ) {
+      headers.append("Content-Length", "0");
+    }
+
+    this.#writable = false;
+
+    const responseInit: ResponseInit = {
+      headers,
+      status,
+      statusText: STATUS_TEXT.get(status),
+    };
+
+    return this.#domResponse = new DomResponse(bodyInit, responseInit);
+  }
+
   /** Take this response and convert it to the response used by the Deno net
    * server.  Calling this will set the response to not be writable.
    *
@@ -261,7 +343,7 @@ export class Response {
       return this.#serverResponse;
     }
     // Process the body
-    const body = await this.#getBody();
+    const body = await this.#getStdBody();
 
     // If there is a response type, set the content type header
     this.#setContentType();

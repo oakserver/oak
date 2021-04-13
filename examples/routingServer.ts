@@ -137,10 +137,11 @@ app.use(router.allowedMethods());
 // A basic 404 page
 app.use(notFound);
 
-app.addEventListener("listen", ({ hostname, port }) => {
+app.addEventListener("listen", ({ hostname, port, serverType }) => {
   console.log(
     bold("Start listening on ") + yellow(`${hostname}:${port}`),
   );
+  console.log(bold("  using HTTP server: " + yellow(serverType)));
 });
 
 await app.listen({ hostname: "127.0.0.1", port: 8000 });

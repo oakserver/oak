@@ -11,7 +11,9 @@ import type {
   BodyText,
 } from "./body.ts";
 import { RequestBody } from "./body.ts";
-import type { HTTPMethods, ServerRequest } from "./types.d.ts";
+import { NativeRequest } from "./http_server_native.ts";
+import type { ServerRequest } from "./http_server_std.ts";
+import type { HTTPMethods } from "./types.d.ts";
 import { preferredCharsets } from "./negotiation/charset.ts";
 import { preferredEncodings } from "./negotiation/encoding.ts";
 import { preferredLanguages } from "./negotiation/language.ts";
@@ -22,7 +24,7 @@ export class Request {
   #body: RequestBody;
   #proxy: boolean;
   #secure: boolean;
-  #serverRequest: ServerRequest;
+  #serverRequest: ServerRequest | NativeRequest;
   #url?: URL;
 
   /** Is `true` if the request has a body, otherwise `false`. */
@@ -67,7 +69,7 @@ export class Request {
   }
 
   /** Set to the value of the _original_ Deno server request. */
-  get serverRequest(): ServerRequest {
+  get originalRequest(): ServerRequest | NativeRequest {
     return this.#serverRequest;
   }
 
@@ -101,7 +103,11 @@ export class Request {
     return this.#url;
   }
 
-  constructor(serverRequest: ServerRequest, proxy = false, secure = false) {
+  constructor(
+    serverRequest: ServerRequest | NativeRequest,
+    proxy = false,
+    secure = false,
+  ) {
     this.#proxy = proxy;
     this.#secure = secure;
     this.#serverRequest = serverRequest;

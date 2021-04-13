@@ -10,8 +10,8 @@ import {
   assertThrowsAsync,
   test,
 } from "./test_deps.ts";
+import type { ServerRequest } from "./http_server_std.ts";
 import { Request } from "./request.ts";
-import type { ServerRequest } from "./types.d.ts";
 const encoder = new TextEncoder();
 
 function createMockBodyReader(body: string): Deno.Reader {
@@ -108,7 +108,7 @@ test({
   fn() {
     const mockServerRequest = createMockServerRequest();
     const request = new Request(mockServerRequest);
-    assertStrictEquals(request.serverRequest, mockServerRequest);
+    assertStrictEquals(request.originalRequest, mockServerRequest);
   },
 });
 

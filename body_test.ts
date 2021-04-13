@@ -2,6 +2,7 @@
 
 import { RequestBody } from "./body.ts";
 import { readAll } from "./deps.ts";
+import type { ServerRequest } from "./http_server_std.ts";
 import {
   assert,
   assertEquals,
@@ -9,7 +10,6 @@ import {
   assertThrows,
   test,
 } from "./test_deps.ts";
-import type { ServerRequest } from "./types.d.ts";
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();

@@ -11,8 +11,8 @@ const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
 const BOUNDARY_PARAM_REGEX = toParamRegExp("boundary", "i");
-const DEFAULT_BUFFER_SIZE = 1048576; // 1mb
-const DEFAULT_MAX_FILE_SIZE = 10485760; // 10mb
+const DEFAULT_BUFFER_SIZE = 1_048_576; // 1mb
+const DEFAULT_MAX_FILE_SIZE = 10_485_760; // 10mb
 const DEFAULT_MAX_SIZE = 0; // all files written to disc
 const NAME_PARAM_REGEX = toParamRegExp("name", "i");
 

@@ -26,6 +26,7 @@ export * as helpers from "./helpers.ts";
 export { Cookies } from "./cookies.ts";
 export type { CookiesGetOptions, CookiesSetDeleteOptions } from "./cookies.ts";
 export * as etag from "./etag.ts";
+export type { ServerRequest, ServerResponse } from "./http_server_std.ts";
 export { HttpError, httpErrors, isHttpError } from "./httpError.ts";
 export { compose as composeMiddleware } from "./middleware.ts";
 export type { Middleware } from "./middleware.ts";
@@ -52,13 +53,7 @@ export { send } from "./send.ts";
 export type { SendOptions } from "./send.ts";
 export { ServerSentEvent, ServerSentEventTarget } from "./server_sent_event.ts";
 export type { ServerSentEventInit } from "./server_sent_event.ts";
-export type {
-  ErrorStatus,
-  HTTPMethods,
-  RedirectStatus,
-  ServerRequest,
-  ServerResponse,
-} from "./types.d.ts";
+export type { ErrorStatus, HTTPMethods, RedirectStatus } from "./types.d.ts";
 export { isErrorStatus, isRedirectStatus } from "./util.ts";
 
 // Re-exported from `net`

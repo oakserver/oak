@@ -39,10 +39,11 @@ app.use((ctx) => {
   ctx.response.body = "Hello World!";
 });
 
-app.addEventListener("listen", ({ hostname, port }) => {
+app.addEventListener("listen", ({ hostname, port, serverType }) => {
   console.log(
     bold("Start listening on ") + yellow(`${hostname}:${port}`),
   );
+  console.log(bold("  using HTTP server: " + yellow(serverType)));
 });
 
 await app.listen({

@@ -84,10 +84,11 @@ app.use(async (ctx) => {
   }
 });
 
-app.addEventListener("listen", ({ hostname, port }) => {
+app.addEventListener("listen", ({ hostname, port, serverType }) => {
   console.log(
     bold("Start listening on ") + yellow(`${hostname}:${port}`),
   );
+  console.log(bold("  using HTTP server: " + yellow(serverType)));
 });
 
 await app.listen({ hostname: "127.0.0.1", port: 8000 });

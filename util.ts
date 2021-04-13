@@ -13,6 +13,7 @@ const LF = "\n".charCodeAt(0);
 const UNMATCHED_SURROGATE_PAIR_REGEXP =
   /(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF]([^\uDC00-\uDFFF]|$)/g;
 const UNMATCHED_SURROGATE_PAIR_REPLACE = "$1\uFFFD$2";
+const DEFAULT_CHUNK_SIZE = 16_640; // 17 Kib
 
 /** Body types which will be coerced into strings before being sent. */
 export const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
@@ -54,6 +55,62 @@ export function isAsyncIterable(value: unknown): value is AsyncIterable<any> {
 export function isReader(value: unknown): value is Deno.Reader {
   return typeof value === "object" && value !== null && "read" in value &&
     typeof (value as Record<string, unknown>).read === "function";
+}
+
+function isCloser(value: unknown): value is Deno.Closer {
+  return typeof value === "object" && value != null && "close" in value &&
+    // deno-lint-ignore no-explicit-any
+    typeof (value as Record<string, any>)["close"] === "function";
+}
+
+export function isConn(value: unknown): value is Deno.Conn {
+  return typeof value === "object" && value != null && "rid" in value &&
+    // deno-lint-ignore no-explicit-any
+    typeof (value as any).rid === "number" && "localAddr" in value &&
+    "remoteAddr" in value;
+}
+
+export function isListenTlsOptions(
+  value: unknown,
+): value is Deno.ListenTlsOptions {
+  return typeof value === "object" && value !== null && "certFile" in value &&
+    "keyFile" in value && "port" in value;
+}
+
+/** Convert a `Deno.Reader` (and optionally `Deno.Closer`) into a
+ * `ReadableStream<Uint8Array>` */
+export function readableStreamFromReader(
+  reader: Deno.Reader | (Deno.Reader & Deno.Closer),
+  chunkSize = DEFAULT_CHUNK_SIZE,
+  strategy?: { highWaterMark?: number | undefined; size?: undefined },
+): ReadableStream<Uint8Array> {
+  return new ReadableStream({
+    async pull(controller) {
+      const chunk = new Uint8Array(chunkSize);
+      try {
+        const read = await reader.read(chunk);
+        if (read === null) {
+          if (isCloser(reader)) {
+            reader.close();
+          }
+          controller.close();
+          return;
+        }
+        controller.enqueue(chunk.subarray(0, read));
+      } catch (e) {
+        controller.error(e);
+        if (isCloser(reader)) {
+          reader.close();
+        }
+      }
+    },
+    cancel() {
+      if (isCloser(reader)) {
+        reader.close();
+      }
+    },
+    type: "bytes",
+  }, strategy);
 }
 
 /** Determines if a HTTP `Status` is an `ErrorStatus` (4XX or 5XX). */

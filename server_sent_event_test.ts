@@ -11,8 +11,8 @@ import {
 } from "./test_deps.ts";
 
 import type { Application } from "./application.ts";
+import type { ServerRequest } from "./http_server_std.ts";
 import { ServerSentEvent, ServerSentEventTarget } from "./server_sent_event.ts";
-import type { ServerRequest } from "./types.d.ts";
 
 const preamble = `HTTP/1.1 200 OK
 connection: Keep-Alive

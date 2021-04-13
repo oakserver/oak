@@ -2,7 +2,8 @@
 
 import type { Application } from "./application.ts";
 import { assert, BufWriter } from "./deps.ts";
-import type { ServerRequest } from "./types.d.ts";
+import { NativeRequest } from "./http_server_native.ts";
+import type { ServerRequest } from "./http_server_std.ts";
 
 const encoder = new TextEncoder();
 
@@ -158,10 +159,13 @@ export class ServerSentEventTarget extends EventTarget {
 
   constructor(
     app: Application,
-    serverRequest: ServerRequest,
+    serverRequest: ServerRequest | NativeRequest,
     { headers }: ServerSentEventTargetOptions = {},
   ) {
     super();
+    if (serverRequest instanceof NativeRequest) {
+      throw new TypeError("SSE with native Deno requests not yet supported.");
+    }
     this.#app = app;
     this.#serverRequest = serverRequest;
     this.#writer = this.#serverRequest.w;

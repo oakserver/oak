@@ -10,7 +10,7 @@ import { basename, extname, parse, readAll } from "./deps.ts";
 import type { Response } from "./response.ts";
 import { decodeComponent, resolvePath } from "./util.ts";
 
-const MAXBUFFER_DEFAULT = 1048576;
+const MAXBUFFER_DEFAULT = 1_048_576; // 1MiB;
 
 export interface SendOptions {
   /** Try to serve the brotli version of a file automatically when brotli is

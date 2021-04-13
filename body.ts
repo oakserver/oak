@@ -1,10 +1,11 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 import { assert, readAll } from "./deps.ts";
+import type { NativeRequest } from "./http_server_native.ts";
+import type { ServerRequest } from "./http_server_std.ts";
 import { httpErrors } from "./httpError.ts";
 import { isMediaType } from "./isMediaType.ts";
 import { FormDataReader } from "./multipart.ts";
-import type { ServerRequest } from "./types.d.ts";
 
 export type BodyType =
   | "form"
@@ -87,7 +88,7 @@ export class RequestBody {
     return this.#readAllBody ?? (this.#readAllBody = readAll(this.#body));
   };
 
-  constructor(request: ServerRequest) {
+  constructor(request: ServerRequest | NativeRequest) {
     const { body, headers } = request;
     this.#body = body;
     this.#headers = headers;

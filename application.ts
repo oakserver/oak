@@ -1,43 +1,42 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 import { Context } from "./context.ts";
+import { assert, Status, STATUS_TEXT } from "./deps.ts";
 import {
-  serve as defaultServe,
-  serveTLS as defaultServeTls,
-  Status,
-  STATUS_TEXT,
-} from "./deps.ts";
+  hasNativeHttp,
+  HttpServerNative,
+  NativeRequest,
+} from "./http_server_native.ts";
+import { HttpServerStd } from "./http_server_std.ts";
+import type { ServerRequest, ServerResponse } from "./http_server_std.ts";
 import { Key, KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
-import type {
-  Serve,
-  Server,
-  ServerRequest,
-  ServerResponse,
-  ServeTls,
-} from "./types.d.ts";
+import { Server, ServerConstructor } from "./types.d.ts";
+import { isConn } from "./util.ts";
 
-export interface ListenOptionsBase {
-  hostname?: string;
-  port: number;
+export interface ListenOptionsBase extends Deno.ListenOptions {
   secure?: false;
   signal?: AbortSignal;
 }
 
-export interface ListenOptionsTls {
-  certFile: string;
-  hostname?: string;
-  keyFile: string;
-  port: number;
+export interface ListenOptionsTls extends Deno.ListenTlsOptions {
   secure: true;
   signal?: AbortSignal;
 }
 
-export type ListenOptions = ListenOptionsTls | ListenOptionsBase;
-
-function isOptionsTls(options: ListenOptions): options is ListenOptionsTls {
-  return options.secure === true;
+export interface HandleMethod {
+  (
+    request: ServerRequest,
+    secure?: boolean,
+  ): Promise<ServerResponse | undefined>;
+  (
+    request: Request,
+    conn: Deno.Conn,
+    secure?: boolean,
+  ): Promise<Response | undefined>;
 }
+
+export type ListenOptions = ListenOptionsTls | ListenOptionsBase;
 
 interface ApplicationErrorEventListener<S> {
   (evt: ApplicationErrorEvent<S>): void | Promise<void>;
@@ -67,6 +66,7 @@ interface ApplicationListenEventInit extends EventInit {
   hostname?: string;
   port: number;
   secure: boolean;
+  serverType: "std" | "native" | "custom";
 }
 
 type ApplicationListenEventListenerOrEventListenerObject =
@@ -82,15 +82,12 @@ export interface ApplicationOptions<S> {
    * This defaults to `false`. */
   proxy?: boolean;
 
-  /** The `server()` function to be used to read requests.
+  /** A server constructor to use instead of the default server for receiving
+   * requests.
    * 
-   * _Not used generally, as this is just for mocking for test purposes_ */
-  serve?: Serve;
-
-  /** The `server()` function to be used to read requests.
-   * 
-   * _Not used generally, as this is just for mocking for test purposes_ */
-  serveTls?: ServeTls;
+   * _This is not generally used, except for mocking and testing._
+   */
+  serverConstructor?: ServerConstructor<ServerRequest | NativeRequest>;
 
   /** The initial state object for the application, of which the type can be
    * used to infer the type of the state for both the application and any of the
@@ -102,7 +99,7 @@ interface RequestState {
   handling: Set<Promise<void>>;
   closing: boolean;
   closed: boolean;
-  server: Server;
+  server: Server<ServerRequest | NativeRequest>;
 }
 
 // deno-lint-ignore no-explicit-any
@@ -123,12 +120,14 @@ export class ApplicationListenEvent extends Event {
   hostname?: string;
   port: number;
   secure: boolean;
+  serverType: "std" | "native" | "custom";
 
   constructor(eventInitDict: ApplicationListenEventInit) {
     super("listen", eventInitDict);
     this.hostname = eventInitDict.hostname;
     this.port = eventInitDict.port;
     this.secure = eventInitDict.secure;
+    this.serverType = eventInitDict.serverType;
   }
 }
 
@@ -144,8 +143,7 @@ export class Application<AS extends State = Record<string, any>>
   #composedMiddleware?: (context: Context<AS>) => Promise<void>;
   #keys?: KeyStack;
   #middleware: Middleware<State, Context<State>>[] = [];
-  #serve: Serve;
-  #serveTls: ServeTls;
+  #serverConstructor: ServerConstructor<ServerRequest | NativeRequest>;
 
   /** A set of keys, or an instance of `KeyStack` which will be used to sign
    * cookies read and set by the application to avoid tampering with the
@@ -190,15 +188,13 @@ export class Application<AS extends State = Record<string, any>>
       state,
       keys,
       proxy,
-      serve = defaultServe,
-      serveTls = defaultServeTls,
+      serverConstructor = hasNativeHttp() ? HttpServerNative : HttpServerStd,
     } = options;
 
     this.proxy = proxy ?? false;
     this.keys = keys;
     this.state = state ?? {} as AS;
-    this.#serve = serve;
-    this.#serveTls = serveTls;
+    this.#serverConstructor = serverConstructor;
   }
 
   #getComposed = (): ((context: Context<AS>) => Promise<void>) => {
@@ -242,7 +238,7 @@ export class Application<AS extends State = Record<string, any>>
 
   /** Processing registered middleware on each request. */
   #handleRequest = async (
-    request: ServerRequest,
+    request: ServerRequest | NativeRequest,
     secure: boolean,
     state: RequestState,
   ): Promise<void> => {
@@ -263,8 +259,14 @@ export class Application<AS extends State = Record<string, any>>
       state.handling.delete(handlingPromise);
       return;
     }
+    let closeResources = true;
     try {
-      await request.respond(await context.response.toServerResponse());
+      if (request instanceof NativeRequest) {
+        closeResources = false;
+        await request.respond(await context.response.toDomResponse());
+      } else {
+        await request.respond(await context.response.toServerResponse());
+      }
       if (state.closing) {
         state.server.close();
         state.closed = true;
@@ -272,7 +274,7 @@ export class Application<AS extends State = Record<string, any>>
     } catch (err) {
       this.#handleError(context, err);
     } finally {
-      context.response.destroy();
+      context.response.destroy(closeResources);
       resolve!();
       state.handling.delete(handlingPromise);
     }
@@ -309,14 +311,32 @@ export class Application<AS extends State = Record<string, any>>
    * context gets set to not to respond, then the method resolves with
    * `undefined`, otherwise it resolves with a request that is compatible with
    * `std/http/server`. */
-  handle = async (
-    request: ServerRequest,
+  handle = (async (
+    request: ServerRequest | Request,
+    secureOrConn: Deno.Conn | boolean | undefined,
     secure = false,
-  ): Promise<ServerResponse | undefined> => {
+  ): Promise<ServerResponse | Response | undefined> => {
     if (!this.#middleware.length) {
       throw new TypeError("There is no middleware to process requests.");
     }
-    const context = new Context(this, request, secure);
+    let contextRequest: ServerRequest | NativeRequest;
+    if (request instanceof Request) {
+      assert(isConn(secureOrConn));
+      contextRequest = new NativeRequest({
+        request,
+        respondWith() {
+          return Promise.resolve(undefined);
+        },
+      }, secureOrConn);
+    } else {
+      assert(
+        typeof secureOrConn === "boolean" ||
+          typeof secureOrConn === "undefined",
+      );
+      secure = secureOrConn ?? false;
+      contextRequest = request;
+    }
+    const context = new Context(this, contextRequest, secure);
     try {
       await this.#getComposed()(context);
     } catch (err) {
@@ -327,14 +347,18 @@ export class Application<AS extends State = Record<string, any>>
       return;
     }
     try {
-      const response = await context.response.toServerResponse();
-      context.response.destroy();
+      const response = contextRequest instanceof NativeRequest
+        ? await context.response.toDomResponse()
+        : await context.response.toServerResponse();
+      context.response.destroy(false);
       return response;
     } catch (err) {
+      // deno-lint-ignore no-unreachable
       this.#handleError(context, err);
+      // deno-lint-ignore no-unreachable
       throw err;
     }
-  };
+  }) as HandleMethod;
 
   /** Start listening for requests, processing registered middleware on each
    * request.  If the options `.secure` is undefined or `false`, the listening
@@ -360,9 +384,7 @@ export class Application<AS extends State = Record<string, any>>
       const [, hostname, portStr] = match;
       options = { hostname, port: parseInt(portStr, 10) };
     }
-    const server = isOptionsTls(options)
-      ? this.#serveTls(options)
-      : this.#serve(options);
+    const server = new this.#serverConstructor(options);
     const { signal } = options;
     const state = {
       closed: false,
@@ -380,8 +402,13 @@ export class Application<AS extends State = Record<string, any>>
       });
     }
     const { hostname, port, secure = false } = options;
+    const serverType = server instanceof HttpServerStd
+      ? "std"
+      : server instanceof HttpServerNative
+      ? "native"
+      : "custom";
     this.dispatchEvent(
-      new ApplicationListenEvent({ hostname, port, secure }),
+      new ApplicationListenEvent({ hostname, port, secure, serverType }),
     );
     try {
       for await (const request of server) {

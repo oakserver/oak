@@ -62,10 +62,11 @@ app.use(router.allowedMethods());
 // A basic 404 page
 app.use(notFound);
 
-app.addEventListener("listen", ({ hostname, port }) => {
+app.addEventListener("listen", ({ hostname, port, serverType }) => {
   console.log(
     bold("Start listening on ") + yellow(`${hostname}:${port}`),
   );
+  console.log(bold("  using HTTP server: " + yellow(serverType)));
 });
 
 // Utilise the signal from the controller
