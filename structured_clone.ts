@@ -30,7 +30,6 @@ export type StructuredClonable =
   | URIError;
 
 declare global {
-  // deno-lint-ignore no-namespace
   namespace Deno {
     var core: {
       deserialize(value: unknown): StructuredClonable;
