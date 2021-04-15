@@ -11,9 +11,11 @@ import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
 import {
-  ServerSentEventTarget,
   ServerSentEventTargetOptions,
+  SSEStdLibTarget,
+  SSEStreamTarget,
 } from "./server_sent_event.ts";
+import type { ServerSentEventTarget } from "./server_sent_event.ts";
 import { structuredClone } from "./structured_clone.ts";
 import type { ErrorStatus } from "./types.d.ts";
 
@@ -146,15 +148,15 @@ export class Context<S extends State = Record<string, any>> {
    * 
    * This will set `.respond` to `false`. */
   sendEvents(options?: ServerSentEventTargetOptions): ServerSentEventTarget {
-    if (this.#sse) {
-      return this.#sse;
+    if (!this.#sse) {
+      if (this.request.originalRequest instanceof NativeRequest) {
+        this.#sse = new SSEStreamTarget(this, options);
+      } else {
+        this.respond = false;
+        this.#sse = new SSEStdLibTarget(this, options);
+      }
     }
-    this.respond = false;
-    return this.#sse = new ServerSentEventTarget(
-      this.app,
-      this.request.originalRequest,
-      options,
-    );
+    return this.#sse;
   }
 
   /** Create and throw an HTTP Error, which can be used to pass status
