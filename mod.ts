@@ -10,12 +10,13 @@ export type {
 } from "./application.ts";
 export type {
   Body,
+  BodyBytes,
   BodyForm,
   BodyFormData,
   BodyJson,
   BodyOptions,
-  BodyRaw,
   BodyReader,
+  BodyStream,
   BodyText,
   BodyType,
   BodyUndefined,

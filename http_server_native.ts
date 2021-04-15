@@ -1,6 +1,5 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { copyBytes } from "./deps.ts";
 import { Server } from "./types.d.ts";
 import { isListenTlsOptions } from "./util.ts";
 
@@ -37,48 +36,7 @@ export function hasNativeHttp(): boolean {
   return !!serveHttp;
 }
 
-class BodyReader implements Deno.Reader {
-  #buffer = new Uint8Array(0);
-  #reader: ReadableStreamReader<Uint8Array> | null;
-
-  constructor(body: ReadableStream<Uint8Array> | null) {
-    this.#reader = body ? body.getReader() : null;
-  }
-
-  async read(p: Uint8Array): Promise<number | null> {
-    if (!this.#reader) {
-      return null;
-    }
-    let copied: number | null = null;
-    if (this.#buffer.byteLength) {
-      if (this.#buffer.byteLength > p.byteLength) {
-        copied = copyBytes(this.#buffer.slice(0, p.byteLength - 1), p);
-        this.#buffer = this.#buffer.slice(p.byteLength);
-      } else {
-        copied = copyBytes(this.#buffer, p);
-        this.#buffer = new Uint8Array();
-      }
-      return copied;
-    }
-    const result = await this.#reader.read();
-    if (result.value) {
-      if (result.value.byteLength > p.byteLength) {
-        copied = copyBytes(result.value.slice(0, p.byteLength - 1), p);
-        this.#buffer = result.value.slice(p.byteLength);
-      } else {
-        copied = copyBytes(result.value, p);
-      }
-    }
-    if (result.done) {
-      this.#reader.releaseLock();
-      this.#reader = null;
-    }
-    return copied;
-  }
-}
-
 export class NativeRequest {
-  #body: BodyReader;
   #conn: Deno.Conn;
   // deno-lint-ignore no-explicit-any
   #reject!: (reason?: any) => void;
@@ -90,7 +48,6 @@ export class NativeRequest {
   constructor(requestEvent: RequestEvent, conn: Deno.Conn) {
     this.#conn = conn;
     this.#request = requestEvent.request;
-    this.#body = new BodyReader(requestEvent.request.body);
     const p = new Promise<Response>((resolve, reject) => {
       this.#resolve = resolve;
       this.#reject = reject;
@@ -98,12 +55,16 @@ export class NativeRequest {
     this.#requestPromise = requestEvent.respondWith(p);
   }
 
-  get body(): Deno.Reader {
-    return this.#body;
+  get body(): ReadableStream<Uint8Array> | null {
+    return this.#request.body;
   }
 
   get conn(): Deno.Conn {
     return this.#conn;
+  }
+
+  get donePromise(): Promise<void> {
+    return this.#requestPromise;
   }
 
   get headers(): Headers {
@@ -176,7 +137,10 @@ export class HttpServerNative implements Server<NativeRequest> {
         async function serve(conn: Deno.Conn) {
           const httpConn = serveHttp(conn);
           for await (const requestEvent of httpConn) {
-            controller.enqueue(new NativeRequest(requestEvent, conn));
+            const nativeRequest = new NativeRequest(requestEvent, conn);
+            controller.enqueue(nativeRequest);
+            // TODO(kitsonk): work around https://github.com/denoland/deno/issues/10182
+            await nativeRequest.donePromise;
             if (server.closed) {
               httpConn.close();
               listener.close();

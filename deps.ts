@@ -16,7 +16,9 @@ export {
   Status,
   STATUS_TEXT,
 } from "https://deno.land/std@0.93.0/http/http_status.ts";
+export { Buffer } from "https://deno.land/std@0.93.0/io/buffer.ts";
 export { BufReader, BufWriter } from "https://deno.land/std@0.93.0/io/bufio.ts";
+export { readerFromStreamReader } from "https://deno.land/std@0.93.0/io/streams.ts";
 export { readAll, writeAll } from "https://deno.land/std@0.93.0/io/util.ts";
 export {
   basename,

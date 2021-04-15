@@ -49,8 +49,8 @@ router
       Status.UnsupportedMediaType,
     );
     const connection = `${
-      (ctx.request.serverRequest.conn.remoteAddr as Deno.NetAddr).hostname
-    }:${(ctx.request.serverRequest.conn.remoteAddr as Deno.NetAddr).port}`;
+      (ctx.request.originalRequest.conn.remoteAddr as Deno.NetAddr).hostname
+    }:${(ctx.request.originalRequest.conn.remoteAddr as Deno.NetAddr).port}`;
     const target = ctx.sendEvents();
     console.log(`${green("SSE connect")} ${cyan(connection)}`);
     let counter = 0;

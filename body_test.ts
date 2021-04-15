@@ -142,7 +142,7 @@ test({
 });
 
 test({
-  name: "body - raw",
+  name: "body - bytes",
   async fn() {
     const requestBody = new RequestBody(createMockServerRequest(
       {
@@ -154,7 +154,7 @@ test({
     ));
     assert(requestBody.has());
     const body = requestBody.get({});
-    assert(body.type === "raw");
+    assert(body.type === "bytes");
     const actual = await body.value;
     assertEquals(decoder.decode(actual), `console.log("hello world!");\n`);
   },
@@ -243,7 +243,7 @@ test({
 });
 
 test({
-  name: "body - type: raw",
+  name: "body - type: bytes",
   async fn() {
     const requestBody = new RequestBody(createMockServerRequest(
       {
@@ -253,8 +253,8 @@ test({
         },
       },
     ));
-    const body = requestBody.get({ type: "raw" });
-    assert(body.type === "raw");
+    const body = requestBody.get({ type: "bytes" });
+    assert(body.type === "bytes");
     const actual = await body.value;
     assertEquals(decoder.decode(actual), `console.log("hello world!");\n`);
   },
@@ -354,7 +354,7 @@ test({
 });
 
 test({
-  name: "body - contentTypes: raw",
+  name: "body - contentTypes: bytes",
   async fn() {
     const requestBody = new RequestBody(createMockServerRequest(
       {
@@ -364,8 +364,8 @@ test({
         },
       },
     ));
-    const body = requestBody.get({ contentTypes: { raw: ["text/plain"] } });
-    assert(body.type === "raw");
+    const body = requestBody.get({ contentTypes: { bytes: ["text/plain"] } });
+    assert(body.type === "bytes");
     const actual = await body.value;
     assertEquals(decoder.decode(actual), `console.log("hello world!");\n`);
   },
@@ -446,5 +446,22 @@ test({
     const bodyJson = requestBody.get({});
     assert(bodyJson.type === "json");
     assertEquals(await bodyJson.value, { hello: "world" });
+  },
+});
+
+test({
+  name: "body - native Request",
+  async fn() {
+    const request = new Request("http://localhost:8000/a.js", {
+      body: "hello deno",
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain",
+      },
+    });
+    const requestBody = new RequestBody(request);
+    const actual = requestBody.get({});
+    assertEquals(actual.type, "text");
+    assertEquals(await actual.value, "hello deno");
   },
 });

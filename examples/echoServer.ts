@@ -68,7 +68,7 @@ app.use(async (ctx) => {
           JSON.stringify(await body.value, undefined, "  ")
         }</pre>`;
         break;
-      case "raw":
+      case "bytes":
         ctx.response.body += `<h2>Content Type: "${
           ctx.request.headers.get("content-type")
         }"</h2>`;

@@ -2,12 +2,13 @@
 
 import type {
   Body,
+  BodyBytes,
   BodyForm,
   BodyFormData,
   BodyJson,
   BodyOptions,
-  BodyRaw,
   BodyReader,
+  BodyStream,
   BodyText,
 } from "./body.ts";
 import { RequestBody } from "./body.ts";
@@ -111,7 +112,11 @@ export class Request {
     this.#proxy = proxy;
     this.#secure = secure;
     this.#serverRequest = serverRequest;
-    this.#body = new RequestBody(serverRequest);
+    this.#body = new RequestBody(
+      serverRequest instanceof NativeRequest
+        ? serverRequest.request
+        : serverRequest,
+    );
   }
 
   /** Returns an array of media types, accepted by the requestor, in order of
@@ -206,14 +211,15 @@ export class Request {
     return preferredLanguages(acceptLanguageValue);
   }
 
+  body(options: BodyOptions<"bytes">): BodyBytes;
   body(options: BodyOptions<"form">): BodyForm;
   body(options: BodyOptions<"form-data">): BodyFormData;
   body(options: BodyOptions<"json">): BodyJson;
-  body(options: BodyOptions<"raw">): BodyRaw;
   body(options: BodyOptions<"reader">): BodyReader;
+  body(options: BodyOptions<"stream">): BodyStream;
   body(options: BodyOptions<"text">): BodyText;
   body(options?: BodyOptions): Body;
-  body(options: BodyOptions = {}): Body | BodyReader {
+  body(options: BodyOptions = {}): Body | BodyReader | BodyStream {
     return this.#body.get(options);
   }
 }

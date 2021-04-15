@@ -77,20 +77,55 @@ export function isListenTlsOptions(
     "keyFile" in value && "port" in value;
 }
 
-/** Convert a `Deno.Reader` (and optionally `Deno.Closer`) into a
- * `ReadableStream<Uint8Array>` */
+export interface ReadableStreamFromReaderOptions {
+  /** If the `reader` is also a `Deno.Closer`, automatically close the `reader`
+   * when `EOF` is encountered, or a read error occurs.
+   * 
+   * Defaults to `true`. */
+  autoClose?: boolean;
+
+  /** The size of chunks to allocate to read, the default is ~16KiB, which is
+   * the maximum size that Deno operations can currently support. */
+  chunkSize?: number;
+
+  /** The queuing strategy to create the `ReadableStream` with. */
+  strategy?: { highWaterMark?: number | undefined; size?: undefined };
+}
+
+/**
+ * Create a `ReadableStream<Uint8Array>` from from a `Deno.Reader`.
+ * 
+ * When the pull algorithm is called on the stream, a chunk from the reader
+ * will be read.  When `null` is returned from the reader, the stream will be
+ * closed along with the reader (if it is also a `Deno.Closer`).
+ * 
+ * An example converting a `Deno.File` into a readable stream:
+ * 
+ * ```ts
+ * import { readableStreamFromReader } from "https://deno.land/std/io/mod.ts";
+ * 
+ * const file = await Deno.open("./file.txt", { read: true });
+ * const fileStream = readableStreamFromReader(file);
+ * ```
+ * 
+ */
 export function readableStreamFromReader(
   reader: Deno.Reader | (Deno.Reader & Deno.Closer),
-  chunkSize = DEFAULT_CHUNK_SIZE,
-  strategy?: { highWaterMark?: number | undefined; size?: undefined },
+  options: ReadableStreamFromReaderOptions = {},
 ): ReadableStream<Uint8Array> {
+  const {
+    autoClose = true,
+    chunkSize = DEFAULT_CHUNK_SIZE,
+    strategy,
+  } = options;
+
   return new ReadableStream({
     async pull(controller) {
       const chunk = new Uint8Array(chunkSize);
       try {
         const read = await reader.read(chunk);
         if (read === null) {
-          if (isCloser(reader)) {
+          if (isCloser(reader) && autoClose) {
             reader.close();
           }
           controller.close();
@@ -105,7 +140,7 @@ export function readableStreamFromReader(
       }
     },
     cancel() {
-      if (isCloser(reader)) {
+      if (isCloser(reader) && autoClose) {
         reader.close();
       }
     },

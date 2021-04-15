@@ -101,7 +101,7 @@ export class ServerSentEventTarget extends EventTarget {
   #closed = false;
   #prev = Promise.resolve();
   #ready: Promise<void> | true;
-  #serverRequest: ServerRequest;
+  #serverRequest: ServerRequest | NativeRequest;
   #writer: BufWriter;
 
   #send = async (payload: string, prev: Promise<void>): Promise<void> => {
