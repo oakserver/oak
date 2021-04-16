@@ -11,7 +11,11 @@ import { HttpServerStd } from "./http_server_std.ts";
 import type { ServerRequest, ServerResponse } from "./http_server_std.ts";
 import { Key, KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
-import { Server, ServerConstructor } from "./types.d.ts";
+import {
+  FetchEventListenerObject,
+  Server,
+  ServerConstructor,
+} from "./types.d.ts";
 import { isConn } from "./util.ts";
 
 export interface ListenOptionsBase extends Deno.ListenOptions {
@@ -153,6 +157,7 @@ export class ApplicationListenEvent extends Event {
 export class Application<AS extends State = Record<string, any>>
   extends EventTarget {
   #composedMiddleware?: (context: Context<AS>) => Promise<void>;
+  #eventHandler?: FetchEventListenerObject;
   #keys?: KeyStack;
   #middleware: Middleware<State, Context<State>>[] = [];
   #serverConstructor: ServerConstructor<ServerRequest | NativeRequest>;
@@ -315,6 +320,47 @@ export class Application<AS extends State = Record<string, any>>
     options?: boolean | AddEventListenerOptions,
   ): void {
     super.addEventListener(type, listener, options);
+  }
+
+  /** When using Deno Deploy, this method can create an event handler object
+   * for the application which can be registered as a fetch event handler.
+   * 
+   * ```
+   * import { Application } from "https://deno.land/x/oak/mod.ts";
+   * 
+   * const app = new App();
+   * app.use((ctx) => ctx.response.body = "hello oak");
+   * 
+   * addEventListener("fetch", app.fetchEventHandler());
+   * ```
+   */
+  fetchEventHandler(): FetchEventListenerObject {
+    if (this.#eventHandler) {
+      return this.#eventHandler;
+    }
+    return this.#eventHandler = {
+      handleEvent: async (requestEvent) => {
+        let resolve: (response: Response) => void;
+        // deno-lint-ignore no-explicit-any
+        let reject: (reason: any) => void;
+        const responsePromise = new Promise<Response>((res, rej) => {
+          resolve = res;
+          reject = rej;
+        });
+        const respondedPromise = requestEvent.respondWith(responsePromise);
+        const response = await this.handle(requestEvent.request);
+        if (response) {
+          resolve!(response);
+        } else {
+          reject!(new Error("No response returned from app handler."));
+        }
+        try {
+          await respondedPromise;
+        } catch (error) {
+          this.dispatchEvent(new ApplicationErrorEvent({ error }));
+        }
+      },
+    };
   }
 
   /** Handle an individual server request, returning the server response.  This

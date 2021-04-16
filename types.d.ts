@@ -77,3 +77,12 @@ export interface ServerConstructor<T> {
   ): Server<T>;
   prototype: Server<T>;
 }
+
+export interface FetchEvent extends Event {
+  request: Request;
+  respondWith(response: Response | Promise<Response>): Promise<Response>;
+}
+
+export interface FetchEventListenerObject {
+  handleEvent(evt: FetchEvent): void | Promise<void>;
+}
