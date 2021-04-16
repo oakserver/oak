@@ -4,12 +4,12 @@ import { assertEquals, assertStrictEquals, test } from "./test_deps.ts";
 
 import { hasNativeHttp, NativeRequest } from "./http_server_native.ts";
 
-function createMockConn(): Deno.Conn {
+function createMockConn() {
   return {
     localAddr: { transport: "tcp", hostname: "localhost", port: 8000 },
     remoteAddr: { transport: "tcp", hostname: "remote", port: 4567 },
     rid: 1,
-  } as Deno.Conn;
+  } as Deno.Conn<Deno.NetAddr>;
 }
 
 test({
@@ -34,7 +34,7 @@ test({
         respondWithStack.push(v);
         return Promise.resolve();
       },
-    });
+    }, conn);
     assertEquals(nativeRequest.url, `http://localhost:8000/`);
     assertEquals(respondWithStack.length, 1);
     const response = new Response("hello deno");
