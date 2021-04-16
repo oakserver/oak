@@ -16,7 +16,7 @@ import { NativeRequest } from "./http_server_native.ts";
 import type { ServerRequest, ServerResponse } from "./http_server_std.ts";
 import { httpErrors } from "./httpError.ts";
 import { Data, KeyStack } from "./keyStack.ts";
-import type { Server } from "./types.d.ts";
+import type { FetchEvent, Server } from "./types.d.ts";
 
 let serverRequestStack: ServerRequest[] = [];
 let requestResponseStack: ServerResponse[] = [];
@@ -581,5 +581,32 @@ test({
     await assertThrowsAsync(async () => {
       await app.handle(createMockRequest());
     }, TypeError);
+  },
+});
+
+test({
+  name: "application .fetchEventHandler()",
+  async fn() {
+    let respondCount = 0;
+    let response: Response | undefined;
+
+    async function respondWith(
+      p: Response | Promise<Response>,
+    ): Promise<Response> {
+      respondCount++;
+      response = await p;
+      return response;
+    }
+
+    const app = new Application();
+    app.use((ctx) => {
+      ctx.response.body = "hello oak";
+    });
+    const handler = app.fetchEventHandler();
+    const request = new Request("http://localhost:8000/");
+    await handler.handleEvent({ request, respondWith } as FetchEvent);
+    assertEquals(respondCount, 1);
+    assert(response);
+    assert(await response.text(), "hello oak");
   },
 });
