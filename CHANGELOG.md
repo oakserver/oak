@@ -1,5 +1,21 @@
 # oak Change Log
 
+## Version 7.1.0
+
+- feat: enable server-sent events for native HTTP bindings (#293)
+
+  Server-sent events now work on both the `std/http` and the native HTTP server
+  with Deno.
+
+- refactor: make connection optional for app.handle() (#294)
+
+  This was required to support Deno Deploy.
+
+- refactor: add fallback for structured clone when core unavailable (#295)
+
+  This was also required to support Deno Deploy, as it currently doesn't expose
+  the low level APIs required to do structured cloning.
+
 ## Version 7.0.0
 
 - feat: context.state is cloned from app.state (1590ac9)
