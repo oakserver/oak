@@ -4,7 +4,12 @@
 
 import { assert, assertEquals, assertThrowsAsync, test } from "./test_deps.ts";
 
-import { Application, ListenOptions, ListenOptionsTls } from "./application.ts";
+import {
+  Application,
+  ListenOptions,
+  ListenOptionsTls,
+  State,
+} from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { NativeRequest } from "./http_server_native.ts";
@@ -27,8 +32,12 @@ function teardown() {
   serverClosed = false;
 }
 
-class MockServer implements Server<ServerRequest> {
-  constructor(options: Deno.ListenOptions | Deno.ListenTlsOptions) {
+class MockServer<AS extends State = Record<string, any>>
+  implements Server<ServerRequest> {
+  constructor(
+    _app: Application<AS>,
+    options: Deno.ListenOptions | Deno.ListenTlsOptions,
+  ) {
     optionsStack.push(options);
   }
 
@@ -43,8 +52,12 @@ class MockServer implements Server<ServerRequest> {
   }
 }
 
-class MockNativeServer implements Server<NativeRequest> {
-  constructor(options: Deno.ListenOptions | Deno.ListenTlsOptions) {
+class MockNativeServer<AS extends State = Record<string, any>>
+  implements Server<NativeRequest> {
+  constructor(
+    _app: Application<AS>,
+    options: Deno.ListenOptions | Deno.ListenTlsOptions,
+  ) {
     optionsStack.push(options);
   }
 

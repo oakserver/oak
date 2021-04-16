@@ -53,8 +53,10 @@ export type {
 export { send } from "./send.ts";
 export type { SendOptions } from "./send.ts";
 export { ServerSentEvent } from "./server_sent_event.ts";
-export type { ServerSentEventTarget } from "./server_sent_event.ts";
-export type { ServerSentEventInit } from "./server_sent_event.ts";
+export type {
+  ServerSentEventInit,
+  ServerSentEventTarget,
+} from "./server_sent_event.ts";
 export type { ErrorStatus, HTTPMethods, RedirectStatus } from "./types.d.ts";
 export { isErrorStatus, isRedirectStatus } from "./util.ts";
 

@@ -105,6 +105,9 @@ export interface ServerSentEventTarget extends EventTarget {
    * another event, comment or message is attempted to be processed. */
   readonly closed: boolean;
 
+  /** Close the target, refusing to accept any more events. */
+  close(): Promise<void>;
+
   /** Send a comment to the remote connection.  Comments are not exposed to the
    * client `EventSource` but are used for diagnostics and helping ensure a
    * connection is kept alive.
@@ -238,6 +241,11 @@ export class SSEStreamTarget extends EventTarget
         this.#controller.close();
       }
     });
+  }
+
+  close(): Promise<void> {
+    this.dispatchEvent(new CloseEvent({ cancelable: false }));
+    return Promise.resolve();
   }
 
   dispatchComment(comment: string): boolean {

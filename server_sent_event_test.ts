@@ -11,8 +11,14 @@ import {
 } from "./test_deps.ts";
 
 import type { Application } from "./application.ts";
+import { Context } from "./context.ts";
+import { NativeRequest } from "./http_server_native.ts";
 import type { ServerRequest } from "./http_server_std.ts";
-import { ServerSentEvent, ServerSentEventTarget } from "./server_sent_event.ts";
+import {
+  ServerSentEvent,
+  SSEStdLibTarget,
+  SSEStreamTarget,
+} from "./server_sent_event.ts";
 
 const preamble = `HTTP/1.1 200 OK
 connection: Keep-Alive
@@ -27,6 +33,7 @@ const env = {
   appErrorEvents: [] as ErrorEvent[],
   outWriter: new StringWriter(),
   connCloseCalled: false,
+  response: undefined as (Response | undefined),
 };
 
 function createMockApp(): Application {
@@ -52,6 +59,16 @@ function createMockServerRequest(): ServerRequest {
     },
     w: new BufWriter(env.outWriter),
   } as any;
+}
+
+function createMockNativeRequest(): NativeRequest {
+  env.response = undefined;
+  return new NativeRequest({
+    request: new Request("http://localhost:8000/"),
+    async respondWith(p: Response | Promise<Response>) {
+      env.response = await p;
+    },
+  }, {} as any);
 }
 
 test({
@@ -114,12 +131,10 @@ test({
 });
 
 test({
-  name: "ServerSentEventTarget - construction",
+  name: "SSEStdLibTarget - construction",
   async fn() {
-    const sse = new ServerSentEventTarget(
-      createMockApp(),
-      createMockServerRequest(),
-    );
+    const context = new Context(createMockApp(), createMockServerRequest());
+    const sse = new SSEStdLibTarget(context);
     assertEquals(sse.closed, false);
     await sse.close();
     assert(env.connCloseCalled);
@@ -131,13 +146,13 @@ test({
 });
 
 test({
-  name: "ServerSentEventTaget - construction with headers",
+  name: "SSEStdLibTarget - construction with headers",
   async fn() {
     const expected =
       `HTTP/1.1 200 OK\nconnection: Keep-Alive\ncontent-type: text/event-stream\ncache-control: special\nkeep-alive: timeout=9007199254740991\nx-oak: test\n\n`;
-    const sse = new ServerSentEventTarget(
-      createMockApp(),
-      createMockServerRequest(),
+    const context = new Context(createMockApp(), createMockServerRequest());
+    const sse = new SSEStdLibTarget(
+      context,
       {
         headers: new Headers([["X-Oak", "test"], ["Cache-Control", "special"]]),
       },
@@ -149,12 +164,10 @@ test({
 });
 
 test({
-  name: "ServerSentEventTarget - dispatchEvent",
+  name: "SSEStdLibTarget - dispatchEvent",
   async fn() {
-    const sse = new ServerSentEventTarget(
-      createMockApp(),
-      createMockServerRequest(),
-    );
+    const context = new Context(createMockApp(), createMockServerRequest());
+    const sse = new SSEStdLibTarget(context);
     const evt = new ServerSentEvent("message", "foobar");
     sse.dispatchEvent(evt);
     await sse.close();
@@ -166,12 +179,10 @@ test({
 });
 
 test({
-  name: "ServerSentEventTarget - dispatchMessage",
+  name: "SSEStdLibTarget - dispatchMessage",
   async fn() {
-    const sse = new ServerSentEventTarget(
-      createMockApp(),
-      createMockServerRequest(),
-    );
+    const context = new Context(createMockApp(), createMockServerRequest());
+    const sse = new SSEStdLibTarget(context);
     sse.dispatchMessage("foobar");
     await sse.close();
     assert(env.connCloseCalled);
@@ -182,12 +193,10 @@ test({
 });
 
 test({
-  name: "ServerSentEventTarget - dispatchComment",
+  name: "SSEStdLibTarget - dispatchComment",
   async fn() {
-    const sse = new ServerSentEventTarget(
-      createMockApp(),
-      createMockServerRequest(),
-    );
+    const context = new Context(createMockApp(), createMockServerRequest());
+    const sse = new SSEStdLibTarget(context);
     sse.dispatchComment("foobar");
     await sse.close();
     assert(env.connCloseCalled);
@@ -198,12 +207,10 @@ test({
 });
 
 test({
-  name: "ServerSentEVentTarget - synchronous dispatch",
+  name: "SSEStdLibTarget - synchronous dispatch",
   async fn() {
-    const sse = new ServerSentEventTarget(
-      createMockApp(),
-      createMockServerRequest(),
-    );
+    const context = new Context(createMockApp(), createMockServerRequest());
+    const sse = new SSEStdLibTarget(context);
     sse.dispatchComment("1");
     sse.dispatchComment("2");
     sse.dispatchComment("3");
@@ -212,6 +219,99 @@ test({
     assert(env.connCloseCalled);
     const actual = env.outWriter.toString();
     assert(actual.endsWith(`\n\n: 1\n\n: 2\n\n: 3\n\n: 4\n\n`));
+    assertEquals(env.appErrorEvents.length, 0);
+  },
+});
+
+test({
+  name: "SSEStreamTarget - construction",
+  async fn() {
+    const request = createMockNativeRequest();
+    const context = new Context(createMockApp(), request);
+    const sse = new SSEStreamTarget(context);
+    assertEquals(sse.closed, false);
+    await request.respond(await context.response.toDomResponse());
+    await sse.close();
+    assert(env.response);
+    assert(env.response.body);
+    const reader = env.response.body.getReader();
+    await reader.closed;
+    assertEquals(env.response.status, 200);
+    console.log(context.response.headers);
+    assertEquals(env.response.headers.get("content-type"), "text/event-stream");
+    assertEquals(env.response.headers.get("connection"), "Keep-Alive");
+    assertEquals(
+      env.response.headers.get("keep-alive"),
+      "timeout=9007199254740991",
+    );
+  },
+});
+
+test({
+  name: "SSEStreamTarget - construction with headers",
+  async fn() {
+    const request = createMockNativeRequest();
+    const context = new Context(createMockApp(), request);
+    const sse = new SSEStreamTarget(
+      context,
+      {
+        headers: new Headers([["X-Oak", "test"], ["Cache-Control", "special"]]),
+      },
+    );
+    await request.respond(await context.response.toDomResponse());
+    await sse.close();
+    assert(env.response);
+    assertEquals(env.response.headers.get("content-type"), "text/event-stream");
+    assertEquals(env.response.headers.get("connection"), "Keep-Alive");
+    assertEquals(env.response.headers.get("x-oak"), "test");
+    assertEquals(env.response.headers.get("cache-control"), "special");
+  },
+});
+
+test({
+  name: "SSEStreamTarget - dispatchEvent",
+  async fn() {
+    const request = createMockNativeRequest();
+    const context = new Context(createMockApp(), request);
+    const sse = new SSEStreamTarget(context);
+    await request.respond(await context.response.toDomResponse());
+    const evt = new ServerSentEvent("message", "foobar");
+    sse.dispatchEvent(evt);
+    await sse.close();
+    assert(env.response);
+    assertEquals(await env.response.text(), "event: message\ndata: foobar\n\n");
+    assertEquals(env.appErrorEvents.length, 0);
+  },
+});
+
+test({
+  name: "SSEStreamTarget - dispatchMessage",
+  async fn() {
+    const request = createMockNativeRequest();
+    const context = new Context(createMockApp(), request);
+    const sse = new SSEStreamTarget(context);
+    await request.respond(await context.response.toDomResponse());
+    sse.dispatchMessage("foobar");
+    await sse.close();
+    assert(env.connCloseCalled);
+    assert(env.response);
+    assertEquals(await env.response.text(), "data: foobar\n\n");
+    assertEquals(env.appErrorEvents.length, 0);
+  },
+});
+
+test({
+  name: "SSEStreamTarget - dispatchComment",
+  async fn() {
+    const request = createMockNativeRequest();
+    const context = new Context(createMockApp(), request);
+    const sse = new SSEStreamTarget(context);
+    await request.respond(await context.response.toDomResponse());
+    sse.dispatchComment("foobar");
+    await sse.close();
+    assert(env.connCloseCalled);
+    assert(env.response);
+    assertEquals(await env.response.text(), ": foobar\n\n");
     assertEquals(env.appErrorEvents.length, 0);
   },
 });
