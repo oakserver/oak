@@ -1,6 +1,7 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { Status } from "./deps.ts";
+import type { Application, State } from "./application.ts";
+import type { Status } from "./deps.ts";
 
 /** A HTTP status that is an error (4XX and 5XX). */
 export type ErrorStatus =
@@ -69,6 +70,10 @@ export interface Server<T> extends AsyncIterable<T> {
 }
 
 export interface ServerConstructor<T> {
-  new (options: Deno.ListenOptions | Deno.ListenTlsOptions): Server<T>;
+  // deno-lint-ignore no-explicit-any
+  new <AS extends State = Record<string, any>>(
+    app: Application<AS>,
+    options: Deno.ListenOptions | Deno.ListenTlsOptions,
+  ): Server<T>;
   prototype: Server<T>;
 }

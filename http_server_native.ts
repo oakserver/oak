@@ -1,6 +1,7 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { Server } from "./types.d.ts";
+import type { Application, State } from "./application.ts";
+import type { Server } from "./types.d.ts";
 import { isListenTlsOptions } from "./util.ts";
 
 export type Respond = (r: Response | Promise<Response>) => void;
@@ -102,17 +103,28 @@ export class NativeRequest {
   }
 }
 
-export class HttpServerNative implements Server<NativeRequest> {
+// deno-lint-ignore no-explicit-any
+export class HttpServerNative<AS extends State = Record<string, any>>
+  implements Server<NativeRequest> {
+  #app: Application<AS>;
   #closed = false;
   #options: Deno.ListenOptions | Deno.ListenTlsOptions;
 
-  constructor(options: Deno.ListenOptions | Deno.ListenTlsOptions) {
+  constructor(
+    app: Application<AS>,
+    options: Deno.ListenOptions | Deno.ListenTlsOptions,
+  ) {
     if (!("serveHttp" in Deno)) {
       throw new Error(
         "The native bindings for serving HTTP are not available.",
       );
     }
+    this.#app = app;
     this.#options = options;
+  }
+
+  get app(): Application<AS> {
+    return this.#app;
   }
 
   get closed(): boolean {
@@ -139,8 +151,11 @@ export class HttpServerNative implements Server<NativeRequest> {
           for await (const requestEvent of httpConn) {
             const nativeRequest = new NativeRequest(requestEvent, conn);
             controller.enqueue(nativeRequest);
-            // TODO(kitsonk): work around https://github.com/denoland/deno/issues/10182
-            await nativeRequest.donePromise;
+            try {
+              await nativeRequest.donePromise;
+            } catch (error) {
+              server.app.dispatchEvent(new ErrorEvent("error", { error }));
+            }
             if (server.closed) {
               httpConn.close();
               listener.close();

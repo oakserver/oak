@@ -1,5 +1,6 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
+import type { Application, State } from "./application.ts";
 import { serve, serveTLS } from "./deps.ts";
 import type { BufReader, BufWriter } from "./deps.ts";
 import type { Server } from "./types.d.ts";
@@ -31,10 +32,15 @@ export interface ServerResponse {
   body: Uint8Array | Deno.Reader | undefined;
 }
 
-export class HttpServerStd implements Server<ServerRequest> {
+// deno-lint-ignore no-explicit-any
+export class HttpServerStd<AS extends State = Record<string, any>>
+  implements Server<ServerRequest> {
   #server: StdServer;
 
-  constructor(options: Deno.ListenOptions | Deno.ListenTlsOptions) {
+  constructor(
+    _app: Application<AS>,
+    options: Deno.ListenOptions | Deno.ListenTlsOptions,
+  ) {
     this.#server = isListenTlsOptions(options)
       ? serveTLS(options)
       : serve(options);

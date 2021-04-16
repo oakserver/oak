@@ -1,6 +1,7 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 import type { Application } from "./application.ts";
+import type { Context } from "./context.ts";
 import { assert, BufWriter } from "./deps.ts";
 import { NativeRequest } from "./http_server_native.ts";
 import type { ServerRequest } from "./http_server_std.ts";
@@ -96,12 +97,186 @@ const responseHeaders = new Headers(
   ],
 );
 
-export class ServerSentEventTarget extends EventTarget {
+export interface ServerSentEventTarget extends EventTarget {
+  /** Is set to `true` if events cannot be sent to the remote connection.
+   * Otherwise it is set to `false`.
+   * 
+   * *Note*: This flag is lazily set, and might not reflect a closed state until
+   * another event, comment or message is attempted to be processed. */
+  readonly closed: boolean;
+
+  /** Close the target, refusing to accept any more events. */
+  close(): Promise<void>;
+
+  /** Send a comment to the remote connection.  Comments are not exposed to the
+   * client `EventSource` but are used for diagnostics and helping ensure a
+   * connection is kept alive.
+   * 
+   * ```ts
+   * import { Application } from "https://deno.land/x/oak/mod.ts";
+   * 
+   * const app = new Application();
+   * 
+   * app.use((ctx) => {
+   *    const sse = ctx.getSSETarget();
+   *    sse.dispatchComment("this is a comment");
+   * });
+   * 
+   * await app.listen();
+   * ```
+   */
+  dispatchComment(comment: string): boolean;
+
+  /** Dispatch a message to the client.  This message will contain `data: ` only
+   * and be available on the client `EventSource` on the `onmessage` or an event
+   * listener of type `"message"`. */
+  // deno-lint-ignore no-explicit-any
+  dispatchMessage(data: any): boolean;
+
+  /** Dispatch a server sent event to the client.  The event `type` will be
+   * sent as `event: ` to the client which will be raised as a `MessageEvent`
+   * on the `EventSource` in the client.
+   * 
+   * Any local event handlers will be dispatched to first, and if the event
+   * is cancelled, it will not be sent to the client.
+   * 
+   * ```ts
+   * import { Application, ServerSentEvent } from "https://deno.land/x/oak/mod.ts";
+   * 
+   * const app = new Application();
+   * 
+   * app.use((ctx) => {
+   *    const sse = ctx.getSSETarget();
+   *    const evt = new ServerSentEvent("ping", "hello");
+   *    sse.dispatchEvent(evt);
+   * });
+   * 
+   * await app.listen();
+   * ```
+   */
+  dispatchEvent(event: ServerSentEvent): boolean;
+
+  /** Dispatch a server sent event to the client.  The event `type` will be
+   * sent as `event: ` to the client which will be raised as a `MessageEvent`
+   * on the `EventSource` in the client.
+   * 
+   * Any local event handlers will be dispatched to first, and if the event
+   * is cancelled, it will not be sent to the client.
+   * 
+   * ```ts
+   * import { Application, ServerSentEvent } from "https://deno.land/x/oak/mod.ts";
+   * 
+   * const app = new Application();
+   * 
+   * app.use((ctx) => {
+   *    const sse = ctx.getSSETarget();
+   *    const evt = new ServerSentEvent("ping", "hello");
+   *    sse.dispatchEvent(evt);
+   * });
+   * 
+   * await app.listen();
+   * ```
+   */
+  dispatchEvent(event: CloseEvent | ErrorEvent): boolean;
+}
+
+export class SSEStreamTarget extends EventTarget
+  implements ServerSentEventTarget {
+  #closed = false;
+  #context: Context;
+  #controller?: ReadableStreamDefaultController<Uint8Array>;
+
+  // deno-lint-ignore no-explicit-any
+  #error = (error: any) => {
+    this.dispatchEvent(new CloseEvent({ cancelable: false }));
+    const errorEvent = new ErrorEvent("error", { error });
+    this.dispatchEvent(errorEvent);
+    this.#context.app.dispatchEvent(errorEvent);
+  };
+
+  #push = (payload: string) => {
+    if (!this.#controller) {
+      this.#error(new Error("The controller has not been set."));
+      return;
+    }
+    if (this.#closed) {
+      return;
+    }
+    this.#controller.enqueue(encoder.encode(payload));
+  };
+
+  get closed(): boolean {
+    return this.#closed;
+  }
+
+  constructor(
+    context: Context,
+    { headers }: ServerSentEventTargetOptions = {},
+  ) {
+    super();
+
+    this.#context = context;
+
+    context.response.body = new ReadableStream<Uint8Array>({
+      start: (controller) => {
+        this.#controller = controller;
+      },
+      cancel: (error) => {
+        this.#error(error);
+      },
+    });
+
+    if (headers) {
+      for (const [key, value] of headers) {
+        context.response.headers.set(key, value);
+      }
+    }
+    for (const [key, value] of responseHeaders) {
+      context.response.headers.set(key, value);
+    }
+
+    this.addEventListener("close", () => {
+      this.#closed = true;
+      if (this.#controller) {
+        this.#controller.close();
+      }
+    });
+  }
+
+  close(): Promise<void> {
+    this.dispatchEvent(new CloseEvent({ cancelable: false }));
+    return Promise.resolve();
+  }
+
+  dispatchComment(comment: string): boolean {
+    this.#push(`: ${comment.split("\n").join("\n: ")}\n\n`);
+    return true;
+  }
+
+  // deno-lint-ignore no-explicit-any
+  dispatchMessage(data: any): boolean {
+    const event = new ServerSentEvent("__message", data);
+    return this.dispatchEvent(event);
+  }
+
+  dispatchEvent(event: ServerSentEvent): boolean;
+  dispatchEvent(event: CloseEvent | ErrorEvent): boolean;
+  dispatchEvent(event: ServerSentEvent | CloseEvent | ErrorEvent): boolean {
+    const dispatched = super.dispatchEvent(event);
+    if (dispatched && event instanceof ServerSentEvent) {
+      this.#push(String(event));
+    }
+    return dispatched;
+  }
+}
+
+export class SSEStdLibTarget extends EventTarget
+  implements ServerSentEventTarget {
   #app: Application;
   #closed = false;
   #prev = Promise.resolve();
   #ready: Promise<void> | true;
-  #serverRequest: ServerRequest | NativeRequest;
+  #serverRequest: ServerRequest;
   #writer: BufWriter;
 
   #send = async (payload: string, prev: Promise<void>): Promise<void> => {
@@ -148,26 +323,18 @@ export class ServerSentEventTarget extends EventTarget {
     }
   };
 
-  /** Is set to `true` if events cannot be sent to the remote connection.
-   * Otherwise it is set to `false`.
-   * 
-   * *Note*: This flag is lazily set, and might not reflect a closed state until
-   * another event, comment or message is attempted to be processed. */
   get closed(): boolean {
     return this.#closed;
   }
 
   constructor(
-    app: Application,
-    serverRequest: ServerRequest | NativeRequest,
+    context: Context,
     { headers }: ServerSentEventTargetOptions = {},
   ) {
     super();
-    if (serverRequest instanceof NativeRequest) {
-      throw new TypeError("SSE with native Deno requests not yet supported.");
-    }
-    this.#app = app;
-    this.#serverRequest = serverRequest;
+    this.#app = context.app;
+    assert(!(context.request.originalRequest instanceof NativeRequest));
+    this.#serverRequest = context.request.originalRequest;
     this.#writer = this.#serverRequest.w;
     this.addEventListener("close", () => {
       this.#closed = true;
