@@ -516,6 +516,7 @@ test({
     let called = 0;
     app.use((context, next) => {
       assert(context instanceof Context);
+      assertEquals(context.request.ip, "example.com");
       assertEquals(typeof next, "function");
       called++;
     });
@@ -527,8 +528,32 @@ test({
       localAddr: { transport: "tcp", hostname: "localhost", port: 8000 },
       remoteAddr: { transport: "tcp", hostname: "example.com", port: 4747 },
       rid: 1,
-    } as Deno.Conn;
+    } as Deno.Conn<Deno.NetAddr>;
     const actual = await app.handle(request, conn);
+    assertEquals(called, 1);
+    assert(actual instanceof Response);
+    assertEquals(actual.body, null);
+    assertEquals(actual.status, Status.NotFound);
+    assertEquals([...actual.headers], [["content-length", "0"]]);
+  },
+});
+
+test({
+  name: "application .handle() omit connection",
+  async fn() {
+    const app = new Application();
+    let called = 0;
+    app.use((context, next) => {
+      assert(context instanceof Context);
+      assertEquals(context.request.ip, "");
+      assertEquals(typeof next, "function");
+      called++;
+    });
+    const request = new Request("http://localhost:8080/", {
+      method: "GET",
+      body: `{"a":"b"}`,
+    });
+    const actual = await app.handle(request);
     assertEquals(called, 1);
     assert(actual instanceof Response);
     assertEquals(actual.body, null);

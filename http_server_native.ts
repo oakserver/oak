@@ -38,7 +38,7 @@ export function hasNativeHttp(): boolean {
 }
 
 export class NativeRequest {
-  #conn: Deno.Conn;
+  #conn?: Deno.Conn<Deno.NetAddr>;
   // deno-lint-ignore no-explicit-any
   #reject!: (reason?: any) => void;
   #request: Request;
@@ -46,7 +46,7 @@ export class NativeRequest {
   #resolve!: (value: Response) => void;
   #resolved = false;
 
-  constructor(requestEvent: RequestEvent, conn: Deno.Conn) {
+  constructor(requestEvent: RequestEvent, conn?: Deno.Conn<Deno.NetAddr>) {
     this.#conn = conn;
     this.#request = requestEvent.request;
     const p = new Promise<Response>((resolve, reject) => {
@@ -60,10 +60,6 @@ export class NativeRequest {
     return this.#request.body;
   }
 
-  get conn(): Deno.Conn {
-    return this.#conn;
-  }
-
   get donePromise(): Promise<void> {
     return this.#requestPromise;
   }
@@ -74,6 +70,10 @@ export class NativeRequest {
 
   get method(): string {
     return this.#request.method;
+  }
+
+  get remoteAddr(): string | undefined {
+    return this.#conn?.remoteAddr.hostname;
   }
 
   get request(): Request {
@@ -146,7 +146,7 @@ export class HttpServerNative<AS extends State = Record<string, any>>
           ? Deno.listenTls(options)
           : Deno.listen(options);
 
-        async function serve(conn: Deno.Conn) {
+        async function serve(conn: Deno.Conn<Deno.NetAddr>) {
           const httpConn = serveHttp(conn);
           for await (const requestEvent of httpConn) {
             const nativeRequest = new NativeRequest(requestEvent, conn);

@@ -63,7 +63,7 @@ function isCloser(value: unknown): value is Deno.Closer {
     typeof (value as Record<string, any>)["close"] === "function";
 }
 
-export function isConn(value: unknown): value is Deno.Conn {
+export function isConn(value: unknown): value is Deno.Conn<Deno.NetAddr> {
   return typeof value === "object" && value != null && "rid" in value &&
     // deno-lint-ignore no-explicit-any
     typeof (value as any).rid === "number" && "localAddr" in value &&

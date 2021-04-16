@@ -34,8 +34,7 @@ test({
         respondWithStack.push(v);
         return Promise.resolve();
       },
-    }, conn);
-    assertStrictEquals(nativeRequest.conn, conn);
+    });
     assertEquals(nativeRequest.url, `http://localhost:8000/`);
     assertEquals(respondWithStack.length, 1);
     const response = new Response("hello deno");

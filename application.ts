@@ -25,13 +25,25 @@ export interface ListenOptionsTls extends Deno.ListenTlsOptions {
 }
 
 export interface HandleMethod {
+  /** Handle an individual server request, returning the server response.  This
+   * is similar to `.listen()`, but opening the connection and retrieving
+   * requests are not the responsibility of the application.  If the generated
+   * context gets set to not to respond, then the method resolves with
+   * `undefined`, otherwise it resolves with a request that is compatible with
+   * `std/http/server`. */
   (
     request: ServerRequest,
     secure?: boolean,
   ): Promise<ServerResponse | undefined>;
+  /** Handle an individual server request, returning the server response.  This
+   * is similar to `.listen()`, but opening the connection and retrieving
+   * requests are not the responsibility of the application.  If the generated
+   * context gets set to not to respond, then the method resolves with
+   * `undefined`, otherwise it resolves with a request that is compatible with
+   * `std/http/server`. */
   (
     request: Request,
-    conn: Deno.Conn,
+    conn?: Deno.Conn<Deno.NetAddr>,
     secure?: boolean,
   ): Promise<Response | undefined>;
 }
@@ -313,7 +325,7 @@ export class Application<AS extends State = Record<string, any>>
    * `std/http/server`. */
   handle = (async (
     request: ServerRequest | Request,
-    secureOrConn: Deno.Conn | boolean | undefined,
+    secureOrConn: Deno.Conn<Deno.NetAddr> | boolean | undefined,
     secure = false,
   ): Promise<ServerResponse | Response | undefined> => {
     if (!this.#middleware.length) {
@@ -321,7 +333,7 @@ export class Application<AS extends State = Record<string, any>>
     }
     let contextRequest: ServerRequest | NativeRequest;
     if (request instanceof Request) {
-      assert(isConn(secureOrConn));
+      assert(isConn(secureOrConn) || typeof secureOrConn === "undefined");
       contextRequest = new NativeRequest({
         request,
         respondWith() {
