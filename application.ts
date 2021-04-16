@@ -384,7 +384,7 @@ export class Application<AS extends State = Record<string, any>>
       const [, hostname, portStr] = match;
       options = { hostname, port: parseInt(portStr, 10) };
     }
-    const server = new this.#serverConstructor(options);
+    const server = new this.#serverConstructor(this, options);
     const { signal } = options;
     const state = {
       closed: false,
