@@ -1,5 +1,14 @@
 # oak Change Log
 
+## Version 7.2.0
+
+Because one minor release a day isn't good enough and:
+
+- feat: add app.fetchEventHandler() (#296)
+
+  Add a method which provides everything needed for handling Deno Deploy's
+  `FetchEvent`s.
+
 ## Version 7.1.0
 
 - feat: enable server-sent events for native HTTP bindings (#293)
