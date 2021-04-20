@@ -1,7 +1,12 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 import { AsyncIterableReader } from "./async_iterable_reader.ts";
-import { contentType, Status, STATUS_TEXT } from "./deps.ts";
+import {
+  contentType,
+  readerFromStreamReader,
+  Status,
+  STATUS_TEXT,
+} from "./deps.ts";
 import { DomResponse } from "./http_server_native.ts";
 import type { ServerResponse } from "./http_server_std.ts";
 import type { Request } from "./request.ts";
@@ -13,6 +18,7 @@ import {
   isReader,
   isRedirectStatus,
   readableStreamFromReader,
+  Uint8ArrayTransformStream,
 } from "./util.ts";
 
 type Body =
@@ -70,10 +76,11 @@ async function convertBodyToBodyInit(
     result = readableStreamFromReader(body);
   } else if (
     ArrayBuffer.isView(body) || body instanceof ArrayBuffer ||
-    body instanceof Blob || body instanceof URLSearchParams ||
-    body instanceof ReadableStream
+    body instanceof Blob || body instanceof URLSearchParams
   ) {
     result = body;
+  } else if (body instanceof ReadableStream) {
+    result = body.pipeThrough(new Uint8ArrayTransformStream());
   } else if (body instanceof FormData) {
     result = body;
     type = "multipart/form-data";
@@ -100,6 +107,10 @@ async function convertBodyToStdBody(
     type = type ?? (isHtml(bodyText) ? "html" : "text/plain");
   } else if (body instanceof Uint8Array || isReader(body)) {
     result = body;
+  } else if (body instanceof ReadableStream) {
+    result = readerFromStreamReader(
+      body.pipeThrough(new Uint8ArrayTransformStream()).getReader(),
+    );
   } else if (isAsyncIterable(body)) {
     result = new AsyncIterableReader(body, toUint8Array);
   } else if (body && typeof body === "object") {

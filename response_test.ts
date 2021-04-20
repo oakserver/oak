@@ -1,6 +1,6 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { Status } from "./deps.ts";
+import { readAll, Status } from "./deps.ts";
 import {
   assert,
   assertEquals,
@@ -156,21 +156,39 @@ test({
 });
 
 test({
-  name: "response.body as async iterator",
+  name: "response.body as readable stream",
   async fn() {
     const response = new Response(createMockRequest());
     response.body = new ReadableStream<string>({
       start(controller) {
-        controller.enqueue("hello deno");
+        controller.enqueue("hello ");
+        controller.enqueue("deno");
         controller.close();
       },
     });
     const serverResponse = await response.toServerResponse();
     assert(isReader(serverResponse.body));
-    const p = new Uint8Array(1000);
-    const len = await serverResponse.body.read(p);
-    assert(decoder.decode(p).startsWith("hello deno"));
-    assertEquals(len, 10);
+    const actual = await readAll(serverResponse.body);
+    assertEquals(decoder.decode(actual), "hello deno");
+    assertEquals(serverResponse.status, 200);
+  },
+});
+
+test({
+  name: "response.body as async iterable",
+  async fn() {
+    const response = new Response(createMockRequest());
+    response.body = {
+      async *[Symbol.asyncIterator]() {
+        yield "hello ";
+        yield "deno";
+        return;
+      },
+    };
+    const serverResponse = await response.toServerResponse();
+    assert(isReader(serverResponse.body));
+    const actual = await readAll(serverResponse.body);
+    assertEquals(decoder.decode(actual), "hello deno");
     assertEquals(serverResponse.status, 200);
   },
 });
