@@ -81,6 +81,12 @@ export class NativeRequest {
   }
 
   get url(): string {
+    try {
+      const url = new URL(this.#request.url);
+      return this.#request.url.replace(url.origin, "");
+    } catch {
+      // we don't care about errors, we just want to fall back
+    }
     return this.#request.url;
   }
 

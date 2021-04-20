@@ -35,7 +35,7 @@ test({
         return Promise.resolve();
       },
     }, conn);
-    assertEquals(nativeRequest.url, `http://localhost:8000/`);
+    assertEquals(nativeRequest.url, `/`);
     assertEquals(respondWithStack.length, 1);
     const response = new Response("hello deno");
     nativeRequest.respond(response);
