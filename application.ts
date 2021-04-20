@@ -47,7 +47,7 @@ export interface HandleMethod {
    * `std/http/server`. */
   (
     request: Request,
-    conn?: Deno.Conn<Deno.NetAddr>,
+    conn?: Deno.Conn,
     secure?: boolean,
   ): Promise<Response | undefined>;
 }
@@ -371,7 +371,7 @@ export class Application<AS extends State = Record<string, any>>
    * `std/http/server`. */
   handle = (async (
     request: ServerRequest | Request,
-    secureOrConn: Deno.Conn<Deno.NetAddr> | boolean | undefined,
+    secureOrConn: Deno.Conn | boolean | undefined,
     secure = false,
   ): Promise<ServerResponse | Response | undefined> => {
     if (!this.#middleware.length) {

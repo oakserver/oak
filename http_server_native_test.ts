@@ -9,7 +9,7 @@ function createMockConn() {
     localAddr: { transport: "tcp", hostname: "localhost", port: 8000 },
     remoteAddr: { transport: "tcp", hostname: "remote", port: 4567 },
     rid: 1,
-  } as Deno.Conn<Deno.NetAddr>;
+  } as Deno.Conn;
 }
 
 test({

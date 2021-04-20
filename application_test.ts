@@ -528,7 +528,7 @@ test({
       localAddr: { transport: "tcp", hostname: "localhost", port: 8000 },
       remoteAddr: { transport: "tcp", hostname: "example.com", port: 4747 },
       rid: 1,
-    } as Deno.Conn<Deno.NetAddr>;
+    } as Deno.Conn;
     const actual = await app.handle(request, conn);
     assertEquals(called, 1);
     assert(actual instanceof Response);

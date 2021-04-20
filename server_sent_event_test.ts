@@ -21,9 +21,9 @@ import {
 } from "./server_sent_event.ts";
 
 const preamble = `HTTP/1.1 200 OK
+cache-control: no-cache
 connection: Keep-Alive
 content-type: text/event-stream
-cache-control: no-cache
 keep-alive: timeout=9007199254740991
 
 `;
@@ -149,7 +149,7 @@ test({
   name: "SSEStdLibTarget - construction with headers",
   async fn() {
     const expected =
-      `HTTP/1.1 200 OK\nconnection: Keep-Alive\ncontent-type: text/event-stream\ncache-control: special\nkeep-alive: timeout=9007199254740991\nx-oak: test\n\n`;
+      `HTTP/1.1 200 OK\ncache-control: special\nconnection: Keep-Alive\ncontent-type: text/event-stream\nkeep-alive: timeout=9007199254740991\nx-oak: test\n\n`;
     const context = new Context(createMockApp(), createMockServerRequest());
     const sse = new SSEStdLibTarget(
       context,
@@ -264,7 +264,7 @@ test({
     assertEquals(env.response.headers.get("content-type"), "text/event-stream");
     assertEquals(env.response.headers.get("connection"), "Keep-Alive");
     assertEquals(env.response.headers.get("x-oak"), "test");
-    assertEquals(env.response.headers.get("cache-control"), "special");
+    assertEquals(env.response.headers.get("cache-control"), "no-cache");
   },
 });
 
