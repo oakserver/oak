@@ -1,5 +1,22 @@
 # oak Change Log
 
+## Version 7.3.0
+
+- feat: better handling of readable streams in response body (#301)
+
+  Before, streams set as a body would always be assumed to be an Uint8Array
+  readable stream. Now any readable stream set as the response body will be
+  transformed automatically to an Uint8Array. In addition, when using the
+  `std/http` version, readable streams were treated as async iterators, now they
+  will be directly converted into a `Deno.Reader`.
+
+- fix: Deno 1.9.1 breaking changes (2527604)
+- fix: Deno 1.9.1 changes to native HTTP (0b8a7d8)
+- fix: better support for native HTTPS (e6d3e72)
+- chore: fix test cases for native request (8490b6f)
+- chore: update to Deno 1.9.1, std 0.94.0, media_types 2.8.2 (78c0997)
+- chore: revert to canary in CI until 1.9.1 available as action
+
 ## Version 7.2.0
 
 Because one minor release a day isn't good enough and:
