@@ -24,7 +24,7 @@ test({
   async fn() {
     const respondWithStack: Array<Response | Promise<Response>> = [];
     const request = new Request("http://localhost:8000/", {
-      method: "GET",
+      method: "POST",
       body: `{"a":"b"}`,
     });
     const conn = createMockConn();

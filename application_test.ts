@@ -521,7 +521,7 @@ test({
       called++;
     });
     const request = new Request("http://localhost:8080/", {
-      method: "GET",
+      method: "POST",
       body: `{"a":"b"}`,
     });
     const conn = {
@@ -550,7 +550,7 @@ test({
       called++;
     });
     const request = new Request("http://localhost:8080/", {
-      method: "GET",
+      method: "POST",
       body: `{"a":"b"}`,
     });
     const actual = await app.handle(request);
