@@ -24,6 +24,14 @@ export interface ListenOptionsBase extends Deno.ListenOptions {
 }
 
 export interface ListenOptionsTls extends Deno.ListenTlsOptions {
+  /** Application-Layer Protocol Negotiation (ALPN) protocols to announce to
+   * the client. If not specified, no ALPN extension will be included in the
+   * TLS handshake.
+   * 
+   * **NOTE** this is part of the native HTTP server in Deno 1.9 or later,
+   * which requires the `--unstable` flag to be available.
+   */
+  alpnProtocols?: string[];
   secure: true;
   signal?: AbortSignal;
 }

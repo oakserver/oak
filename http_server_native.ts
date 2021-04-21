@@ -90,6 +90,10 @@ export class NativeRequest {
     return this.#request.url;
   }
 
+  get rawUrl(): string {
+    return this.#request.url;
+  }
+
   // deno-lint-ignore no-explicit-any
   error(reason?: any): void {
     if (this.#resolved) {
@@ -172,13 +176,18 @@ export class HttpServerNative<AS extends State = Record<string, any>>
         }
 
         async function accept() {
-          for await (const conn of listener) {
+          while (true) {
+            try {
+              const conn = await listener.accept();
+              serve(conn);
+            } catch (error) {
+              server.app.dispatchEvent(new ErrorEvent("error", { error }));
+            }
             if (server.closed) {
               listener.close();
               controller.close();
               return;
             }
-            serve(conn);
           }
         }
 

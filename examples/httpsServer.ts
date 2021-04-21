@@ -1,6 +1,10 @@
 /*
- * This is a basic example of a test server which provides a logger middleware,
- * a response time middleware, and a basic "Hello World!" middleware.
+ * This is a basic example of a test server that listens on HTTPS and when using
+ * the native HTTP server in Deno, will automatically server HTTP/2.
+ * 
+ * This server uses self-signed encryption certificates, which also has a custom
+ * root certificate authority. To use it as configured, you need to install and
+ * trust the `tls/RootCA.crt` on your local system.
  */
 
 // Importing some console colors
@@ -51,5 +55,7 @@ await app.listen({
   secure: true,
   certFile: "./examples/tls/localhost.crt",
   keyFile: "./examples/tls/localhost.key",
+  // This broadcasts that we can support HTTP/2 and HTTP/1.1 connections.
+  alpnProtocols: ["h2", "http/1.1"],
 });
 console.log(bold("Finished."));

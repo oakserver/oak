@@ -83,6 +83,18 @@ export class Request {
   get url(): URL {
     if (!this.#url) {
       const serverRequest = this.#serverRequest;
+      if (serverRequest instanceof NativeRequest) {
+        // between 1.9.0 and 1.9.1 the request.url of the native HTTP started
+        // returning the full URL, where previously it only returned the path
+        // so we will try to use that URL here, but default back to old logic
+        // if the URL isn't valid.
+        try {
+          this.#url = new URL(serverRequest.rawUrl);
+          return this.#url;
+        } catch {
+          // we don't care about errors here
+        }
+      }
       let proto: string;
       let host: string;
       if (this.#proxy) {
