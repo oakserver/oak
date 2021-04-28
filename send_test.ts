@@ -74,6 +74,9 @@ function createMockContext<
         }
       },
       headers,
+      toDomResponse() {
+        return Promise.resolve(new Response(body, { status, headers }));
+      },
       toServerResponse() {
         return Promise.resolve({
           status,
@@ -537,5 +540,49 @@ test({
       String(fixture.length),
     );
     assertEquals(context.response.headers.get("etag"), etag.calculate(fixture));
+  },
+});
+
+test({
+  name: "range header",
+  ignore: Deno.build.os === "windows",
+  async fn() {
+    const { context } = setup("/test.json");
+    context.request.headers.set("Range", "bytes=0-5");
+    await send(context, context.request.url.pathname, { root: "./fixtures" });
+    const response = await context.response.toDomResponse();
+    assertEquals(response.status, 206);
+    assertEquals(context.response.type, ".json");
+    assertEquals(context.response.headers.get("content-length"), "5");
+    assertEquals(await response.text(), `{\n  "h`);
+  },
+});
+
+test({
+  name: "range header - multiple ranges",
+  ignore: Deno.build.os === "windows",
+  async fn() {
+    const { context } = setup("/test.json");
+    context.request.headers.set("Range", "bytes=0-5, 6-9");
+    await send(context, context.request.url.pathname, { root: "./fixtures" });
+    const response = await context.response.toDomResponse();
+    assertEquals(response.status, 206);
+    assert(
+      response.headers.get("content-type")!.startsWith(
+        `multipart/byteranges; boundary=`,
+      ),
+    );
+    assertEquals(response.headers.get("content-length"), "294");
+    const actual = await response.text();
+    assert(
+      actual.includes(
+        `\nContent-Type: application/json; charset=utf-8\nContent-Range: 0-5/23\n\n{\n  "h\n`,
+      ),
+    );
+    assert(
+      actual.includes(
+        `\nContent-Type: application/json; charset=utf-8\nContent-Range: 6-9/23\n\nello\n`,
+      ),
+    );
   },
 });

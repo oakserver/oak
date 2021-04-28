@@ -6,11 +6,21 @@
 import type { Context } from "./context.ts";
 import { calculate, FileInfo, ifNoneMatch } from "./etag.ts";
 import { createHttpError } from "./httpError.ts";
-import { basename, extname, parse, readAll } from "./deps.ts";
+import {
+  assert,
+  basename,
+  extname,
+  LimitedReader,
+  parse,
+  readAll,
+  Status,
+} from "./deps.ts";
+import { ifRange, MultiPartStream, parseRange } from "./range.ts";
 import type { Response } from "./response.ts";
-import { decodeComponent, resolvePath } from "./util.ts";
+import { decodeComponent, getBoundary, resolvePath } from "./util.ts";
 
 const MAXBUFFER_DEFAULT = 1_048_576; // 1MiB;
+const BOUNDARY = getBoundary();
 
 export interface SendOptions {
   /** Try to serve the brotli version of a file automatically when brotli is
@@ -100,6 +110,54 @@ async function getEntity(
     };
   }
   return [body, entity];
+}
+
+async function sendRange(
+  response: Response,
+  body: Uint8Array | Deno.File,
+  range: string,
+  size: number,
+) {
+  const ranges = parseRange(range, size);
+  if (ranges.length === 0) {
+    throw createHttpError(Status.RequestedRangeNotSatisfiable);
+  }
+  response.status = Status.PartialContent;
+  if (ranges.length === 1) {
+    const [byteRange] = ranges;
+    response.headers.set(
+      "Content-Length",
+      String(byteRange.end - byteRange.start),
+    );
+    response.headers.set(
+      "Content-Range",
+      `bytes ${byteRange.start}-${byteRange.end}/${size}`,
+    );
+    if (body instanceof Uint8Array) {
+      response.body = body.slice(byteRange.start, byteRange.end + 1);
+    } else {
+      await body.seek(byteRange.start, Deno.SeekMode.Start);
+      response.body = new LimitedReader(body, byteRange.end - byteRange.start);
+    }
+  } else {
+    assert(response.type);
+    response.headers.set(
+      "content-type",
+      `multipart/byteranges; boundary=${BOUNDARY}`,
+    );
+    const multipartBody = new MultiPartStream(
+      body,
+      response.type,
+      ranges,
+      size,
+      BOUNDARY,
+    );
+    response.headers.set(
+      "content-length",
+      String(multipartBody.contentLength()),
+    );
+    response.body = multipartBody;
+  }
 }
 
 /** Asynchronously fulfill a response with a file from the local file
@@ -231,8 +289,6 @@ export async function send(
     }
   }
 
-  response.headers.set("Content-Length", String(stats.size));
-
   if (!body || !entity) {
     [body, entity] = await getEntity(
       path,
@@ -243,11 +299,30 @@ export async function send(
     );
   }
 
+  if (
+    request.headers.has("If-Range") && mtime &&
+    ifRange(request.headers.get("If-Range")!, mtime, entity) &&
+    request.headers.has("Range")
+  ) {
+    await sendRange(response, body, request.headers.get("Range")!, stats.size);
+    return path;
+  }
+
+  if (request.headers.has("Range")) {
+    await sendRange(response, body, request.headers.get("Range")!, stats.size);
+    return path;
+  }
+
+  response.headers.set("Content-Length", String(stats.size));
+  response.body = body;
+
   if (!response.headers.has("ETag")) {
     response.headers.set("ETag", calculate(entity));
   }
 
-  response.body = body;
+  if (!response.headers.has("Accept-Ranges")) {
+    response.headers.set("Accept-Ranges", "bytes");
+  }
 
   return path;
 }

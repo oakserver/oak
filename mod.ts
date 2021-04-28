@@ -37,7 +37,8 @@ export type {
   FormDataFile,
   FormDataReadOptions,
 } from "./multipart.ts";
-
+export { ifRange, MultiPartStream, parseRange } from "./range.ts";
+export type { ByteRange } from "./range.ts";
 export { Request } from "./request.ts";
 export { REDIRECT_BACK, Response } from "./response.ts";
 export { Router } from "./router.ts";
