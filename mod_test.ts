@@ -23,6 +23,9 @@ test({
     assertEquals(typeof mod.isRedirectStatus, "function");
     assertEquals(typeof mod.composeMiddleware, "function");
     assertEquals(typeof mod.Cookies, "function");
+    assertEquals(typeof mod.ifRange, "function");
+    assertEquals(typeof mod.MultiPartStream, "function");
+    assertEquals(typeof mod.parseRange, "function");
     assertEquals(typeof mod.REDIRECT_BACK, "symbol");
     assertEquals(typeof mod.Request, "function");
     assertEquals(typeof mod.Response, "function");
@@ -31,6 +34,6 @@ test({
     assertEquals(typeof mod.STATUS_TEXT, "object");
     assertEquals(typeof mod.Status, "object");
     assertEquals(typeof mod.send, "function");
-    assertEquals(Object.keys(mod).length, 20);
+    assertEquals(Object.keys(mod).length, 23);
   },
 });

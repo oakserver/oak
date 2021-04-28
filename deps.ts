@@ -5,11 +5,11 @@
 // `std` dependencies
 
 export {
+  concat,
   copy as copyBytes,
   equals,
 } from "https://deno.land/std@0.94.0/bytes/mod.ts";
 export { createHash } from "https://deno.land/std@0.94.0/hash/mod.ts";
-export { Sha1 } from "https://deno.land/std@0.94.0/hash/sha1.ts";
 export { HmacSha256 } from "https://deno.land/std@0.94.0/hash/sha256.ts";
 export { serve, serveTLS } from "https://deno.land/std@0.94.0/http/server.ts";
 export {
@@ -18,6 +18,7 @@ export {
 } from "https://deno.land/std@0.94.0/http/http_status.ts";
 export { Buffer } from "https://deno.land/std@0.94.0/io/buffer.ts";
 export { BufReader, BufWriter } from "https://deno.land/std@0.94.0/io/bufio.ts";
+export { LimitedReader } from "https://deno.land/std@0.94.0/io/readers.ts";
 export { readerFromStreamReader } from "https://deno.land/std@0.94.0/io/streams.ts";
 export { readAll, writeAll } from "https://deno.land/std@0.94.0/io/util.ts";
 export {

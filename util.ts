@@ -1,6 +1,13 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { isAbsolute, join, normalize, sep, Sha1, Status } from "./deps.ts";
+import {
+  createHash,
+  isAbsolute,
+  join,
+  normalize,
+  sep,
+  Status,
+} from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
 import type { ErrorStatus, RedirectStatus } from "./types.d.ts";
 
@@ -13,7 +20,7 @@ const LF = "\n".charCodeAt(0);
 const UNMATCHED_SURROGATE_PAIR_REGEXP =
   /(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF]([^\uDC00-\uDFFF]|$)/g;
 const UNMATCHED_SURROGATE_PAIR_REPLACE = "$1\uFFFD$2";
-const DEFAULT_CHUNK_SIZE = 16_640; // 17 Kib
+export const DEFAULT_CHUNK_SIZE = 16_640; // 17 Kib
 
 /** Body types which will be coerced into strings before being sent. */
 export const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
@@ -38,8 +45,16 @@ export function encodeUrl(url: string) {
 
 export function getRandomFilename(prefix = "", extension = ""): string {
   return `${prefix}${
-    new Sha1().update(crypto.getRandomValues(new Uint8Array(256))).hex()
+    createHash("sha1").update(crypto.getRandomValues(new Uint8Array(256)))
+      .toString("hex")
   }${extension ? `.${extension}` : ""}`;
+}
+
+export function getBoundary(): string {
+  return `oak_${
+    createHash("sha1").update(crypto.getRandomValues(new Uint8Array(256)))
+      .toString("hex")
+  }`;
 }
 
 /** Guard for Async Iterables */

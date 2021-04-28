@@ -122,8 +122,7 @@ for (const [key, value] of Object.entries(errorStatusMap)) {
 }
 
 /** Create a specific class of `HttpError` based on the status, which defaults
- * to _500 Internal Server Error_.
- */
+ * to _500 Internal Server Error_. */
 export function createHttpError(
   status: ErrorStatus = 500,
   message?: string,
