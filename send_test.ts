@@ -545,6 +545,7 @@ test({
 
 test({
   name: "range header",
+  ignore: Deno.build.os === "windows",
   async fn() {
     const { context } = setup("/test.json");
     context.request.headers.set("Range", "bytes=0-5");
@@ -559,6 +560,7 @@ test({
 
 test({
   name: "range header - multiple ranges",
+  ignore: Deno.build.os === "windows",
   async fn() {
     const { context } = setup("/test.json");
     context.request.headers.set("Range", "bytes=0-5, 6-9");
