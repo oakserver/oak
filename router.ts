@@ -132,7 +132,8 @@ export interface RouterMiddleware<
   /** For route parameter middleware, the `param` key for this parameter will
    * be set. */
   param?: keyof P;
-  router?: Router;
+  // deno-lint-ignore no-explicit-any
+  router?: Router<any, any>;
 }
 
 export interface RouterOptions {
@@ -167,6 +168,8 @@ export interface RouterParamMiddleware<
     context: RouterContext<P, S>,
     next: () => Promise<unknown>,
   ): Promise<unknown> | unknown;
+  // deno-lint-ignore no-explicit-any
+  router?: Router<any, any>;
 }
 
 export type RouteParams = Record<string | number, string | undefined>;
@@ -174,6 +177,10 @@ export type RouteParams = Record<string | number, string | undefined>;
 type LayerOptions = TokensToRegexpOptions & ParseOptions & {
   ignoreCaptures?: boolean;
   name?: string;
+};
+
+type RegisterOptions = LayerOptions & {
+  ignorePrefix?: boolean;
 };
 
 type UrlOptions = TokensToRegexpOptions & ParseOptions & {
@@ -383,7 +390,7 @@ export class Router<
     path: string | string[],
     middlewares: RouterMiddleware[],
     methods: HTTPMethods[],
-    options: LayerOptions & { ignorePrefix?: boolean } = {},
+    options: RegisterOptions = {},
   ): void => {
     if (Array.isArray(path)) {
       for (const p of path) {
@@ -404,7 +411,7 @@ export class Router<
         layerMiddlewares = [];
       }
 
-      const router: Router = middleware.router.#clone();
+      const router = middleware.router.#clone();
 
       for (const layer of router.#stack) {
         if (!options.ignorePrefix) {
@@ -432,12 +439,18 @@ export class Router<
     methods: HTTPMethods[],
     options: LayerOptions = {},
   ) => {
-    const { end, name, sensitive, strict, ignoreCaptures } = options;
-    const route = new Layer(path, methods, middlewares, {
-      end: end === false ? end : true,
+    const {
+      end,
       name,
-      sensitive: sensitive ?? this.#opts.sensitive ?? false,
-      strict: strict ?? this.#opts.strict ?? false,
+      sensitive = this.#opts.sensitive,
+      strict = this.#opts.strict,
+      ignoreCaptures,
+    } = options;
+    const route = new Layer(path, methods, middlewares, {
+      end,
+      name,
+      sensitive,
+      strict,
       ignoreCaptures,
     });
 
