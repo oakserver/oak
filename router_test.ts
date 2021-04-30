@@ -87,6 +87,14 @@ test({
 });
 
 test({
+  name: "router accepts non-void middleware",
+  fn() {
+    const router = new Router();
+    router.get("/", (ctx) => ctx.response.body = "hello oak");
+  },
+});
+
+test({
   name: "router get single match",
   async fn() {
     const { app, context, next } = setup("/", "GET");

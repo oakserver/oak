@@ -10,7 +10,7 @@ export interface Middleware<
   S extends State = Record<string, any>,
   T extends Context = Context<S>,
 > {
-  (context: T, next: () => Promise<void>): Promise<void> | void;
+  (context: T, next: () => Promise<unknown>): Promise<unknown> | unknown;
 }
 
 /** Compose multiple middleware functions into a single middleware function. */
@@ -19,11 +19,11 @@ export function compose<
   T extends Context = Context<S>,
 >(
   middleware: Middleware<S, T>[],
-): (context: T, next?: () => Promise<void>) => Promise<void> {
+): (context: T, next?: () => Promise<unknown>) => Promise<unknown> {
   return function composedMiddleware(
     context: T,
-    next?: () => Promise<void>,
-  ): Promise<void> {
+    next?: () => Promise<unknown>,
+  ): Promise<unknown> {
     let index = -1;
 
     async function dispatch(i: number): Promise<void> {

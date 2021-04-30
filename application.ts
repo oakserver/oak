@@ -164,7 +164,7 @@ export class ApplicationListenEvent extends Event {
 // deno-lint-ignore no-explicit-any
 export class Application<AS extends State = Record<string, any>>
   extends EventTarget {
-  #composedMiddleware?: (context: Context<AS>) => Promise<void>;
+  #composedMiddleware?: (context: Context<AS>) => Promise<unknown>;
   #eventHandler?: FetchEventListenerObject;
   #keys?: KeyStack;
   #middleware: Middleware<State, Context<State>>[] = [];
@@ -222,7 +222,7 @@ export class Application<AS extends State = Record<string, any>>
     this.#serverConstructor = serverConstructor;
   }
 
-  #getComposed = (): ((context: Context<AS>) => Promise<void>) => {
+  #getComposed = (): ((context: Context<AS>) => Promise<unknown>) => {
     if (!this.#composedMiddleware) {
       this.#composedMiddleware = compose(this.#middleware);
     }

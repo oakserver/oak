@@ -115,6 +115,14 @@ test({
 });
 
 test({
+  name: "register middleware - accepts non void",
+  fn() {
+    const app = new Application({ serverConstructor: MockServer });
+    app.use((ctx) => ctx.response.body = "hello world");
+  },
+});
+
+test({
   name: "middleware execution order 1",
   async fn() {
     serverRequestStack.push(createMockRequest());

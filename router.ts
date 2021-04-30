@@ -126,9 +126,9 @@ export interface RouterMiddleware<
   // deno-lint-ignore no-explicit-any
   S extends State = Record<string, any>,
 > {
-  (context: RouterContext<P, S>, next: () => Promise<void>):
-    | Promise<void>
-    | void;
+  (context: RouterContext<P, S>, next: () => Promise<unknown>):
+    | Promise<unknown>
+    | unknown;
   /** For route parameter middleware, the `param` key for this parameter will
    * be set. */
   param?: keyof P;
@@ -164,8 +164,8 @@ export interface RouterParamMiddleware<
   (
     param: string,
     context: RouterContext<P, S>,
-    next: () => Promise<void>,
-  ): Promise<void> | void;
+    next: () => Promise<unknown>,
+  ): Promise<unknown> | unknown;
 }
 
 export type RouteParams = Record<string | number, string | undefined>;
@@ -287,7 +287,7 @@ class Layer<
       this: Router,
       ctx,
       next,
-    ): Promise<void> | void {
+    ): Promise<unknown> | unknown {
       const p = ctx.params[param];
       assert(p);
       return fn.call(this, p, ctx, next);
@@ -835,8 +835,8 @@ export class Router<
   routes(): Middleware {
     const dispatch = (
       context: Context,
-      next: () => Promise<void>,
-    ): Promise<void> => {
+      next: () => Promise<unknown>,
+    ): Promise<unknown> => {
       const ctx = context as RouterContext;
       let pathname: string;
       let method: HTTPMethods;
@@ -867,7 +867,10 @@ export class Router<
       const chain = matchedRoutes.reduce(
         (prev, route) => [
           ...prev,
-          (ctx: RouterContext, next: () => Promise<void>): Promise<void> => {
+          (
+            ctx: RouterContext,
+            next: () => Promise<unknown>,
+          ): Promise<unknown> => {
             ctx.captures = route.captures(path);
             ctx.params = route.params(ctx.captures, ctx.params);
             ctx.routeName = route.name;
