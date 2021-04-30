@@ -118,6 +118,7 @@ export class HttpServerNative<AS extends State = Record<string, any>>
   implements Server<NativeRequest> {
   #app: Application<AS>;
   #closed = false;
+  #listener?: Deno.Listener;
   #options: Deno.ListenOptions | Deno.ListenTlsOptions;
 
   constructor(
@@ -143,57 +144,59 @@ export class HttpServerNative<AS extends State = Record<string, any>>
 
   close(): void {
     this.#closed = true;
+    if (this.#listener) {
+      this.#listener.close();
+      this.#listener = undefined;
+    }
   }
 
   [Symbol.asyncIterator](): AsyncIterableIterator<NativeRequest> {
-    // deno-lint-ignore no-this-alias
-    const server = this;
-    const options = this.#options;
+    const start: ReadableStreamDefaultControllerCallback<NativeRequest> = (
+      controller,
+    ) => {
+      // deno-lint-ignore no-this-alias
+      const server = this;
+      const listener = this.#listener = isListenTlsOptions(this.#options)
+        ? Deno.listenTls(this.#options)
+        : Deno.listen(this.#options);
 
-    const stream = new ReadableStream<NativeRequest>({
-      start(controller) {
-        const listener = isListenTlsOptions(options)
-          ? Deno.listenTls(options)
-          : Deno.listen(options);
-
-        async function serve(conn: Deno.Conn) {
-          const httpConn = serveHttp(conn);
-          for await (const requestEvent of httpConn) {
-            const nativeRequest = new NativeRequest(requestEvent, conn);
-            controller.enqueue(nativeRequest);
-            try {
-              await nativeRequest.donePromise;
-            } catch (error) {
-              server.app.dispatchEvent(new ErrorEvent("error", { error }));
-            }
-            if (server.closed) {
-              httpConn.close();
-              listener.close();
-              controller.close();
-              return;
-            }
+      async function serve(conn: Deno.Conn) {
+        const httpConn = serveHttp(conn);
+        for await (const requestEvent of httpConn) {
+          const nativeRequest = new NativeRequest(requestEvent, conn);
+          controller.enqueue(nativeRequest);
+          try {
+            await nativeRequest.donePromise;
+          } catch (error) {
+            server.app.dispatchEvent(new ErrorEvent("error", { error }));
+          }
+          if (server.closed) {
+            httpConn.close();
+            controller.close();
           }
         }
+      }
 
-        async function accept() {
-          while (true) {
-            try {
-              const conn = await listener.accept();
-              serve(conn);
-            } catch (error) {
+      async function accept() {
+        while (true) {
+          try {
+            const conn = await listener.accept();
+            serve(conn);
+          } catch (error) {
+            if (!server.closed) {
               server.app.dispatchEvent(new ErrorEvent("error", { error }));
             }
-            if (server.closed) {
-              listener.close();
-              controller.close();
-              return;
-            }
+          }
+          if (server.closed) {
+            controller.close();
+            return;
           }
         }
+      }
 
-        accept();
-      },
-    });
+      accept();
+    };
+    const stream = new ReadableStream<NativeRequest>({ start });
 
     return stream[Symbol.asyncIterator]();
   }
