@@ -22,7 +22,7 @@ export class KeyStack {
   /** A class which accepts an array of keys that are used to sign and verify
    * data and allows easy key rotation without invalidation of previously signed
    * data.
-   * 
+   *
    * @param keys An array of keys, of which the index 0 will be used to sign
    *             data, but verification can happen against any key.
    */

@@ -95,7 +95,7 @@ export function isListenTlsOptions(
 export interface ReadableStreamFromReaderOptions {
   /** If the `reader` is also a `Deno.Closer`, automatically close the `reader`
    * when `EOF` is encountered, or a read error occurs.
-   * 
+   *
    * Defaults to `true`. */
   autoClose?: boolean;
 
@@ -109,20 +109,20 @@ export interface ReadableStreamFromReaderOptions {
 
 /**
  * Create a `ReadableStream<Uint8Array>` from from a `Deno.Reader`.
- * 
+ *
  * When the pull algorithm is called on the stream, a chunk from the reader
  * will be read.  When `null` is returned from the reader, the stream will be
  * closed along with the reader (if it is also a `Deno.Closer`).
- * 
+ *
  * An example converting a `Deno.File` into a readable stream:
- * 
+ *
  * ```ts
  * import { readableStreamFromReader } from "https://deno.land/std/io/mod.ts";
- * 
+ *
  * const file = await Deno.open("./file.txt", { read: true });
  * const fileStream = readableStreamFromReader(file);
  * ```
- * 
+ *
  */
 export function readableStreamFromReader(
   reader: Deno.Reader | (Deno.Reader & Deno.Closer),

@@ -191,7 +191,7 @@ export class Cookies {
 
   /** Iterate over the request's cookies, yielding up a tuple containing the
    * key and the value.
-   * 
+   *
    * If there are keys set on the application, only keys and values that are
    * properly signed will be returned. */
   *entries(): IterableIterator<[string, string]> {
@@ -219,7 +219,7 @@ export class Cookies {
   }
 
   /** Get the value of a cookie from the request.
-   * 
+   *
    * If the cookie is signed, and the signature is invalid, the cookie will
    * be set to be deleted in the the response.  If the signature uses an "old"
    * key, the cookie will be re-signed with the current key and be added to the
@@ -262,7 +262,7 @@ export class Cookies {
   }
 
   /** Iterate over the request's cookies, yielding up the keys.
-   * 
+   *
    * If there are keys set on the application, only the keys that are properly
    * signed will be returned. */
   *keys(): IterableIterator<string> {
@@ -276,7 +276,7 @@ export class Cookies {
   }
 
   /** Set a cookie in the response.
-   * 
+   *
    * If there are keys set in the application, cookies will be automatically
    * signed, unless overridden by the set options.  Cookies can be deleted by
    * setting the value to `null`. */
@@ -320,7 +320,7 @@ export class Cookies {
   }
 
   /** Iterate over the request's cookies, yielding up each value.
-   * 
+   *
    * If there are keys set on the application, only the values that are
    * properly signed will be returned. */
   *values(): IterableIterator<string> {
@@ -335,7 +335,7 @@ export class Cookies {
 
   /** Iterate over the request's cookies, yielding up a tuple containing the
    * key and the value.
-   * 
+   *
    * If there are keys set on the application, only keys and values that are
    * properly signed will be returned. */
   *[Symbol.iterator](): IterableIterator<[string, string]> {

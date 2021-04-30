@@ -27,7 +27,7 @@ export interface ListenOptionsTls extends Deno.ListenTlsOptions {
   /** Application-Layer Protocol Negotiation (ALPN) protocols to announce to
    * the client. If not specified, no ALPN extension will be included in the
    * TLS handshake.
-   * 
+   *
    * **NOTE** this is part of the native HTTP server in Deno 1.9 or later,
    * which requires the `--unstable` flag to be available.
    */
@@ -108,7 +108,7 @@ export interface ApplicationOptions<S> {
 
   /** A server constructor to use instead of the default server for receiving
    * requests.
-   * 
+   *
    * _This is not generally used, except for mocking and testing._
    */
   serverConstructor?: ServerConstructor<ServerRequest | NativeRequest>;
@@ -196,11 +196,11 @@ export class Application<AS extends State = Record<string, any>>
    * generic argument when constructing:
    *
    *       const app = new Application<{ foo: string }>();
-   * 
+   *
    * Or can be contextually inferred based on setting an initial state object:
-   * 
+   *
    *       const app = new Application({ state: { foo: "bar" } });
-   * 
+   *
    * When a new context is created, the application's state is cloned and the
    * state is unique to that request/response.  Changes can be made to the
    * application state that will be shared with all contexts.
@@ -332,13 +332,13 @@ export class Application<AS extends State = Record<string, any>>
 
   /** When using Deno Deploy, this method can create an event handler object
    * for the application which can be registered as a fetch event handler.
-   * 
+   *
    * ```
    * import { Application } from "https://deno.land/x/oak/mod.ts";
-   * 
+   *
    * const app = new App();
    * app.use((ctx) => ctx.response.body = "hello oak");
-   * 
+   *
    * addEventListener("fetch", app.fetchEventHandler());
    * ```
    */
@@ -496,20 +496,20 @@ export class Application<AS extends State = Record<string, any>>
    * of execution via the use of the `next()` function that the middleware
    * function will be called with.  The `context` object provides information
    * about the current state of the application.
-   * 
+   *
    * Basic usage:
-   * 
+   *
    * ```ts
    * const import { Application } from "https://deno.land/x/oak/mod.ts";
-   * 
+   *
    * const app = new Application();
-   * 
+   *
    * app.use((ctx, next) => {
    *   ctx.request; // contains request information
    *   ctx.response; // setups up information to use in the response;
    *   await next(); // manages the flow control of the middleware execution
    * });
-   * 
+   *
    * await app.listen({ port: 80 });
    * ```
    */

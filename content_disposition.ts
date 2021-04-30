@@ -1,8 +1,8 @@
 /**
- * Adapted directly from content-disposition.js at 
+ * Adapted directly from content-disposition.js at
  * https://github.com/Rob--W/open-in-browser/blob/master/extension/content-disposition.js
  * which is licensed as:
- * 
+ *
  * (c) 2017 Rob Wu <rob@robwu.nl> (https://robwu.nl)
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

@@ -100,7 +100,7 @@ const responseHeaders = new Headers(
 export interface ServerSentEventTarget extends EventTarget {
   /** Is set to `true` if events cannot be sent to the remote connection.
    * Otherwise it is set to `false`.
-   * 
+   *
    * *Note*: This flag is lazily set, and might not reflect a closed state until
    * another event, comment or message is attempted to be processed. */
   readonly closed: boolean;
@@ -111,17 +111,17 @@ export interface ServerSentEventTarget extends EventTarget {
   /** Send a comment to the remote connection.  Comments are not exposed to the
    * client `EventSource` but are used for diagnostics and helping ensure a
    * connection is kept alive.
-   * 
+   *
    * ```ts
    * import { Application } from "https://deno.land/x/oak/mod.ts";
-   * 
+   *
    * const app = new Application();
-   * 
+   *
    * app.use((ctx) => {
    *    const sse = ctx.getSSETarget();
    *    sse.dispatchComment("this is a comment");
    * });
-   * 
+   *
    * await app.listen();
    * ```
    */
@@ -136,21 +136,21 @@ export interface ServerSentEventTarget extends EventTarget {
   /** Dispatch a server sent event to the client.  The event `type` will be
    * sent as `event: ` to the client which will be raised as a `MessageEvent`
    * on the `EventSource` in the client.
-   * 
+   *
    * Any local event handlers will be dispatched to first, and if the event
    * is cancelled, it will not be sent to the client.
-   * 
+   *
    * ```ts
    * import { Application, ServerSentEvent } from "https://deno.land/x/oak/mod.ts";
-   * 
+   *
    * const app = new Application();
-   * 
+   *
    * app.use((ctx) => {
    *    const sse = ctx.getSSETarget();
    *    const evt = new ServerSentEvent("ping", "hello");
    *    sse.dispatchEvent(evt);
    * });
-   * 
+   *
    * await app.listen();
    * ```
    */
@@ -159,21 +159,21 @@ export interface ServerSentEventTarget extends EventTarget {
   /** Dispatch a server sent event to the client.  The event `type` will be
    * sent as `event: ` to the client which will be raised as a `MessageEvent`
    * on the `EventSource` in the client.
-   * 
+   *
    * Any local event handlers will be dispatched to first, and if the event
    * is cancelled, it will not be sent to the client.
-   * 
+   *
    * ```ts
    * import { Application, ServerSentEvent } from "https://deno.land/x/oak/mod.ts";
-   * 
+   *
    * const app = new Application();
-   * 
+   *
    * app.use((ctx) => {
    *    const sse = ctx.getSSETarget();
    *    const evt = new ServerSentEvent("ping", "hello");
    *    sse.dispatchEvent(evt);
    * });
-   * 
+   *
    * await app.listen();
    * ```
    */
@@ -363,17 +363,17 @@ export class SSEStdLibTarget extends EventTarget
   /** Send a comment to the remote connection.  Comments are not exposed to the
    * client `EventSource` but are used for diagnostics and helping ensure a
    * connection is kept alive.
-   * 
+   *
    * ```ts
    * import { Application } from "https://deno.land/x/oak/mod.ts";
-   * 
+   *
    * const app = new Application();
-   * 
+   *
    * app.use((ctx) => {
    *    const sse = ctx.getSSETarget();
    *    sse.dispatchComment("this is a comment");
    * });
-   * 
+   *
    * await app.listen();
    * ```
    */
@@ -397,21 +397,21 @@ export class SSEStdLibTarget extends EventTarget
   /** Dispatch a server sent event to the client.  The event `type` will be
    * sent as `event: ` to the client which will be raised as a `MessageEvent`
    * on the `EventSource` in the client.
-   * 
+   *
    * Any local event handlers will be dispatched to first, and if the event
    * is cancelled, it will not be sent to the client.
-   * 
+   *
    * ```ts
    * import { Application, ServerSentEvent } from "https://deno.land/x/oak/mod.ts";
-   * 
+   *
    * const app = new Application();
-   * 
+   *
    * app.use((ctx) => {
    *    const sse = ctx.getSSETarget();
    *    const evt = new ServerSentEvent("ping", "hello");
    *    sse.dispatchEvent(evt);
    * });
-   * 
+   *
    * await app.listen();
    * ```
    */

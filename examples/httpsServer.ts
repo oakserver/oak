@@ -1,7 +1,7 @@
 /*
  * This is a basic example of a test server that listens on HTTPS and when using
  * the native HTTP server in Deno, will automatically server HTTP/2.
- * 
+ *
  * This server uses self-signed encryption certificates, which also has a custom
  * root certificate authority. To use it as configured, you need to install and
  * trust the `tls/RootCA.crt` on your local system.

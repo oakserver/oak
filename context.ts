@@ -53,7 +53,7 @@ export class Context<S extends State = Record<string, any>> {
    * level processing of requests and responses, for example if using web
    * sockets.  This automatically gets set to `false` when the context is
    * upgraded to a web socket via the `.upgrade()` method.
-   * 
+   *
    * The default is `true`. */
   respond: boolean;
 
@@ -77,13 +77,13 @@ export class Context<S extends State = Record<string, any>> {
    * ```ts
    * const app = new Application<{ foo: string }>();
    * ```
-   * 
+   *
    * Or can be contextually inferred based on setting an initial state object:
-   * 
+   *
    * ```ts
    * const app = new Application({ state: { foo: "bar" } });
    * ```
-   * 
+   *
    * On each request/response cycle, the context's state is cloned from the
    * application state. This means changes to the context's `.state` will be
    * dropped when the request drops, but "defaults" can be applied to the
@@ -109,7 +109,7 @@ export class Context<S extends State = Record<string, any>> {
   }
 
   /** Asserts the condition and if the condition fails, creates an HTTP error
-   * with the provided status (which defaults to `500`).  The error status by 
+   * with the provided status (which defaults to `500`).  The error status by
    * default will be set on the `.response.status`.
    */
   assert(
@@ -131,10 +131,10 @@ export class Context<S extends State = Record<string, any>> {
 
   /** Asynchronously fulfill a response with a file from the local file
    * system.
-   * 
+   *
    * If the `options.path` is not supplied, the file to be sent will default
    * to this `.request.url.pathname`.
-   * 
+   *
    * Requires Deno read permission. */
   send(options: ContextSendOptions): Promise<string | undefined> {
     const { path = this.request.url.pathname, ...sendOptions } = options;
@@ -145,7 +145,7 @@ export class Context<S extends State = Record<string, any>> {
    * sending server sent events.  Events dispatched on the returned target will
    * be sent to the client and be available in the client's `EventSource` that
    * initiated the connection.
-   * 
+   *
    * This will set `.respond` to `false`. */
   sendEvents(options?: ServerSentEventTargetOptions): ServerSentEventTarget {
     if (!this.#sse) {

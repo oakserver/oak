@@ -162,7 +162,7 @@ export class Response {
   /** The body of the response.  The body will be automatically processed when
    * the response is being sent and converted to a `Uint8Array` or a
    * `Deno.Reader`.
-   * 
+   *
    * Automatic conversion to a `Deno.Reader` occurs for async iterables. */
   get body(): Body | BodyFunction {
     return this.#body;
@@ -171,7 +171,7 @@ export class Response {
   /** The body of the response.  The body will be automatically processed when
    * the response is being sent and converted to a `Uint8Array` or a
    * `Deno.Reader`.
-   * 
+   *
    * Automatic conversion to a `Deno.Reader` occurs for async iterables. */
   set body(value: Body | BodyFunction) {
     if (!this.#writable) {
@@ -252,7 +252,7 @@ export class Response {
   }
 
   /** Release any resources that are being tracked by the response.
-   * 
+   *
    * @param closeResources close any resource IDs registered with the response
    */
   destroy(closeResources = true): void {

@@ -21,7 +21,7 @@ function compareArrayBuffer(a: ArrayBuffer, b: ArrayBuffer): boolean {
 
 /** Compare two strings, Uint8Arrays, ArrayBuffers, or arrays of numbers in a
  * way that avoids timing based attacks on the comparisons on the values.
- * 
+ *
  * The function will return `true` if the values match, or `false`, if they
  * do not match. */
 export function compare(

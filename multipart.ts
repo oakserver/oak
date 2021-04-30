@@ -20,7 +20,7 @@ export interface FormDataBody {
   /** A record of form parts where the key was the `name` of the part and the
    * value was the value of the part. This record does not include any files
    * that were part of the form data.
-   * 
+   *
    * *Note*: Duplicate names are not included in this record, if there are
    * duplicates, the last value will be the value that is set here.  If there
    * is a possibility of duplicate values, use the `.stream()` method to
@@ -56,7 +56,7 @@ export interface FormDataReadOptions {
   bufferSize?: number;
 
   /** The maximum file size that can be handled.  This defaults to 10MB when
-   * not specified.  This is to try to avoid DOS attacks where someone would 
+   * not specified.  This is to try to avoid DOS attacks where someone would
    * continue to try to send a "file" continuously until a host limit was
    * reached crashing the server or the host. */
   maxFileSize?: number;
@@ -268,7 +268,7 @@ export class FormDataReader {
 
   /** Reads the multipart body of the response and resolves with an object which
    * contains fields and files that were part of the response.
-   * 
+   *
    * *Note*: this method handles multiple files with the same `name` attribute
    * in the request, but by design it does not handle multiple fields that share
    * the same `name`.  If you expect the request body to contain multiple form

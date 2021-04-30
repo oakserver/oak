@@ -89,9 +89,9 @@ export function getEntity<S extends State = Record<string, any>>(
  * Calculate an ETag value for an entity. If the entity is `FileInfo`, then the
  * tag will default to a _weak_ ETag.  `options.weak` overrides any default
  * behavior in generating the tag.
- * 
+ *
  * @param entity A string, Uint8Array, or file info to use to generate the ETag
- * @param options 
+ * @param options
  */
 export function calculate(
   entity: string | Uint8Array | FileInfo,
@@ -103,7 +103,7 @@ export function calculate(
   return weak ? `W/${tag}` : tag;
 }
 
-/** 
+/**
  * Create middleware that will attempt to decode the response.body into
  * something that can be used to generate an `ETag` and add the `ETag` header to
  * the response.
@@ -126,8 +126,8 @@ export function factory<S extends State = Record<string, any>>(
 /**
  * A helper function that takes the value from the `If-Match` header and an
  * entity and returns `true` if the `ETag` for the entity matches the supplied
- * value, otherwise `false`. 
- * 
+ * value, otherwise `false`.
+ *
  * See MDN's [`If-Match`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Match)
  * article for more information on how to use this function.
  */
@@ -152,7 +152,7 @@ export function ifMatch(
  * A helper function that takes the value from the `If-No-Match` header and
  * an entity and returns `false` if the `ETag` for the entity matches the
  * supplied value, otherwise `false`.
- * 
+ *
  * See MDN's [`If-None-Match`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match)
  * article for more information on how to use this function.
  */

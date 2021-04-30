@@ -148,8 +148,8 @@ const { core } = Deno;
 
 /**
  * Provides structured cloning
- * @param value 
- * @returns 
+ * @param value
+ * @returns
  */
 export function structuredClone<T extends StructuredClonable>(value: T): T {
   return core ? core.deserialize(core.serialize(value)) : cloneValue(value);

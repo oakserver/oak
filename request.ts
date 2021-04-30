@@ -52,7 +52,7 @@ export class Request {
   }
 
   /** When the application's `.proxy` is `true`, this will be set to an array of
-   * IPs, ordered from upstream to downstream, based on the value of the header 
+   * IPs, ordered from upstream to downstream, based on the value of the header
    * `X-Forwarded-For`.  When `false` an empty array is returned. */
   get ips(): string[] {
     return this.#proxy

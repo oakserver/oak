@@ -474,11 +474,11 @@ export class Router<
    * router.  If none of the routes handle a method, then "not allowed" logic
    * will be used.  If a method is supported by some routes, but not the
    * particular matched router, then "not implemented" will be returned.
-   * 
+   *
    * The middleware will also automatically handle the `OPTIONS` method,
    * responding with a `200 OK` when the `Allowed` header sent to the allowed
    * methods for a given route.
-   * 
+   *
    * By default, a "not allowed" request will respond with a `405 Not Allowed`
    * and a "not implemented" will respond with a `501 Not Implemented`. Setting
    * the option `.throw` to `true` will cause the middleware to throw an
@@ -787,7 +787,7 @@ export class Router<
   /** Register a direction middleware, where when the `source` path is matched
    * the router will redirect the request to the `destination` path.  A `status`
    * of `302 Found` will be set by default.
-   * 
+   *
    * The `source` and `destination` can be named routes. */
   redirect(
     source: string,
@@ -818,15 +818,15 @@ export class Router<
 
   /** Return middleware that will do all the route processing that the router
    * has been configured to handle.  Typical usage would be something like this:
-   * 
+   *
    * ```ts
    * import { Application, Router } from "https://deno.land/x/oak/mod.ts";
-   * 
+   *
    * const app = new Application();
    * const router = new Router();
-   * 
+   *
    * // register routes
-   * 
+   *
    * app.use(router.routes());
    * app.use(router.allowedMethods());
    * await app.listen({ port: 80 });
