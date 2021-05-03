@@ -162,10 +162,14 @@ export class HttpServerNative<AS extends State = Record<string, any>>
 
       async function serve(conn: Deno.Conn) {
         const httpConn = serveHttp(conn);
-        for await (const requestEvent of httpConn) {
-          const nativeRequest = new NativeRequest(requestEvent, conn);
-          controller.enqueue(nativeRequest);
+        while (true) {
           try {
+            const requestEvent = await httpConn.nextRequest();
+            if (requestEvent === null) {
+              return;
+            }
+            const nativeRequest = new NativeRequest(requestEvent, conn);
+            controller.enqueue(nativeRequest);
             await nativeRequest.donePromise;
           } catch (error) {
             server.app.dispatchEvent(new ErrorEvent("error", { error }));
