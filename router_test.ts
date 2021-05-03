@@ -782,3 +782,154 @@ test({
     );
   },
 });
+
+test({
+  name: "sub router get single match",
+  async fn() {
+    const { app, context, next } = setup("/foo/bar", "GET");
+
+    const callStack: number[] = [];
+    const router = new Router();
+    const subRouter = new Router();
+    const subSubRouter = new Router();
+    subSubRouter.get("/", (context) => {
+      assertStrictEquals(context.router, router);
+      assertStrictEquals(context.app, app);
+      callStack.push(1);
+    });
+    subRouter.use("/bar", subSubRouter.routes());
+    router.use("/foo", subRouter.routes());
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [1]);
+    assertStrictEquals((context as RouterContext).router, router);
+  },
+});
+
+test({
+  name: "sub router match with next",
+  async fn() {
+    const { context, next } = setup("/foo/bar/baz", "GET");
+
+    const callStack: number[] = [];
+    const router = new Router();
+    const subRouter = new Router();
+    const subSubRouter = new Router();
+    subSubRouter.get("/", () => {
+      callStack.push(3);
+    });
+    subSubRouter.get("/baz", async (ctx, next) => {
+      callStack.push(4);
+      await next();
+    });
+    subSubRouter.get("/baz", () => {
+      callStack.push(5);
+    });
+    subSubRouter.get("/baz", () => {
+      callStack.push(6);
+    });
+    subRouter.get("/bar/(.*)", async (ctx, next) => {
+      callStack.push(2);
+      await next();
+    });
+    subRouter.use("/bar", subSubRouter.routes());
+    router.get("/foo/(.*)", async (ctx, next) => {
+      callStack.push(1);
+      await next();
+    });
+    router.use("/foo", subRouter.routes());
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [1, 2, 4, 5]);
+  },
+});
+
+test({
+  name: "sub router match single param",
+  async fn() {
+    const { context, next } = setup("/foo/bar/baz/beep", "GET");
+
+    const callStack: number[] = [];
+    const router = new Router();
+    const subRouter = new Router();
+    const subSubRouter = new Router();
+    subSubRouter.get<{ id: string; name: string }>("/", (context) => {
+      assertEquals(context.params.id, "bar");
+      assertEquals(context.params.name, "beep");
+      callStack.push(1);
+    });
+    subRouter.get("/baz", () => {
+      callStack.push(2);
+    });
+    subRouter.use<{ name: string }>("/baz/:name", subSubRouter.routes());
+    router.get("/foo", () => {
+      callStack.push(3);
+    });
+    router.use<{ id: string }>("/foo/:id", subRouter.routes());
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [1]);
+    assertStrictEquals((context as RouterContext).router, router);
+  },
+});
+
+test({
+  name: "sub router patch prefix with param",
+  async fn() {
+    const { context, next } = setup("/foo/bar/baz", "GET");
+    const callStack: number[] = [];
+    const router = new Router();
+    const subRouter = new Router({ prefix: "/:bar" });
+    subRouter.get("/baz", (ctx) => {
+      assertEquals(ctx.params.bar, "bar");
+      callStack.push(0);
+    });
+    router.use("/foo", subRouter.routes());
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [0]);
+  },
+});
+
+test({
+  name: "sub router match layer prefix",
+  async fn() {
+    let callStack: number[] = [];
+    let matches: string[] = [];
+    const router = new Router();
+    const subRouter = new Router();
+    const subSubRouter = new Router();
+
+    subSubRouter.get("/bar", async (ctx, next) => {
+      callStack.push(1);
+      matches.push(...(ctx.matched?.map((layer) => layer.path) ?? []));
+      await next();
+    });
+    subRouter.use(subSubRouter.routes());
+    subRouter.use("(.*)", subSubRouter.routes());
+    router.use("/foo", subRouter.routes());
+    const mw = router.routes();
+
+    const { context, next } = setup("/foo/bar", "GET");
+    await mw(context, next);
+    assertEquals(callStack, [1, 1]);
+    assertEquals(matches, [
+      "/foo/bar",
+      "/foo(.*)/bar",
+      "/foo/bar",
+      "/foo(.*)/bar",
+    ]);
+    assertStrictEquals((context as RouterContext).router, router);
+
+    callStack = [];
+    matches = [];
+
+    const { context: context2, next: next2 } = setup("/foo/123/bar", "GET");
+    await mw(context2, next2);
+    assertEquals(callStack, [1]);
+    assertEquals(matches, [
+      "/foo(.*)/bar",
+    ]);
+    assertStrictEquals((context2 as RouterContext).router, router);
+  },
+});

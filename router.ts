@@ -132,6 +132,8 @@ export interface RouterMiddleware<
   /** For route parameter middleware, the `param` key for this parameter will
    * be set. */
   param?: keyof P;
+  // deno-lint-ignore no-explicit-any
+  router?: Router<any, any>;
 }
 
 export interface RouterOptions {
@@ -166,6 +168,8 @@ export interface RouterParamMiddleware<
     context: RouterContext<P, S>,
     next: () => Promise<unknown>,
   ): Promise<unknown> | unknown;
+  // deno-lint-ignore no-explicit-any
+  router?: Router<any, any>;
 }
 
 export type RouteParams = Record<string | number, string | undefined>;
@@ -173,6 +177,10 @@ export type RouteParams = Record<string | number, string | undefined>;
 type LayerOptions = TokensToRegexpOptions & ParseOptions & {
   ignoreCaptures?: boolean;
   name?: string;
+};
+
+type RegisterOptions = LayerOptions & {
+  ignorePrefix?: boolean;
 };
 
 type UrlOptions = TokensToRegexpOptions & ParseOptions & {
@@ -238,9 +246,18 @@ class Layer<
     if (this.methods.includes("GET")) {
       this.methods.unshift("HEAD");
     }
-    this.stack = Array.isArray(middleware) ? middleware : [middleware];
+    this.stack = Array.isArray(middleware) ? middleware.slice() : [middleware];
     this.path = path;
     this.#regexp = pathToRegexp(path, this.#paramNames, this.#opts);
+  }
+
+  clone(): Layer<P, S> {
+    return new Layer(
+      this.path,
+      this.methods,
+      this.stack,
+      { name: this.name, ...this.#opts },
+    );
   }
 
   match(path: string): boolean {
@@ -371,23 +388,69 @@ export class Router<
 
   #register = (
     path: string | string[],
-    middleware: RouterMiddleware[],
+    middlewares: RouterMiddleware[],
     methods: HTTPMethods[],
-    options: LayerOptions = {},
+    options: RegisterOptions = {},
   ): void => {
     if (Array.isArray(path)) {
       for (const p of path) {
-        this.#register(p, middleware, methods, options);
+        this.#register(p, middlewares, methods, options);
       }
       return;
     }
 
-    const { end, name, sensitive, strict, ignoreCaptures } = options;
-    const route = new Layer(path, methods, middleware, {
-      end: end === false ? end : true,
+    let layerMiddlewares: RouterMiddleware[] = [];
+    for (const middleware of middlewares) {
+      if (!middleware.router) {
+        layerMiddlewares.push(middleware);
+        continue;
+      }
+
+      if (layerMiddlewares.length) {
+        this.#addLayer(path, layerMiddlewares, methods, options);
+        layerMiddlewares = [];
+      }
+
+      const router = middleware.router.#clone();
+
+      for (const layer of router.#stack) {
+        if (!options.ignorePrefix) {
+          layer.setPrefix(path);
+        }
+        if (this.#opts.prefix) {
+          layer.setPrefix(this.#opts.prefix);
+        }
+        this.#stack.push(layer);
+      }
+
+      for (const [param, mw] of Object.entries(this.#params)) {
+        router.param(param, mw);
+      }
+    }
+
+    if (layerMiddlewares.length) {
+      this.#addLayer(path, layerMiddlewares, methods, options);
+    }
+  };
+
+  #addLayer = (
+    path: string,
+    middlewares: RouterMiddleware[],
+    methods: HTTPMethods[],
+    options: LayerOptions = {},
+  ) => {
+    const {
+      end,
       name,
-      sensitive: sensitive ?? this.#opts.sensitive ?? false,
-      strict: strict ?? this.#opts.strict ?? false,
+      sensitive = this.#opts.sensitive,
+      strict = this.#opts.strict,
+      ignoreCaptures,
+    } = options;
+    const route = new Layer(path, methods, middlewares, {
+      end,
+      name,
+      sensitive,
+      strict,
       ignoreCaptures,
     });
 
@@ -427,6 +490,14 @@ export class Router<
     }
 
     this.#register(path, middleware, methods, { name });
+  };
+
+  #clone = (): Router<RP, RS> => {
+    const router = new Router<RP, RS>(this.#opts);
+    router.#methods = router.#methods.slice();
+    router.#params = { ...this.#params };
+    router.#stack = this.#stack.map((layer) => layer.clone());
+    return router;
   };
 
   constructor(opts: RouterOptions = {}) {
@@ -927,7 +998,7 @@ export class Router<
       path ?? "(.*)",
       middleware as RouterMiddleware[],
       [],
-      { end: false, ignoreCaptures: !path },
+      { end: false, ignoreCaptures: !path, ignorePrefix: !path },
     );
 
     // deno-lint-ignore no-explicit-any
