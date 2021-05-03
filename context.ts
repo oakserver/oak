@@ -28,13 +28,16 @@ export interface ContextSendOptions extends SendOptions {
 
 /** Provides context about the current request and response to middleware
  * functions. */
-// deno-lint-ignore no-explicit-any
-export class Context<S extends State = Record<string, any>> {
+export class Context<
+  S extends AS = State,
+  // deno-lint-ignore no-explicit-any
+  AS extends State = Record<string, any>,
+> {
   #socket?: WebSocket;
   #sse?: ServerSentEventTarget;
 
   /** A reference to the current application. */
-  app: Application<State>;
+  app: Application<AS>;
 
   /** An object which allows access to cookies, mediating both the request and
    * response. */
@@ -93,7 +96,7 @@ export class Context<S extends State = Record<string, any>> {
   state: S;
 
   constructor(
-    app: Application<S>,
+    app: Application<AS>,
     serverRequest: ServerRequest | NativeRequest,
     secure = false,
   ) {

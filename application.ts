@@ -62,21 +62,22 @@ export interface HandleMethod {
 
 export type ListenOptions = ListenOptionsTls | ListenOptionsBase;
 
-interface ApplicationErrorEventListener<S> {
-  (evt: ApplicationErrorEvent<S>): void | Promise<void>;
+interface ApplicationErrorEventListener<S extends AS, AS> {
+  (evt: ApplicationErrorEvent<S, AS>): void | Promise<void>;
 }
 
-interface ApplicationErrorEventListenerObject<S> {
-  handleEvent(evt: ApplicationErrorEvent<S>): void | Promise<void>;
+interface ApplicationErrorEventListenerObject<S extends AS, AS> {
+  handleEvent(evt: ApplicationErrorEvent<S, AS>): void | Promise<void>;
 }
 
-interface ApplicationErrorEventInit<S extends State> extends ErrorEventInit {
-  context?: Context<S>;
+interface ApplicationErrorEventInit<S extends AS, AS extends State>
+  extends ErrorEventInit {
+  context?: Context<S, AS>;
 }
 
-type ApplicationErrorEventListenerOrEventListenerObject<S> =
-  | ApplicationErrorEventListener<S>
-  | ApplicationErrorEventListenerObject<S>;
+type ApplicationErrorEventListenerOrEventListenerObject<S extends AS, AS> =
+  | ApplicationErrorEventListener<S, AS>
+  | ApplicationErrorEventListenerObject<S, AS>;
 
 interface ApplicationListenEventListener {
   (evt: ApplicationListenEvent): void | Promise<void>;
@@ -131,10 +132,11 @@ export type State = Record<string | number | symbol, any>;
 
 const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 
-export class ApplicationErrorEvent<S extends State> extends ErrorEvent {
-  context?: Context<S>;
+export class ApplicationErrorEvent<S extends AS, AS extends State>
+  extends ErrorEvent {
+  context?: Context<S, AS>;
 
-  constructor(eventInitDict: ApplicationErrorEventInit<S>) {
+  constructor(eventInitDict: ApplicationErrorEventInit<S, AS>) {
     super("error", eventInitDict);
     this.context = eventInitDict.context;
   }
@@ -164,10 +166,10 @@ export class ApplicationListenEvent extends Event {
 // deno-lint-ignore no-explicit-any
 export class Application<AS extends State = Record<string, any>>
   extends EventTarget {
-  #composedMiddleware?: (context: Context<AS>) => Promise<unknown>;
+  #composedMiddleware?: (context: Context<AS, AS>) => Promise<unknown>;
   #eventHandler?: FetchEventListenerObject;
   #keys?: KeyStack;
-  #middleware: Middleware<State, Context<State>>[] = [];
+  #middleware: Middleware<State, Context<State, AS>>[] = [];
   #serverConstructor: ServerConstructor<ServerRequest | NativeRequest>;
 
   /** A set of keys, or an instance of `KeyStack` which will be used to sign
@@ -222,7 +224,7 @@ export class Application<AS extends State = Record<string, any>>
     this.#serverConstructor = serverConstructor;
   }
 
-  #getComposed = (): ((context: Context<AS>) => Promise<unknown>) => {
+  #getComposed = (): ((context: Context<AS, AS>) => Promise<unknown>) => {
     if (!this.#composedMiddleware) {
       this.#composedMiddleware = compose(this.#middleware);
     }
@@ -308,9 +310,9 @@ export class Application<AS extends State = Record<string, any>>
   /** Add an event listener for an `"error"` event which occurs when an
    * un-caught error occurs when processing the middleware or during processing
    * of the response. */
-  addEventListener(
+  addEventListener<S extends AS>(
     type: "error",
-    listener: ApplicationErrorEventListenerOrEventListenerObject<AS> | null,
+    listener: ApplicationErrorEventListenerOrEventListenerObject<S, AS> | null,
     options?: boolean | AddEventListenerOptions,
   ): void;
   /** Add an event listener for a `"listen"` event which occurs when the server
@@ -514,7 +516,7 @@ export class Application<AS extends State = Record<string, any>>
    * ```
    */
   use<S extends State = AS>(
-    ...middleware: Middleware<S, Context<S>>[]
+    ...middleware: Middleware<S, Context<S, AS>>[]
   ): Application<S extends AS ? S : (S & AS)> {
     this.#middleware.push(...middleware);
     this.#composedMiddleware = undefined;

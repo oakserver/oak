@@ -432,6 +432,10 @@ test({
       ctx.state.session = 2;
       // @ts-expect-error
       ctx.state.bar = 3;
+      ctx.app.state.id = 4;
+      ctx.app.state.session = 5;
+      // @ts-expect-error
+      ctx.app.state.bar = 6;
     });
   },
 });
