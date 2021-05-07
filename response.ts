@@ -204,7 +204,7 @@ export class Response {
     if (this.#status) {
       return this.#status;
     }
-    return this.body
+    return this.body != null
       ? Status.OK
       : this.#bodySet
       ? Status.NoContent

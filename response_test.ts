@@ -455,3 +455,13 @@ test({
     assertEquals(serverResponse.status, Status.NoContent);
   },
 });
+
+test({
+  name: "response.body handles falsy values",
+  async fn() {
+    const response = new Response(createMockRequest());
+    response.body = 0;
+    const serverResponse = await response.toServerResponse();
+    assertEquals(serverResponse.status, Status.OK);
+  },
+});
