@@ -1,5 +1,26 @@
 # oak Change Log
 
+## Version 7.4.0
+
+- feat: add range support for send() (#303)
+
+  When using `.send()` oak announces support for ranges and is able to process
+  the `Range` header along with `If-Range` header.
+
+- feat: add support for nested routers (#275)
+
+  Routers can now support "sub" or nested routers.
+
+- fix: properly close native listener (a7e053c)
+- fix: handle http connection errors (6d5f6d6)
+- fix: `context.app.state` is properly typed (81fcefa)
+- fix: setting response body to `null` or `undefined` returns 204 (af21480)
+- fix: no response body is `null` or `undefined`, not falsy (1481508)
+- refactor: allow non-void returns from middleware (b86f1da)
+- chore: restore Deno 1.9.1 to CI (9696760)
+- chore: Deno fmt updates (8398d6e)
+- chore: add example nested routing server (0d4b5d8)
+
 ## Version 7.3.0
 
 - feat: better handling of readable streams in response body (#301)
