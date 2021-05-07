@@ -129,6 +129,7 @@ async function convertBodyToStdBody(
  * finishes processing the request. */
 export class Response {
   #body?: Body | BodyFunction;
+  #bodySet = false;
   #domResponse?: globalThis.Response;
   #headers = new Headers();
   #request: Request;
@@ -177,6 +178,7 @@ export class Response {
     if (!this.#writable) {
       throw new Error("The response is not writable.");
     }
+    this.#bodySet = true;
     this.#body = value;
   }
 
@@ -202,10 +204,10 @@ export class Response {
     if (this.#status) {
       return this.#status;
     }
-    const typeofbody = typeof this.body;
-    return this.body &&
-        (BODY_TYPES.includes(typeofbody) || typeofbody === "object")
+    return this.body
       ? Status.OK
+      : this.#bodySet
+      ? Status.NoContent
       : Status.NotFound;
   }
 
@@ -320,8 +322,6 @@ export class Response {
 
     const { headers } = this;
 
-    const status = this.#status ?? (bodyInit ? Status.OK : Status.NotFound);
-
     // If there is no body and no content type and no set length, then set the
     // content length to 0
     if (
@@ -336,6 +336,7 @@ export class Response {
 
     this.#writable = false;
 
+    const status = this.status;
     const responseInit: ResponseInit = {
       headers,
       status,
@@ -375,9 +376,9 @@ export class Response {
 
     this.#writable = false;
     return this.#serverResponse = {
-      status: this.#status ?? (body ? Status.OK : Status.NotFound),
       body,
       headers,
+      status: this.status,
     };
   }
 }

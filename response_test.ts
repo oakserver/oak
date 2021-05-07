@@ -407,6 +407,8 @@ test({
     assertEquals(response.status, Status.NotFound);
     response.body = "hello";
     assertEquals(response.status, Status.OK);
+    response.body = null;
+    assertEquals(response.status, Status.NoContent);
     response.status = Status.PartialContent;
     assertEquals(response.status, Status.PartialContent);
   },
@@ -449,6 +451,7 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.body = null;
-    await response.toServerResponse();
+    const serverResponse = await response.toServerResponse();
+    assertEquals(serverResponse.status, Status.NoContent);
   },
 });
