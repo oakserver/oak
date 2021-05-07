@@ -237,7 +237,6 @@ test({
     const reader = env.response.body.getReader();
     await reader.closed;
     assertEquals(env.response.status, 200);
-    console.log(context.response.headers);
     assertEquals(env.response.headers.get("content-type"), "text/event-stream");
     assertEquals(env.response.headers.get("connection"), "Keep-Alive");
     assertEquals(
