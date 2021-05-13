@@ -1,5 +1,9 @@
 # oak Change Log
 
+## Version 7.4.1
+
+- chore: update to Deno 1.10.1, std 0.96.0, media_types 2.8.4
+
 ## Version 7.4.0
 
 - feat: add range support for send() (#303)
