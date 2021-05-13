@@ -862,7 +862,7 @@ export class Router<
    * The `source` and `destination` can be named routes. */
   redirect(
     source: string,
-    destination: string,
+    destination: string | URL,
     status: RedirectStatus = Status.Found,
   ): this {
     if (source[0] !== "/") {
@@ -872,15 +872,24 @@ export class Router<
       }
       source = s;
     }
-    if (destination[0] !== "/") {
-      const d = this.url(destination);
-      if (!d) {
-        throw new RangeError(`Could not resolve named route: "${source}"`);
+    if (typeof destination === "string") {
+      if (destination[0] !== "/") {
+        const d = this.url(destination);
+        if (!d) {
+          try {
+            const url = new URL(destination);
+            destination = url;
+          } catch {
+            throw new RangeError(`Could not resolve named route: "${source}"`);
+          }
+        } else {
+          destination = d;
+        }
       }
-      destination = d;
     }
 
-    this.all(source, (ctx) => {
+    this.all(source, async (ctx, next) => {
+      await next();
       ctx.response.redirect(destination);
       ctx.response.status = status;
     });

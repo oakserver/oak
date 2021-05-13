@@ -534,6 +534,22 @@ test({
 });
 
 test({
+  name: "router redirect, arbitrary URL",
+  async fn() {
+    const { context, next } = setup("/foo");
+    const router = new Router();
+    router.redirect("/foo", "https://example.com/", Status.MovedPermanently);
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(context.response.status, Status.MovedPermanently);
+    assertEquals(
+      context.response.headers.get("Location"),
+      "https://example.com/",
+    );
+  },
+});
+
+test({
   name: "router param middleware",
   async fn() {
     const { context, next } = setup("/book/1234/price");
