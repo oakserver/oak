@@ -622,3 +622,16 @@ test({
     assert(await response.text(), "hello oak");
   },
 });
+
+test({
+  name: "application.use() - type checking - at least one middleware is passed",
+  fn() {
+    const app = new Application();
+    try {
+      // @ts-expect-error
+      app.use();
+    } catch {
+      //
+    }
+  },
+});

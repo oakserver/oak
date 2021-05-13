@@ -949,3 +949,33 @@ test({
     assertStrictEquals((context2 as RouterContext).router, router);
   },
 });
+
+test({
+  name: "router - type checking - ensure at least one middleware is passed",
+  fn() {
+    const router = new Router();
+
+    try {
+      // @ts-expect-error
+      router.all("/");
+      // @ts-expect-error
+      router.delete("/");
+      // @ts-expect-error
+      router.get("/");
+      // @ts-expect-error
+      router.head("/");
+      // @ts-expect-error
+      router.options("/");
+      // @ts-expect-error
+      router.patch("/");
+      // @ts-expect-error
+      router.post("/");
+      // @ts-expect-error
+      router.put("/");
+      // @ts-expect-error
+      router.use();
+    } catch {
+      //
+    }
+  },
+});

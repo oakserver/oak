@@ -516,6 +516,10 @@ export class Application<AS extends State = Record<string, any>>
    * ```
    */
   use<S extends State = AS>(
+    middleware: Middleware<S, Context<S, AS>>,
+    ...middlewares: Middleware<S, Context<S, AS>>[]
+  ): Application<S extends AS ? S : (S & AS)>;
+  use<S extends State = AS>(
     ...middleware: Middleware<S, Context<S, AS>>[]
   ): Application<S extends AS ? S : (S & AS)> {
     this.#middleware.push(...middleware);
