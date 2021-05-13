@@ -599,6 +599,13 @@ await listenAndServe({ port: 8000 }, async (request) => {
 });
 ```
 
+### Handling fetch events
+
+The `Application` class has an instance method of `.fetchEventHandler()` which
+will create an event handler for `"fetch"` events, like those used by
+[Deno Deploy](https://deno.com/deploy). For more information, refer to the more
+in depth [documentation](https://oakserver.github.io/oak/deploy).
+
 ### Error handling
 
 Middleware can be used to handle other errors with middleware. Awaiting other
