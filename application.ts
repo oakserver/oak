@@ -404,7 +404,11 @@ export class Application<AS extends State = Record<string, any>>
       secure = secureOrConn ?? false;
       contextRequest = request;
     }
-    const context = new Context(this, contextRequest, secure);
+    const context = new Context(
+      this,
+      contextRequest,
+      secure as boolean | undefined,
+    );
     try {
       await this.#getComposed()(context);
     } catch (err) {
