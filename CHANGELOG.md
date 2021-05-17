@@ -1,5 +1,18 @@
 # oak Change Log
 
+## Version 7.5.0
+
+- feat: allow overriding std/native HTTP servers (771e7b0)
+
+  Exported `HttpSeverStd` and `HttpServerNative` to allow these to be supplied
+  when creating the application by passing the `serverConstructor` option, as
+  well as updated documentation around how to accomplish this.
+
+- fix(#282): `router.redirect()` destination can be arbitrary URL (802435c)
+- fix(#319): ensure that at least one middleware is present in types (29326ef)
+- fix: upcoming TypeScript 4.3 changes (fe7ad3c)
+- docs: add information about Deno Deploy (3faadda)
+
 ## Version 7.4.1
 
 - chore: update to Deno 1.10.1, std 0.96.0, media_types 2.8.4
