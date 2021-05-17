@@ -18,6 +18,8 @@ test({
     assertEquals(Object.keys(mod.helpers).length, 1);
     assertEquals(typeof mod.HttpError, "function");
     assertEquals(typeof mod.httpErrors, "object");
+    assertEquals(typeof mod.HttpServerNative, "function");
+    assertEquals(typeof mod.HttpServerStd, "function");
     assertEquals(typeof mod.isErrorStatus, "function");
     assertEquals(typeof mod.isHttpError, "function");
     assertEquals(typeof mod.isRedirectStatus, "function");
@@ -34,6 +36,6 @@ test({
     assertEquals(typeof mod.STATUS_TEXT, "object");
     assertEquals(typeof mod.Status, "object");
     assertEquals(typeof mod.send, "function");
-    assertEquals(Object.keys(mod).length, 23);
+    assertEquals(Object.keys(mod).length, 25);
   },
 });

@@ -513,11 +513,32 @@ need to start your server with the `--unstable` flag. For example:
 > deno run --allow-net --unstable server.ts
 ```
 
-Currently there are two features that are not yet supported with the native
-server, those are:
+The only feature known to be a limitation on the native HTTP server is the
+ability to upgrade a connection to a web-socket.
 
-- Server Sent Events
-- Upgrading a request to a WebSocket
+#### Overriding the HTTP server
+
+If you wish to not utilise the default behavior of detecting the capability, you
+can force the server during application creation. For example to force the
+`std/http` server, you would do the following:
+
+```ts
+import { Application, HttpServerStd } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application({
+  serverConstructor: HttpServerStd,
+});
+```
+
+Of if you wanted to force the native:
+
+```ts
+import { Application, HttpServerNative } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application({
+  serverConstructor: HttpServerNative,
+});
+```
 
 ### Just handling requests
 

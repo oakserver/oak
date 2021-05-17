@@ -12,7 +12,9 @@ import {
 } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
-import { NativeRequest } from "./http_server_native.ts";
+import { HttpServerNative } from "./http_server_native.ts";
+import type { NativeRequest } from "./http_server_native.ts";
+import { HttpServerStd } from "./http_server_std.ts";
 import type { ServerRequest, ServerResponse } from "./http_server_std.ts";
 import { httpErrors } from "./httpError.ts";
 import { Data, KeyStack } from "./keyStack.ts";
@@ -633,5 +635,23 @@ test({
     } catch {
       //
     }
+  },
+});
+
+test({
+  name: "new Application() - HttpServerStd",
+  fn() {
+    new Application({
+      serverConstructor: HttpServerStd,
+    });
+  },
+});
+
+test({
+  name: "new Application() - HttpServerNative",
+  fn() {
+    new Application({
+      serverConstructor: HttpServerNative,
+    });
   },
 });

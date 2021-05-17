@@ -108,9 +108,10 @@ export interface ApplicationOptions<S> {
   proxy?: boolean;
 
   /** A server constructor to use instead of the default server for receiving
-   * requests.
-   *
-   * _This is not generally used, except for mocking and testing._
+   * requests.  When the native HTTP server is detected in the environment, then
+   * the native server will be used, otherwise the `std/http` server will be
+   * used.  Passing either `HTTPServerStd` or `HTTPServerNative` will override
+   * this behavior.
    */
   serverConstructor?: ServerConstructor<ServerRequest | NativeRequest>;
 
