@@ -76,7 +76,7 @@ await app.listen({ port: 8000 });
 ```
 
 The symbol `REDIRECT_BACK` can be used to redirect the requestor back to the to
-the referrer (if the request's `Referrer` header has been set), and the second
+the referrer (if the request's `Referer` header has been set), and the second
 argument can be used to provide a "backup" if there is no referrer. For example:
 
 ```ts

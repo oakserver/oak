@@ -418,11 +418,11 @@ And a method:
   A method to simplify redirecting the response to another URL. It will set the
   `Location` header to the supplied `url` and the status to `302 Found` (unless
   the status is already a `3XX` status). The use of symbol `REDIRECT_BACK` as
-  the `url` indicates that the `Referrer` header in the request should be used
-  as the direction, with the `alt` being the alternative location if the
-  `Referrer` is not set. If neither the `alt` nor the `Referrer` are set, the
-  redirect will occur to `/`. A basic HTML (if the requestor supports it) or a
-  text body will be set explaining they are being redirected.
+  the `url` indicates that the `Referer` header in the request should be used as
+  the direction, with the `alt` being the alternative location if the `Referer`
+  is not set. If neither the `alt` nor the `Referer` are set, the redirect will
+  occur to `/`. A basic HTML (if the requestor supports it) or a text body will
+  be set explaining they are being redirected.
 
 ### Automatic response body handling
 

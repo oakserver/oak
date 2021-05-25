@@ -292,7 +292,7 @@ export class Response {
     alt: string | URL = "/",
   ): void {
     if (url === REDIRECT_BACK) {
-      url = this.#request.headers.get("Referrer") ?? String(alt);
+      url = this.#request.headers.get("Referer") ?? String(alt);
     } else if (typeof url === "object") {
       url = String(url);
     }
