@@ -729,6 +729,45 @@ app.use(async (context, next) => {
 await app.listen({ port: 8000 });
 ```
 
+When `send()` can't find a matching filesystem entry, it will throw an
+`HttpError` with its status set to `404` (`Status.NotFound`). This example
+illustrates handling that error in order to use another middleware (a fallback
+virtual filesystem) when `send()` can't find a match:
+
+```ts
+import {
+  Application,
+  HttpError,
+  Router,
+  Status,
+} from "https://deno.land/x/oak/mod.ts";
+
+const fallbackFilesystem = new Router()
+  .get("/virtual_file.txt", (context) => {
+    context.response.body = "Hello world";
+  });
+
+const app = new Application()
+  .use(async (context, next) => {
+    try {
+      await context.send({
+        root: `${Deno.cwd()}/examples/static`,
+        index: "index.html",
+      });
+    } catch (ex) {
+      if (ex instanceof HttpError && ex.status === Status.NotFound) {
+        // send didn't find a matching filesystem entry
+        return next();
+      }
+      throw ex;
+    }
+  })
+  .use(fallbackFilesystem.routes())
+  .use(fallbackFilesystem.allowedMethods());
+
+await app.listen({ port: 8000 });
+```
+
 `send()` automatically supports features like providing `ETag` and
 `Last-Modified` headers in the response as well as processing `If-None-Match`
 and `If-Modified-Since` headers in the request. This means when serving up
