@@ -298,7 +298,7 @@ test({
   name: "response.redirect(REDIRECT_BACK)",
   async fn() {
     const response = new Response(
-      createMockRequest({ headers: [["referrer", "https://example.com/foo"]] }),
+      createMockRequest({ headers: [["referer", "https://example.com/foo"]] }),
     );
     response.redirect(REDIRECT_BACK);
     const serverResponse = await response.toServerResponse();
