@@ -364,7 +364,7 @@ export class Router<
   #params: Record<string, RouterParamMiddleware<any, any>> = {};
   #stack: Layer[] = [];
 
-  #match = (path: string, method: HTTPMethods): Matches => {
+  #match(path: string, method: HTTPMethods): Matches {
     const matches: Matches = {
       path: [],
       pathAndMethod: [],
@@ -384,14 +384,14 @@ export class Router<
     }
 
     return matches;
-  };
+  }
 
-  #register = (
+  #register(
     path: string | string[],
     middlewares: RouterMiddleware[],
     methods: HTTPMethods[],
     options: RegisterOptions = {},
-  ): void => {
+  ): void {
     if (Array.isArray(path)) {
       for (const p of path) {
         this.#register(p, middlewares, methods, options);
@@ -431,14 +431,14 @@ export class Router<
     if (layerMiddlewares.length) {
       this.#addLayer(path, layerMiddlewares, methods, options);
     }
-  };
+  }
 
-  #addLayer = (
+  #addLayer(
     path: string,
     middlewares: RouterMiddleware[],
     methods: HTTPMethods[],
     options: LayerOptions = {},
-  ) => {
+  ) {
     const {
       end,
       name,
@@ -463,22 +463,22 @@ export class Router<
     }
 
     this.#stack.push(route);
-  };
+  }
 
-  #route = (name: string): Layer | undefined => {
+  #route(name: string): Layer | undefined {
     for (const route of this.#stack) {
       if (route.name === name) {
         return route;
       }
     }
-  };
+  }
 
-  #useVerb = (
+  #useVerb(
     nameOrPath: string,
     pathOrMiddleware: string | RouterMiddleware,
     middleware: RouterMiddleware[],
     methods: HTTPMethods[],
-  ): void => {
+  ): void {
     let name: string | undefined = undefined;
     let path: string;
     if (typeof pathOrMiddleware === "string") {
@@ -490,15 +490,15 @@ export class Router<
     }
 
     this.#register(path, middleware, methods, { name });
-  };
+  }
 
-  #clone = (): Router<RP, RS> => {
+  #clone(): Router<RP, RS> {
     const router = new Router<RP, RS>(this.#opts);
     router.#methods = router.#methods.slice();
     router.#params = { ...this.#params };
     router.#stack = this.#stack.map((layer) => layer.clone());
     return router;
-  };
+  }
 
   constructor(opts: RouterOptions = {}) {
     this.#opts = opts;

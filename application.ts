@@ -225,17 +225,17 @@ export class Application<AS extends State = Record<string, any>>
     this.#serverConstructor = serverConstructor;
   }
 
-  #getComposed = (): ((context: Context<AS, AS>) => Promise<unknown>) => {
+  #getComposed(): ((context: Context<AS, AS>) => Promise<unknown>) {
     if (!this.#composedMiddleware) {
       this.#composedMiddleware = compose(this.#middleware);
     }
     return this.#composedMiddleware;
-  };
+  }
 
   /** Deal with uncaught errors in either the middleware or sending the
    * response. */
   // deno-lint-ignore no-explicit-any
-  #handleError = (context: Context<AS>, error: any): void => {
+  #handleError(context: Context<AS>, error: any): void {
     if (!(error instanceof Error)) {
       error = new Error(`non-error thrown: ${JSON.stringify(error)}`);
     }
@@ -262,14 +262,14 @@ export class Application<AS extends State = Record<string, any>>
     context.response.body = error.expose
       ? error.message
       : STATUS_TEXT.get(status);
-  };
+  }
 
   /** Processing registered middleware on each request. */
-  #handleRequest = async (
+  async #handleRequest(
     request: ServerRequest | NativeRequest,
     secure: boolean,
     state: RequestState,
-  ): Promise<void> => {
+  ): Promise<void> {
     const context = new Context(this, request, secure);
     let resolve: () => void;
     const handlingPromise = new Promise<void>((res) => resolve = res);
@@ -306,7 +306,7 @@ export class Application<AS extends State = Record<string, any>>
       resolve!();
       state.handling.delete(handlingPromise);
     }
-  };
+  }
 
   /** Add an event listener for an `"error"` event which occurs when an
    * un-caught error occurs when processing the middleware or during processing

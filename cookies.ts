@@ -153,7 +153,7 @@ export class Cookies {
   #response: Response;
   #secure?: boolean;
 
-  #requestKeys = (): string[] => {
+  #requestKeys(): string[] {
     if (this.#cookieKeys) {
       return this.#cookieKeys;
     }
@@ -168,7 +168,7 @@ export class Cookies {
       result.push(key);
     }
     return result;
-  };
+  }
 
   constructor(
     request: Request,

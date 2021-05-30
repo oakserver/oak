@@ -28,11 +28,11 @@ export class Request {
   #serverRequest: ServerRequest | NativeRequest;
   #url?: URL;
 
-  #getRemoteAddr = (): string => {
+  #getRemoteAddr(): string {
     return this.#serverRequest instanceof NativeRequest
       ? this.#serverRequest.remoteAddr ?? ""
       : (this.#serverRequest.conn.remoteAddr as Deno.NetAddr).hostname;
-  };
+  }
 
   /** Is `true` if the request has a body, otherwise `false`. */
   get hasBody(): boolean {

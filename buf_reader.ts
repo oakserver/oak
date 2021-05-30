@@ -30,7 +30,7 @@ export class BufReader {
   #eof = false;
 
   // Reads a new chunk into the buffer.
-  #fill = async (): Promise<void> => {
+  async #fill(): Promise<void> {
     // Slide existing data to beginning.
     if (this.#posRead > 0) {
       this.#buffer.copyWithin(0, this.#posRead, this.#posWrite);
@@ -59,13 +59,13 @@ export class BufReader {
     throw new Error(
       `No progress after ${MAX_CONSECUTIVE_EMPTY_READS} read() calls`,
     );
-  };
+  }
 
-  #reset = (buffer: Uint8Array, reader: Deno.Reader): void => {
+  #reset(buffer: Uint8Array, reader: Deno.Reader): void {
     this.#buffer = buffer;
     this.#reader = reader;
     this.#eof = false;
-  };
+  }
 
   constructor(rd: Deno.Reader, size: number = DEFAULT_BUF_SIZE) {
     if (size < MIN_BUF_SIZE) {

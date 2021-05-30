@@ -187,14 +187,14 @@ export class SSEStreamTarget extends EventTarget
   #controller?: ReadableStreamDefaultController<Uint8Array>;
 
   // deno-lint-ignore no-explicit-any
-  #error = (error: any) => {
+  #error(error: any) {
     this.dispatchEvent(new CloseEvent({ cancelable: false }));
     const errorEvent = new ErrorEvent("error", { error });
     this.dispatchEvent(errorEvent);
     this.#context.app.dispatchEvent(errorEvent);
-  };
+  }
 
-  #push = (payload: string) => {
+  #push(payload: string) {
     if (!this.#controller) {
       this.#error(new Error("The controller has not been set."));
       return;
@@ -203,7 +203,7 @@ export class SSEStreamTarget extends EventTarget
       return;
     }
     this.#controller.enqueue(encoder.encode(payload));
-  };
+  }
 
   get closed(): boolean {
     return this.#closed;
@@ -279,7 +279,7 @@ export class SSEStdLibTarget extends EventTarget
   #serverRequest: ServerRequest;
   #writer: BufWriter;
 
-  #send = async (payload: string, prev: Promise<void>): Promise<void> => {
+  async #send(payload: string, prev: Promise<void>): Promise<void> {
     if (this.#closed) {
       return;
     }
@@ -297,9 +297,9 @@ export class SSEStdLibTarget extends EventTarget
       this.dispatchEvent(errorEvent);
       this.#app.dispatchEvent(errorEvent);
     }
-  };
+  }
 
-  #setup = async (overrideHeaders?: Headers): Promise<void> => {
+  async #setup(overrideHeaders?: Headers): Promise<void> {
     const headers = new Headers(responseHeaders);
     if (overrideHeaders) {
       for (const [key, value] of overrideHeaders) {
@@ -321,7 +321,7 @@ export class SSEStdLibTarget extends EventTarget
       this.#app.dispatchEvent(errorEvent);
       throw error;
     }
-  };
+  }
 
   get closed(): boolean {
     return this.#closed;

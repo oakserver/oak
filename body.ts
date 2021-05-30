@@ -152,7 +152,7 @@ export class RequestBody {
   #request: Request | ServerRequest;
   #type?: "bytes" | "form-data" | "reader" | "stream" | "undefined";
 
-  #parse = (type: BodyType): BodyValueGetter => {
+  #parse(type: BodyType): BodyValueGetter {
     switch (type) {
       case "form":
         this.#type = "bytes";
@@ -184,12 +184,12 @@ export class RequestBody {
       default:
         throw new TypeError(`Invalid body type: "${type}"`);
     }
-  };
+  }
 
-  #validateGetArgs = (
+  #validateGetArgs(
     type: BodyType | undefined,
     contentTypes: BodyOptionsContentTypes,
-  ) => {
+  ) {
     if (type === "reader" && this.#type && this.#type !== "reader") {
       throw new TypeError(
         `Body already consumed as "${this.#type}" and cannot be returned as a reader.`,
@@ -225,14 +225,14 @@ export class RequestBody {
         `"type" and "contentTypes" cannot be specified at the same time`,
       );
     }
-  };
+  }
 
-  #valuePromise = () => {
+  #valuePromise() {
     return this.#readAllBody ??
       (this.#readAllBody = this.#request instanceof Request
         ? this.#request.arrayBuffer().then((ab) => new Uint8Array(ab))
         : readAll(this.#request.body));
-  };
+  }
 
   constructor(request: ServerRequest | Request) {
     this.#request = request;

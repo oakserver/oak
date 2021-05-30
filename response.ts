@@ -139,26 +139,26 @@ export class Response {
   #type?: string;
   #writable = true;
 
-  #getBodyInit = async (): Promise<globalThis.BodyInit | undefined> => {
+  async #getBodyInit(): Promise<globalThis.BodyInit | undefined> {
     const [body, type] = await convertBodyToBodyInit(this.body, this.type);
     this.type = type;
     return body;
-  };
+  }
 
-  #getStdBody = async (): Promise<Uint8Array | Deno.Reader | undefined> => {
+  async #getStdBody(): Promise<Uint8Array | Deno.Reader | undefined> {
     const [body, type] = await convertBodyToStdBody(this.body, this.type);
     this.type = type;
     return body;
-  };
+  }
 
-  #setContentType = (): void => {
+  #setContentType(): void {
     if (this.type) {
       const contentTypeString = contentType(this.type);
       if (contentTypeString && !this.headers.has("Content-Type")) {
         this.headers.append("Content-Type", contentTypeString);
       }
     }
-  };
+  }
 
   /** The body of the response.  The body will be automatically processed when
    * the response is being sent and converted to a `Uint8Array` or a

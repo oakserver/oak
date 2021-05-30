@@ -33,7 +33,7 @@ export class KeyStack {
     this.#keys = keys;
   }
 
-  #sign = (data: Data, key: Key): string => {
+  #sign(data: Data, key: Key): string {
     return btoa(
       String.fromCharCode.apply(
         undefined,
@@ -42,7 +42,7 @@ export class KeyStack {
       ),
     )
       .replace(/\/|\+|=/g, (c) => replacements[c]);
-  };
+  }
 
   /** Take `data` and return a SHA256 HMAC digest that uses the current 0 index
    * of the `keys` passed to the constructor.  This digest is in the form of a

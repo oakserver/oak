@@ -16,14 +16,14 @@ export class AsyncIterableReader<T> implements Deno.Reader {
     this.#processValue = processValue;
   }
 
-  #close = () => {
+  #close() {
     if (this.#asyncIterator.return) {
       this.#asyncIterator.return();
     }
     // deno-lint-ignore no-explicit-any
     (this as any).#asyncIterator = undefined;
     this.#closed = true;
-  };
+  }
 
   async read(p: Uint8Array): Promise<number | null> {
     if (this.#closed) {
