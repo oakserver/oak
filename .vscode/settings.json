@@ -1,0 +1,12 @@
+{
+  "deno.enable": true,
+  "deno.unstable": true,
+  "deno.lint": true,
+  "deno.codeLens.testArgs": [
+    "--allow-read",
+    "--allow-write"
+  ],
+  "deno.suggest.imports.hosts": {
+    "https://deno.land/x/": true
+  }
+}

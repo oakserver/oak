@@ -1,7 +1,9 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, assertStrictEquals, test } from "./test_deps.ts";
+import { assertEquals, assertStrictEquals } from "./test_deps.ts";
 import { isMediaType } from "./isMediaType.ts";
+
+const { test } = Deno;
 
 test({
   name: "isMediaType should ignore params",

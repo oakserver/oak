@@ -6,13 +6,14 @@ import {
   assertEquals,
   assertStrictEquals,
   assertThrowsAsync,
-  test,
 } from "./test_deps.ts";
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { Router, RouterContext } from "./router.ts";
+
+const { test } = Deno;
 
 function createMockApp<
   S extends Record<string | number | symbol, any> = Record<string, any>,

@@ -1,8 +1,9 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, StringReader, test } from "./test_deps.ts";
-
+import { assertEquals, StringReader } from "./test_deps.ts";
 import { BufReader } from "./buf_reader.ts";
+
+const { test } = Deno;
 
 const decoder = new TextDecoder();
 

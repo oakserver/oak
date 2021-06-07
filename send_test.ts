@@ -1,6 +1,6 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assert, assertEquals, assertStrictEquals, test } from "./test_deps.ts";
+import { assert, assertEquals, assertStrictEquals } from "./test_deps.ts";
 
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
@@ -8,6 +8,8 @@ import { readAll, Status } from "./deps.ts";
 import * as etag from "./etag.ts";
 import { httpErrors } from "./httpError.ts";
 import { send } from "./send.ts";
+
+const { test } = Deno;
 
 let encodingsAccepted = "identity";
 

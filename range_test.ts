@@ -1,11 +1,13 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assert, assertEquals, assertThrows, test } from "./test_deps.ts";
+import { assert, assertEquals, assertThrows } from "./test_deps.ts";
 
 import { concat, copyBytes } from "./deps.ts";
 import { calculate } from "./etag.ts";
 import { httpErrors } from "./httpError.ts";
 import { ifRange, MultiPartStream, parseRange } from "./range.ts";
+
+const { test } = Deno;
 
 class MockFile implements Deno.Seeker, Deno.Reader, Deno.Closer {
   #buf: Uint8Array;

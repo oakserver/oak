@@ -8,8 +8,9 @@ import {
   assertEquals,
   assertStrictEquals,
   assertThrows,
-  test,
 } from "./test_deps.ts";
+
+const { test } = Deno;
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();

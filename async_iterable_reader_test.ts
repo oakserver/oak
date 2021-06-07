@@ -1,8 +1,10 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assert, assertEquals, test } from "./test_deps.ts";
+import { assert, assertEquals } from "./test_deps.ts";
 
 import { AsyncIterableReader } from "./async_iterable_reader.ts";
+
+const { test } = Deno;
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -17,7 +19,7 @@ test({
       },
     });
 
-    const air = new AsyncIterableReader(rs, encoder.encode);
+    const air = new AsyncIterableReader(rs, (value) => encoder.encode(value));
 
     let buf = new Uint8Array(1000);
     let bytesRead = await air.read(buf);
@@ -41,7 +43,7 @@ test({
       },
     });
 
-    const air = new AsyncIterableReader(rs, encoder.encode);
+    const air = new AsyncIterableReader(rs, (value) => encoder.encode(value));
 
     let buf = new Uint8Array(1000);
     let bytesRead = await air.read(buf);
@@ -69,7 +71,7 @@ test({
       },
     });
 
-    const air = new AsyncIterableReader(rs, encoder.encode);
+    const air = new AsyncIterableReader(rs, (value) => encoder.encode(value));
 
     let buf = new Uint8Array(5);
     let bytesRead = await air.read(buf);

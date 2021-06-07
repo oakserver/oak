@@ -1,9 +1,11 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, Buffer, test } from "./test_deps.ts";
+import { assertEquals, Buffer } from "./test_deps.ts";
 
 import { BufReader } from "./buf_reader.ts";
 import { readHeaders, toParamRegExp, unquote } from "./headers.ts";
+
+const { test } = Deno;
 
 test({
   name: "headers - toParamRegExp()",

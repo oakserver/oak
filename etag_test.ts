@@ -1,12 +1,14 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assert, assertEquals, test } from "./test_deps.ts";
+import { assert, assertEquals } from "./test_deps.ts";
 
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 
 import { calculate, factory, ifMatch, ifNoneMatch } from "./etag.ts";
+
+const { test } = Deno;
 
 let encodingsAccepted = "identity";
 

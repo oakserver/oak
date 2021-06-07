@@ -1,8 +1,10 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assert, assertEquals, test } from "./test_deps.ts";
+import { assert, assertEquals } from "./test_deps.ts";
 
 import { structuredClone } from "./structured_clone.ts";
+
+const { test } = Deno;
 
 test({
   name: "basic structured clone",

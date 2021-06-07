@@ -2,13 +2,16 @@
 
 // deno-lint-ignore-file
 
-import { assert, assertEquals, assertStrictEquals, test } from "./test_deps.ts";
+import { assert, assertEquals, assertStrictEquals } from "./test_deps.ts";
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
 import { Status } from "./deps.ts";
 import { createHttpError, httpErrors } from "./httpError.ts";
 import type { ErrorStatus } from "./types.d.ts";
 import { compose, Middleware } from "./middleware.ts";
+
+const { test } = Deno;
+
 function createMockContext<S extends State = Record<string, any>>() {
   return ({
     request: {

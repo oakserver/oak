@@ -1,8 +1,10 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, assertStrictEquals, test } from "./test_deps.ts";
+import { assertEquals, assertStrictEquals } from "./test_deps.ts";
 
 import { hasNativeHttp, NativeRequest } from "./http_server_native.ts";
+
+const { test } = Deno;
 
 function createMockConn() {
   return {

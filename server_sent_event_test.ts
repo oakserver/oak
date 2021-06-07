@@ -2,13 +2,7 @@
 
 // deno-lint-ignore-file
 
-import {
-  assert,
-  assertEquals,
-  BufWriter,
-  StringWriter,
-  test,
-} from "./test_deps.ts";
+import { assert, assertEquals, BufWriter, StringWriter } from "./test_deps.ts";
 
 import type { Application } from "./application.ts";
 import { Context } from "./context.ts";
@@ -19,6 +13,8 @@ import {
   SSEStdLibTarget,
   SSEStreamTarget,
 } from "./server_sent_event.ts";
+
+const { test } = Deno;
 
 const preamble = `HTTP/1.1 200 OK
 cache-control: no-cache

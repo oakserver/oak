@@ -10,7 +10,6 @@ import {
   assertThrowsAsync,
   BufReader,
   BufWriter,
-  test,
 } from "./test_deps.ts";
 import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
@@ -20,6 +19,8 @@ import type { ServerRequest } from "./http_server_std.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { httpErrors } from "./httpError.ts";
+
+const { test } = Deno;
 
 function createMockApp<S extends State = Record<string, any>>(
   state = {} as S,

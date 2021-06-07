@@ -1,12 +1,9 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import {
-  assertEquals,
-  assertStrictEquals,
-  assertThrows,
-  test,
-} from "./test_deps.ts";
+import { assertEquals, assertStrictEquals, assertThrows } from "./test_deps.ts";
 import { format, parse } from "./mediaTyper.ts";
+
+const { test } = Deno;
 
 test({
   name: "format basic type",

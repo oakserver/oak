@@ -2,7 +2,7 @@
 
 // deno-lint-ignore-file
 
-import { assert, assertEquals, assertThrowsAsync, test } from "./test_deps.ts";
+import { assert, assertEquals, assertThrowsAsync } from "./test_deps.ts";
 
 import {
   Application,
@@ -19,6 +19,8 @@ import type { ServerRequest, ServerResponse } from "./http_server_std.ts";
 import { httpErrors } from "./httpError.ts";
 import { Data, KeyStack } from "./keyStack.ts";
 import type { FetchEvent, Server } from "./types.d.ts";
+
+const { test } = Deno;
 
 let serverRequestStack: ServerRequest[] = [];
 let requestResponseStack: ServerResponse[] = [];

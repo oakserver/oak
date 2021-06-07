@@ -5,7 +5,6 @@ import {
   assertEquals,
   assertThrowsAsync,
   Buffer,
-  test,
   writeAllSync,
 } from "./test_deps.ts";
 
@@ -14,7 +13,8 @@ import { FormDataFile, FormDataReader } from "./multipart.ts";
 import { equals, lookup, parse } from "./deps.ts";
 import { stripEol } from "./util.ts";
 
-// const decoder = new TextDecoder();
+const { test } = Deno;
+
 const encoder = new TextEncoder();
 
 const fixtureContentType = `multipart/form-data; boundary=OAK-SERVER-BOUNDARY`;

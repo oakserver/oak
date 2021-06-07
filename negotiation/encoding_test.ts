@@ -1,7 +1,9 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, test } from "../test_deps.ts";
+import { assertEquals } from "../test_deps.ts";
 import { preferredEncodings } from "./encoding.ts";
+
+const { test } = Deno;
 
 test({
   name: "preferredEncodings",
