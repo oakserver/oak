@@ -60,6 +60,15 @@ export { printHello } from "./print_hello.ts";
 --OAK-SERVER-BOUNDARY--
 `;
 
+const fixtureNoNewline = `
+--OAK-SERVER-BOUNDARY
+Content-Disposition: form-data; name="noNewline"; filename="noNewline.txt"
+Content-Type: text/plain
+
+555
+--OAK-SERVER-BOUNDARY--
+`;
+
 function createBody(value: string): Buffer {
   return new Buffer(encoder.encode(value));
 }
@@ -228,5 +237,25 @@ test({
     assertEquals(actual.files[0].contentType, "video/mp2t");
     assertEquals(actual.files[0].name, "filea");
     assertEquals(actual.files[0].originalName, "编写软件很难.ts");
+  },
+});
+
+test({
+  name:
+    "multipart - FormDataReader - .read() no extra CRLF at the end of result file if origin file doesn't end with newline",
+  async fn() {
+    const body = createBody(fixtureNoNewline);
+    const fdr = new FormDataReader(fixtureContentType, body);
+    const actual = await fdr.read();
+
+    assert(actual.files);
+    assertEquals(actual.files.length, 1);
+    assertEquals(actual.files[0].contentType, "text/plain");
+    assertEquals(actual.files[0].name, "noNewline");
+    assertEquals(actual.files[0].originalName, "noNewline.txt");
+    assert(actual.files[0].filename);
+
+    const file = await Deno.stat(actual.files[0].filename);
+    assertEquals(file.size, 3);
   },
 });

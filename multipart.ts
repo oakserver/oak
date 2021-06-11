@@ -182,6 +182,16 @@ async function* parts(
         const strippedBytes = stripEol(bytes);
         if (isEqual(strippedBytes, part) || isEqual(strippedBytes, final)) {
           if (file) {
+            // remove extra 2 bytes ([CR, LF]) from result file
+            const bytesDiff = bytes.length - strippedBytes.length;
+            if (bytesDiff) {
+              const originalBytesSize = await file.seek(
+                -bytesDiff,
+                Deno.SeekMode.Current,
+              );
+              await file.truncate(originalBytesSize);
+            }
+
             file.close();
           }
           yield [
