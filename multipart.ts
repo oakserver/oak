@@ -185,7 +185,10 @@ async function* parts(
             // remove extra 2 bytes ([CR, LF]) from result file
             const bytesDiff = bytes.length - strippedBytes.length;
             if (bytesDiff) {
-              const originalBytesSize = await file.seek(-bytesDiff, Deno.SeekMode.Current);
+              const originalBytesSize = await file.seek(
+                -bytesDiff,
+                Deno.SeekMode.Current,
+              );
               await file.truncate(originalBytesSize);
             }
 

@@ -241,7 +241,8 @@ test({
 });
 
 test({
-  name: "multipart - FormDataReader - .read() no extra CRLF at the end of result file if origin file doesn't end with newline",
+  name:
+    "multipart - FormDataReader - .read() no extra CRLF at the end of result file if origin file doesn't end with newline",
   async fn() {
     const body = createBody(fixtureNoNewline);
     const fdr = new FormDataReader(fixtureContentType, body);
