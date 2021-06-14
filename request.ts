@@ -83,7 +83,7 @@ export class Request {
   get url(): URL {
     if (!this.#url) {
       const serverRequest = this.#serverRequest;
-      if (serverRequest instanceof NativeRequest) {
+      if (serverRequest instanceof NativeRequest && !this.#proxy) {
         // between 1.9.0 and 1.9.1 the request.url of the native HTTP started
         // returning the full URL, where previously it only returned the path
         // so we will try to use that URL here, but default back to old logic
