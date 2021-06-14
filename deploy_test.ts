@@ -18,7 +18,7 @@ Deno.test({
         ip: "127.0.0.1",
         ips: ["127.0.0.1"],
         secure: true,
-        url: "https://localhost/",
+        url: "http://localhost/",
       });
     });
   },

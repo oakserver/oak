@@ -111,6 +111,23 @@ test({
 });
 
 test({
+  name: "set multiple cookies",
+  fn() {
+    const request = createMockRequest();
+    const response = createMockResponse();
+    const cookies = new Cookies(request, response);
+    cookies.set("a", "a");
+    cookies.set("b", "b");
+    cookies.set("c", "c");
+    assertEquals([...response.headers], [
+      ["set-cookie", "a=a; path=/; httponly"],
+      ["set-cookie", "b=b; path=/; httponly"],
+      ["set-cookie", "c=c; path=/; httponly"],
+    ]);
+  },
+});
+
+test({
   name: "set cookie with options",
   fn() {
     const request = createMockRequest();

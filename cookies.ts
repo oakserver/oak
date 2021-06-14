@@ -287,10 +287,8 @@ export class Cookies {
   ): this {
     const request = this.#request;
     const response = this.#response;
-    let headers = response.headers.get("Set-Cookie") ?? [] as string[];
-    if (typeof headers === "string") {
-      headers = [headers];
-    }
+    const existingSetCookie = response.headers.get("Set-Cookie");
+    const headers = existingSetCookie ? existingSetCookie.split(/,\s+/) : [];
     const secure = this.#secure !== undefined ? this.#secure : request.secure;
     const signed = options.signed ?? !!this.#keys;
 
@@ -313,6 +311,7 @@ export class Cookies {
       pushCookie(headers, cookie);
     }
 
+    response.headers.delete("Set-Cookie");
     for (const header of headers) {
       response.headers.append("Set-Cookie", header);
     }
