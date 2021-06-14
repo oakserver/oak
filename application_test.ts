@@ -4,8 +4,9 @@
 
 import { assert, assertEquals, assertThrowsAsync } from "./test_deps.ts";
 
-import {
-  Application,
+import { Application } from "./application.ts";
+import type {
+  ApplicationErrorEvent,
   ListenOptions,
   ListenOptionsTls,
   State,
@@ -411,6 +412,40 @@ test({
     await app.listen({ port: 8000 });
     const [response] = requestResponseStack;
     assertEquals(response.status, 404);
+    teardown();
+  },
+});
+
+test({
+  name: "thrown errors in a catch block",
+  async fn() {
+    const errors: ApplicationErrorEvent<any, any>[] = [];
+    const app = new Application({ serverConstructor: MockServer });
+    serverRequestStack.push(createMockRequest());
+
+    app.addEventListener("error", (evt) => {
+      errors.push(evt);
+    });
+
+    app.use(async () => {
+      let file: Deno.File | undefined;
+      try {
+        const filename = await Deno.makeTempFile();
+        file = await Deno.open(filename, { read: true });
+        file.close();
+        file.close();
+      } catch {
+        if (file) {
+          file.close();
+        }
+      }
+    });
+
+    await app.listen({ port: 8000 });
+    const [response] = requestResponseStack;
+    assertEquals(response.status, 500);
+    assertEquals(errors.length, 1);
+    assertEquals(errors[0].error.message, "Bad resource ID");
     teardown();
   },
 });
