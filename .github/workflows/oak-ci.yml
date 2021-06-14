@@ -29,7 +29,7 @@ jobs:
         run: deno test --allow-read --allow-write
 
       - name: run tests unstable
-        run: deno test --coverage=./cov --allow-read --allow-write --unstable
+        run: deno test --coverage=./cov --allow-read --allow-write --allow-net --unstable
 
       - name: generate lcov
         run: deno coverage --unstable --lcov ./cov > cov.lcov

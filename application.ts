@@ -121,6 +121,16 @@ export interface ApplicationOptions<S> {
   state?: S;
 }
 
+export interface FetchEventHandlerOptions {
+  /** Sets the applications `.proxy` value, which determines if proxy headers
+   * are used when determining values in the request. This defaults to `true`.
+   */
+  proxy?: boolean;
+  /** Determines if requests handled by the fetch event handler should be
+   * treated as "secure" (e.g. served over HTTP). This defaults to `true`. */
+  secure?: boolean;
+}
+
 interface RequestState {
   handling: Set<Promise<void>>;
   closing: boolean;
@@ -336,6 +346,10 @@ export class Application<AS extends State = Record<string, any>>
   /** When using Deno Deploy, this method can create an event handler object
    * for the application which can be registered as a fetch event handler.
    *
+   * _Note_ the result of this method is memoized, meaning that subsequent calls
+   * to the method with different options still results in the same behavior of
+   * the handler.
+   *
    * ```
    * import { Application } from "https://deno.land/x/oak/mod.ts";
    *
@@ -345,10 +359,13 @@ export class Application<AS extends State = Record<string, any>>
    * addEventListener("fetch", app.fetchEventHandler());
    * ```
    */
-  fetchEventHandler(): FetchEventListenerObject {
+  fetchEventHandler(
+    { proxy = true, secure = true }: FetchEventHandlerOptions = {},
+  ): FetchEventListenerObject {
     if (this.#eventHandler) {
       return this.#eventHandler;
     }
+    this.proxy = proxy;
     return this.#eventHandler = {
       handleEvent: async (requestEvent) => {
         let resolve: (response: Response) => void;
@@ -359,7 +376,11 @@ export class Application<AS extends State = Record<string, any>>
           reject = rej;
         });
         const respondedPromise = requestEvent.respondWith(responsePromise);
-        const response = await this.handle(requestEvent.request);
+        const response = await this.handle(
+          requestEvent.request,
+          undefined,
+          secure,
+        );
         if (response) {
           resolve!(response);
         } else {
@@ -383,7 +404,7 @@ export class Application<AS extends State = Record<string, any>>
   handle = (async (
     request: ServerRequest | Request,
     secureOrConn: Deno.Conn | boolean | undefined,
-    secure = false,
+    secure: boolean | undefined = false,
   ): Promise<ServerResponse | Response | undefined> => {
     if (!this.#middleware.length) {
       throw new TypeError("There is no middleware to process requests.");
@@ -408,7 +429,7 @@ export class Application<AS extends State = Record<string, any>>
     const context = new Context(
       this,
       contextRequest,
-      secure as boolean | undefined,
+      secure,
     );
     try {
       await this.#getComposed()(context);

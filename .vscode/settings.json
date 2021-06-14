@@ -3,6 +3,7 @@
   "deno.unstable": true,
   "deno.lint": true,
   "deno.codeLens.testArgs": [
+    "--allow-net",
     "--allow-read",
     "--allow-write"
   ],

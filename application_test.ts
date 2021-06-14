@@ -623,7 +623,83 @@ test({
     await handler.handleEvent({ request, respondWith } as FetchEvent);
     assertEquals(respondCount, 1);
     assert(response);
-    assert(await response.text(), "hello oak");
+    assertEquals(await response.text(), "hello oak");
+  },
+});
+
+test({
+  name: "application .fetchEventHandler() - proxy handling",
+  async fn() {
+    let respondCount = 0;
+    let response: Response | undefined;
+
+    async function respondWith(
+      p: Response | Promise<Response>,
+    ): Promise<Response> {
+      respondCount++;
+      response = await p;
+      return response;
+    }
+
+    const app = new Application();
+    app.use((ctx) => {
+      ctx.response.body = {
+        ip: ctx.request.ip,
+        ips: ctx.request.ips,
+      };
+      ctx.response.type = "json";
+    });
+    const handler = app.fetchEventHandler();
+    const request = new Request("http://localhost:8000/", {
+      headers: {
+        "x-forwarded-for": "127.0.0.1, 192.168.0.1",
+      },
+    });
+    await handler.handleEvent({ request, respondWith } as FetchEvent);
+    assertEquals(respondCount, 1);
+    assert(response);
+    assertEquals(await response.json(), {
+      ip: "127.0.0.1",
+      ips: ["127.0.0.1", "192.168.0.1"],
+    });
+  },
+});
+
+test({
+  name: "application .fetchEventHandler() - secure option",
+  async fn() {
+    let respondCount = 0;
+    let response: Response | undefined;
+
+    async function respondWith(
+      p: Response | Promise<Response>,
+    ): Promise<Response> {
+      respondCount++;
+      response = await p;
+      return response;
+    }
+
+    let middleware = (ctx: Context) => {
+      ctx.response.body = { secure: ctx.request.secure };
+      ctx.response.type = "json";
+    };
+    let app = new Application();
+    app.use(middleware);
+    let handler = app.fetchEventHandler();
+    let request = new Request("https://localhost:8000/");
+    await handler.handleEvent({ request, respondWith } as FetchEvent);
+    assertEquals(respondCount, 1);
+    assert(response);
+    assertEquals(await response.json(), { secure: true });
+
+    app = new Application();
+    app.use(middleware);
+    handler = app.fetchEventHandler({ secure: false });
+    request = new Request("https://localhost:8000/");
+    await handler.handleEvent({ request, respondWith } as FetchEvent);
+    assertEquals(respondCount, 2);
+    assert(response);
+    assertEquals(await response.json(), { secure: false });
   },
 });
 
