@@ -1,5 +1,9 @@
 # oak Change Log
 
+## Version 7.6.1
+
+- fix: handleError works correctly under Deploy (0d929ea)
+
 ## Version 7.6.0
 
 - feat: improve support for Deno Deploy (2426ff2)
