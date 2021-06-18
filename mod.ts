@@ -32,6 +32,8 @@ export type { NativeRequest } from "./http_server_native.ts";
 export { HttpServerStd } from "./http_server_std.ts";
 export type { ServerRequest, ServerResponse } from "./http_server_std.ts";
 export { HttpError, httpErrors, isHttpError } from "./httpError.ts";
+export { proxy } from "./middleware/proxy.ts";
+export type { ProxyOptions } from "./middleware/proxy.ts";
 export { compose as composeMiddleware } from "./middleware.ts";
 export type { Middleware } from "./middleware.ts";
 export { FormDataReader } from "./multipart.ts";

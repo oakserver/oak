@@ -31,7 +31,7 @@ export class Request {
   #getRemoteAddr(): string {
     return this.#serverRequest instanceof NativeRequest
       ? this.#serverRequest.remoteAddr ?? ""
-      : (this.#serverRequest.conn.remoteAddr as Deno.NetAddr).hostname;
+      : (this.#serverRequest.conn.remoteAddr as Deno.NetAddr).hostname ?? "";
   }
 
   /** Is `true` if the request has a body, otherwise `false`. */
@@ -48,7 +48,7 @@ export class Request {
    * `X-Forwarded-For` will be used to determine the requesting remote address.
    */
   get ip(): string {
-    return this.#proxy ? this.ips[0] : this.#getRemoteAddr();
+    return (this.#proxy ? this.ips[0] : this.#getRemoteAddr()) ?? "";
   }
 
   /** When the application's `.proxy` is `true`, this will be set to an array of

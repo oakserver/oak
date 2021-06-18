@@ -32,6 +32,7 @@ export interface MockContextOptions<
   S extends State = Record<string, any>,
 > {
   app?: Application<S>;
+  ip?: string;
   method?: string;
   params?: P;
   path?: string;
@@ -52,6 +53,7 @@ export function createMockContext<
 >(
   {
     app,
+    ip = "127.0.0.1",
     method = "GET",
     params,
     path = "/",
@@ -73,6 +75,7 @@ export function createMockContext<
         return mockContextState.encodingsAccepted;
       },
       headers: new Headers(),
+      ip,
       method,
       path,
       search: undefined,

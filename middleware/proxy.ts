@@ -1,0 +1,227 @@
+// Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
+
+import type { State } from "../application.ts";
+import type { Context } from "../context.ts";
+import type { Middleware } from "../middleware.ts";
+import type {
+  RouteParams,
+  RouterContext,
+  RouterMiddleware,
+} from "../router.ts";
+import { isRouterContext } from "../util.ts";
+
+export type Fetch = (input: Request) => Promise<Response>;
+
+export type ProxyMatchFunction<
+  P extends RouteParams = RouteParams,
+  // deno-lint-ignore no-explicit-any
+  S extends State = Record<string, any>,
+> = (ctx: Context<S> | RouterContext<P, S>) => boolean;
+
+export type ProxyMapFunction<P extends RouteParams> = (
+  path: string,
+  params?: P,
+) => string;
+
+export type ProxyHeadersFunction<S extends State> = (
+  ctx: Context<S>,
+) => HeadersInit | Promise<HeadersInit>;
+
+export type ProxyRouterHeadersFunction<P extends RouteParams, S extends State> =
+  (ctx: RouterContext<P, S>) => HeadersInit | Promise<HeadersInit>;
+
+export interface ProxyOptions<
+  P extends RouteParams = RouteParams,
+  // deno-lint-ignore no-explicit-any
+  S extends State = Record<string, any>,
+> {
+  /** The fetch function to use to proxy the request. This defaults to the
+   * global `fetch` function. This is designed for test mocking purposes. */
+  fetch?: Fetch;
+  /** Additional headers that should be set in the response. The value can
+   * be a headers init value or a function that returns or resolves with a
+   * headers init value. */
+  headers?:
+    | HeadersInit
+    | ProxyHeadersFunction<S>
+    | ProxyRouterHeadersFunction<P, S>;
+  /** Either a record or a proxy map function that will allow proxied requests
+   * being handled by the middleware to be remapped to a different remote
+   * path. */
+  map?: Record<string, string> | ProxyMapFunction<P>;
+  /** A string, regular expression or proxy match function what determines if
+   * the proxy middleware should proxy the request.
+   *
+   * If the value is a string the match will be true if the requests pathname
+   * starts with the string. In the case of a regular expression, if the
+   * pathname
+   * */
+  match?:
+    | string
+    | RegExp
+    | ProxyMatchFunction<P, S>;
+  /** A flag that indicates if traditional proxy headers should be set in the
+   * response. This defaults to `true`.
+   */
+  proxyHeaders?: boolean;
+  /** A callback hook which will be called before each proxied fetch request
+   * to allow the native `Request` to be modified or replaced. */
+  request?(req: Request): Request | Promise<Request>;
+  /** A callback hook which will be called after each proxied fetch response
+   * is received to allow the native `Response` to be modified or replaced. */
+  response?(res: Response): Response | Promise<Response>;
+}
+
+const FORWARDED_RE =
+  /^(,[ \\t]*)*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*([ \\t]*,([ \\t]*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*)?)*$/g;
+
+function createMatcher<P extends RouteParams, S extends State>(
+  { match }: ProxyOptions<P, S>,
+) {
+  return function matches(ctx: RouterContext<P, S>): boolean {
+    if (!match) {
+      return true;
+    }
+    if (typeof match === "string") {
+      return ctx.request.url.pathname.startsWith(match);
+    }
+    if (match instanceof RegExp) {
+      return match.test(ctx.request.url.pathname);
+    }
+    return match(ctx);
+  };
+}
+
+async function createRequest<P extends RouteParams, S extends State>(
+  target: string | URL,
+  ctx: Context<S> | RouterContext<P, S>,
+  { headers: optHeaders, map, proxyHeaders = true, request: reqFn }:
+    ProxyOptions<P, S>,
+): Promise<Request> {
+  let path = ctx.request.url.pathname;
+  let params: P | undefined;
+  if (isRouterContext<P, S>(ctx)) {
+    params = ctx.params;
+  }
+  if (map && typeof map === "function") {
+    path = map(path, params);
+  } else if (map) {
+    path = map[path] ?? path;
+  }
+  const url = new URL(String(target));
+  if (url.pathname.endsWith("/") && path.startsWith("/")) {
+    url.pathname = `${url.pathname}${path.slice(1)}`;
+  } else if (!url.pathname.endsWith("/") && !path.startsWith("/")) {
+    url.pathname = `${url.pathname}/${path}`;
+  } else {
+    url.pathname = `${url.pathname}${path}`;
+  }
+  const body = getBodyInit(ctx);
+  const headers = new Headers(ctx.request.headers);
+  if (optHeaders) {
+    if (typeof optHeaders === "function") {
+      optHeaders = await optHeaders(ctx as RouterContext<P, S>);
+    }
+    for (const [key, value] of iterableHeaders(optHeaders)) {
+      headers.set(key, value);
+    }
+  }
+  if (proxyHeaders) {
+    const maybeForwarded = headers.get("forwarded");
+    const ip = ctx.request.ip.startsWith("[")
+      ? `"${ctx.request.ip}"`
+      : ctx.request.ip;
+    const host = headers.get("host");
+    if (maybeForwarded && FORWARDED_RE.test(maybeForwarded)) {
+      let value = `for=${ip}`;
+      if (host) {
+        value += `;host=${host}`;
+      }
+      headers.append("forwarded", value);
+    } else {
+      headers.append("x-forwarded-for", ip);
+      if (host) {
+        headers.append("x-forwarded-host", host);
+      }
+    }
+  }
+
+  const init: RequestInit = {
+    body,
+    headers,
+    method: ctx.request.method,
+    redirect: "follow",
+  };
+  let request = new Request(url.toString(), init);
+  if (reqFn) {
+    request = await reqFn(request);
+  }
+  return request;
+}
+
+function getBodyInit<P extends RouteParams, S extends State>(
+  ctx: Context<S> | RouterContext<P, S>,
+): BodyInit | null {
+  if (!ctx.request.hasBody) {
+    return null;
+  }
+  return ctx.request.body({ type: "stream" }).value;
+}
+
+function iterableHeaders(
+  headers: HeadersInit,
+): IterableIterator<[string, string]> {
+  if (headers instanceof Headers) {
+    return headers.entries();
+  } else if (Array.isArray(headers)) {
+    return headers.values() as IterableIterator<[string, string]>;
+  } else {
+    return Object.entries(headers).values();
+  }
+}
+
+async function processResponse<P extends RouteParams, S extends State>(
+  response: Response,
+  ctx: Context<S> | RouterContext<P, S>,
+  { response: resFn }: ProxyOptions<P, S>,
+) {
+  if (resFn) {
+    response = await resFn(response);
+  }
+  if (response.body) {
+    ctx.response.body = response.body;
+  } else {
+    ctx.response.body = null;
+  }
+  ctx.response.status = response.status;
+  for (const [key, value] of response.headers) {
+    ctx.response.headers.append(key, value);
+  }
+}
+
+/**
+ * Middleware that provides a back-to-back proxy for requests.
+ *
+ * @param target
+ * @param options
+ */
+export function proxy<S extends State>(
+  target: string | URL,
+  options?: ProxyOptions<RouteParams, S>,
+): Middleware<S>;
+export function proxy<P extends RouteParams, S extends State>(
+  target: string | URL,
+  options: ProxyOptions<P, S> = {},
+): RouterMiddleware<P, S> {
+  const matches = createMatcher(options);
+  return async function proxy(ctx, next) {
+    if (!matches(ctx)) {
+      return next();
+    }
+    const request = await createRequest(target, ctx, options);
+    const { fetch = globalThis.fetch } = options;
+    const response = await fetch(request);
+    await processResponse(response, ctx, options);
+    return next();
+  };
+}

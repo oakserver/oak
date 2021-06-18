@@ -30,6 +30,7 @@ test({
     assertEquals(typeof mod.ifRange, "function");
     assertEquals(typeof mod.MultiPartStream, "function");
     assertEquals(typeof mod.parseRange, "function");
+    assertEquals(typeof mod.proxy, "function");
     assertEquals(typeof mod.REDIRECT_BACK, "symbol");
     assertEquals(typeof mod.Request, "function");
     assertEquals(typeof mod.Response, "function");
@@ -40,6 +41,6 @@ test({
     assertEquals(typeof mod.send, "function");
     assertEquals(typeof mod.testing, "object");
     assertEquals(Object.keys(mod.testing).length, 4);
-    assertEquals(Object.keys(mod).length, 26);
+    assertEquals(Object.keys(mod).length, 27);
   },
 });
