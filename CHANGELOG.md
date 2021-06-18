@@ -1,5 +1,31 @@
 # oak Change Log
 
+## Version 7.6.0
+
+- feat: improve support for Deno Deploy (2426ff2)
+
+  Fix issues with parsing certain request fields when running under deploy.
+
+- feat: add testing utilities (7baf73c)
+
+  Add utilities for make testing oak middleware easier. See
+  [Testing oak](https://oakserver.github.io/oak/testing) for more information.
+
+- feat: proxy middleware (bbc7ab7)
+
+  Add built in proxy middleware that makes it easier to do back to back proxy
+  requests using Deno CLI or Deno Deploy.
+
+- fix(#328): use Referer instead of Referrer header (a9c56c7)
+- fix(#335): remove extra CRLF in multipart (#338)
+- fix(#333): if proxy is true, then parse headers for url (9a628e3)
+- fix(#327): properly handle setting multiple cookies (275fe08)
+- tests: fix response test fixture (5d66aa1)
+- tests: async try catch throws (b6288d6)
+- chore: refactor based on canary Deno updating to TS 4.3 (43d2699)
+- chore: incorporate upcoming Deno changes (7a69a57)
+- chore: update to Deno 1.11.1, std 0.99.0, media_types 2.9.0 (d9e5387)
+
 ## Version 7.5.0
 
 - feat: allow overriding std/native HTTP servers (771e7b0)
