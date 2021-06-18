@@ -1,5 +1,9 @@
 # oak Change Log
 
+## Version 7.6.2
+
+- feat: proxy supports content type callback (d471d1d)
+
 ## Version 7.6.1
 
 - fix: handleError works correctly under Deploy (0d929ea)
