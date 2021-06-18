@@ -9,6 +9,7 @@ middleware router inspired by [@koa/router](https://github.com/koajs/router/).
 
 - [deno doc for oak](https://doc.deno.land/https/deno.land/x/oak/mod.ts)
 - [oak and Deno Deploy](./deploy)
+- [Testing oak](./testing)
 - [Frequently Asked Questions](./FAQ)
 - [Awesome oak](https://oakserver.github.io/awesome-oak/) - Community resources
   for oak.

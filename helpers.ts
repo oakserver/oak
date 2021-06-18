@@ -2,10 +2,7 @@
 
 import type { Context } from "./context.ts";
 import type { RouterContext } from "./router.ts";
-
-function isRouterContext(value: Context): value is RouterContext {
-  return "params" in value;
-}
+import { isRouterContext } from "./util.ts";
 
 interface GetQueryOptionsBase {
   /** The return value should be a `Map` instead of a record object. */

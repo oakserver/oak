@@ -1,95 +1,21 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 import { assert, assertEquals, assertStrictEquals } from "./test_deps.ts";
+import {
+  createMockApp,
+  createMockContext,
+  mockContextState,
+} from "./testing.ts";
 
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
-import { readAll, Status } from "./deps.ts";
+import { readAll } from "./deps.ts";
 import * as etag from "./etag.ts";
 import { httpErrors } from "./httpError.ts";
+import type { RouteParams } from "./router.ts";
 import { send } from "./send.ts";
 
 const { test } = Deno;
-
-let encodingsAccepted = "identity";
-
-function createMockApp<
-  // deno-lint-ignore no-explicit-any
-  S extends Record<string | number | symbol, any> = Record<string, any>,
->(
-  state = {} as S,
-): Application<S> {
-  return {
-    state,
-    // deno-lint-ignore no-explicit-any
-  } as any;
-}
-
-function createMockContext<
-  // deno-lint-ignore no-explicit-any
-  S extends Record<string | number | symbol, any> = Record<string, any>,
->(
-  app: Application<S>,
-  path = "/",
-  method = "GET",
-) {
-  // deno-lint-ignore no-explicit-any
-  let body: any;
-  let status = Status.OK;
-  const headers = new Headers();
-  const resources: number[] = [];
-  return ({
-    app,
-    request: {
-      acceptsEncodings() {
-        return encodingsAccepted;
-      },
-      headers: new Headers(),
-      method,
-      path,
-      search: undefined,
-      searchParams: new URLSearchParams(),
-      url: new URL(`http://localhost${path}`),
-    },
-    response: {
-      get status(): Status {
-        return status;
-      },
-      set status(value: Status) {
-        status = value;
-      },
-      // deno-lint-ignore no-explicit-any
-      get body(): any {
-        return body;
-      },
-      // deno-lint-ignore no-explicit-any
-      set body(value: any) {
-        body = value;
-      },
-      addResource(rid: number) {
-        resources.push(rid);
-      },
-      destroy() {
-        body = undefined;
-        for (const rid of resources) {
-          Deno.close(rid);
-        }
-      },
-      headers,
-      toDomResponse() {
-        return Promise.resolve(new Response(body, { status, headers }));
-      },
-      toServerResponse() {
-        return Promise.resolve({
-          status,
-          body,
-          headers,
-        });
-      },
-    },
-    state: app.state,
-  } as unknown) as Context<S>;
-}
 
 // deno-lint-ignore no-explicit-any
 function isDenoReader(value: any): value is Deno.Reader {
@@ -107,9 +33,10 @@ function setup<
   app: Application<S>;
   context: Context<S>;
 } {
-  encodingsAccepted = "identity";
-  const app = createMockApp<S>();
-  const context = createMockContext<S>(app, path, method);
+  mockContextState.encodingsAccepted = "identity";
+  // deno-lint-ignore no-explicit-any
+  const app = createMockApp<any>();
+  const context = createMockContext<RouteParams, S>({ app, path, method });
   return { app, context };
 }
 
@@ -143,7 +70,7 @@ test({
   async fn() {
     const { context } = setup("/test.json");
     const fixture = await Deno.readFile("./fixtures/test.json.gz");
-    encodingsAccepted = "gzip";
+    mockContextState.encodingsAccepted = "gzip";
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
       maxbuffer: 0,
@@ -168,7 +95,7 @@ test({
   async fn() {
     const { context } = setup("/test.json");
     const fixture = await Deno.readFile("./fixtures/test.json.br");
-    encodingsAccepted = "br";
+    mockContextState.encodingsAccepted = "br";
     await send(context, context.request.url.pathname, {
       root: "./fixtures",
       maxbuffer: 0,
@@ -216,7 +143,7 @@ test({
   name: "send 404",
   async fn() {
     const { context } = setup("/foo.txt");
-    encodingsAccepted = "identity";
+    mockContextState.encodingsAccepted = "identity";
     let didThrow = false;
     try {
       await send(context, context.request.url.pathname, {
@@ -258,7 +185,7 @@ test({
   name: "send hidden file throws 403",
   async fn() {
     const { context } = setup("/.test.json");
-    encodingsAccepted = "identity";
+    mockContextState.encodingsAccepted = "identity";
     let didThrow = false;
     try {
       await send(context, context.request.url.pathname, {
@@ -276,7 +203,7 @@ test({
   name: "send file from hidden dir throws 403",
   async fn() {
     const { context } = setup("/.test/test.json");
-    encodingsAccepted = "identity";
+    mockContextState.encodingsAccepted = "identity";
     let didThrow = false;
     try {
       await send(context, context.request.url.pathname, {
@@ -367,7 +294,7 @@ test({
   name: "send path: /../file throws 403",
   async fn() {
     const { context } = setup("/../test.json");
-    encodingsAccepted = "identity";
+    mockContextState.encodingsAccepted = "identity";
     let didThrow = false;
     try {
       await send(context, "/../test.json", {

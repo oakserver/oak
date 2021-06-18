@@ -900,6 +900,13 @@ Would result in the return value being:
 }
 ```
 
+## Testing
+
+The `mod.ts` exports an object named `testing` which contains some utilities for
+testing oak middleware you might create. See the
+[Testing with oak](https://oakserver.github.io/oak/testing) for more
+information.
+
 ---
 
 There are several modules that are directly adapted from other modules. They

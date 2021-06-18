@@ -3,54 +3,11 @@
 // deno-lint-ignore-file
 
 import { assert, assertEquals, assertStrictEquals } from "./test_deps.ts";
-import type { State } from "./application.ts";
-import type { Context } from "./context.ts";
-import { Status } from "./deps.ts";
-import { createHttpError, httpErrors } from "./httpError.ts";
-import type { ErrorStatus } from "./types.d.ts";
+import { httpErrors } from "./httpError.ts";
+import { createMockContext } from "./testing.ts";
 import { compose, Middleware } from "./middleware.ts";
 
 const { test } = Deno;
-
-function createMockContext<S extends State = Record<string, any>>() {
-  return ({
-    request: {
-      headers: new Headers(),
-      method: "GET",
-      path: "/",
-      search: undefined,
-      searchParams: new URLSearchParams(),
-      url: "/",
-    },
-    response: {
-      status: Status.OK,
-      body: undefined,
-      headers: new Headers(),
-    },
-    assert(
-      condition: any,
-      errorStatus: ErrorStatus = 500,
-      message?: string,
-      props?: object,
-    ): asserts condition {
-      if (condition) {
-        return;
-      }
-      const err = createHttpError(errorStatus, message);
-      if (props) {
-        Object.assign(err, props);
-      }
-      throw err;
-    },
-    throw(errorStatus: ErrorStatus, message?: string, props?: object): never {
-      const err = createHttpError(errorStatus, message);
-      if (props) {
-        Object.assign(err, props);
-      }
-      throw err;
-    },
-  } as unknown) as Context<S>;
-}
 
 test({
   name: "test compose()",

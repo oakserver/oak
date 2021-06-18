@@ -38,6 +38,8 @@ test({
     assertEquals(typeof mod.STATUS_TEXT, "object");
     assertEquals(typeof mod.Status, "object");
     assertEquals(typeof mod.send, "function");
-    assertEquals(Object.keys(mod).length, 25);
+    assertEquals(typeof mod.testing, "object");
+    assertEquals(Object.keys(mod.testing).length, 4);
+    assertEquals(Object.keys(mod).length, 26);
   },
 });

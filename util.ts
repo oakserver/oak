@@ -1,5 +1,7 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
+import type { State } from "./application.ts";
+import type { Context } from "./context.ts";
 import {
   createHash,
   isAbsolute,
@@ -9,6 +11,7 @@ import {
   Status,
 } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
+import type { RouteParams, RouterContext } from "./router.ts";
 import type { ErrorStatus, RedirectStatus } from "./types.d.ts";
 
 const ENCODE_CHARS_REGEXP =
@@ -64,6 +67,12 @@ export function isAsyncIterable(value: unknown): value is AsyncIterable<any> {
     Symbol.asyncIterator in value &&
     // deno-lint-ignore no-explicit-any
     typeof (value as any)[Symbol.asyncIterator] === "function";
+}
+
+export function isRouterContext<P extends RouteParams, S extends State>(
+  value: Context<S>,
+): value is RouterContext<P, S> {
+  return "params" in value;
 }
 
 /** Guard for `Deno.Reader`. */

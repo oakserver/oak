@@ -46,6 +46,7 @@ export {
 } from "https://deno.land/x/media_types@v2.8.4/mod.ts";
 export {
   compile,
+  match as pathMatch,
   parse as pathParse,
   pathToRegexp,
 } from "https://deno.land/x/path_to_regexp@v6.2.0/index.ts";

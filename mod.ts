@@ -61,6 +61,7 @@ export type {
   ServerSentEventInit,
   ServerSentEventTarget,
 } from "./server_sent_event.ts";
+export * as testing from "./testing.ts";
 export type {
   ErrorStatus,
   HTTPMethods,

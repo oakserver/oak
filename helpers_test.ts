@@ -1,63 +1,10 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-// deno-lint-ignore-file
-
-import type { Application } from "./application.ts";
-import type { Context } from "./context.ts";
 import { getQuery } from "./helpers.ts";
 import { assertEquals } from "./test_deps.ts";
+import { createMockContext } from "./testing.ts";
 
 const { test } = Deno;
-
-function createMockApp<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
->(
-  state = {} as S,
-): Application<S> {
-  return {
-    state,
-  } as any;
-}
-
-interface MockContextOptions<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
-> {
-  app?: Application<S>;
-  method?: string;
-  params?: Record<string, string>;
-  path?: string;
-}
-
-function createMockContext<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
->(
-  {
-    app = createMockApp(),
-    method = "GET",
-    params,
-    path = "/",
-  }: MockContextOptions = {},
-) {
-  const headers = new Headers();
-  return ({
-    app,
-    params,
-    request: {
-      headers: new Headers(),
-      method,
-      url: new URL(path, "https://localhost/"),
-    },
-    response: {
-      status: undefined,
-      body: undefined,
-      redirect(url: string | URL) {
-        headers.set("Location", encodeURI(String(url)));
-      },
-      headers,
-    },
-    state: app.state,
-  } as unknown) as Context<S>;
-}
 
 test({
   name: "getQuery - basic",
