@@ -80,7 +80,7 @@ Deno.test({
       return Promise.resolve(new Response("hello world"));
     }
 
-    const mw = proxy("https://oakserver.gihut.io/", { fetch, match: "/oak" });
+    const mw = proxy("https://oakserver.github.io/", { fetch, match: "/oak" });
     const next = createMockNext();
 
     const ctx1 = createMockContext({
@@ -104,7 +104,7 @@ Deno.test({
       return Promise.resolve(new Response("hello world"));
     }
 
-    const mw = proxy("https://oakserver.gihut.io/", { fetch, match: /\.ts$/ });
+    const mw = proxy("https://oakserver.github.io/", { fetch, match: /\.ts$/ });
     const next = createMockNext();
 
     const ctx1 = createMockContext({
@@ -128,7 +128,7 @@ Deno.test({
       return Promise.resolve(new Response("hello world"));
     }
 
-    const mw = proxy("https://oakserver.gihut.io/", {
+    const mw = proxy("https://oakserver.github.io/", {
       fetch,
       match(ctx) {
         return ctx.request.url.pathname.startsWith("/oak");
@@ -147,5 +147,34 @@ Deno.test({
     });
     await mw(ctx2, next);
     assertStrictEquals(ctx2.response.body, undefined);
+  },
+});
+
+Deno.test({
+  name: "proxy - contentType",
+  async fn() {
+    function fetch(_request: Request) {
+      return Promise.resolve(
+        new Response(`console.log("hello world");`, {
+          headers: { "Content-Type": "text/plain" },
+        }),
+      );
+    }
+
+    const mw = proxy("https://oakserver.github.io/", {
+      fetch,
+      contentType(url, contentType) {
+        assertStrictEquals(url, "");
+        assertStrictEquals(contentType, "text/plain");
+        return "text/html";
+      },
+    });
+
+    const next = createMockNext();
+    const ctx = createMockContext({
+      path: "/oak/index.html",
+    });
+    await mw(ctx, next);
+    assertStrictEquals(ctx.response.headers.get("content-type"), "text/html");
   },
 });

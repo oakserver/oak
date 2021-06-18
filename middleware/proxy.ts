@@ -35,6 +35,14 @@ export interface ProxyOptions<
   // deno-lint-ignore no-explicit-any
   S extends State = Record<string, any>,
 > {
+  /** A callback hook that is called after the response is received which allows
+   * the response content type to be adjusted. This is for situations where the
+   * content type provided by the proxy server might not be suitable for
+   * responding with. */
+  contentType?(
+    url: string,
+    contentType?: string,
+  ): Promise<string | undefined> | string | undefined;
   /** The fetch function to use to proxy the request. This defaults to the
    * global `fetch` function. This is designed for test mocking purposes. */
   fetch?: Fetch;
@@ -183,7 +191,7 @@ function iterableHeaders(
 async function processResponse<P extends RouteParams, S extends State>(
   response: Response,
   ctx: Context<S> | RouterContext<P, S>,
-  { response: resFn }: ProxyOptions<P, S>,
+  { contentType: contentTypeFn, response: resFn }: ProxyOptions<P, S>,
 ) {
   if (resFn) {
     response = await resFn(response);
@@ -196,6 +204,15 @@ async function processResponse<P extends RouteParams, S extends State>(
   ctx.response.status = response.status;
   for (const [key, value] of response.headers) {
     ctx.response.headers.append(key, value);
+  }
+  if (contentTypeFn) {
+    const value = await contentTypeFn(
+      response.url,
+      ctx.response.headers.get("content-type") ?? undefined,
+    );
+    if (value != null) {
+      ctx.response.headers.set("content-type", value);
+    }
   }
 }
 
