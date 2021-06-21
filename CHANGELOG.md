@@ -1,5 +1,11 @@
 # oak Change Log
 
+## Version 7.6.3
+
+- fix: type check under other targets (6fdb123)
+- fix: formatting (e51751c)
+- docs: correct typo (#342)
+
 ## Version 7.6.2
 
 - feat: proxy supports content type callback (d471d1d)
