@@ -36,7 +36,7 @@ const app = new Application();
 addEventListener("fetch", app.fetchEventHandler());
 ```
 
-Then when you Deploy application receives requests, the oak application and
+Then when your Deploy application receives requests, the oak application and
 middleware will handle them.
 
 ## Better IDE Integration
