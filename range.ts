@@ -94,10 +94,14 @@ async function readRange(
   return result;
 }
 
+const encoder = new TextEncoder();
+
 /** A class that takes a file (either a Deno.File or Uint8Array) and bytes
  * and streams the ranges as a multi-part encoded HTTP body. */
 export class MultiPartStream extends ReadableStream<Uint8Array> {
   #contentLength: number;
+  #postscript: Uint8Array;
+  #preamble: Uint8Array;
 
   constructor(
     file: (Deno.Reader & Deno.Seeker & Deno.Closer) | Uint8Array,
@@ -106,21 +110,11 @@ export class MultiPartStream extends ReadableStream<Uint8Array> {
     size: number,
     boundary: string,
   ) {
-    const encoder = new TextEncoder();
-    const resolvedType = contentType(type);
-    if (!resolvedType) {
-      throw new TypeError(`Could not resolve media type for "${type}"`);
-    }
-    const preamble = encoder.encode(
-      `\n--${boundary}\nContent-Type: ${resolvedType}\n`,
-    );
-    const postscript = encoder.encode(`\n--${boundary}--\n`);
-
     super({
-      async pull(controller) {
+      pull: async (controller) => {
         const range = ranges.shift();
         if (!range) {
-          controller.enqueue(postscript);
+          controller.enqueue(this.#postscript);
           controller.close();
           if (!(file instanceof Uint8Array)) {
             file.close();
@@ -136,16 +130,25 @@ export class MultiPartStream extends ReadableStream<Uint8Array> {
         const rangeHeader = encoder.encode(
           `Content-Range: ${range.start}-${range.end}/${size}\n\n`,
         );
-        controller.enqueue(concat(preamble, rangeHeader, bytes));
+        controller.enqueue(concat(this.#preamble, rangeHeader, bytes));
       },
     });
 
+    const resolvedType = contentType(type);
+    if (!resolvedType) {
+      throw new TypeError(`Could not resolve media type for "${type}"`);
+    }
+    this.#preamble = encoder.encode(
+      `\n--${boundary}\nContent-Type: ${resolvedType}\n`,
+    );
+
+    this.#postscript = encoder.encode(`\n--${boundary}--\n`);
     this.#contentLength = ranges.reduce(
       (prev, { start, end }): number => {
-        return prev + preamble.length + String(start).length +
+        return prev + this.#preamble.length + String(start).length +
           String(end).length + String(size).length + 20 + (end - start);
       },
-      postscript.length,
+      this.#postscript.length,
     );
   }
 

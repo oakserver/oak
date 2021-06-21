@@ -7,6 +7,12 @@ import { isListenTlsOptions } from "./util.ts";
 export type Respond = (r: Response | Promise<Response>) => void;
 export const DomResponse: typeof Response = Response;
 
+// This type is part of Deno, but not part of lib.dom.d.ts, therefore add it here
+// so that type checking can occur properly under `lib.dom.d.ts`.
+interface ReadableStreamDefaultControllerCallback<R> {
+  (controller: ReadableStreamDefaultController<R>): void | PromiseLike<void>;
+}
+
 // Since the native bindings are currently unstable in Deno, we will add the
 // interfaces here, so that we can type check oak without requiring the
 // `--unstable` flag to be used.

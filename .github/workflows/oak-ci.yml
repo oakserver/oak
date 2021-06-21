@@ -31,6 +31,9 @@ jobs:
       - name: run tests unstable
         run: deno test --coverage=./cov --allow-read --allow-write --allow-net --unstable
 
+      - name: run tests using dom libs
+        run: deno test --unstable --allow-read --allow-write --allow-net --config dom.tsconfig.json
+
       - name: generate lcov
         run: deno coverage --unstable --lcov ./cov > cov.lcov
 
