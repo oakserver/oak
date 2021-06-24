@@ -124,6 +124,8 @@ async function createRequest<P extends RouteParams, S extends State>(
   } else {
     url.pathname = `${url.pathname}${path}`;
   }
+  url.search = ctx.request.url.search;
+
   const body = getBodyInit(ctx);
   const headers = new Headers(ctx.request.headers);
   if (optHeaders) {

@@ -178,3 +178,22 @@ Deno.test({
     assertStrictEquals(ctx.response.headers.get("content-type"), "text/html");
   },
 });
+
+Deno.test({
+  name: "proxy - preserves - search params",
+  async fn() {
+    function fetch(request: Request) {
+      const url = new URL(request.url);
+      assertStrictEquals(url.search, ctx.request.url.search);
+      return Promise.resolve(new Response("hello world"));
+    }
+
+    const mw = proxy("https://oakserver.github.io/", { fetch });
+
+    const next = createMockNext();
+    const ctx = createMockContext({
+      path: "/oak/index.html?query=foobar&page=42",
+    });
+    await mw(ctx, next);
+  },
+});
