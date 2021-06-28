@@ -287,8 +287,12 @@ export class Cookies {
   ): this {
     const request = this.#request;
     const response = this.#response;
-    const existingSetCookie = response.headers.get("Set-Cookie");
-    const headers = existingSetCookie ? existingSetCookie.split(/,\s+/) : [];
+    const headers: string[] = [];
+    for (const [key, value] of response.headers.entries()) {
+      if (key === "set-cookie") {
+        headers.push(value);
+      }
+    }
     const secure = this.#secure !== undefined ? this.#secure : request.secure;
     const signed = options.signed ?? !!this.#keys;
 

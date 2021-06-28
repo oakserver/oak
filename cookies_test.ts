@@ -214,3 +214,40 @@ test({
     );
   },
 });
+
+test({
+  name: "set multiple cookies with options",
+  fn() {
+    const request = createMockRequest();
+    const response = createMockResponse();
+    const cookies = new Cookies(request, response);
+    cookies.set("foo", "bar", {
+      domain: "*.example.com",
+      expires: new Date("2020-01-01T00:00:00+00:00"),
+      httpOnly: false,
+      overwrite: false,
+      path: "/foo",
+      sameSite: "strict",
+    });
+    cookies.set("a", "b", {
+      domain: "*.example.com",
+      expires: new Date("2020-01-01T00:00:00+00:00"),
+      httpOnly: false,
+      overwrite: false,
+      path: "/a",
+      sameSite: "strict",
+    });
+    cookies.set("foo", "baz", {
+      domain: "*.example.com",
+      expires: new Date("2020-01-01T00:00:00+00:00"),
+      httpOnly: false,
+      overwrite: true,
+      path: "/baz",
+      sameSite: "strict",
+    });
+    assertEquals(
+      response.headers.get("set-cookie"),
+      "a=b; path=/a; expires=Wed, 01 Jan 2020 00:00:00 GMT; domain=*.example.com; samesite=strict, foo=baz; path=/baz; expires=Wed, 01 Jan 2020 00:00:00 GMT; domain=*.example.com; samesite=strict",
+    );
+  },
+});
