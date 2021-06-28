@@ -267,7 +267,7 @@ test({
     const req = createMockServerRequest();
     assertEquals(
       Deno.inspect(new Context(app, req), { depth: 1 }),
-      `Context {\n  app: MockApplication {},\n  cookies: Cookies [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: URL {\n  href: "http://localhost/",\n  origin: "http://localhost",\n  protocol: "http:",\n  username: "",\n  password: "",\n  host: "localhost",\n  hostname: "localhost",\n  port: "",\n  pathname: "/",\n  hash: "",\n  search: ""\n}\n},\n  response: Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true },\n  socket: undefined,\n  state: {}\n}`,
+      `Context {\n  app: MockApplication {},\n  cookies: Cookies [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/"\n},\n  response: Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true },\n  socket: undefined,\n  state: {}\n}`,
     );
   },
 });
