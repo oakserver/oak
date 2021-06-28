@@ -22,6 +22,9 @@ export function createMockApp<
     use() {
       return app;
     },
+    [Symbol.for("Deno.customInspect")]() {
+      return `MockApplication {}`;
+    },
   } as any;
   return app;
 }
@@ -145,6 +148,9 @@ export function createMockContext<
         Object.assign(err, props);
       }
       throw err;
+    },
+    [Symbol.for("Deno.customInspect")]() {
+      return `MockContext {}`;
     },
   } as unknown) as RouterContext<P, S>;
 }

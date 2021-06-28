@@ -768,3 +768,13 @@ test({
     });
   },
 });
+
+test({
+  name: "Application - inspecting",
+  fn() {
+    assertEquals(
+      Deno.inspect(new Application()),
+      `Application { "#middleware": [], keys: undefined, proxy: false, state: {} }`,
+    );
+  },
+});

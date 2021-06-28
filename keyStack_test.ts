@@ -198,3 +198,13 @@ test({
     assert(keyStack.verify(data2, keyStack.sign(data1)));
   },
 });
+
+test({
+  name: "KeyStack - inspecting",
+  fn() {
+    assertEquals(
+      Deno.inspect(new KeyStack(["abcdef"])),
+      `KeyStack { length: 1 }`,
+    );
+  },
+});

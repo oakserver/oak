@@ -79,7 +79,7 @@ export class NativeRequest {
   }
 
   get remoteAddr(): string | undefined {
-    return (this.#conn?.remoteAddr as Deno.NetAddr).hostname;
+    return (this.#conn?.remoteAddr as Deno.NetAddr)?.hostname;
   }
 
   get request(): Request {

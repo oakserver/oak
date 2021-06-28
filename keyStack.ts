@@ -19,6 +19,10 @@ const replacements: Record<string, string> = {
 export class KeyStack {
   #keys: Key[];
 
+  get length(): number {
+    return this.#keys.length;
+  }
+
   /** A class which accepts an array of keys that are used to sign and verify
    * data and allows easy key rotation without invalidation of previously signed
    * data.
@@ -68,5 +72,13 @@ export class KeyStack {
       }
     }
     return -1;
+  }
+
+  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+    return `${this.constructor.name} ${
+      inspect({
+        length: this.length,
+      })
+    }`;
   }
 }

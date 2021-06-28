@@ -447,9 +447,7 @@ export class Application<AS extends State = Record<string, any>>
       context.response.destroy(false);
       return response;
     } catch (err) {
-      // deno-lint-ignore no-unreachable
       this.#handleError(context, err);
-      // deno-lint-ignore no-unreachable
       throw err;
     }
   }) as HandleMethod;
@@ -552,5 +550,12 @@ export class Application<AS extends State = Record<string, any>>
     this.#composedMiddleware = undefined;
     // deno-lint-ignore no-explicit-any
     return this as Application<any>;
+  }
+
+  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+    const { keys, proxy, state } = this;
+    return `${this.constructor.name} ${
+      inspect({ "#middleware": this.#middleware, keys, proxy, state })
+    }`;
   }
 }

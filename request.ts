@@ -31,7 +31,7 @@ export class Request {
   #getRemoteAddr(): string {
     return this.#serverRequest instanceof NativeRequest
       ? this.#serverRequest.remoteAddr ?? ""
-      : (this.#serverRequest.conn.remoteAddr as Deno.NetAddr).hostname ?? "";
+      : (this.#serverRequest?.conn?.remoteAddr as Deno.NetAddr)?.hostname ?? "";
   }
 
   /** Is `true` if the request has a body, otherwise `false`. */
@@ -235,5 +235,20 @@ export class Request {
   body(options?: BodyOptions): Body;
   body(options: BodyOptions = {}): Body | BodyReader | BodyStream {
     return this.#body.get(options);
+  }
+
+  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+    const { hasBody, headers, ip, ips, method, secure, url } = this;
+    return `${this.constructor.name} ${
+      inspect({
+        hasBody,
+        headers,
+        ip,
+        ips,
+        method,
+        secure,
+        url: url.toString(),
+      })
+    }`;
   }
 }

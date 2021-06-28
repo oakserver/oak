@@ -460,3 +460,13 @@ test({
     assertEquals(serverResponse.status, Status.OK);
   },
 });
+
+test({
+  name: "Response - inspecting",
+  fn() {
+    assertEquals(
+      Deno.inspect(new Response(createMockRequest())),
+      `Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true }`,
+    );
+  },
+});

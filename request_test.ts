@@ -294,3 +294,15 @@ test({
     );
   },
 });
+
+test({
+  name: "Request - inspecting",
+  fn() {
+    assertEquals(
+      Deno.inspect(
+        new Request(createMockServerRequest({ url: "/foo?bar=baz&qat=qux" })),
+      ),
+      `Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/foo?bar=baz&qat=qux"\n}`,
+    );
+  },
+});

@@ -377,4 +377,8 @@ export class FormDataReader {
       }
     }
   }
+
+  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+    return `${this.constructor.name} ${inspect({})}`;
+  }
 }

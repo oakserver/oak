@@ -348,6 +348,19 @@ class Layer<
       options: { ...this.#opts },
     };
   }
+
+  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+    return `${this.constructor.name} ${
+      inspect({
+        methods: this.methods,
+        middleware: this.stack,
+        options: this.#opts,
+        paramNames: this.#paramNames.map((key) => key.name),
+        path: this.path,
+        regexp: this.#regexp,
+      })
+    }`;
+  }
 }
 
 /** An interface for registering middleware that will run when certain HTTP
@@ -1055,5 +1068,11 @@ export class Router<
     options?: UrlOptions,
   ): string {
     return toUrl(path, params, options);
+  }
+
+  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+    return `${this.constructor.name} ${
+      inspect({ "#params": this.#params, "#stack": this.#stack })
+    }`;
   }
 }

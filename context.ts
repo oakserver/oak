@@ -198,4 +198,29 @@ export class Context<
     this.respond = false;
     return this.#socket;
   }
+
+  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+    const {
+      app,
+      cookies,
+      isUpgradable,
+      respond,
+      request,
+      response,
+      socket,
+      state,
+    } = this;
+    return `${this.constructor.name} ${
+      inspect({
+        app,
+        cookies,
+        isUpgradable,
+        respond,
+        request,
+        response,
+        socket,
+        state,
+      })
+    }`;
+  }
 }

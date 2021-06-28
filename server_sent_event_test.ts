@@ -310,3 +310,26 @@ test({
     assertEquals(env.appErrorEvents.length, 0);
   },
 });
+
+test({
+  name: "SSEStdLibTarget - inspecting",
+  fn() {
+    const context = new Context(createMockApp(), createMockServerRequest());
+    assertEquals(
+      Deno.inspect(new SSEStdLibTarget(context)),
+      `SSEStdLibTarget { closed: false }`,
+    );
+  },
+});
+
+test({
+  name: "SSEStreamTarget - inspecting",
+  fn() {
+    const request = createMockNativeRequest();
+    const context = new Context(createMockApp(), request);
+    assertEquals(
+      Deno.inspect(new SSEStreamTarget(context)),
+      `SSEStreamTarget {\n  "#closed": false,\n  "#context": Context {\n  app: EventTarget {},\n  cookies: Cookies [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers {},\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost:8000/"\n},\n  response: Response {\n  body: ReadableStream { locked: false },\n  headers: Headers {\n  "cache-control": "no-cache",\n  connection: "Keep-Alive",\n  "content-type": "text/event-stream",\n  "keep-alive": "timeout=9007199254740991"\n},\n  status: 200,\n  type: undefined,\n  writable: true\n},\n  socket: undefined,\n  state: undefined\n}\n}`,
+    );
+  },
+});

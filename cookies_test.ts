@@ -200,3 +200,17 @@ test({
     assertEquals([...cookies], [["bar", "foo"]]);
   },
 });
+
+test({
+  name: "Cookies - inspecting",
+  fn() {
+    const request = createMockRequest(
+      ["bar=foo", "foo=baz", "baz=1234"],
+    );
+    const response = createMockResponse();
+    assertEquals(
+      Deno.inspect(new Cookies(request, response)),
+      `Cookies [ [ "bar", "foo" ], [ "foo", "baz" ], [ "baz", "1234" ] ]`,
+    );
+  },
+});

@@ -268,6 +268,12 @@ export class SSEStreamTarget extends EventTarget
     }
     return dispatched;
   }
+
+  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+    return `${this.constructor.name} ${
+      inspect({ "#closed": this.#closed, "#context": this.#context })
+    }`;
+  }
 }
 
 export class SSEStdLibTarget extends EventTarget
@@ -423,5 +429,9 @@ export class SSEStdLibTarget extends EventTarget
       this.#prev = this.#send(String(event), this.#prev);
     }
     return dispatched;
+  }
+
+  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+    return `${this.constructor.name} ${inspect({ "closed": this.closed })}`;
   }
 }

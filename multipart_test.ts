@@ -259,3 +259,14 @@ test({
     assertEquals(file.size, 3);
   },
 });
+
+test({
+  name: "FormDataReader - inspecting",
+  fn() {
+    const body = createBody(fixture);
+    assertEquals(
+      Deno.inspect(new FormDataReader(fixtureContentType, body)),
+      `FormDataReader {}`,
+    );
+  },
+});

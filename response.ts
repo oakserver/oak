@@ -381,4 +381,11 @@ export class Response {
       status: this.status,
     };
   }
+
+  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+    const { body, headers, status, type, writable } = this;
+    return `${this.constructor.name} ${
+      inspect({ body, headers, status, type, writable })
+    }`;
+  }
 }
