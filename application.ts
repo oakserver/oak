@@ -447,7 +447,9 @@ export class Application<AS extends State = Record<string, any>>
       context.response.destroy(false);
       return response;
     } catch (err) {
+      // deno-lint-ignore no-unreachable
       this.#handleError(context, err);
+      // deno-lint-ignore no-unreachable
       throw err;
     }
   }) as HandleMethod;
