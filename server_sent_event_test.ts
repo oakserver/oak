@@ -203,6 +203,29 @@ test({
 });
 
 test({
+  name: "SSEStdLibTarget - keep-alive setting",
+  async fn() {
+    const context = new Context(createMockApp(), createMockServerRequest());
+    const sse = new SSEStdLibTarget(context, { keepAlive: 1000 });
+    const p = new Promise<void>((resolve, reject) => {
+      setTimeout(async () => {
+        try {
+          await sse.close();
+          assert(env.connCloseCalled);
+          const actual = env.outWriter.toString();
+          assert(actual.endsWith(`\n\n: keep-alive comment\n\n`));
+          assertEquals(env.appErrorEvents.length, 0);
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      }, 1250);
+    });
+    return p;
+  },
+});
+
+test({
   name: "SSEStdLibTarget - synchronous dispatch",
   async fn() {
     const context = new Context(createMockApp(), createMockServerRequest());
@@ -288,7 +311,6 @@ test({
     await request.respond(await context.response.toDomResponse());
     sse.dispatchMessage("foobar");
     await sse.close();
-    assert(env.connCloseCalled);
     assert(env.response);
     assertEquals(await env.response.text(), "data: foobar\n\n");
     assertEquals(env.appErrorEvents.length, 0);
@@ -304,10 +326,33 @@ test({
     await request.respond(await context.response.toDomResponse());
     sse.dispatchComment("foobar");
     await sse.close();
-    assert(env.connCloseCalled);
     assert(env.response);
     assertEquals(await env.response.text(), ": foobar\n\n");
     assertEquals(env.appErrorEvents.length, 0);
+  },
+});
+
+test({
+  name: "SSEStreamTarget - keep-alive setting",
+  async fn() {
+    const request = createMockNativeRequest();
+    const context = new Context(createMockApp(), request);
+    const sse = new SSEStreamTarget(context, { keepAlive: 1000 });
+    await request.respond(await context.response.toDomResponse());
+    const p = new Promise<void>((resolve, reject) => {
+      setTimeout(async () => {
+        try {
+          await sse.close();
+          assert(env.response);
+          assertEquals(await env.response.text(), ": keep-alive comment\n\n");
+          assertEquals(env.appErrorEvents.length, 0);
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      }, 1250);
+    });
+    return p;
   },
 });
 

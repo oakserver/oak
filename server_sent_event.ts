@@ -8,6 +8,8 @@ import type { ServerRequest } from "./http_server_std.ts";
 
 const encoder = new TextEncoder();
 
+const DEFAULT_KEEP_ALIVE_INTERVAL = 30_000;
+
 export interface ServerSentEventInit extends EventInit {
   /** An optional `id` which will be sent with the event and exposed in the
    * client `EventSource`. */
@@ -29,6 +31,12 @@ export interface ServerSentEventTargetOptions {
   /** Additional headers to send to the client during startup.  These headers
    * will overwrite any of the default headers if the key is duplicated. */
   headers?: Headers;
+  /** Keep client connections alive by sending a comment event to the client
+   * at a specified interval.  If `true`, then it polls every 30000 milliseconds
+   * (30 seconds). If set to a number, then it polls that number of
+   * milliseconds.  The feature is disabled if set to `false`.  It defaults to
+   * `false`. */
+  keepAlive?: boolean | number;
 }
 
 class CloseEvent extends Event {
@@ -185,6 +193,7 @@ export class SSEStreamTarget extends EventTarget
   #closed = false;
   #context: Context;
   #controller?: ReadableStreamDefaultController<Uint8Array>;
+  #keepAliveId?: number;
 
   // deno-lint-ignore no-explicit-any
   #error(error: any) {
@@ -212,7 +221,7 @@ export class SSEStreamTarget extends EventTarget
 
   constructor(
     context: Context,
-    { headers }: ServerSentEventTargetOptions = {},
+    { headers, keepAlive = false }: ServerSentEventTargetOptions = {},
   ) {
     super();
 
@@ -246,6 +255,10 @@ export class SSEStreamTarget extends EventTarget
 
     this.addEventListener("close", () => {
       this.#closed = true;
+      if (this.#keepAliveId != null) {
+        clearInterval(this.#keepAliveId);
+        this.#keepAliveId = undefined;
+      }
       if (this.#controller) {
         try {
           this.#controller.close();
@@ -255,6 +268,15 @@ export class SSEStreamTarget extends EventTarget
         }
       }
     });
+
+    if (keepAlive) {
+      const interval = typeof keepAlive === "number"
+        ? keepAlive
+        : DEFAULT_KEEP_ALIVE_INTERVAL;
+      this.#keepAliveId = setInterval(() => {
+        this.dispatchComment("keep-alive comment");
+      }, interval);
+    }
   }
 
   close(): Promise<void> {
@@ -294,6 +316,7 @@ export class SSEStdLibTarget extends EventTarget
   implements ServerSentEventTarget {
   #app: Application;
   #closed = false;
+  #keepAliveId?: number;
   #prev = Promise.resolve();
   #ready: Promise<void> | true;
   #serverRequest: ServerRequest;
@@ -349,7 +372,7 @@ export class SSEStdLibTarget extends EventTarget
 
   constructor(
     context: Context,
-    { headers }: ServerSentEventTargetOptions = {},
+    { headers, keepAlive = false }: ServerSentEventTargetOptions = {},
   ) {
     super();
     this.#app = context.app;
@@ -358,6 +381,10 @@ export class SSEStdLibTarget extends EventTarget
     this.#writer = this.#serverRequest.w;
     this.addEventListener("close", () => {
       this.#closed = true;
+      if (this.#keepAliveId != null) {
+        clearInterval(this.#keepAliveId);
+        this.#keepAliveId = undefined;
+      }
       try {
         this.#serverRequest.conn.close();
       } catch (error) {
@@ -368,6 +395,14 @@ export class SSEStdLibTarget extends EventTarget
         }
       }
     });
+    if (keepAlive) {
+      const interval = typeof keepAlive === "number"
+        ? keepAlive
+        : DEFAULT_KEEP_ALIVE_INTERVAL;
+      this.#keepAliveId = setInterval(() => {
+        this.dispatchComment("keep-alive comment");
+      }, interval);
+    }
     this.#ready = this.#setup(headers);
   }
 
