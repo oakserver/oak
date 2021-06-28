@@ -188,6 +188,7 @@ export class SSEStreamTarget extends EventTarget
 
   // deno-lint-ignore no-explicit-any
   #error(error: any) {
+    console.log("error", error);
     this.dispatchEvent(new CloseEvent({ cancelable: false }));
     const errorEvent = new ErrorEvent("error", { error });
     this.dispatchEvent(errorEvent);
@@ -222,7 +223,15 @@ export class SSEStreamTarget extends EventTarget
         this.#controller = controller;
       },
       cancel: (error) => {
-        this.#error(error);
+        // connections closing are considered "normal" for SSE events and just
+        // mean the far side has closed.
+        if (
+          error instanceof Error && error.message.includes("connection closed")
+        ) {
+          this.close();
+        } else {
+          this.#error(error);
+        }
       },
     });
 
@@ -238,7 +247,12 @@ export class SSEStreamTarget extends EventTarget
     this.addEventListener("close", () => {
       this.#closed = true;
       if (this.#controller) {
-        this.#controller.close();
+        try {
+          this.#controller.close();
+        } catch {
+          // we ignore any errors here, as it is likely that the controller
+          // is already closed
+        }
       }
     });
   }

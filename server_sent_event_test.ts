@@ -312,6 +312,29 @@ test({
 });
 
 test({
+  name: "SSEStreamTarget - connection closed readable stream",
+  async fn() {
+    let closed = false;
+    let errored = false;
+    const request = createMockNativeRequest();
+    const context = new Context(createMockApp(), request);
+    const sse = new SSEStreamTarget(context);
+    sse.addEventListener("close", () => {
+      closed = true;
+    });
+    sse.addEventListener("error", () => {
+      errored = true;
+    });
+    assert(context.response.body instanceof ReadableStream);
+    context.response.body.cancel(
+      new Error("connection closed before message completed"),
+    );
+    assert(closed);
+    assert(!errored);
+  },
+});
+
+test({
   name: "SSEStdLibTarget - inspecting",
   fn() {
     const context = new Context(createMockApp(), createMockServerRequest());

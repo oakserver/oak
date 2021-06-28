@@ -59,6 +59,7 @@ router
         { id: counter++ },
       );
       target.dispatchEvent(evt);
+      console.log("dispatched");
     }, 2000);
     target.addEventListener("close", () => {
       console.log(`${green("SSE disconnect")} ${cyan(connection)}`);
