@@ -1,5 +1,35 @@
 # oak Change Log
 
+## Version 7.7.0
+
+- feat: improve inspection/console logging (bfbf061)
+
+  Most oak classes now utilise Deno's custom inspect API to provide better
+  logging information.
+
+- feat: SSE can send keep-alive comments (3d27096)
+
+  When upgrading a connection to a server-sent-event target, the `keepAlive`
+  option can be set to allow "polling" of the connection to keep it alive (as
+  well as detect client disconnections without having to dispatch and event).
+
+- fix(proxy): Retain original search parameters (#347)
+
+  Search parameters in a proxied request are now forwarded.
+
+- fix(#343): parse out unique set-cookie headers
+
+  When setting multiple cookies in a response, adding additional cookies works
+  properly.
+
+- fix: SSEStreamTarget handles connections closing properly (0678104)
+
+  When using SSE with the native HTTP, client connections closing will now
+  trigger the `"close"` event properly.
+
+- chore: change ci to Deno 1.11.2 (bbd5fe4)
+- chore: restore lint comments until Deno 1.12 (93323c3)
+
 ## Version 7.6.3
 
 - fix: type check under other targets (6fdb123)
