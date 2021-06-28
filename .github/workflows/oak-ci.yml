@@ -15,7 +15,7 @@ jobs:
       - name: download deno
         uses: denoland/setup-deno@main
         with:
-          deno-version: canary
+          deno-version: 1.11.2
 
       - name: check format
         if: matrix.os == 'ubuntu-latest'
