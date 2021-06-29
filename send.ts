@@ -127,7 +127,7 @@ async function sendRange(
     const [byteRange] = ranges;
     response.headers.set(
       "Content-Length",
-      String(byteRange.end - byteRange.start),
+      String(byteRange.end - byteRange.start + 1),
     );
     response.headers.set(
       "Content-Range",
