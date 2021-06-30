@@ -482,8 +482,23 @@ test({
     const response = await context.response.toDomResponse();
     assertEquals(response.status, 206);
     assertEquals(context.response.type, ".json");
-    assertEquals(context.response.headers.get("content-length"), "5");
+    assertEquals(context.response.headers.get("content-length"), "6");
     assertEquals(await response.text(), `{\n  "h`);
+  },
+});
+
+test({
+  name: "range header from 0-",
+  ignore: Deno.build.os === "windows",
+  async fn() {
+    const { context } = setup("/test.json");
+    context.request.headers.set("Range", "bytes=0-");
+    await send(context, context.request.url.pathname, { root: "./fixtures" });
+    const response = await context.response.toDomResponse();
+    assertEquals(response.status, 206);
+    assertEquals(context.response.type, ".json");
+    assertEquals(context.response.headers.get("content-length"), "23");
+    assertEquals(await response.text(), `{\n  "hello": "world"\n}\n`);
   },
 });
 
