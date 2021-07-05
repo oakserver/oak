@@ -773,6 +773,8 @@ system relative to the root from the requested path.
 A basic usage would look something like this:
 
 ```ts
+//deno run --allow-net --allow-read server.ts
+
 import { Application, send } from "https://deno.land/x/oak/mod.ts";
 
 const app = new Application();
