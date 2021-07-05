@@ -17,7 +17,7 @@ import {
 } from "./deps.ts";
 import { ifRange, MultiPartStream, parseRange } from "./range.ts";
 import type { Response } from "./response.ts";
-import { decodeComponent, getBoundary, resolvePath } from "./util.ts";
+import { decodeComponent, getBoundary, resolvePath, sep } from "./util.ts";
 
 const MAXBUFFER_DEFAULT = 1_048_576; // 1MiB;
 const BOUNDARY = getBoundary();
@@ -183,7 +183,7 @@ export async function send(
     root,
   } = options;
   const trailingSlash = path[path.length - 1] === "/";
-  path = decodeComponent(path.substr(parse(path).root.length));
+  path = decodeComponent(path.substr(parse(path).root.length)).replace(new RegExp(`^${sep}+`), sep);
   if (index && trailingSlash) {
     path += index;
   }
