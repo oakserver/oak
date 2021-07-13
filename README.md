@@ -9,8 +9,9 @@
 [![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Flatest-version%2Fx%2Foak%2Fmod.ts)](https://doc.deno.land/https/deno.land/x/oak/mod.ts)
 
 A middleware framework for Deno's
-[http](https://doc.deno.land/https/deno.land/std/http/mod.ts) server, including
-a router middleware.
+[std http](https://doc.deno.land/https/deno.land/std/http/mod.ts) server, native
+HTTP server and [Deno Deploy](https://deno.com/deploy). It also includes a
+middleware router.
 
 This middleware framework is inspired by [Koa](https://github.com/koajs/koa/)
 and middleware router inspired by
@@ -54,6 +55,15 @@ app.use((ctx) => {
 
 await app.listen({ port: 8000 });
 ```
+
+You would then run this script in Deno like:
+
+```
+> deno run --allow-net helloWorld.ts
+```
+
+For more information on running code under Deno, or information on how to
+install the Deno CLI, check out the [Deno manual](https://deno.land/manual).
 
 The middleware is processed as a stack, where each middleware function can
 control the flow of the response. When the middleware is called, it is passed a
