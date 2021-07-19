@@ -17,3 +17,4 @@ export {
   assertThrows,
   assertThrowsAsync,
 } from "https://deno.land/std@0.101.0/testing/asserts.ts";
+export type { WebSocketEvent } from "https://deno.land/std@0.101.0/ws/mod.ts";

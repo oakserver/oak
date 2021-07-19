@@ -36,7 +36,7 @@ test({
         respondWithStack.push(v);
         return Promise.resolve();
       },
-    }, conn);
+    }, { conn });
     assertEquals(nativeRequest.url, `/`);
     assertEquals(respondWithStack.length, 1);
     const response = new Response("hello deno");

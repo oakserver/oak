@@ -37,8 +37,13 @@ export { assert } from "https://deno.land/std@0.101.0/testing/asserts.ts";
 export {
   acceptable,
   acceptWebSocket,
+  isWebSocketCloseEvent,
+  isWebSocketPingEvent,
+  isWebSocketPongEvent,
 } from "https://deno.land/std@0.101.0/ws/mod.ts";
-export type { WebSocket } from "https://deno.land/std@0.101.0/ws/mod.ts";
+export type {
+  WebSocket as WebSocketStd,
+} from "https://deno.land/std@0.101.0/ws/mod.ts";
 
 // 3rd party dependencies
 

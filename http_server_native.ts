@@ -3,6 +3,7 @@
 import type { Application, State } from "./application.ts";
 import type { Server } from "./types.d.ts";
 import { isListenTlsOptions } from "./util.ts";
+import type { UpgradeWebSocketOptions } from "./websocket.ts";
 
 export type Respond = (r: Response | Promise<Response>) => void;
 export const DomResponse: typeof Response = Response;
@@ -35,12 +36,33 @@ const serveHttp: (conn: Deno.Conn) => HttpConn = "serveHttp" in Deno
     )
   : undefined;
 
+interface WebSocketUpgrade {
+  response: Response;
+  websocket: WebSocket;
+}
+
+export type UpgradeWebSocketFn = (
+  request: Request,
+  options?: UpgradeWebSocketOptions,
+) => WebSocketUpgrade;
+
+const maybeUpgradeWebSocket: UpgradeWebSocketFn | undefined =
+  "upgradeWebSocket" in Deno
+    ? // deno-lint-ignore no-explicit-any
+      (Deno as any).upgradeWebSocket.bind(Deno)
+    : undefined;
+
 /**
  * Detects if the current version of Deno provides the native HTTP bindings,
  * which may be only available under the `--unstable` flag.
  */
 export function hasNativeHttp(): boolean {
   return !!serveHttp;
+}
+
+interface NativeRequestOptions {
+  conn?: Deno.Conn;
+  upgradeWebSocket?: UpgradeWebSocketFn;
 }
 
 export class NativeRequest {
@@ -51,9 +73,18 @@ export class NativeRequest {
   #requestPromise: Promise<void>;
   #resolve!: (value: Response) => void;
   #resolved = false;
+  #upgradeWebSocket?: UpgradeWebSocketFn;
 
-  constructor(requestEvent: RequestEvent, conn?: Deno.Conn) {
+  constructor(
+    requestEvent: RequestEvent,
+    options: NativeRequestOptions = {},
+  ) {
+    const { conn } = options;
     this.#conn = conn;
+    // this allows for the value to be explicitly undefined in the options
+    this.#upgradeWebSocket = "upgradeWebSocket" in options
+      ? options["upgradeWebSocket"]
+      : maybeUpgradeWebSocket;
     this.#request = requestEvent.request;
     const p = new Promise<Response>((resolve, reject) => {
       this.#resolve = resolve;
@@ -117,6 +148,22 @@ export class NativeRequest {
     this.#resolved = true;
     return this.#requestPromise;
   }
+
+  upgrade(options?: UpgradeWebSocketOptions): WebSocket {
+    if (this.#resolved) {
+      throw new Error("Request already responded to.");
+    }
+    if (!this.#upgradeWebSocket) {
+      throw new TypeError("Upgrading web sockets not supported.");
+    }
+    const { response, websocket } = this.#upgradeWebSocket(
+      this.#request,
+      options,
+    );
+    this.#resolve(response);
+    this.#resolved = true;
+    return websocket;
+  }
 }
 
 // deno-lint-ignore no-explicit-any
@@ -174,7 +221,7 @@ export class HttpServerNative<AS extends State = Record<string, any>>
             if (requestEvent === null) {
               return;
             }
-            const nativeRequest = new NativeRequest(requestEvent, conn);
+            const nativeRequest = new NativeRequest(requestEvent, { conn });
             controller.enqueue(nativeRequest);
             await nativeRequest.donePromise;
           } catch (error) {

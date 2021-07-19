@@ -15,10 +15,14 @@ import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Cookies } from "./cookies.ts";
 import { readAll } from "./deps.ts";
+import { NativeRequest } from "./http_server_native.ts";
+import type { UpgradeWebSocketFn } from "./http_server_native.ts";
 import type { ServerRequest } from "./http_server_std.ts";
-import { Request } from "./request.ts";
-import { Response } from "./response.ts";
+import { Request as OakRequest } from "./request.ts";
+import { Response as OakResponse } from "./response.ts";
 import { httpErrors } from "./httpError.ts";
+import { WebSocketShim } from "./websocket.ts";
+import type { UpgradeWebSocketOptions } from "./websocket.ts";
 
 const { test } = Deno;
 
@@ -62,6 +66,45 @@ function createMockServerRequest(
   } as any;
 }
 
+interface MockNativeOptions {
+  url?: string;
+  requestInit?: RequestInit;
+  undefinedUpgrade?: boolean;
+}
+
+let respondWithStack: (Response | Promise<Response>)[] = [];
+let upgradeWebSocketStack: [Request, UpgradeWebSocketOptions | undefined][] =
+  [];
+
+const mockWebSocket = {} as WebSocket;
+const mockResponse = {} as Response;
+
+function createMockNativeRequest(
+  {
+    url = "http://localhost/",
+    requestInit = { headers: [["host", "localhost"]] },
+    undefinedUpgrade = false,
+  }: MockNativeOptions = {},
+) {
+  respondWithStack = [];
+  upgradeWebSocketStack = [];
+  const request = new Request(url, requestInit);
+  const requestEvent = {
+    request,
+    respondWith(r: Response | Promise<Response>) {
+      respondWithStack.push(r);
+      return Promise.resolve();
+    },
+  };
+  const upgradeWebSocket: UpgradeWebSocketFn | undefined = undefinedUpgrade
+    ? undefined
+    : (request, options) => {
+      upgradeWebSocketStack.push([request, options]);
+      return { response: mockResponse, websocket: mockWebSocket };
+    };
+  return new NativeRequest(requestEvent, { upgradeWebSocket });
+}
+
 function isDenoReader(value: any): value is Deno.Reader {
   return value && typeof value === "object" && "read" in value &&
     typeof value.read === "function";
@@ -77,8 +120,8 @@ test({
     assertEquals(context.state, app.state);
     assertStrictEquals(context.app, app);
     assert(context.cookies instanceof Cookies);
-    assert(context.request instanceof Request);
-    assert(context.response instanceof Response);
+    assert(context.request instanceof OakRequest);
+    assert(context.response instanceof OakResponse);
   },
 });
 
@@ -166,19 +209,81 @@ test({
 });
 
 test({
-  name: "context.upgrade()",
+  name: "context.upgrade() - std Request",
   async fn() {
     const context = new Context(
       createMockApp(),
       createMockServerRequest({
-        headers: [["Upgrade", "websocket"], ["Sec-WebSocket-Key", "abc"]],
+        headers: [["Upgrade", "websocket"], ["Sec-WebSocket-Key", "abc"], [
+          "host",
+          "localhost",
+        ]],
       }),
     );
     assert(context.socket === undefined);
     const ws = await context.upgrade();
     assert(ws);
-    assert(context.socket === ws);
+    assert(ws instanceof WebSocketShim);
+    assertStrictEquals(context.socket, ws);
     assertEquals(context.respond, false);
+  },
+});
+
+test({
+  name: "context.upgrade() - native request",
+  async fn() {
+    const context = new Context(
+      createMockApp(),
+      createMockNativeRequest({
+        url: "http://localhost/",
+        requestInit: {
+          headers: [
+            ["upgrade", "websocket"],
+            ["sec-websocket-key", "abc"],
+            ["host", "localhost"],
+          ],
+        },
+      }),
+    );
+    assert(context.socket === undefined);
+    const ws = await context.upgrade();
+    assert(ws);
+    assertStrictEquals(context.socket, ws);
+    assertStrictEquals(ws, mockWebSocket);
+    assertEquals(context.respond, false);
+    assertEquals(respondWithStack.length, 1);
+    assertStrictEquals(await respondWithStack[0], mockResponse);
+    assertEquals(upgradeWebSocketStack.length, 1);
+  },
+});
+
+test({
+  name: "context.upgrade() - not supported",
+  async fn() {
+    const context = new Context(
+      createMockApp(),
+      createMockNativeRequest({
+        url: "http://localhost/",
+        requestInit: {
+          headers: [
+            ["upgrade", "websocket"],
+            ["sec-websocket-key", "abc"],
+            ["host", "localhost"],
+          ],
+        },
+        undefinedUpgrade: true,
+      }),
+    );
+    assert(context.socket === undefined);
+    await assertThrowsAsync(
+      async () => {
+        await context.upgrade();
+      },
+      TypeError,
+      "Upgrading web sockets not supported.",
+    );
+    assert(context.socket === undefined);
+    assertEquals(context.respond, true);
   },
 });
 
@@ -196,7 +301,7 @@ test({
 });
 
 test({
-  name: "context.isUpgradable true",
+  name: "context.isUpgradable true - std request",
   async fn() {
     const context = new Context(
       createMockApp(),
@@ -209,12 +314,50 @@ test({
 });
 
 test({
-  name: "context.isUpgradable false",
+  name: "context.isUpgradable true - native request",
+  async fn() {
+    const context = new Context(
+      createMockApp(),
+      createMockNativeRequest({
+        url: "http://localhost/",
+        requestInit: {
+          headers: [
+            ["upgrade", "websocket"],
+            ["sec-websocket-key", "abc"],
+            ["host", "localhost"],
+          ],
+        },
+      }),
+    );
+    assertEquals(context.isUpgradable, true);
+  },
+});
+
+test({
+  name: "context.isUpgradable false - std request",
   async fn() {
     const context = new Context(
       createMockApp(),
       createMockServerRequest({
         headers: [["Upgrade", "websocket"]],
+      }),
+    );
+    assertEquals(context.isUpgradable, false);
+  },
+});
+
+test({
+  name: "context.isUpgradable false - native request",
+  async fn() {
+    const context = new Context(
+      createMockApp(),
+      createMockNativeRequest({
+        url: "http://localhost/",
+        requestInit: {
+          headers: [
+            ["upgrade", "websocket"],
+          ],
+        },
       }),
     );
     assertEquals(context.isUpgradable, false);

@@ -196,7 +196,9 @@ The context passed to middleware has some methods:
 - `.upgrade()`
 
   Attempt to upgrade the connection to a web socket connection, and resolve with
-  an web socket interface. This will set `.respond` to `false`.
+  a `WebSocket` interface. Previously this would be a Deno `std` library web
+  socket but now is the web standard `WebSocket`. This will set `.respond` to
+  `false`.
 
 Unlike other middleware frameworks, `context` does not have a significant amount
 of aliases. The information about the request is only located in `.request` and
@@ -522,9 +524,6 @@ need to start your server with the `--unstable` flag. For example:
 ```
 > deno run --allow-net --unstable server.ts
 ```
-
-The only feature known to be a limitation on the native HTTP server is the
-ability to upgrade a connection to a web-socket.
 
 #### Overriding the HTTP server
 

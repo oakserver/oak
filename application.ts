@@ -417,7 +417,7 @@ export class Application<AS extends State = Record<string, any>>
         respondWith() {
           return Promise.resolve(undefined);
         },
-      }, secureOrConn);
+      }, { conn: secureOrConn });
     } else {
       assert(
         typeof secureOrConn === "boolean" ||

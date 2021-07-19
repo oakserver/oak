@@ -2,7 +2,7 @@
 
 import type { Application, State } from "./application.ts";
 import { Cookies } from "./cookies.ts";
-import { acceptable, acceptWebSocket, WebSocket } from "./deps.ts";
+import { acceptable, acceptWebSocket } from "./deps.ts";
 import { NativeRequest } from "./http_server_native.ts";
 import type { ServerRequest } from "./http_server_std.ts";
 import { createHttpError } from "./httpError.ts";
@@ -18,6 +18,8 @@ import {
 import type { ServerSentEventTarget } from "./server_sent_event.ts";
 import { structuredClone } from "./structured_clone.ts";
 import type { ErrorStatus } from "./types.d.ts";
+import { WebSocketShim } from "./websocket.ts";
+import type { UpgradeWebSocketOptions } from "./websocket.ts";
 
 export interface ContextSendOptions extends SendOptions {
   /** The filename to send, which will be resolved based on the other options.
@@ -68,7 +70,7 @@ export class Context<
   response: Response;
 
   /** If the the current context has been upgraded, then this will be set to
-   * with the web socket, otherwise it is `undefined`. */
+   * with the current web socket, otherwise it is `undefined`. */
   get socket(): WebSocket | undefined {
     return this.#socket;
   }
@@ -180,21 +182,31 @@ export class Context<
   }
 
   /** Take the current request and upgrade it to a web socket, resolving with
-   * the web socket object. This will set `.respond` to `false`. */
-  async upgrade(): Promise<WebSocket> {
+   * the a web standard `WebSocket` object. This will set `.respond` to
+   * `false`.
+   *
+   * *Note* when using the `std` library HTTP server versus the Deno native
+   * HTTP server, the `std` WebSocket is wrapped by a class that provides a
+   * web standard `WebSocket` interface. The `std` WebSocket does not handle the
+   * optional options that are provided when upgrading.
+   */
+  async upgrade(options?: UpgradeWebSocketOptions): Promise<WebSocket> {
     if (this.#socket) {
       return this.#socket;
     }
     if (this.request.originalRequest instanceof NativeRequest) {
-      throw new TypeError(
-        "Socket upgrades are not yet supported on native Deno requests.",
+      this.#socket = this.request.originalRequest.upgrade(options);
+    } else {
+      const { conn, r: bufReader, w: bufWriter, headers } =
+        this.request.originalRequest;
+      this.#socket = new WebSocketShim(
+        await acceptWebSocket(
+          { conn, bufReader, bufWriter, headers },
+        ),
+        this.request.url.toString(),
+        options?.protocol,
       );
     }
-    const { conn, r: bufReader, w: bufWriter, headers } =
-      this.request.originalRequest;
-    this.#socket = await acceptWebSocket(
-      { conn, bufReader, bufWriter, headers },
-    );
     this.respond = false;
     return this.#socket;
   }
