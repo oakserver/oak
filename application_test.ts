@@ -516,7 +516,10 @@ test({
 test({
   name: "app.addEventListener()",
   async fn() {
-    const app = new Application({ serverConstructor: MockServer });
+    const app = new Application({
+      serverConstructor: MockServer,
+      logErrors: false,
+    });
     app.addEventListener("error", (evt) => {
       assert(evt.error instanceof httpErrors.InternalServerError);
     });
@@ -532,7 +535,10 @@ test({
 test({
   name: "uncaught errors impact response",
   async fn() {
-    const app = new Application({ serverConstructor: MockServer });
+    const app = new Application({
+      serverConstructor: MockServer,
+      logErrors: false,
+    });
     serverRequestStack.push(createMockRequest());
     app.use((ctx) => {
       ctx.throw(404, "File Not Found");
@@ -545,10 +551,70 @@ test({
 });
 
 test({
+  name: "uncaught errors log by default",
+  async fn() {
+    const errorLogStack: any[][] = [];
+    const originalConsoleError = Object.getOwnPropertyDescriptor(
+      console,
+      "error",
+    );
+    assert(originalConsoleError);
+    Object.defineProperty(console, "error", {
+      value(...args: any[]) {
+        errorLogStack.push(args);
+      },
+      configurable: true,
+    });
+    const app = new Application({ serverConstructor: MockServer });
+    serverRequestStack.push(createMockRequest());
+    app.use((ctx) => {
+      ctx.throw(404, "File Not Found");
+    });
+    await app.listen({ port: 8000 });
+    Object.defineProperty(console, "error", originalConsoleError);
+    assertEquals(errorLogStack.length, 4);
+    assert(errorLogStack[0][0].startsWith("[uncaught oak error]"));
+    teardown();
+  },
+});
+
+test({
+  name: "caught errors don't dispatch error events",
+  async fn() {
+    const app = new Application({ serverConstructor: MockServer });
+    serverRequestStack.push(createMockRequest());
+    const errStack: any[] = [];
+    app.use(async (_ctx, next) => {
+      try {
+        await next();
+      } catch (err) {
+        errStack.push(err);
+      }
+    });
+    app.use((ctx) => {
+      ctx.throw(404, "File Not Found");
+    });
+    const errEventStack: ApplicationErrorEvent<any, any>[] = [];
+    app.addEventListener("error", (evt) => {
+      errEventStack.push(evt);
+    });
+    await app.listen({ port: 8000 });
+    const [response] = requestResponseStack;
+    assertEquals(response.status, 404);
+    assertEquals(errStack.length, 1);
+    assertEquals(errEventStack.length, 0);
+    teardown();
+  },
+});
+
+test({
   name: "thrown errors in a catch block",
   async fn() {
     const errors: ApplicationErrorEvent<any, any>[] = [];
-    const app = new Application({ serverConstructor: MockServer });
+    const app = new Application({
+      serverConstructor: MockServer,
+      logErrors: false,
+    });
     serverRequestStack.push(createMockRequest());
 
     app.addEventListener("error", (evt) => {
@@ -582,7 +648,10 @@ test({
   name: "errors when generating server response",
   async fn() {
     const errors: ApplicationErrorEvent<any, any>[] = [];
-    const app = new Application({ serverConstructor: MockServer });
+    const app = new Application({
+      serverConstructor: MockServer,
+      logErrors: false,
+    });
     serverRequestStack.push(createMockRequest());
 
     app.addEventListener("error", (evt) => {
@@ -609,7 +678,10 @@ test({
   name: "errors when generating native response",
   async fn() {
     const errors: ApplicationErrorEvent<any, any>[] = [];
-    const app = new Application({ serverConstructor: MockNativeServer });
+    const app = new Application({
+      serverConstructor: MockNativeServer,
+      logErrors: false,
+    });
     nativeRequestStack.push(createMockNativeRequest());
 
     app.addEventListener("error", (evt) => {

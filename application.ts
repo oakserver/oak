@@ -118,6 +118,23 @@ export interface ApplicationOptions<S> {
    * cookies produced by the application. */
   keys?: KeyStack | Key[];
 
+  /** If `true`, any errors handled by the application will be logged to the
+   * stderr. If `false` nothing will be logged. The default is `true`.
+   *
+   * All errors are available as events on the application of type `"error"` and
+   * can be accessed for custom logging/application management via adding an
+   * event listener to the application:
+   *
+   * ```ts
+   * const app = new Application({ logErrors: false });
+   * app.addEventListener("error", (evt) => {
+   *   // evt.error will contain what error was thrown
+   * });
+   * ```
+   *
+   */
+  logErrors?: boolean;
+
   /** If set to `true`, proxy headers will be trusted when processing requests.
    * This defaults to `false`. */
   proxy?: boolean;
@@ -165,6 +182,32 @@ export class ApplicationErrorEvent<S extends AS, AS extends State>
   constructor(eventInitDict: ApplicationErrorEventInit<S, AS>) {
     super("error", eventInitDict);
     this.context = eventInitDict.context;
+  }
+}
+
+function logErrorListener<S extends AS, AS extends State>(
+  { error, context }: ApplicationErrorEvent<S, AS>,
+) {
+  if (error instanceof Error) {
+    console.error(`[uncaught oak error]: ${error.name} - ${error.message}`);
+  } else {
+    console.error(`[uncaught oak error]\n`, error);
+  }
+  if (context) {
+    console.error(`\nrequest:`, {
+      url: context.request.url.toString(),
+      method: context.request.method,
+      hasBody: context.request.hasBody,
+    });
+    console.error(`response:`, {
+      status: context.response.status,
+      type: context.response.type,
+      hasBody: !!context.response.body,
+      writable: context.response.writable,
+    });
+  }
+  if (error instanceof Error && error.stack) {
+    console.error(`\n${error.stack.split("\n").slice(1).join("\n")}`);
   }
 }
 
@@ -244,6 +287,7 @@ export class Application<AS extends State = Record<string, any>>
       proxy,
       serverConstructor = hasNativeHttp() ? HttpServerNative : HttpServerStd,
       contextState = "clone",
+      logErrors = true,
     } = options;
 
     this.proxy = proxy ?? false;
@@ -251,6 +295,10 @@ export class Application<AS extends State = Record<string, any>>
     this.state = state ?? {} as AS;
     this.#serverConstructor = serverConstructor;
     this.#contextState = contextState;
+
+    if (logErrors) {
+      this.addEventListener("error", logErrorListener);
+    }
   }
 
   #getComposed(): ((context: Context<AS, AS>) => Promise<unknown>) {
