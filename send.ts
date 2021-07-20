@@ -28,6 +28,33 @@ export interface SendOptions {
    * exists. (defaults to `true`) */
   brotli?: boolean;
 
+  /** A record of extensions and content types that should be used when
+   * determining the content of a file being served. By default, the
+   * [`media_type`](https://github.com/oakserver/media_types/) database is used
+   * to map an extension to the served content-type. The keys of the map are
+   * extensions, and values are the content types to use. The content type can
+   * be a partial content type, which will be resolved to a full content type
+   * header.
+   *
+   * Any extensions matched will override the default behavior. Key should
+   * include the leading dot (e.g. `.ext` instead of just `ext`).
+   *
+   * ### Example
+   *
+   * ```ts
+   * app.use((ctx) => {
+   *   return send(ctx, ctx.request.url.pathname, {
+   *     contentTypes: {
+   *       ".importmap": "application/importmap+json"
+   *     },
+   *     root: ".",
+   *   })
+   * });
+   * ```
+   *
+   */
+  contentTypes?: Record<string, string>;
+
   /** Try to match extensions from passed array to search for file when no
    * extension is sufficed in URL. First found is served. (defaults to
    * `undefined`) */
@@ -172,6 +199,7 @@ export async function send(
 ): Promise<string | undefined> {
   const {
     brotli = true,
+    contentTypes = {},
     extensions,
     format = true,
     gzip = true,
@@ -266,7 +294,7 @@ export async function send(
   if (!response.type) {
     response.type = encodingExt !== ""
       ? extname(basename(path, encodingExt))
-      : extname(path);
+      : contentTypes[extname(path)] ?? extname(path);
   }
 
   let entity: Uint8Array | FileInfo | null = null;

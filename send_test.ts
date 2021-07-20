@@ -530,3 +530,59 @@ test({
     );
   },
 });
+
+test({
+  name: "send - contentTypes - custom",
+  async fn() {
+    const { context } = setup("/test.importmap");
+    const fixture = await Deno.readFile("./fixtures/test.importmap");
+    await send(context, context.request.url.pathname, {
+      root: "./fixtures",
+      contentTypes: {
+        ".importmap": "application/importmap+json",
+      },
+      maxbuffer: 0,
+    });
+    const serverResponse = context.response.toServerResponse();
+    const bodyReader = (await serverResponse).body;
+    assert(isDenoReader(bodyReader));
+    const body = await readAll(bodyReader);
+    assertEquals(body, fixture);
+    assertEquals(context.response.type, "application/importmap+json");
+    assertEquals(
+      context.response.headers.get("content-length"),
+      String(fixture.length),
+    );
+    assert(context.response.headers.get("last-modified") != null);
+    assertEquals(context.response.headers.get("cache-control"), "max-age=0");
+    context.response.destroy();
+  },
+});
+
+test({
+  name: "send - contentTypes - override",
+  async fn() {
+    const { context } = setup("/test.html");
+    const fixture = await Deno.readFile("./fixtures/test.html");
+    await send(context, context.request.url.pathname, {
+      root: "./fixtures",
+      contentTypes: {
+        ".html": "plain/text",
+      },
+      maxbuffer: 0,
+    });
+    const serverResponse = context.response.toServerResponse();
+    const bodyReader = (await serverResponse).body;
+    assert(isDenoReader(bodyReader));
+    const body = await readAll(bodyReader);
+    assertEquals(body, fixture);
+    assertEquals(context.response.type, "plain/text");
+    assertEquals(
+      context.response.headers.get("content-length"),
+      String(fixture.length),
+    );
+    assert(context.response.headers.get("last-modified") != null);
+    assertEquals(context.response.headers.get("cache-control"), "max-age=0");
+    context.response.destroy();
+  },
+});
