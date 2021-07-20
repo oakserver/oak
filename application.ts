@@ -329,23 +329,35 @@ export class Application<AS extends State = Record<string, any>>
       return;
     }
     let closeResources = true;
+    let response: Response | ServerResponse;
     try {
       if (request instanceof NativeRequest) {
         closeResources = false;
-        await request.respond(await context.response.toDomResponse());
+        response = await context.response.toDomResponse();
       } else {
-        await request.respond(await context.response.toServerResponse());
+        response = await context.response.toServerResponse();
       }
-      if (state.closing) {
-        state.server.close();
-        state.closed = true;
+    } catch (err) {
+      this.#handleError(context, err);
+      if (request instanceof NativeRequest) {
+        response = await context.response.toDomResponse();
+      } else {
+        response = await context.response.toServerResponse();
       }
+    }
+    assert(response);
+    try {
+      await request.respond(response as Response & ServerResponse);
     } catch (err) {
       this.#handleError(context, err);
     } finally {
       context.response.destroy(closeResources);
       resolve!();
       state.handling.delete(handlingPromise);
+      if (state.closing) {
+        state.server.close();
+        state.closed = true;
+      }
     }
   }
 

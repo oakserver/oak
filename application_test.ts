@@ -18,8 +18,7 @@ import type {
 } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
-import { HttpServerNative } from "./http_server_native.ts";
-import type { NativeRequest } from "./http_server_native.ts";
+import { HttpServerNative, NativeRequest } from "./http_server_native.ts";
 import { HttpServerStd } from "./http_server_std.ts";
 import type { ServerRequest, ServerResponse } from "./http_server_std.ts";
 import { httpErrors } from "./httpError.ts";
@@ -31,6 +30,7 @@ const { test } = Deno;
 let serverRequestStack: ServerRequest[] = [];
 let requestResponseStack: ServerResponse[] = [];
 let nativeRequestStack: NativeRequest[] = [];
+let nativeRequestResponseStack: (Promise<Response> | Response)[] = [];
 let optionsStack: Array<ListenOptions | ListenOptionsTls> = [];
 let serverClosed = false;
 
@@ -38,6 +38,7 @@ function teardown() {
   serverRequestStack = [];
   requestResponseStack = [];
   nativeRequestStack = [];
+  nativeRequestResponseStack = [];
   optionsStack = [];
   serverClosed = false;
 }
@@ -96,6 +97,21 @@ function createMockRequest(
     },
     proto,
   } as any;
+}
+
+function createMockNativeRequest(
+  url = "http://localhost/index.html",
+  requestInit?: RequestInit,
+): NativeRequest {
+  const request = new Request(url, requestInit);
+
+  return new NativeRequest({
+    request,
+    respondWith(r) {
+      nativeRequestResponseStack.push(r);
+      return Promise.resolve();
+    },
+  });
 }
 
 test({
@@ -558,6 +574,61 @@ test({
     assertEquals(response.status, 500);
     assertEquals(errors.length, 1);
     assertEquals(errors[0].error.message, "Bad resource ID");
+    teardown();
+  },
+});
+
+test({
+  name: "errors when generating server response",
+  async fn() {
+    const errors: ApplicationErrorEvent<any, any>[] = [];
+    const app = new Application({ serverConstructor: MockServer });
+    serverRequestStack.push(createMockRequest());
+
+    app.addEventListener("error", (evt) => {
+      errors.push(evt);
+    });
+
+    app.use(async (ctx) => {
+      ctx.response.body = { a: 4600119228n };
+    });
+
+    await app.listen({ port: 8000 });
+    const [response] = requestResponseStack;
+    assertEquals(response.status, 500);
+    assertEquals(errors.length, 1);
+    assertEquals(
+      errors[0].error.message,
+      "Do not know how to serialize a BigInt",
+    );
+    teardown();
+  },
+});
+
+test({
+  name: "errors when generating native response",
+  async fn() {
+    const errors: ApplicationErrorEvent<any, any>[] = [];
+    const app = new Application({ serverConstructor: MockNativeServer });
+    nativeRequestStack.push(createMockNativeRequest());
+
+    app.addEventListener("error", (evt) => {
+      errors.push(evt);
+    });
+
+    app.use(async (ctx) => {
+      ctx.response.body = { a: 4600119228n };
+    });
+
+    await app.listen({ port: 8000 });
+    const [r] = nativeRequestResponseStack;
+    const response = await r;
+    assertEquals(response.status, 500);
+    assertEquals(errors.length, 1);
+    assertEquals(
+      errors[0].error.message,
+      "Do not know how to serialize a BigInt",
+    );
     teardown();
   },
 });
