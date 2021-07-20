@@ -1,5 +1,66 @@
 # oak Change Log
 
+## Version 8.0.0
+
+- **BREAKING CHANGE** feat: add native request web socket support (9d1b770)
+
+  The ability to upgrade Deno native HTTP requests is support by Deno 1.12 and
+  later and has been integrated into oak.
+
+  This also introduces a **breaking change**, where if using the `std` server
+  with oak, the `ctx.upgrade()` will resolve with a web standard `WebSocket`
+  interface, where previously it resolved with the non-standard `std` server
+  interface.
+
+- **BREAKING CHANGE** feat: options for the way state is create for a context
+  (f360e3f)
+
+  In oak v6 and prior, the context's `.state` was simply an alias to the
+  application's `.state`. In v7, the context's `.state` was a clone of the
+  application's `.state`. The problem was that not everything that could be
+  assigned to the application's state was cloneable, leading to runtime errors
+  when trying to handle requests.
+
+  In v8, the default behavior is similar to v7, but non-clone-able properties of
+  the applications `.state` are skipped. In addition, there is a new application
+  option which can be passed up creating a new application named `contextState`
+  which takes one of several values:
+
+  - `"clone"` - this is the default behavior mentioned above.
+  - `"alias"` - this is the behavior of oak v6 and prior, where the
+    application's `.state` strictly equals the context's `.state`.
+  - `"prototype"` - this creates a new `.state` for each context, using the
+    application's `.state` as the prototype.
+  - `"empty"` - a new empty object is created for each context's `.state`.
+
+- feat: allow setting of an extension/content type map for send() (f8ee902)
+
+  `send()` takes a new option of `contextTypes` which is a record of extensions
+  and content types to use. This allows extending and overriding of the existing
+  `media_types` database when serving files.
+
+- feat: log uncaught errors by default (7669d12)
+
+  While the application has emitted `"error"` events for quite a while, many
+  users are not aware of how listen for errors. Therefore by default, the
+  application will log to stderr any uncaught errors that occur within the
+  application. This behavior can be turned off by setting the application option
+  `logErrors` to `false` when creating a new application.
+
+- fix(#352): fix content-length in Range requests (#353)
+
+- fix(#362): handle errors occurring during finalizing response (7d39e1f)
+
+  Previously, if there were issues finalizing the response, such as attempting
+  to serialize to JSON the response's body, the error would be dispatched on the
+  application, but a response would not be sent back to the client, just
+  "hanging" the client. Now, an error response (500) should be sent back to the
+  client.
+
+- docs: update readme (6efacb1)
+- chore: update to Deno 1.12.1, std 0.102.0, media_types 2.9.3 (4bc080c)
+- chore: update vscode settings (f4138f9)
+
 ## Version 7.7.0
 
 - feat: improve inspection/console logging (bfbf061)
