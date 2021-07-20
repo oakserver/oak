@@ -8,6 +8,6 @@
     "--allow-write"
   ],
   "deno.suggest.imports.hosts": {
-    "https://deno.land/x/": true
+    "https://deno.land": true
   }
 }
