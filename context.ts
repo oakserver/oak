@@ -16,7 +16,6 @@ import {
   SSEStreamTarget,
 } from "./server_sent_event.ts";
 import type { ServerSentEventTarget } from "./server_sent_event.ts";
-import { structuredClone } from "./structured_clone.ts";
 import type { ErrorStatus } from "./types.d.ts";
 import { WebSocketShim } from "./websocket.ts";
 import type { UpgradeWebSocketOptions } from "./websocket.ts";
@@ -100,10 +99,11 @@ export class Context<
   constructor(
     app: Application<AS>,
     serverRequest: ServerRequest | NativeRequest,
+    state: S,
     secure = false,
   ) {
     this.app = app;
-    this.state = structuredClone(app.state);
+    this.state = state;
     this.request = new Request(serverRequest, app.proxy, secure);
     this.respond = true;
     this.response = new Response(this.request);

@@ -20,6 +20,7 @@ import type { UpgradeWebSocketFn } from "./http_server_native.ts";
 import type { ServerRequest } from "./http_server_std.ts";
 import { Request as OakRequest } from "./request.ts";
 import { Response as OakResponse } from "./response.ts";
+import { cloneState } from "./structured_clone.ts";
 import { httpErrors } from "./httpError.ts";
 import { WebSocketShim } from "./websocket.ts";
 import type { UpgradeWebSocketOptions } from "./websocket.ts";
@@ -115,7 +116,7 @@ test({
   fn() {
     const app = createMockApp();
     const serverRequest = createMockServerRequest();
-    const context = new Context(app, serverRequest);
+    const context = new Context(app, serverRequest, cloneState(app.state));
     assert(context instanceof Context);
     assertEquals(context.state, app.state);
     assertStrictEquals(context.app, app);
@@ -131,6 +132,7 @@ test({
     const context: Context = new Context(
       createMockApp(),
       createMockServerRequest(),
+      {},
     );
     assertThrows(
       () => {
@@ -146,7 +148,7 @@ test({
 test({
   name: "context.throw()",
   fn() {
-    const context = new Context(createMockApp(), createMockServerRequest());
+    const context = new Context(createMockApp(), createMockServerRequest(), {});
     assertThrows(
       () => {
         context.throw(404, "foobar");
@@ -163,6 +165,7 @@ test({
     const context = new Context(
       createMockApp(),
       createMockServerRequest({ url: "/test.html" }),
+      {},
     );
     const fixture = await Deno.readFile("./fixtures/test.html");
     await context.send({ root: "./fixtures", maxbuffer: 0 });
@@ -185,7 +188,7 @@ test({
 test({
   name: "context.send() specified path",
   async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest());
+    const context = new Context(createMockApp(), createMockServerRequest(), {});
     const fixture = await Deno.readFile("./fixtures/test.html");
     await context.send({
       path: "/test.html",
@@ -219,6 +222,7 @@ test({
           "localhost",
         ]],
       }),
+      {},
     );
     assert(context.socket === undefined);
     const ws = await context.upgrade();
@@ -244,6 +248,7 @@ test({
           ],
         },
       }),
+      {},
     );
     assert(context.socket === undefined);
     const ws = await context.upgrade();
@@ -273,6 +278,7 @@ test({
         },
         undefinedUpgrade: true,
       }),
+      {},
     );
     assert(context.socket === undefined);
     await assertThrowsAsync(
@@ -290,7 +296,7 @@ test({
 test({
   name: "context.upgrade() failure does not set socket/respond",
   async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest());
+    const context = new Context(createMockApp(), createMockServerRequest(), {});
     assert(context.socket === undefined);
     await assertThrowsAsync(async () => {
       await context.upgrade();
@@ -308,6 +314,7 @@ test({
       createMockServerRequest({
         headers: [["Upgrade", "websocket"], ["Sec-WebSocket-Key", "abc"]],
       }),
+      {},
     );
     assertEquals(context.isUpgradable, true);
   },
@@ -328,6 +335,7 @@ test({
           ],
         },
       }),
+      {},
     );
     assertEquals(context.isUpgradable, true);
   },
@@ -341,6 +349,7 @@ test({
       createMockServerRequest({
         headers: [["Upgrade", "websocket"]],
       }),
+      {},
     );
     assertEquals(context.isUpgradable, false);
   },
@@ -359,6 +368,7 @@ test({
           ],
         },
       }),
+      {},
     );
     assertEquals(context.isUpgradable, false);
   },
@@ -367,7 +377,7 @@ test({
 test({
   name: "context.getSSETarget()",
   async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest());
+    const context = new Context(createMockApp(), createMockServerRequest(), {});
     const sse = context.sendEvents();
     sse.dispatchComment(`hello world`);
     await sse.close();
@@ -380,26 +390,10 @@ test({
     const context = new Context(
       createMockApp(),
       createMockServerRequest(),
+      {},
       true,
     );
     assertEquals(context.request.secure, true);
-  },
-});
-
-test({
-  name: "context.state mutations don't apply to app.state",
-  fn() {
-    const app = createMockApp();
-    app.state.a = "a";
-    let context = new Context(app, createMockServerRequest());
-    assertEquals(context.state, { a: "a" });
-    context.state.a = "b";
-    assertEquals(context.state, { a: "b" });
-    assertEquals(app.state, { a: "a" });
-    app.state.b = "b";
-    assertEquals(context.state, { a: "b" });
-    context = new Context(app, createMockServerRequest());
-    assertEquals(context.state, { a: "a", b: "b" });
   },
 });
 
@@ -409,7 +403,7 @@ test({
     const app = createMockApp();
     const req = createMockServerRequest();
     assertEquals(
-      Deno.inspect(new Context(app, req), { depth: 1 }),
+      Deno.inspect(new Context(app, req, {}), { depth: 1 }),
       `Context {\n  app: MockApplication {},\n  cookies: Cookies [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/"\n},\n  response: Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true },\n  socket: undefined,\n  state: {}\n}`,
     );
   },

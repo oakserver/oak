@@ -11,6 +11,7 @@ import { HttpServerStd } from "./http_server_std.ts";
 import type { ServerRequest, ServerResponse } from "./http_server_std.ts";
 import { Key, KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
+import { cloneState } from "./structured_clone.ts";
 import {
   FetchEventListenerObject,
   Server,
@@ -99,6 +100,20 @@ type ApplicationListenEventListenerOrEventListenerObject =
   | ApplicationListenEventListenerObject;
 
 export interface ApplicationOptions<S> {
+  /** Determine how when creating a new context, the state from the application
+   * should be applied. A value of `"clone"` will set the state as a clone of
+   * the app state. Any non-cloneable or non-enumerable properties will not be
+   * copied. A value of `"prototype"` means that the application's state will be
+   * used as the prototype of the the context's state, meaning shallow
+   * properties on the context's state will not be reflected in the
+   * application's state. A value of `"alias"` means that application's `.state`
+   * and the context's `.state` will be a reference to the same object. A value
+   * of `"empty"` will initialize the context's `.state` with an empty object.
+   *
+   * The default value is `"clone"`.
+   */
+  contextState?: "clone" | "prototype" | "alias" | "empty";
+
   /** An initial set of keys (or instance of `KeyGrip`) to be used for signing
    * cookies produced by the application. */
   keys?: KeyStack | Key[];
@@ -178,6 +193,7 @@ export class ApplicationListenEvent extends Event {
 export class Application<AS extends State = Record<string, any>>
   extends EventTarget {
   #composedMiddleware?: (context: Context<AS, AS>) => Promise<unknown>;
+  #contextState: "clone" | "prototype" | "alias" | "empty";
   #eventHandler?: FetchEventListenerObject;
   #keys?: KeyStack;
   #middleware: Middleware<State, Context<State, AS>>[] = [];
@@ -227,12 +243,14 @@ export class Application<AS extends State = Record<string, any>>
       keys,
       proxy,
       serverConstructor = hasNativeHttp() ? HttpServerNative : HttpServerStd,
+      contextState = "clone",
     } = options;
 
     this.proxy = proxy ?? false;
     this.keys = keys;
     this.state = state ?? {} as AS;
     this.#serverConstructor = serverConstructor;
+    this.#contextState = contextState;
   }
 
   #getComposed(): ((context: Context<AS, AS>) => Promise<unknown>) {
@@ -240,6 +258,19 @@ export class Application<AS extends State = Record<string, any>>
       this.#composedMiddleware = compose(this.#middleware);
     }
     return this.#composedMiddleware;
+  }
+
+  #getContextState(): AS {
+    switch (this.#contextState) {
+      case "alias":
+        return this.state;
+      case "clone":
+        return cloneState(this.state);
+      case "empty":
+        return {} as AS;
+      case "prototype":
+        return Object.create(this.state);
+    }
   }
 
   /** Deal with uncaught errors in either the middleware or sending the
@@ -280,7 +311,7 @@ export class Application<AS extends State = Record<string, any>>
     secure: boolean,
     state: RequestState,
   ): Promise<void> {
-    const context = new Context(this, request, secure);
+    const context = new Context(this, request, this.#getContextState(), secure);
     let resolve: () => void;
     const handlingPromise = new Promise<void>((res) => resolve = res);
     state.handling.add(handlingPromise);
@@ -429,6 +460,7 @@ export class Application<AS extends State = Record<string, any>>
     const context = new Context(
       this,
       contextRequest,
+      this.#getContextState(),
       secure,
     );
     try {

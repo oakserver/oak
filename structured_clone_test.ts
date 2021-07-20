@@ -2,16 +2,25 @@
 
 import { assert, assertEquals } from "./test_deps.ts";
 
-import { structuredClone } from "./structured_clone.ts";
+import { cloneState } from "./structured_clone.ts";
 
 const { test } = Deno;
 
 test({
-  name: "basic structured clone",
+  name: "basic cloning",
   fn() {
     const fixture = { a: "a", b: 2, c: true };
-    const actual = structuredClone(fixture);
+    const actual = cloneState(fixture);
     assert(actual !== fixture);
     assertEquals(actual, fixture);
+  },
+});
+
+test({
+  name: "cloning state with functions",
+  fn() {
+    const fixture = { a: "a", b: () => {}, c: true };
+    const actual = cloneState(fixture);
+    assertEquals(actual, { a: "a", c: true });
   },
 });

@@ -129,7 +129,7 @@ test({
 test({
   name: "SSEStdLibTarget - construction",
   async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest());
+    const context = new Context(createMockApp(), createMockServerRequest(), {});
     const sse = new SSEStdLibTarget(context);
     assertEquals(sse.closed, false);
     await sse.close();
@@ -146,7 +146,7 @@ test({
   async fn() {
     const expected =
       `HTTP/1.1 200 OK\ncache-control: special\nconnection: Keep-Alive\ncontent-type: text/event-stream\nkeep-alive: timeout=9007199254740991\nx-oak: test\n\n`;
-    const context = new Context(createMockApp(), createMockServerRequest());
+    const context = new Context(createMockApp(), createMockServerRequest(), {});
     const sse = new SSEStdLibTarget(
       context,
       {
@@ -162,7 +162,7 @@ test({
 test({
   name: "SSEStdLibTarget - dispatchEvent",
   async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest());
+    const context = new Context(createMockApp(), createMockServerRequest(), {});
     const sse = new SSEStdLibTarget(context);
     const evt = new ServerSentEvent("message", "foobar");
     sse.dispatchEvent(evt);
@@ -177,7 +177,7 @@ test({
 test({
   name: "SSEStdLibTarget - dispatchMessage",
   async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest());
+    const context = new Context(createMockApp(), createMockServerRequest(), {});
     const sse = new SSEStdLibTarget(context);
     sse.dispatchMessage("foobar");
     await sse.close();
@@ -191,7 +191,7 @@ test({
 test({
   name: "SSEStdLibTarget - dispatchComment",
   async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest());
+    const context = new Context(createMockApp(), createMockServerRequest(), {});
     const sse = new SSEStdLibTarget(context);
     sse.dispatchComment("foobar");
     await sse.close();
@@ -205,7 +205,7 @@ test({
 test({
   name: "SSEStdLibTarget - keep-alive setting",
   async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest());
+    const context = new Context(createMockApp(), createMockServerRequest(), {});
     const sse = new SSEStdLibTarget(context, { keepAlive: 1000 });
     const p = new Promise<void>((resolve, reject) => {
       setTimeout(async () => {
@@ -228,7 +228,7 @@ test({
 test({
   name: "SSEStdLibTarget - synchronous dispatch",
   async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest());
+    const context = new Context(createMockApp(), createMockServerRequest(), {});
     const sse = new SSEStdLibTarget(context);
     sse.dispatchComment("1");
     sse.dispatchComment("2");
@@ -246,7 +246,7 @@ test({
   name: "SSEStreamTarget - construction",
   async fn() {
     const request = createMockNativeRequest();
-    const context = new Context(createMockApp(), request);
+    const context = new Context(createMockApp(), request, {});
     const sse = new SSEStreamTarget(context);
     assertEquals(sse.closed, false);
     await request.respond(await context.response.toDomResponse());
@@ -269,7 +269,7 @@ test({
   name: "SSEStreamTarget - construction with headers",
   async fn() {
     const request = createMockNativeRequest();
-    const context = new Context(createMockApp(), request);
+    const context = new Context(createMockApp(), request, {});
     const sse = new SSEStreamTarget(
       context,
       {
@@ -290,7 +290,7 @@ test({
   name: "SSEStreamTarget - dispatchEvent",
   async fn() {
     const request = createMockNativeRequest();
-    const context = new Context(createMockApp(), request);
+    const context = new Context(createMockApp(), request, {});
     const sse = new SSEStreamTarget(context);
     await request.respond(await context.response.toDomResponse());
     const evt = new ServerSentEvent("message", "foobar");
@@ -306,7 +306,7 @@ test({
   name: "SSEStreamTarget - dispatchMessage",
   async fn() {
     const request = createMockNativeRequest();
-    const context = new Context(createMockApp(), request);
+    const context = new Context(createMockApp(), request, {});
     const sse = new SSEStreamTarget(context);
     await request.respond(await context.response.toDomResponse());
     sse.dispatchMessage("foobar");
@@ -321,7 +321,7 @@ test({
   name: "SSEStreamTarget - dispatchComment",
   async fn() {
     const request = createMockNativeRequest();
-    const context = new Context(createMockApp(), request);
+    const context = new Context(createMockApp(), request, {});
     const sse = new SSEStreamTarget(context);
     await request.respond(await context.response.toDomResponse());
     sse.dispatchComment("foobar");
@@ -336,7 +336,7 @@ test({
   name: "SSEStreamTarget - keep-alive setting",
   async fn() {
     const request = createMockNativeRequest();
-    const context = new Context(createMockApp(), request);
+    const context = new Context(createMockApp(), request, {});
     const sse = new SSEStreamTarget(context, { keepAlive: 1000 });
     await request.respond(await context.response.toDomResponse());
     const p = new Promise<void>((resolve, reject) => {
@@ -362,7 +362,7 @@ test({
     let closed = false;
     let errored = false;
     const request = createMockNativeRequest();
-    const context = new Context(createMockApp(), request);
+    const context = new Context(createMockApp(), request, {});
     const sse = new SSEStreamTarget(context);
     sse.addEventListener("close", () => {
       closed = true;
@@ -382,7 +382,7 @@ test({
 test({
   name: "SSEStdLibTarget - inspecting",
   fn() {
-    const context = new Context(createMockApp(), createMockServerRequest());
+    const context = new Context(createMockApp(), createMockServerRequest(), {});
     assertEquals(
       Deno.inspect(new SSEStdLibTarget(context)),
       `SSEStdLibTarget { closed: false }`,
@@ -394,10 +394,10 @@ test({
   name: "SSEStreamTarget - inspecting",
   fn() {
     const request = createMockNativeRequest();
-    const context = new Context(createMockApp(), request);
+    const context = new Context(createMockApp(), request, {});
     assertEquals(
       Deno.inspect(new SSEStreamTarget(context)),
-      `SSEStreamTarget {\n  "#closed": false,\n  "#context": Context {\n  app: EventTarget {},\n  cookies: Cookies [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers {},\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost:8000/"\n},\n  response: Response {\n  body: ReadableStream { locked: false },\n  headers: Headers {\n  "cache-control": "no-cache",\n  connection: "Keep-Alive",\n  "content-type": "text/event-stream",\n  "keep-alive": "timeout=9007199254740991"\n},\n  status: 200,\n  type: undefined,\n  writable: true\n},\n  socket: undefined,\n  state: undefined\n}\n}`,
+      `SSEStreamTarget {\n  "#closed": false,\n  "#context": Context {\n  app: EventTarget {},\n  cookies: Cookies [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers {},\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost:8000/"\n},\n  response: Response {\n  body: ReadableStream { locked: false },\n  headers: Headers {\n  "cache-control": "no-cache",\n  connection: "Keep-Alive",\n  "content-type": "text/event-stream",\n  "keep-alive": "timeout=9007199254740991"\n},\n  status: 200,\n  type: undefined,\n  writable: true\n},\n  socket: undefined,\n  state: {}\n}\n}`,
     );
   },
 });

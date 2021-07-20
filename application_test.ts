@@ -2,7 +2,12 @@
 
 // deno-lint-ignore-file
 
-import { assert, assertEquals, assertThrowsAsync } from "./test_deps.ts";
+import {
+  assert,
+  assertEquals,
+  assertStrictEquals,
+  assertThrowsAsync,
+} from "./test_deps.ts";
 
 import { Application } from "./application.ts";
 import type {
@@ -304,6 +309,113 @@ test({
 });
 
 test({
+  name: "app - contextState - clone",
+  async fn() {
+    serverRequestStack.push(createMockRequest());
+    const app = new Application({
+      contextState: "clone",
+      state: {
+        a() {},
+        b: "string",
+        c: /c/,
+      },
+      serverConstructor: MockServer,
+    });
+    let called = false;
+    app.use((ctx) => {
+      assertEquals(ctx.state, { b: "string" });
+      assert(ctx.state !== ctx.app.state);
+      called = true;
+    });
+    await app.listen({ port: 8000 });
+    assert(called);
+    teardown();
+  },
+});
+
+test({
+  name: "app - contextState - prototype",
+  async fn() {
+    serverRequestStack.push(createMockRequest());
+    const state = {
+      a: "a",
+      b: { c: "c" },
+    };
+    const app = new Application({
+      contextState: "prototype",
+      state,
+      serverConstructor: MockServer,
+    });
+    let called = false;
+    app.use<typeof state & { d: string }>((ctx) => {
+      assert(ctx.state !== ctx.app.state);
+      assert(Object.getPrototypeOf(ctx.state) === ctx.app.state);
+      assertEquals(ctx.state.a, "a");
+      assertEquals(ctx.state.b, { c: "c" });
+      ctx.state.a = "f";
+      ctx.state.d = "d";
+      ctx.state.b.c = "e";
+      assertEquals(ctx.app.state, { a: "a", b: { c: "e" } });
+      called = true;
+    });
+    await app.listen({ port: 8000 });
+    assert(called);
+    teardown();
+  },
+});
+
+test({
+  name: "app - contextState - alias",
+  async fn() {
+    serverRequestStack.push(createMockRequest());
+    const app = new Application({
+      contextState: "alias",
+      state: {
+        a() {},
+        b: "string",
+        c: /c/,
+      },
+      serverConstructor: MockServer,
+    });
+    let called = false;
+    app.use((ctx) => {
+      assertStrictEquals(ctx.state, ctx.app.state);
+      called = true;
+    });
+    await app.listen({ port: 8000 });
+    assert(called);
+    teardown();
+  },
+});
+
+test({
+  name: "app - contextState - empty",
+  async fn() {
+    serverRequestStack.push(createMockRequest());
+    const app = new Application({
+      contextState: "empty",
+      state: {
+        a() {},
+        b: "string",
+        c: /c/,
+      },
+      serverConstructor: MockServer,
+    });
+    let called = false;
+    app.use((ctx) => {
+      assert(ctx.state !== ctx.app.state);
+      assertEquals(Object.entries(ctx.state).length, 0);
+      ctx.state.b = "b";
+      assertEquals(ctx.app.state.b, "string");
+      called = true;
+    });
+    await app.listen({ port: 8000 });
+    assert(called);
+    teardown();
+  },
+});
+
+test({
   name: "app.keys undefined",
   fn() {
     const app = new Application();
@@ -323,13 +435,13 @@ test({
   name: "app.keys passed as KeyStack-like",
   fn() {
     const keys = {
-      sign(data: Data): string {
+      sign(_data: Data): string {
         return "";
       },
-      verify(data: Data, digest: string): boolean {
+      verify(_data: Data, _digest: string): boolean {
         return true;
       },
-      indexOf(data: Data, digest: string): number {
+      indexOf(_data: Data, _digest: string): number {
         return 0;
       },
     } as KeyStack;
