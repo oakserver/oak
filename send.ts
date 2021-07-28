@@ -164,7 +164,10 @@ async function sendRange(
       response.body = body.slice(byteRange.start, byteRange.end + 1);
     } else {
       await body.seek(byteRange.start, Deno.SeekMode.Start);
-      response.body = new LimitedReader(body, byteRange.end - byteRange.start);
+      response.body = new LimitedReader(
+        body,
+        byteRange.end - byteRange.start + 1,
+      );
     }
   } else {
     assert(response.type);

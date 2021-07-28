@@ -63,7 +63,7 @@ export function parseRange(value: string, size: number): ByteRange[] {
     } catch {
       throw createHttpError();
     }
-    if (start < 0 || start >= size || end < 0 || end >= size || start >= end) {
+    if (start < 0 || start >= size || end < 0 || end >= size || start > end) {
       throw createHttpError(Status.RequestedRangeNotSatisfiable);
     }
     ranges.push({ start, end });
