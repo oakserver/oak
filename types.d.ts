@@ -66,6 +66,7 @@ export type HTTPMethods =
 
 export interface Server<T> extends AsyncIterable<T> {
   close(): void;
+  listen(): Deno.Listener;
   [Symbol.asyncIterator](): AsyncIterableIterator<T>;
 }
 

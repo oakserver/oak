@@ -1,6 +1,7 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
+import { assert } from "./deps.ts";
 import type { Server } from "./types.d.ts";
 import { isListenTlsOptions } from "./util.ts";
 import type { UpgradeWebSocketOptions } from "./websocket.ts";
@@ -203,16 +204,18 @@ export class HttpServerNative<AS extends State = Record<string, any>>
     }
   }
 
+  listen(): Deno.Listener {
+    return this.#listener = isListenTlsOptions(this.#options)
+      ? Deno.listenTls(this.#options)
+      : Deno.listen(this.#options);
+  }
+
   [Symbol.asyncIterator](): AsyncIterableIterator<NativeRequest> {
     const start: ReadableStreamDefaultControllerCallback<NativeRequest> = (
       controller,
     ) => {
       // deno-lint-ignore no-this-alias
       const server = this;
-      const listener = this.#listener = isListenTlsOptions(this.#options)
-        ? Deno.listenTls(this.#options)
-        : Deno.listen(this.#options);
-
       async function serve(conn: Deno.Conn) {
         const httpConn = serveHttp(conn);
         while (true) {
@@ -234,10 +237,12 @@ export class HttpServerNative<AS extends State = Record<string, any>>
         }
       }
 
+      const listener = this.#listener;
+      assert(listener);
       async function accept() {
         while (true) {
           try {
-            const conn = await listener.accept();
+            const conn = await listener!.accept();
             serve(conn);
           } catch (error) {
             if (!server.closed) {

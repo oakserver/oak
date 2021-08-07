@@ -89,7 +89,8 @@ interface ApplicationListenEventListenerObject {
 }
 
 interface ApplicationListenEventInit extends EventInit {
-  hostname?: string;
+  hostname: string;
+  listener: Deno.Listener;
   port: number;
   secure: boolean;
   serverType: "std" | "native" | "custom";
@@ -212,7 +213,8 @@ function logErrorListener<S extends AS, AS extends State>(
 }
 
 export class ApplicationListenEvent extends Event {
-  hostname?: string;
+  hostname: string;
+  listener: Deno.Listener;
   port: number;
   secure: boolean;
   serverType: "std" | "native" | "custom";
@@ -220,6 +222,7 @@ export class ApplicationListenEvent extends Event {
   constructor(eventInitDict: ApplicationListenEventInit) {
     super("listen", eventInitDict);
     this.hostname = eventInitDict.hostname;
+    this.listener = eventInitDict.listener;
     this.port = eventInitDict.port;
     this.secure = eventInitDict.secure;
     this.serverType = eventInitDict.serverType;
@@ -585,14 +588,22 @@ export class Application<AS extends State = Record<string, any>>
         state.closing = true;
       });
     }
-    const { hostname, port, secure = false } = options;
+    const { secure = false } = options;
     const serverType = server instanceof HttpServerStd
       ? "std"
       : server instanceof HttpServerNative
       ? "native"
       : "custom";
+    const listener = server.listen();
+    const { hostname, port } = listener.addr as Deno.NetAddr;
     this.dispatchEvent(
-      new ApplicationListenEvent({ hostname, port, secure, serverType }),
+      new ApplicationListenEvent({
+        hostname,
+        listener,
+        port,
+        secure,
+        serverType,
+      }),
     );
     try {
       for await (const request of server) {

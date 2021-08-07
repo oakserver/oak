@@ -1,12 +1,13 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
-import { serve, serveTLS } from "./deps.ts";
+import { assert, serve, serveTLS } from "./deps.ts";
 import type { BufReader, BufWriter } from "./deps.ts";
 import type { Server } from "./types.d.ts";
 import { isListenTlsOptions } from "./util.ts";
 
 interface StdServer extends AsyncIterable<ServerRequest> {
+  listener: Deno.Listener;
   close(): void;
   [Symbol.asyncIterator](): AsyncIterableIterator<ServerRequest>;
 }
@@ -35,22 +36,31 @@ export interface ServerResponse {
 // deno-lint-ignore no-explicit-any
 export class HttpServerStd<AS extends State = Record<string, any>>
   implements Server<ServerRequest> {
-  #server: StdServer;
+  #options: Deno.ListenOptions | Deno.ListenTlsOptions;
+  #server: StdServer | undefined;
 
   constructor(
     _app: Application<AS>,
     options: Deno.ListenOptions | Deno.ListenTlsOptions,
   ) {
-    this.#server = isListenTlsOptions(options)
-      ? serveTLS(options)
-      : serve(options);
+    this.#options = options;
   }
 
   close(): void {
-    this.#server.close();
+    if (this.#server) {
+      this.#server.close();
+    }
+  }
+
+  listen() {
+    this.#server = isListenTlsOptions(this.#options)
+      ? serveTLS(this.#options)
+      : serve(this.#options);
+    return this.#server.listener;
   }
 
   [Symbol.asyncIterator](): AsyncIterableIterator<ServerRequest> {
+    assert(this.#server);
     return this.#server[Symbol.asyncIterator]();
   }
 }

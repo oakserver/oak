@@ -47,13 +47,23 @@ class MockServer<AS extends State = Record<string, any>>
   implements Server<ServerRequest> {
   constructor(
     _app: Application<AS>,
-    options: Deno.ListenOptions | Deno.ListenTlsOptions,
+    private options: Deno.ListenOptions | Deno.ListenTlsOptions,
   ) {
     optionsStack.push(options);
   }
 
   close(): void {
     serverClosed = true;
+  }
+
+  listen(): Deno.Listener {
+    return {
+      addr: {
+        transport: "tcp",
+        hostname: this.options.hostname,
+        port: this.options.port,
+      },
+    } as Deno.Listener;
   }
 
   async *[Symbol.asyncIterator]() {
@@ -67,13 +77,23 @@ class MockNativeServer<AS extends State = Record<string, any>>
   implements Server<NativeRequest> {
   constructor(
     _app: Application<AS>,
-    options: Deno.ListenOptions | Deno.ListenTlsOptions,
+    private options: Deno.ListenOptions | Deno.ListenTlsOptions,
   ) {
     optionsStack.push(options);
   }
 
   close(): void {
     serverClosed = true;
+  }
+
+  listen(): Deno.Listener {
+    return {
+      addr: {
+        transport: "tcp",
+        hostname: this.options.hostname,
+        port: this.options.port,
+      },
+    } as Deno.Listener;
   }
 
   async *[Symbol.asyncIterator]() {
