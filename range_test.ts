@@ -112,6 +112,7 @@ test({
       { start: 0, end: 199 },
       { start: 200, end: 399 },
     ]);
+    assertEquals(parseRange(`bytes=199-`, 200), [{ start: 199, end: 199 }]);
   },
 });
 
