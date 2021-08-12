@@ -194,24 +194,24 @@ export class Cookies {
    *
    * If there are keys set on the application, only keys and values that are
    * properly signed will be returned. */
-  *entries(): IterableIterator<[string, string]> {
+  async *entries(): AsyncIterableIterator<[string, string]> {
     const keys = this.#requestKeys();
     for (const key of keys) {
-      const value = this.get(key);
+      const value = await this.get(key);
       if (value) {
         yield [key, value];
       }
     }
   }
 
-  forEach(
+  async forEach(
     callback: (key: string, value: string, cookies: this) => void,
     // deno-lint-ignore no-explicit-any
     thisArg: any = null,
-  ): void {
+  ): Promise<void> {
     const keys = this.#requestKeys();
     for (const key of keys) {
-      const value = this.get(key);
+      const value = await this.get(key);
       if (value) {
         callback.call(thisArg, key, value, this);
       }
@@ -224,7 +224,10 @@ export class Cookies {
    * be set to be deleted in the the response.  If the signature uses an "old"
    * key, the cookie will be re-signed with the current key and be added to the
    * response to be updated. */
-  get(name: string, options: CookiesGetOptions = {}): string | undefined {
+  async get(
+    name: string,
+    options: CookiesGetOptions = {},
+  ): Promise<string | undefined> {
     const signed = options.signed ?? !!this.#keys;
     const nameSig = `${name}.sig`;
 
@@ -240,7 +243,7 @@ export class Cookies {
     if (!signed) {
       return value;
     }
-    const digest = this.get(nameSig, { signed: false });
+    const digest = await this.get(nameSig, { signed: false });
     if (!digest) {
       return;
     }
@@ -248,14 +251,14 @@ export class Cookies {
     if (!this.#keys) {
       throw new TypeError("keys required for signed cookies");
     }
-    const index = this.#keys.indexOf(data, digest);
+    const index = await this.#keys.indexOf(data, digest);
 
     if (index < 0) {
       this.delete(nameSig, { path: "/", signed: false });
     } else {
       if (index) {
         // the key has "aged" and needs to be re-signed
-        this.set(nameSig, this.#keys.sign(data), { signed: false });
+        this.set(nameSig, await this.#keys.sign(data), { signed: false });
       }
       return value;
     }
@@ -265,10 +268,10 @@ export class Cookies {
    *
    * If there are keys set on the application, only the keys that are properly
    * signed will be returned. */
-  *keys(): IterableIterator<string> {
+  async *keys(): AsyncIterableIterator<string> {
     const keys = this.#requestKeys();
     for (const key of keys) {
-      const value = this.get(key);
+      const value = await this.get(key);
       if (value) {
         yield key;
       }
@@ -280,11 +283,11 @@ export class Cookies {
    * If there are keys set in the application, cookies will be automatically
    * signed, unless overridden by the set options.  Cookies can be deleted by
    * setting the value to `null`. */
-  set(
+  async set(
     name: string,
     value: string | null,
     options: CookiesSetDeleteOptions = {},
-  ): this {
+  ): Promise<this> {
     const request = this.#request;
     const response = this.#response;
     const headers: string[] = [];
@@ -310,7 +313,7 @@ export class Cookies {
       if (!this.#keys) {
         throw new TypeError(".keys required for signed cookies.");
       }
-      cookie.value = this.#keys.sign(cookie.toString());
+      cookie.value = await this.#keys.sign(cookie.toString());
       cookie.name += ".sig";
       pushCookie(headers, cookie);
     }
@@ -326,10 +329,10 @@ export class Cookies {
    *
    * If there are keys set on the application, only the values that are
    * properly signed will be returned. */
-  *values(): IterableIterator<string> {
+  async *values(): AsyncIterableIterator<string> {
     const keys = this.#requestKeys();
     for (const key of keys) {
-      const value = this.get(key);
+      const value = await this.get(key);
       if (value) {
         yield value;
       }
@@ -341,17 +344,17 @@ export class Cookies {
    *
    * If there are keys set on the application, only keys and values that are
    * properly signed will be returned. */
-  *[Symbol.iterator](): IterableIterator<[string, string]> {
+  async *[Symbol.asyncIterator](): AsyncIterableIterator<[string, string]> {
     const keys = this.#requestKeys();
     for (const key of keys) {
-      const value = this.get(key);
+      const value = await this.get(key);
       if (value) {
         yield [key, value];
       }
     }
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
-    return `${this.constructor.name} ${inspect([...this.entries()])}`;
+  [Symbol.for("Deno.customInspect")]() {
+    return `${this.constructor.name} []`;
   }
 }

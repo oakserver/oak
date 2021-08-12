@@ -4,7 +4,9 @@
 // timing safe string comparison to avoid timing attacks as described in
 // https://codahale.com/a-lesson-in-timing-attacks/.
 
-import { assert, HmacSha256 } from "./deps.ts";
+import { assert } from "./deps.ts";
+import { importKey, sign } from "./util.ts";
+import type { Data } from "./types.d.ts";
 
 function compareArrayBuffer(a: ArrayBuffer, b: ArrayBuffer): boolean {
   assert(a.byteLength === b.byteLength, "ArrayBuffer lengths must match.");
@@ -24,13 +26,11 @@ function compareArrayBuffer(a: ArrayBuffer, b: ArrayBuffer): boolean {
  *
  * The function will return `true` if the values match, or `false`, if they
  * do not match. */
-export function compare(
-  a: string | number[] | ArrayBuffer | Uint8Array,
-  b: string | number[] | ArrayBuffer | Uint8Array,
-): boolean {
+export async function compare(a: Data, b: Data): Promise<boolean> {
   const key = new Uint8Array(32);
   globalThis.crypto.getRandomValues(key);
-  const ah = (new HmacSha256(key)).update(a).arrayBuffer();
-  const bh = (new HmacSha256(key)).update(b).arrayBuffer();
+  const cryptoKey = await importKey(key);
+  const ah = await sign(a, cryptoKey);
+  const bh = await sign(b, cryptoKey);
   return compareArrayBuffer(ah, bh);
 }

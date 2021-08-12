@@ -4,20 +4,20 @@
 // which allows signing of data (cookies) to prevent tampering, but also allows
 // for easy key rotation without needing to resign the data.
 
-import { HmacSha256 } from "./deps.ts";
 import { compare } from "./tssCompare.ts";
-
-export type Data = string | number[] | ArrayBuffer | Uint8Array;
-export type Key = string | number[] | ArrayBuffer | Uint8Array;
-
-const replacements: Record<string, string> = {
-  "/": "_",
-  "+": "-",
-  "=": "",
-};
+import { encodeBase64Safe, importKey, sign } from "./util.ts";
+import type { Data, Key } from "./types.d.ts";
 
 export class KeyStack {
+  #cryptoKeys = new Map<Key, CryptoKey>();
   #keys: Key[];
+
+  async #toCryptoKey(key: Key): Promise<CryptoKey> {
+    if (!this.#cryptoKeys.has(key)) {
+      this.#cryptoKeys.set(key, await importKey(key));
+    }
+    return this.#cryptoKeys.get(key)!;
+  }
 
   get length(): number {
     return this.#keys.length;
@@ -37,37 +37,30 @@ export class KeyStack {
     this.#keys = keys;
   }
 
-  #sign(data: Data, key: Key): string {
-    return btoa(
-      String.fromCharCode.apply(
-        undefined,
-        // deno-lint-ignore no-explicit-any
-        new Uint8Array(new HmacSha256(key).update(data).arrayBuffer()) as any,
-      ),
-    )
-      .replace(/\/|\+|=/g, (c) => replacements[c]);
-  }
-
   /** Take `data` and return a SHA256 HMAC digest that uses the current 0 index
    * of the `keys` passed to the constructor.  This digest is in the form of a
    * URL safe base64 encoded string. */
-  sign(data: Data): string {
-    return this.#sign(data, this.#keys[0]);
+  async sign(data: Data): Promise<string> {
+    const key = await this.#toCryptoKey(this.#keys[0]);
+    return encodeBase64Safe(await sign(data, key));
   }
 
   /** Given `data` and a `digest`, verify that one of the `keys` provided the
    * constructor was used to generate the `digest`.  Returns `true` if one of
    * the keys was used, otherwise `false`. */
-  verify(data: Data, digest: string): boolean {
-    return this.indexOf(data, digest) > -1;
+  async verify(data: Data, digest: string): Promise<boolean> {
+    return (await this.indexOf(data, digest)) > -1;
   }
 
   /** Given `data` and a `digest`, return the current index of the key in the
    * `keys` passed the constructor that was used to generate the digest.  If no
    * key can be found, the method returns `-1`. */
-  indexOf(data: Data, digest: string): number {
+  async indexOf(data: Data, digest: string): Promise<number> {
     for (let i = 0; i < this.#keys.length; i++) {
-      if (compare(digest, this.#sign(data, this.#keys[i]))) {
+      const cryptoKey = await this.#toCryptoKey(this.#keys[i]);
+      if (
+        await compare(digest, encodeBase64Safe(await sign(data, cryptoKey)))
+      ) {
         return i;
       }
     }

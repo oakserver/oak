@@ -9,11 +9,12 @@ import {
 } from "./http_server_native.ts";
 import { HttpServerStd } from "./http_server_std.ts";
 import type { ServerRequest, ServerResponse } from "./http_server_std.ts";
-import { Key, KeyStack } from "./keyStack.ts";
+import { KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
 import { cloneState } from "./structured_clone.ts";
 import {
   FetchEventListenerObject,
+  Key,
   Server,
   ServerConstructor,
 } from "./types.d.ts";

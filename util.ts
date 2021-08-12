@@ -2,10 +2,10 @@
 
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
-import { isAbsolute, join, normalize, sep, Status } from "./deps.ts";
+import { base64, isAbsolute, join, normalize, sep, Status } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
-import type { ErrorStatus, RedirectStatus } from "./types.d.ts";
+import type { Data, ErrorStatus, Key, RedirectStatus } from "./types.d.ts";
 
 const ENCODE_CHARS_REGEXP =
   /(?:[^\x21\x25\x26-\x3B\x3D\x3F-\x5B\x5D\x5F\x61-\x7A\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g;
@@ -378,4 +378,44 @@ export class Uint8ArrayTransformStream
     };
     super(init);
   }
+}
+
+const replacements: Record<string, string> = {
+  "/": "_",
+  "+": "-",
+  "=": "",
+};
+
+const encoder = new TextEncoder();
+
+export function encodeBase64Safe(data: string | ArrayBuffer): string {
+  return base64.encode(data).replace(/\/|\+|=/g, (c) => replacements[c]);
+}
+
+export function importKey(key: Key): Promise<CryptoKey> {
+  if (typeof key === "string") {
+    key = encoder.encode(key);
+  } else if (Array.isArray(key) || key instanceof ArrayBuffer) {
+    // TODO(@kitsonk) don't transform AB when https://github.com/denoland/deno/issues/11664 is fixed
+    key = new Uint8Array(key);
+  }
+  return window.crypto.subtle.importKey(
+    "raw",
+    key,
+    {
+      name: "HMAC",
+      hash: { name: "SHA-256" },
+    },
+    true,
+    ["sign", "verify"],
+  );
+}
+
+export function sign(data: Data, key: CryptoKey): Promise<ArrayBuffer> {
+  if (typeof data === "string") {
+    data = encoder.encode(data);
+  } else if (Array.isArray(data)) {
+    data = Uint8Array.from(data);
+  }
+  return crypto.subtle.sign("HMAC", key, data);
 }

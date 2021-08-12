@@ -37,9 +37,9 @@ app.use(async (ctx, next) => {
   ctx.response.headers.set("X-Response-Time", `${ms}ms`);
 });
 
-app.use((ctx) => {
-  const lastVisit = ctx.cookies.get("lastVisit");
-  ctx.cookies.set("lastVisit", new Date().toISOString());
+app.use(async (ctx) => {
+  const lastVisit = await ctx.cookies.get("lastVisit");
+  await ctx.cookies.set("lastVisit", new Date().toISOString());
   if (lastVisit) {
     ctx.response.body = `Welcome back. You were last here at ${lastVisit}.`;
   } else {

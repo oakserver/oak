@@ -27,19 +27,19 @@ function createMockResponse(): Response {
 
 test({
   name: "get cookie value",
-  fn() {
+  async fn() {
     const request = createMockRequest(["foo=bar"]);
     const response = createMockResponse();
     const cookies = new Cookies(request, response);
-    assertEquals(cookies.get("foo"), "bar");
-    assertEquals(cookies.get("bar"), undefined);
+    assertEquals(await cookies.get("foo"), "bar");
+    assertEquals(await cookies.get("bar"), undefined);
     assertEquals([...response.headers], []);
   },
 });
 
 test({
   name: "get signed cookie",
-  fn() {
+  async fn() {
     const request = createMockRequest(
       ["bar=foo", "bar.sig=S7GhXzJF3n4j8JwTupr7H-h25qtt_vs0stdETXZb-Ro"],
     );
@@ -49,14 +49,14 @@ test({
       response,
       { keys: new KeyStack(["secret1"]) },
     );
-    assertEquals(cookies.get("bar"), "foo");
+    assertEquals(await cookies.get("bar"), "foo");
     assertEquals([...response.headers], []);
   },
 });
 
 test({
   name: "get signed cookie requiring re-signing",
-  fn() {
+  async fn() {
     const request = createMockRequest(
       ["bar=foo", "bar.sig=S7GhXzJF3n4j8JwTupr7H-h25qtt_vs0stdETXZb-Ro"],
     );
@@ -66,7 +66,7 @@ test({
       response,
       { keys: new KeyStack(["secret2", "secret1"]) },
     );
-    assertEquals(cookies.get("bar"), "foo");
+    assertEquals(await cookies.get("bar"), "foo");
     assertEquals([...response.headers], [[
       "set-cookie",
       "bar.sig=ar46bgP3n0ZRazFOfiZ4SyZVFxKUvG1-zQZCb9lbcPI; path=/; httponly",
@@ -76,7 +76,7 @@ test({
 
 test({
   name: "get invalid signed cookie",
-  fn() {
+  async fn() {
     const request = createMockRequest(
       ["bar=foo", "bar.sig=tampered", "foo=baz"],
     );
@@ -86,8 +86,8 @@ test({
       response,
       { keys: new KeyStack(["secret1"]) },
     );
-    assertEquals(cookies.get("bar"), undefined);
-    assertEquals(cookies.get("foo"), undefined);
+    assertEquals(await cookies.get("bar"), undefined);
+    assertEquals(await cookies.get("foo"), undefined);
     assertEquals([...response.headers], [
       [
         "set-cookie",
@@ -99,11 +99,11 @@ test({
 
 test({
   name: "set cookie",
-  fn() {
+  async fn() {
     const request = createMockRequest();
     const response = createMockResponse();
     const cookies = new Cookies(request, response);
-    cookies.set("foo", "bar");
+    await cookies.set("foo", "bar");
     assertEquals([...response.headers], [
       ["set-cookie", "foo=bar; path=/; httponly"],
     ]);
@@ -112,13 +112,13 @@ test({
 
 test({
   name: "set multiple cookies",
-  fn() {
+  async fn() {
     const request = createMockRequest();
     const response = createMockResponse();
     const cookies = new Cookies(request, response);
-    cookies.set("a", "a");
-    cookies.set("b", "b");
-    cookies.set("c", "c");
+    await cookies.set("a", "a");
+    await cookies.set("b", "b");
+    await cookies.set("c", "c");
     assertEquals([...response.headers], [
       ["set-cookie", "a=a; path=/; httponly"],
       ["set-cookie", "b=b; path=/; httponly"],
@@ -129,11 +129,11 @@ test({
 
 test({
   name: "set cookie with options",
-  fn() {
+  async fn() {
     const request = createMockRequest();
     const response = createMockResponse();
     const cookies = new Cookies(request, response);
-    cookies.set("foo", "bar", {
+    await cookies.set("foo", "bar", {
       domain: "*.example.com",
       expires: new Date("2020-01-01T00:00:00+00:00"),
       httpOnly: false,
@@ -150,7 +150,7 @@ test({
 
 test({
   name: "set signed cookie",
-  fn() {
+  async fn() {
     const request = createMockRequest();
     const response = createMockResponse();
     const cookies = new Cookies(
@@ -158,7 +158,7 @@ test({
       response,
       { keys: new KeyStack(["secret1"]) },
     );
-    cookies.set("bar", "foo");
+    await cookies.set("bar", "foo");
 
     assertEquals(
       response.headers.get("set-cookie"),
@@ -169,7 +169,7 @@ test({
 
 test({
   name: "iterate cookies",
-  fn() {
+  async fn() {
     const request = createMockRequest(
       ["bar=foo", "foo=baz", "baz=1234"],
     );
@@ -178,8 +178,12 @@ test({
       request,
       response,
     );
+    const actual = [];
+    for await (const cookie of cookies) {
+      actual.push(cookie);
+    }
     assertEquals(
-      [...cookies],
+      actual,
       [["bar", "foo"], ["foo", "baz"], ["baz", "1234"]],
     );
   },
@@ -187,7 +191,7 @@ test({
 
 test({
   name: "iterate signed cookie",
-  fn() {
+  async fn() {
     const request = createMockRequest(
       ["bar=foo", "bar.sig=S7GhXzJF3n4j8JwTupr7H-h25qtt_vs0stdETXZb-Ro"],
     );
@@ -197,7 +201,11 @@ test({
       response,
       { keys: new KeyStack(["secret1"]) },
     );
-    assertEquals([...cookies], [["bar", "foo"]]);
+    const actual = [];
+    for await (const cookie of cookies) {
+      actual.push(cookie);
+    }
+    assertEquals(actual, [["bar", "foo"]]);
   },
 });
 
@@ -210,18 +218,18 @@ test({
     const response = createMockResponse();
     assertEquals(
       Deno.inspect(new Cookies(request, response)),
-      `Cookies [ [ "bar", "foo" ], [ "foo", "baz" ], [ "baz", "1234" ] ]`,
+      `Cookies []`,
     );
   },
 });
 
 test({
   name: "set multiple cookies with options",
-  fn() {
+  async fn() {
     const request = createMockRequest();
     const response = createMockResponse();
     const cookies = new Cookies(request, response);
-    cookies.set("foo", "bar", {
+    await cookies.set("foo", "bar", {
       domain: "*.example.com",
       expires: new Date("2020-01-01T00:00:00+00:00"),
       httpOnly: false,
@@ -229,7 +237,7 @@ test({
       path: "/foo",
       sameSite: "strict",
     });
-    cookies.set("a", "b", {
+    await cookies.set("a", "b", {
       domain: "*.example.com",
       expires: new Date("2020-01-01T00:00:00+00:00"),
       httpOnly: false,
@@ -237,7 +245,7 @@ test({
       path: "/a",
       sameSite: "strict",
     });
-    cookies.set("foo", "baz", {
+    await cookies.set("foo", "baz", {
       domain: "*.example.com",
       expires: new Date("2020-01-01T00:00:00+00:00"),
       httpOnly: false,

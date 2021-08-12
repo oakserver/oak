@@ -22,8 +22,8 @@ import { HttpServerNative, NativeRequest } from "./http_server_native.ts";
 import { HttpServerStd } from "./http_server_std.ts";
 import type { ServerRequest, ServerResponse } from "./http_server_std.ts";
 import { httpErrors } from "./httpError.ts";
-import { Data, KeyStack } from "./keyStack.ts";
-import type { FetchEvent, Server } from "./types.d.ts";
+import { KeyStack } from "./keyStack.ts";
+import type { Data, FetchEvent, Server } from "./types.d.ts";
 
 const { test } = Deno;
 
@@ -471,14 +471,14 @@ test({
   name: "app.keys passed as KeyStack-like",
   fn() {
     const keys = {
-      sign(_data: Data): string {
-        return "";
+      sign(_data: Data) {
+        return Promise.resolve("");
       },
-      verify(_data: Data, _digest: string): boolean {
-        return true;
+      verify(_data: Data, _digest: string) {
+        return Promise.resolve(true);
       },
-      indexOf(_data: Data, _digest: string): number {
-        return 0;
+      indexOf(_data: Data, _digest: string) {
+        return Promise.resolve(0);
       },
     } as KeyStack;
     const app = new Application({ keys });

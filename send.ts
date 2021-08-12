@@ -332,7 +332,7 @@ export async function send(
 
   if (
     request.headers.has("If-Range") && mtime &&
-    ifRange(request.headers.get("If-Range")!, mtime, entity) &&
+    await ifRange(request.headers.get("If-Range")!, mtime, entity) &&
     request.headers.has("Range")
   ) {
     await sendRange(response, body, request.headers.get("Range")!, stats.size);
