@@ -145,7 +145,9 @@ function cloneValue(value: any): any {
 }
 
 const core = Deno?.core;
-const structuredClone = globalThis.structuredClone;
+const structuredClone: ((value: unknown) => unknown) | undefined =
+  // deno-lint-ignore no-explicit-any
+  (globalThis as any).structuredClone;
 
 /**
  * Provides structured cloning
