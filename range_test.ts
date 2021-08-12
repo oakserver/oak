@@ -51,19 +51,21 @@ class MockFile implements Deno.Seeker, Deno.Reader, Deno.Closer {
 
 test({
   name: "ifRange() - timestamp - true",
-  fn() {
-    assert(ifRange("Wed, 21 Oct 2015 07:28:00 GMT", 1445412480000, {
-      size: 1024,
-      mtime: new Date(1445412480000),
-    }));
+  async fn() {
+    assert(
+      await ifRange("Wed, 21 Oct 2015 07:28:00 GMT", 1445412480000, {
+        size: 1024,
+        mtime: new Date(1445412480000),
+      }),
+    );
   },
 });
 
 test({
   name: "ifRange() - timestamp - false",
-  fn() {
+  async fn() {
     assert(
-      !ifRange("Wed, 21 Oct 2014 07:28:00 GMT", 1445412480000, {
+      !await ifRange("Wed, 21 Oct 2014 07:28:00 GMT", 1445412480000, {
         size: 1024,
         mtime: new Date(1445412480000),
       }),
@@ -73,31 +75,35 @@ test({
 
 test({
   name: "ifRange() - etag - true",
-  fn() {
+  async fn() {
     const content = new TextEncoder().encode("hello deno");
-    assert(ifRange(`"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, 1445412480000, content));
+    assert(
+      await ifRange(`"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, 1445412480000, content),
+    );
   },
 });
 
 test({
   name: "ifRange() - etag - false",
-  fn() {
+  async fn() {
     const content = new TextEncoder().encode("hello deno");
-    assert(!ifRange(`"blah"`, 1445412480000, content));
+    assert(!await ifRange(`"blah"`, 1445412480000, content));
   },
 });
 
 test({
   name: "ifRange() - weak etag - true",
-  fn() {
-    const etag = calculate({
+  async fn() {
+    const etag = await calculate({
       size: 1024,
       mtime: new Date(1445412480000),
     });
-    assert(ifRange(etag, 1445412480000, {
-      size: 1024,
-      mtime: new Date(1445412480000),
-    }));
+    assert(
+      await ifRange(etag, 1445412480000, {
+        size: 1024,
+        mtime: new Date(1445412480000),
+      }),
+    );
   },
 });
 

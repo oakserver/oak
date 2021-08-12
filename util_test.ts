@@ -81,8 +81,8 @@ test({
 
 test({
   name: "getRandomFilename()",
-  fn() {
-    const actual = getRandomFilename("foo", "bar");
+  async fn() {
+    const actual = await getRandomFilename("foo", "bar");
     assert(actual.startsWith("foo"));
     assert(actual.endsWith(".bar"));
     assert(actual.length > 7);

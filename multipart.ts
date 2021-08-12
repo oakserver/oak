@@ -133,7 +133,7 @@ async function* parts(
     if (!outPath) {
       outPath = await Deno.makeTempDir();
     }
-    const filename = `${outPath}/${getRandomFilename(prefix, ext)}`;
+    const filename = `${outPath}/${await getRandomFilename(prefix, ext)}`;
     const file = await Deno.open(filename, { write: true, createNew: true });
     return [filename, file];
   }

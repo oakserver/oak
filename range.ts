@@ -16,16 +16,16 @@ export interface ByteRange {
 /** Determine, by the value of an `If-Range` header, if a `Range` header should
  * be applied to a request, returning `true` if it should or otherwise
  * `false`. */
-export function ifRange(
+export async function ifRange(
   value: string,
   mtime: number,
   entity: Uint8Array | FileInfo,
-): boolean {
+): Promise<boolean> {
   if (value) {
     const matches = value.match(ETAG_RE);
     if (matches) {
       const [match] = matches;
-      if (calculate(entity) === match) {
+      if (await calculate(entity) === match) {
         return true;
       }
     } else {

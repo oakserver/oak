@@ -9,7 +9,7 @@ export {
   copy as copyBytes,
   equals,
 } from "https://deno.land/std@0.104.0/bytes/mod.ts";
-export { createHash } from "https://deno.land/std@0.104.0/hash/mod.ts";
+export * as base64 from "https://deno.land/std@0.104.0/encoding/base64.ts";
 export { HmacSha256 } from "https://deno.land/std@0.104.0/hash/sha256.ts";
 export { serve, serveTLS } from "https://deno.land/std@0.104.0/http/server.ts";
 export {

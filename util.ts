@@ -2,14 +2,7 @@
 
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
-import {
-  createHash,
-  isAbsolute,
-  join,
-  normalize,
-  sep,
-  Status,
-} from "./deps.ts";
+import { isAbsolute, join, normalize, sep, Status } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
 import type { ErrorStatus, RedirectStatus } from "./types.d.ts";
@@ -46,18 +39,28 @@ export function encodeUrl(url: string) {
     .replace(ENCODE_CHARS_REGEXP, encodeURI);
 }
 
-export function getRandomFilename(prefix = "", extension = ""): string {
-  return `${prefix}${
-    createHash("sha1").update(crypto.getRandomValues(new Uint8Array(256)))
-      .toString("hex")
-  }${extension ? `.${extension}` : ""}`;
+export function bufferToHex(buffer: ArrayBuffer): string {
+  const arr = Array.from(new Uint8Array(buffer));
+  return arr.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export function getBoundary(): string {
-  return `oak_${
-    createHash("sha1").update(crypto.getRandomValues(new Uint8Array(256)))
-      .toString("hex")
-  }`;
+export async function getRandomFilename(
+  prefix = "",
+  extension = "",
+): Promise<string> {
+  const buffer = await crypto.subtle.digest(
+    "SHA-1",
+    crypto.getRandomValues(new Uint8Array(256)),
+  );
+  return `${prefix}${bufferToHex(buffer)}${extension ? `.${extension}` : ""}`;
+}
+
+export async function getBoundary(): Promise<string> {
+  const buffer = await crypto.subtle.digest(
+    "SHA-1",
+    crypto.getRandomValues(new Uint8Array(256)),
+  );
+  return `oak_${bufferToHex(buffer)}`;
 }
 
 /** Guard for Async Iterables */

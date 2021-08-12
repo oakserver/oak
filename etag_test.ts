@@ -36,39 +36,39 @@ const encoder = new TextEncoder();
 
 test({
   name: "etag - calculate - string - empty",
-  fn() {
-    const actual = calculate("");
+  async fn() {
+    const actual = await calculate("");
     assertEquals(actual, `"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk="`);
   },
 });
 
 test({
   name: "etag - calculate - string",
-  fn() {
-    const actual = calculate("hello deno");
+  async fn() {
+    const actual = await calculate("hello deno");
     assertEquals(actual, `"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`);
   },
 });
 
 test({
   name: "etag - calculate - Uint8Array - empty",
-  fn() {
-    const actual = calculate(new Uint8Array());
+  async fn() {
+    const actual = await calculate(new Uint8Array());
     assertEquals(actual, `"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk="`);
   },
 });
 
 test({
   name: "etag - calculate - Uint8Array - empty",
-  fn() {
-    const actual = calculate(encoder.encode("hello deno"));
+  async fn() {
+    const actual = await calculate(encoder.encode("hello deno"));
     assertEquals(actual, `"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`);
   },
 });
 
 test({
   name: "etag - calculate - Deno.FileInfo",
-  fn() {
+  async fn() {
     const fixture: Deno.FileInfo = {
       isFile: true,
       isDirectory: false,
@@ -87,7 +87,7 @@ test({
       blksize: null,
       blocks: null,
     };
-    const actual = calculate(fixture);
+    const actual = await calculate(fixture);
     assertEquals(actual, `W/"400-bfac58a88e"`);
   },
 });
@@ -227,13 +227,15 @@ test({
 
 test({
   name: "etag - ifMatch",
-  fn() {
-    assert(!ifMatch(`"abcdefg"`, "hello deno"));
-    assert(ifMatch(`"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"));
-    assert(ifMatch(`"abcdefg", "a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"));
-    assert(ifMatch("*", "hello deno"));
+  async fn() {
+    assert(!await ifMatch(`"abcdefg"`, "hello deno"));
+    assert(await ifMatch(`"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"));
     assert(
-      !ifMatch("*", {
+      await ifMatch(`"abcdefg", "a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"),
+    );
+    assert(await ifMatch("*", "hello deno"));
+    assert(
+      !await ifMatch("*", {
         size: 1024,
         mtime: new Date(Date.UTC(96, 1, 2, 3, 4, 5, 6)),
       }),
@@ -243,21 +245,24 @@ test({
 
 test({
   name: "etag - ifNoneMatch",
-  fn() {
-    assert(ifNoneMatch(`"abcdefg"`, "hello deno"));
-    assert(!ifNoneMatch(`"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"));
+  async fn() {
+    assert(await ifNoneMatch(`"abcdefg"`, "hello deno"));
+    assert(!await ifNoneMatch(`"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"));
     assert(
-      !ifNoneMatch(`"abcdefg", "a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"),
+      !await ifNoneMatch(
+        `"abcdefg", "a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`,
+        "hello deno",
+      ),
     );
-    assert(!ifNoneMatch("*", "hello deno"));
+    assert(!await ifNoneMatch("*", "hello deno"));
     assert(
-      !ifNoneMatch(`W/"400-bfac58a88e"`, {
+      !await ifNoneMatch(`W/"400-bfac58a88e"`, {
         size: 1024,
         mtime: new Date(Date.UTC(96, 1, 2, 3, 4, 5, 6)),
       }),
     );
     assert(
-      ifNoneMatch(`"400-bfac58a88e"`, {
+      await ifNoneMatch(`"400-bfac58a88e"`, {
         size: 1024,
         mtime: new Date(Date.UTC(96, 1, 2, 3, 4, 5, 6)),
       }),

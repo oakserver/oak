@@ -406,7 +406,7 @@ test({
       String(fixture.length),
     );
     const etagHeader = context.response.headers.get("etag");
-    assertEquals(etagHeader, etag.calculate(fixture));
+    assertEquals(etagHeader, await etag.calculate(fixture));
   },
 });
 
@@ -442,11 +442,14 @@ test({
   async fn() {
     const { context } = setup("/test.jpg");
     const fixture = await Deno.readFile("./fixtures/test.jpg");
-    context.request.headers.set("If-None-Match", etag.calculate(fixture));
+    context.request.headers.set("If-None-Match", await etag.calculate(fixture));
     await send(context, context.request.url.pathname, { root: "./fixtures" });
     const serverResponse = await context.response.toServerResponse();
     assertEquals(serverResponse.status, 304);
-    assertEquals(context.response.headers.get("etag"), etag.calculate(fixture));
+    assertEquals(
+      context.response.headers.get("etag"),
+      await etag.calculate(fixture),
+    );
   },
 });
 
@@ -468,7 +471,10 @@ test({
       context.response.headers.get("content-length"),
       String(fixture.length),
     );
-    assertEquals(context.response.headers.get("etag"), etag.calculate(fixture));
+    assertEquals(
+      context.response.headers.get("etag"),
+      await etag.calculate(fixture),
+    );
   },
 });
 

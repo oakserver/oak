@@ -2,7 +2,7 @@
 
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
-import { createHash } from "./deps.ts";
+import { base64 } from "./deps.ts";
 import type { Middleware } from "./middleware.ts";
 import { BODY_TYPES, isAsyncIterable, isReader } from "./util.ts";
 
@@ -34,14 +34,18 @@ function calcStatTag(entity: FileInfo): string {
   return `"${size}-${mtime}"`;
 }
 
-function calcEntityTag(entity: string | Uint8Array): string {
+const encoder = new TextEncoder();
+
+async function calcEntityTag(entity: string | Uint8Array): Promise<string> {
   if (entity.length === 0) {
     return `"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk="`;
   }
 
-  const hash = createHash("sha1")
-    .update(entity)
-    .toString("base64")
+  if (typeof entity === "string") {
+    entity = encoder.encode(entity);
+  }
+
+  const hash = base64.encode(await crypto.subtle.digest("SHA-1", entity))
     .substring(0, 27);
 
   return `"${entity.length.toString(16)}-${hash}"`;
@@ -93,12 +97,14 @@ export function getEntity<S extends State = Record<string, any>>(
  * @param entity A string, Uint8Array, or file info to use to generate the ETag
  * @param options
  */
-export function calculate(
+export async function calculate(
   entity: string | Uint8Array | FileInfo,
   options: ETagOptions = {},
-): string {
+): Promise<string> {
   const weak = options.weak ?? isFileInfo(entity);
-  const tag = isFileInfo(entity) ? calcStatTag(entity) : calcEntityTag(entity);
+  const tag = isFileInfo(entity)
+    ? calcStatTag(entity)
+    : await calcEntityTag(entity);
 
   return weak ? `W/${tag}` : tag;
 }
@@ -117,7 +123,7 @@ export function factory<S extends State = Record<string, any>>(
     if (!context.response.headers.has("ETag")) {
       const entity = await getEntity(context);
       if (entity) {
-        context.response.headers.set("ETag", calculate(entity, options));
+        context.response.headers.set("ETag", await calculate(entity, options));
       }
     }
   };
@@ -131,12 +137,12 @@ export function factory<S extends State = Record<string, any>>(
  * See MDN's [`If-Match`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Match)
  * article for more information on how to use this function.
  */
-export function ifMatch(
+export async function ifMatch(
   value: string,
   entity: string | Uint8Array | FileInfo,
   options: ETagOptions = {},
-): boolean {
-  const etag = calculate(entity, options);
+): Promise<boolean> {
+  const etag = await calculate(entity, options);
   // Weak tags cannot be matched and return false.
   if (etag.startsWith("W/")) {
     return false;
@@ -156,15 +162,15 @@ export function ifMatch(
  * See MDN's [`If-None-Match`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match)
  * article for more information on how to use this function.
  */
-export function ifNoneMatch(
+export async function ifNoneMatch(
   value: string,
   entity: string | Uint8Array | FileInfo,
   options: ETagOptions = {},
-): boolean {
+): Promise<boolean> {
   if (value.trim() === "*") {
     return false;
   }
-  const etag = calculate(entity, options);
+  const etag = await calculate(entity, options);
   const tags = value.split(/\s*,\s*/);
   return !tags.includes(etag);
 }

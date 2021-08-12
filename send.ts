@@ -20,7 +20,7 @@ import type { Response } from "./response.ts";
 import { decodeComponent, getBoundary, resolvePath } from "./util.ts";
 
 const MAXBUFFER_DEFAULT = 1_048_576; // 1MiB;
-const BOUNDARY = getBoundary();
+const BOUNDARY = await getBoundary();
 
 export interface SendOptions {
   /** Try to serve the brotli version of a file automatically when brotli is
@@ -305,8 +305,8 @@ export async function send(
 
   if (request.headers.has("If-None-Match") && mtime) {
     [body, entity] = await getEntity(path, mtime, stats, maxbuffer, response);
-    if (!ifNoneMatch(request.headers.get("If-None-Match")!, entity)) {
-      response.headers.set("ETag", calculate(entity));
+    if (!await ifNoneMatch(request.headers.get("If-None-Match")!, entity)) {
+      response.headers.set("ETag", await calculate(entity));
       response.status = 304;
       return path;
     }
@@ -348,7 +348,7 @@ export async function send(
   response.body = body;
 
   if (!response.headers.has("ETag")) {
-    response.headers.set("ETag", calculate(entity));
+    response.headers.set("ETag", await calculate(entity));
   }
 
   if (!response.headers.has("Accept-Ranges")) {
