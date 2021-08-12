@@ -92,7 +92,7 @@ function createHttpErrorConstructor<E extends typeof HttpError>(
     constructor(message?: string) {
       super(message || STATUS_TEXT.get(status));
       this.status = status;
-      this.expose = status >= 400 && status < 500 ? true : false;
+      this.expose = status >= 400 && status < 500;
       Object.defineProperty(this, "name", {
         configurable: true,
         enumerable: false,
