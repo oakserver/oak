@@ -144,15 +144,20 @@ function cloneValue(value: any): any {
   }
 }
 
-const { core } = Deno;
+const core = Deno?.core;
+const structuredClone = globalThis.structuredClone;
 
 /**
  * Provides structured cloning
  * @param value
  * @returns
  */
-function structuredClone<T extends StructuredClonable>(value: T): T {
-  return core ? core.deserialize(core.serialize(value)) : cloneValue(value);
+function sc<T extends StructuredClonable>(value: T): T {
+  return structuredClone
+    ? structuredClone(value)
+    : core
+    ? core.deserialize(core.serialize(value))
+    : cloneValue(value);
 }
 
 /** Clones a state object, skipping any values that cannot be cloned. */
@@ -161,7 +166,7 @@ export function cloneState<S extends Record<string, any>>(state: S): S {
   const clone = {} as S;
   for (const [key, value] of Object.entries(state)) {
     try {
-      const clonedValue = structuredClone(value);
+      const clonedValue = sc(value);
       clone[key as keyof S] = clonedValue;
     } catch {
       // we just no-op values that cannot be cloned

@@ -64,7 +64,9 @@ test({
   name: "parse basic type",
   fn() {
     const actual = parse("text/html");
-    assertEquals(actual, { type: "text", subtype: "html", suffix: undefined });
+    assertEquals(actual.type, "text");
+    assertEquals(actual.subtype, "html");
+    assertEquals(actual.suffix, undefined);
   },
 });
 
@@ -72,7 +74,9 @@ test({
   name: "parse with suffix",
   fn() {
     const actual = parse("image/svg+xml");
-    assertEquals(actual, { type: "image", subtype: "svg", suffix: "xml" });
+    assertEquals(actual.type, "image");
+    assertEquals(actual.subtype, "svg");
+    assertEquals(actual.suffix, "xml");
   },
 });
 
@@ -80,7 +84,9 @@ test({
   name: "parse is case insensitive",
   fn() {
     const actual = parse("IMAGE/SVG+XML");
-    assertEquals(actual, { type: "image", subtype: "svg", suffix: "xml" });
+    assertEquals(actual.type, "image");
+    assertEquals(actual.subtype, "svg");
+    assertEquals(actual.suffix, "xml");
   },
 });
 

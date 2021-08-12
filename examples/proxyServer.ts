@@ -8,7 +8,7 @@ import {
   green,
   red,
   yellow,
-} from "https://deno.land/std@0.102.0/fmt/colors.ts";
+} from "https://deno.land/std@0.104.0/fmt/colors.ts";
 
 import { Application, HttpError, proxy, Status } from "../mod.ts";
 
@@ -83,7 +83,7 @@ app.use((ctx, next) => {
 });
 
 // Proxy requests
-app.use(proxy({ target: "https://oakserver.github.io/" }));
+app.use(proxy("https://oakserver.github.io/"));
 
 // Log when we start listening for requests
 app.addEventListener("listen", ({ hostname, port, serverType }) => {
