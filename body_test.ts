@@ -204,6 +204,22 @@ test({
 });
 
 test({
+  name: "body - type: stream",
+  async fn() {
+    const requestBody = new RequestBody(createMockServerRequest({
+      body: "hello world",
+      headerValues: {
+        "content-type": "text/plain",
+      },
+    }));
+    const body = requestBody.get({ type: "stream" });
+    assert(body.type === "stream");
+    const actual = await new Response(body.value).text();
+    assertEquals(actual, "hello world");
+  },
+});
+
+test({
   name: "body - type: form",
   async fn() {
     const requestBody = new RequestBody(createMockServerRequest(
@@ -464,5 +480,24 @@ test({
     const actual = requestBody.get({});
     assertEquals(actual.type, "text");
     assertEquals(await actual.value, "hello deno");
+  },
+});
+
+test({
+  name: "body - multiple streams",
+  async fn() {
+    const requestBody = new RequestBody(createMockServerRequest({
+      body: "hello world",
+      headerValues: {
+        "content-type": "text/plain",
+      },
+    }));
+    const a = requestBody.get({ type: "stream" });
+    const b = requestBody.get({ type: "stream" });
+    assert(a.type === "stream");
+    assert(b.type === "stream");
+    const textA = await new Response(a.value).text();
+    const textB = await new Response(b.value).text();
+    assertEquals(textA, textB);
   },
 });

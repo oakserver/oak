@@ -147,6 +147,7 @@ function bodyAsStream(
 
 export class RequestBody {
   #formDataReader?: FormDataReader;
+  #stream?: ReadableStream<Uint8Array>;
   #has?: boolean;
   #readAllBody?: Promise<Uint8Array>;
   #request: Request | ServerRequest;
@@ -254,7 +255,9 @@ export class RequestBody {
         );
       }
       this.#type = "stream";
-      return { type, value: bodyAsStream(this.#request.body) };
+      const streams = (this.#stream ?? bodyAsStream(this.#request.body)).tee();
+      this.#stream = streams[1];
+      return { type, value: streams[0] };
     }
     if (!this.has()) {
       this.#type = "undefined";
