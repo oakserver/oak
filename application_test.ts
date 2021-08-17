@@ -599,6 +599,35 @@ test({
 });
 
 test({
+  name: "bad request URL logs properly",
+  async fn() {
+    const errorLogStack: any[][] = [];
+    const originalConsoleError = Object.getOwnPropertyDescriptor(
+      console,
+      "error",
+    );
+    assert(originalConsoleError);
+    Object.defineProperty(console, "error", {
+      value(...args: any[]) {
+        errorLogStack.push(args);
+      },
+      configurable: true,
+    });
+    const app = new Application({ serverConstructor: MockServer });
+    serverRequestStack.push(
+      createMockRequest("", "HTTP/1.1", [["host", "/"]]),
+    );
+    app.use((ctx) => {
+      ctx.response.body = ctx.request.url;
+    });
+    await app.listen({ port: 8000 });
+    Object.defineProperty(console, "error", originalConsoleError);
+    assertEquals(errorLogStack.length, 4);
+    teardown();
+  },
+});
+
+test({
   name: "caught errors don't dispatch error events",
   async fn() {
     const app = new Application({ serverConstructor: MockServer });
@@ -721,21 +750,6 @@ test({
       errors[0].error.message,
       "Do not know how to serialize a BigInt",
     );
-    teardown();
-  },
-});
-
-test({
-  name: "bad request URL logs properly",
-  async fn() {
-    const app = new Application({ serverConstructor: MockServer });
-    serverRequestStack.push(
-      createMockRequest("", "HTTP/1.1", [["host", "/"]]),
-    );
-    app.use((ctx) => {
-      ctx.response.body = ctx.request.url;
-    });
-    await app.listen({ port: 8000 });
     teardown();
   },
 });
