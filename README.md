@@ -299,21 +299,24 @@ And several methods:
   passed, the request headers are used to determine the type of the body, which
   will be parsed and returned. The returned object contains two properties.
   `type` contains the type of `"json"`, `"text"`, `"form"`, `"form-data"`,
-  `"raw"` or `"undefined"`.
+  `"bytes"` or `"undefined"`.
 
   The type of the `value` can be determined by the value of the `type` property:
 
-  | `type`        | `value`                    |
-  | ------------- | -------------------------- |
-  | `"form"`      | `Promise<URLSearchParams>` |
-  | `"form-data"` | `FormDataReader`           |
-  | `"json"`      | `Promise<unknown>`         |
-  | `"raw"`       | `Promise<Uint8Array>`      |
-  | `"text"`      | `Promise<string>`          |
-  | `"undefined"` | `undefined`                |
+  | `type`        | `value`                      |
+  | ------------- | ---------------------------- |
+  | `"bytes"`     | `Promise<Uint8Array>`        |
+  | `"form"`      | `Promise<URLSearchParams>`   |
+  | `"form-data"` | `FormDataReader`             |
+  | `"json"`      | `Promise<unknown>`           |
+  | `"reader"`    | `Deno.Reader`                |
+  | `"stream"`    | `ReadableStream<Uint8Array>` |
+  | `"text"`      | `Promise<string>`            |
+  | `"undefined"` | `undefined`                  |
 
   If there is no body, the `type` of `"undefined"` is returned. If the content
-  type of the request is not recognised, then the `type` of `"raw"` is returned.
+  type of the request is not recognised, then the `type` of `"bytes"` is
+  returned.
 
   You can use the option `type` to specifically request the body to be returned
   in a particular format. If you need access to the Deno HTTP server's body,
@@ -356,9 +359,9 @@ And several methods:
 
   You can use the option `contentTypes` to set additional media types that when
   present as the content type for the request, the body will be parsed
-  accordingly. The options takes possibly four keys: `json`, `form`, `text`, and
-  `raw`. For example if you wanted JavaScript sent to the server to be parsed as
-  text, you would do something like this:
+  accordingly. The options takes possibly five keys: `json`, `form`, `formData`,
+  `text`, and `bytes`. For example if you wanted JavaScript sent to the server
+  to be parsed as text, you would do something like this:
 
   ```ts
   app.use(async (ctx) => {
@@ -375,13 +378,12 @@ And several methods:
   Because of the nature of how the body is parsed, once the body is requested
   and returned in a particular format, it can't be requested in certain other
   ones, and `.request.body()` will throw if an incompatible type is requested.
-  The type `"reader"` is incompatible with all other types, bodies which are
-  resolved as type `"form-data"` or `"undefined"` are incompatible with all
-  other types. While `"json"`, `"form"`, `"raw"`, `"text"` are all compatible
-  with each other, although if there are invalid data for that type, they may
-  throw if coerced into that type.
+  The types `"form-data"`, `"reader"` and `"stream"` are incompatible with each
+  other and all other types, while `"json"`, `"form"`, `"bytes"`, `"text"` are
+  all compatible with each other. Although, if there are invalid data for that
+  type, they may throw if coerced into that type.
 
-  In particular the `contentTypes.raw` can be used to override default types
+  In particular the `contentTypes.bytes` can be used to override default types
   that are supported that you would want the middleware to handle itself. For
   example if you wanted the middleware to parse all text media types itself, you
   would do something like this:
@@ -390,10 +392,10 @@ And several methods:
   app.use(async (ctx) => {
     const result = ctx.request.body({
       contentTypes: {
-        raw: ["text"],
+        bytes: ["text"],
       },
     });
-    result.type; // "raw"
+    result.type; // "bytes"
     await result.value; // a Uint8Array of all of the bytes read from the request
   });
   ```
