@@ -399,7 +399,7 @@ export function importKey(key: Key): Promise<CryptoKey> {
     // TODO(@kitsonk) don't transform AB when https://github.com/denoland/deno/issues/11664 is fixed
     key = new Uint8Array(key);
   }
-  return window.crypto.subtle.importKey(
+  return globalThis.crypto.subtle.importKey(
     "raw",
     key,
     {

@@ -1,6 +1,9 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-export { createWorker, testing } from "https://deno.land/x/dectyl@0.3.0/mod.ts";
+export {
+  createWorker,
+  LogLevel,
+} from "https://deno.land/x/dectyl@0.10.2/mod.ts";
 
 export { Buffer } from "https://deno.land/std@0.104.0/io/buffer.ts";
 export {

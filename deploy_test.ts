@@ -7,7 +7,7 @@ const notUnstable = (() => {
 })();
 
 Deno.test({
-  name: "deploy - basic test",
+  name: "deploy - fetch event API",
   ignore: notUnstable,
   async fn() {
     const worker = await createWorker("./fixtures/deploy_diagnostics.ts");
@@ -19,6 +19,31 @@ Deno.test({
         ips: ["127.0.0.1"],
         secure: true,
         url: "http://localhost/",
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "deploy - request event API",
+  ignore: notUnstable,
+  async fn() {
+    const worker = await createWorker("./fixtures/deploy_request_event.ts");
+    await worker.run(async () => {
+      const logs: string[] = [];
+      (async () => {
+        for await (const log of worker.logs) {
+          console.log(log);
+          logs.push(log);
+        }
+      })();
+      const [response] = await worker.fetch("/");
+      assertEquals(await response.json(), {
+        headers: [["host", "localhost"], ["x-forwarded-for", "127.0.0.1"]],
+        ip: "127.0.0.1",
+        ips: [],
+        secure: false,
+        url: "https://localhost/",
       });
     });
   },

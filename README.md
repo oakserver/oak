@@ -560,10 +560,10 @@ The `.handle()` method will invoke the middleware, just like the middleware gets
 invoked for each request that is processed by `.listen()`. The method works with
 either `std/http` requests/responses, or it handles the _native_ Deno responses.
 
-#### Handling _native_ requests and responses
+#### Handling _native_ or Deploy requests and responses
 
-When using the native requests, the `.handle()` method accepts up to three
-arguments. The first being a
+When using the native/Deploy requests, the `.handle()` method accepts up to
+three arguments. The first being a
 [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) argument,
 and the second being a `Deno.Conn` argument. The third optional argument is a
 flag to indicate if the request was "secure" in the sense it originated from a
@@ -628,13 +628,6 @@ await listenAndServe({ port: 8000 }, async (request) => {
   }
 });
 ```
-
-### Handling fetch events
-
-The `Application` class has an instance method of `.fetchEventHandler()` which
-will create an event handler for `"fetch"` events, like those used by
-[Deno Deploy](https://deno.com/deploy). For more information, refer to the more
-in depth [documentation](https://oakserver.github.io/oak/deploy).
 
 ### Error handling
 

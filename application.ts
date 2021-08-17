@@ -438,21 +438,13 @@ export class Application<AS extends State = Record<string, any>>
     super.addEventListener(type, listener, options);
   }
 
-  /** When using Deno Deploy, this method can create an event handler object
-   * for the application which can be registered as a fetch event handler.
+  /** **DEPRECATED**
    *
-   * _Note_ the result of this method is memoized, meaning that subsequent calls
-   * to the method with different options still results in the same behavior of
-   * the handler.
+   * Deno Deploy now supports request events like the Deno CLI. Users should
+   * use `app.listen()` just like if they were running on the Deno CLI for
+   * Deploy apps.  This method will be removed in future versions of oak.
    *
-   * ```
-   * import { Application } from "https://deno.land/x/oak/mod.ts";
-   *
-   * const app = new App();
-   * app.use((ctx) => ctx.response.body = "hello oak");
-   *
-   * addEventListener("fetch", app.fetchEventHandler());
-   * ```
+   * @deprecated This method will be removed in future versions of oak
    */
   fetchEventHandler(
     { proxy = true, secure = true }: FetchEventHandlerOptions = {},
