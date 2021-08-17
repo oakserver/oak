@@ -208,22 +208,25 @@ the information about the response is only located in `.response`.
 
 The `context.cookies` allows access to the values of cookies in the request, and
 allows cookies to be set in the response. It automatically secures cookies if
-the `.keys` property is set on the application. It has several methods:
+the `.keys` property is set on the application. Because `.cookies` uses the web
+crypto APIs to sign and validate cookies, and those APIs work in an asynchronous
+way, the cookie APIs work in an asynchronous way. It has several methods:
 
-- `.get(key: string, options?: CookieGetOptions)`
+- `.get(key: string, options?: CookieGetOptions): Promise<string | undefined>`
 
   Attempts to retrieve the cookie out of the request and returns the value of
   the cookie based on the key. If the applications `.keys` is set, then the
   cookie will be verified against a signed version of the cookie. If the cookie
-  is valid, the value will be returned. If it is invalid, the cookie signature
-  will be set to deleted on the response. If the cookie was not signed by the
-  current key, it will be resigned and added to the response.
+  is valid, the promise will resolve with the value. If it is invalid, the
+  cookie signature will be set to deleted on the response. If the cookie was not
+  signed by the current key, it will be resigned and added to the response.
 
-- `.set(key: string, value: string, options?: CookieSetDeleteOptions)`
+- `.set(key: string, value: string, options?: CookieSetDeleteOptions): Promise<void>`
 
   Will set a cookie in the response based on the provided key, value and any
   options. If the applications `.keys` is set, then the cookie will be signed
-  and the signature added to the response.
+  and the signature added to the response. As the keys are signed
+  asynchronously, awaiting the `.set()` method is advised.
 
 #### Request
 

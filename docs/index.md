@@ -154,7 +154,9 @@ properties of the context are:
   An interface to get and set cookies that abstracts the need to mediate between
   the request and response. If the `.keys` property has been set on the
   application, the cookies will be signed and verified automatically to help
-  prevent with clients attempting to tamper with the keys.
+  prevent with clients attempting to tamper with the keys. Because the cookies
+  are signed and verified with the asynchronous web crypto APIs, the methods on
+  the cookies object work asynchronously as well.
 
 - `.request`
 
