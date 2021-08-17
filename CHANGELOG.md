@@ -1,5 +1,57 @@
 # oak Change Log
 
+## Version 9.0.0
+
+- **BREAKING CHANGE** refactor: move to web crypto for cookie signing (14c6b47)
+
+  Use the web crypto APIs for cookie signing and validation instead of the Deno
+  `std` library. This introduces a **breaking change** in that getting and
+  setting cookies are now performed asynchronously due to async nature of the
+  web crypto APIs. Both `.cookies.get()` and `.cookies.set()` return promises
+  which should be awaited.
+
+- feat: support request event interface for Deploy (2aadac6)
+
+  Add support for the request event interface for Deno Deploy, which is the same
+  API as the _native_ Deno CLI http server API. This means that Deploy
+  applications are started in the same way as if they are one the CLI, likely
+  meaning that there is no change to using oak when moving between Deno CLI and
+  Deploy. Deploy users should just `await app.listen()` like they would with CLI
+  applications.
+
+  This also _deprecates_ the `app.fetchEventHandler()` method. The method will
+  be removed in future version of oak.
+
+- refactor: move to web crypto instead of std createHash (2156f76)
+
+  The web crypto APIs are now used for internal purposes like creating etags and
+  generating temporary directories.
+
+- refactor: clean-up of logic in `HttpError` constructor (#381)
+- fix: listen event occurs on listen and contains correct info (44ab231)
+
+  The listen event would not be dispatched at the right time and potentially not
+  contain correct information. This has been fixed.
+
+- fix: range requests properly handle single last byte requests (#373)
+
+  Fixes an edge case where range requests requesting a single last byte would
+  fail.
+
+- fix: issue with types when using dom libs (7fcc494)
+- fix: allow streaming the request body multiple times (#384)
+- fix: malformed request url doesn't cause uncaught error (046c732)
+- fix: clear headers properly when uncaught error (83f0841)
+- chore: add easy dev container support (5eb2177)
+
+  The repository contains dev container information, making it easy to clone the
+  repo on GitHub and have a development environment.
+
+- chore: update to Deno 1.13.1, std 0.105.0, media_types 2.10.1 (bc9b82b)
+- chore: update to dectyl 0.10.3 (bc81512)
+- docs: update request body types documentation in readme (#383)
+- docs: update information about cookies API (d08dce7)
+
 ## Version 8.0.0
 
 - **BREAKING CHANGE** feat: add native request web socket support (9d1b770)
