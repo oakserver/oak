@@ -3,7 +3,7 @@
 export {
   createWorker,
   LogLevel,
-} from "https://deno.land/x/dectyl@0.10.2/mod.ts";
+} from "https://deno.land/x/dectyl@0.10.3/mod.ts";
 
 export { Buffer } from "https://deno.land/std@0.105.0/io/buffer.ts";
 export {
