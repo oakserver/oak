@@ -726,6 +726,21 @@ test({
 });
 
 test({
+  name: "bad request URL logs properly",
+  async fn() {
+    const app = new Application({ serverConstructor: MockServer });
+    serverRequestStack.push(
+      createMockRequest("", "HTTP/1.1", [["host", "/"]]),
+    );
+    app.use((ctx) => {
+      ctx.response.body = ctx.request.url;
+    });
+    await app.listen({ port: 8000 });
+    teardown();
+  },
+});
+
+test({
   name: "app.listen() without middleware",
   async fn() {
     const app = new Application({ serverConstructor: MockServer });

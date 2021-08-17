@@ -196,8 +196,14 @@ function logErrorListener<S extends AS, AS extends State>(
     console.error(`[uncaught oak error]\n`, error);
   }
   if (context) {
+    let url: string;
+    try {
+      url = context.request.url.toString();
+    } catch {
+      url = "[malformed url]";
+    }
     console.error(`\nrequest:`, {
-      url: context.request.url.toString(),
+      url,
       method: context.request.method,
       hasBody: context.request.hasBody,
     });
