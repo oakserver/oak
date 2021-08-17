@@ -571,6 +571,32 @@ test({
 });
 
 test({
+  name: "uncaught errors clear headers properly",
+  async fn() {
+    const app = new Application({
+      serverConstructor: MockServer,
+      logErrors: false,
+    });
+    serverRequestStack.push(createMockRequest());
+    app.use((ctx) => {
+      ctx.response.headers.append("a", "b");
+      ctx.response.headers.append("b", "c");
+      ctx.response.headers.append("c", "d");
+      ctx.response.headers.append("d", "e");
+      ctx.response.headers.append("f", "g");
+      ctx.throw(500, "Internal Error");
+    });
+    await app.listen({ port: 8000 });
+    const [response] = requestResponseStack;
+    assertEquals([...response.headers], [[
+      "content-type",
+      "text/plain; charset=utf-8",
+    ]]);
+    teardown();
+  },
+});
+
+test({
   name: "uncaught errors log by default",
   async fn() {
     const errorLogStack: any[][] = [];

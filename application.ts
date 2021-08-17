@@ -343,7 +343,7 @@ export class Application<AS extends State = Record<string, any>>
     if (!context.response.writable) {
       return;
     }
-    for (const key of context.response.headers.keys()) {
+    for (const key of [...context.response.headers.keys()]) {
       context.response.headers.delete(key);
     }
     if (error.headers && error.headers instanceof Headers) {
