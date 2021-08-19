@@ -173,6 +173,7 @@ export class HttpServerNative<AS extends State = Record<string, any>>
   #app: Application<AS>;
   #closed = false;
   #listener?: Deno.Listener;
+  #httpConnections: Set<Deno.HttpConn> = new Set();
   #options: Deno.ListenOptions | Deno.ListenTlsOptions;
 
   constructor(
@@ -198,16 +199,37 @@ export class HttpServerNative<AS extends State = Record<string, any>>
 
   close(): void {
     this.#closed = true;
+
     if (this.#listener) {
       this.#listener.close();
       this.#listener = undefined;
     }
+
+    for (const httpConn of this.#httpConnections) {
+      try {
+        httpConn.close();
+      } catch (error) {
+        if (!(error instanceof Deno.errors.BadResource)) {
+          throw error;
+        }
+      }
+    }
+
+    this.#httpConnections.clear();
   }
 
   listen(): Deno.Listener {
     return this.#listener = isListenTlsOptions(this.#options)
       ? Deno.listenTls(this.#options)
       : Deno.listen(this.#options);
+  }
+
+  #trackHttpConnection(httpConn: Deno.HttpConn): void {
+    this.#httpConnections.add(httpConn);
+  }
+
+  #untrackHttpConnection(httpConn: Deno.HttpConn): void {
+    this.#httpConnections.delete(httpConn);
   }
 
   [Symbol.asyncIterator](): AsyncIterableIterator<NativeRequest> {
@@ -218,19 +240,25 @@ export class HttpServerNative<AS extends State = Record<string, any>>
       const server = this;
       async function serve(conn: Deno.Conn) {
         const httpConn = serveHttp(conn);
+        server.#trackHttpConnection(httpConn);
+
         while (true) {
           try {
             const requestEvent = await httpConn.nextRequest();
+
             if (requestEvent === null) {
               return;
             }
+
             const nativeRequest = new NativeRequest(requestEvent, { conn });
             controller.enqueue(nativeRequest);
             await nativeRequest.donePromise;
           } catch (error) {
             server.app.dispatchEvent(new ErrorEvent("error", { error }));
           }
+
           if (server.closed) {
+            server.#untrackHttpConnection(httpConn);
             httpConn.close();
             controller.close();
           }
