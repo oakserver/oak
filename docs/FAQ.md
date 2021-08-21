@@ -98,7 +98,7 @@ designed for making custom application state available when processing requests.
 
 It can also be strongly typed in TypeScript by using generics.
 
-When a new context is create, by default the state of the application is cloned,
+When a new context is created, by default the state of the application is cloned,
 so effectively changes to the context's `.state` will only endure for the
 lifetime of the request and response. There are other options for how the state
 for the context is initialized, which can be set by setting the `contextState`
