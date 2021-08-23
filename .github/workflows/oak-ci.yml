@@ -26,13 +26,13 @@ jobs:
         run: deno lint --unstable
 
       - name: run tests
-        run: deno test --allow-read --allow-write --allow-net
+        run: deno test --allow-read --allow-write --allow-net --jobs 4
 
       - name: run tests unstable
-        run: deno test --coverage=./cov --allow-read --allow-write --allow-net --unstable
+        run: deno test --coverage=./cov --allow-read --allow-write --allow-net --unstable --jobs 4
 
       - name: run tests using dom libs
-        run: deno test --unstable --allow-read --allow-write --allow-net --config dom.tsconfig.json
+        run: deno test --unstable --allow-read --allow-write --allow-net --config dom.tsconfig.json --jobs 4
 
       - name: generate lcov
         run: deno coverage --unstable --lcov ./cov > cov.lcov
