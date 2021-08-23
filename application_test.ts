@@ -619,7 +619,7 @@ test({
     await app.listen({ port: 8000 });
     Object.defineProperty(console, "error", originalConsoleError);
     assertEquals(errorLogStack.length, 4);
-    assert(errorLogStack[0][0].startsWith("[uncaught oak error]"));
+    assert(errorLogStack[0][0].startsWith("[uncaught application error]"));
     teardown();
   },
 });

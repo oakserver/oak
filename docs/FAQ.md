@@ -139,3 +139,23 @@ app.use(async (ctx, next) => {
 
 await app.listen();
 ```
+
+## I am seeing `[uncaught application error]` in the output, what is going on?
+
+By default, `Application()` has a setting `logErrors` set to `true`. When this
+is the case, any errors that are thrown in middleware and uncaught, or occur
+outside the middleware (like some network errors) will result in a message being
+logged.
+
+Specifically error messages like
+`Http - connection closed before message completed` can occur when responding to
+requests where the connection drops before Deno has fully flushed the body. In
+some network environments this is "normal", but neither Deno nor oak know that,
+so the error gets surfaced. There maybe no way to avoid 100% of these errors,
+and an application might want to respond to that (like clearing some sort of
+state), therefore oak does not just "ignore" them, but provides them.
+
+You can disabled automatic logging by setting `logErrors` to `false` in the
+`Application` options. You can also use the
+`.addEventHandler("error", (evt) => {});` to register your own event handler for
+uncaught errors.

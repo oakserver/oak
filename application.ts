@@ -191,9 +191,11 @@ function logErrorListener<S extends AS, AS extends State>(
   { error, context }: ApplicationErrorEvent<S, AS>,
 ) {
   if (error instanceof Error) {
-    console.error(`[uncaught oak error]: ${error.name} - ${error.message}`);
+    console.error(
+      `[uncaught application error]: ${error.name} - ${error.message}`,
+    );
   } else {
-    console.error(`[uncaught oak error]\n`, error);
+    console.error(`[uncaught application error]\n`, error);
   }
   if (context) {
     let url: string;
