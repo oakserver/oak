@@ -27,6 +27,9 @@ jobs:
 
       - name: run tests
         run: deno test --allow-read --allow-write --allow-net --jobs 4
+      
+      - name: run tests no check
+        run: deno test --allow-read --allow-write --allow-net --no-check --jobs 4
 
       - name: run tests unstable
         run: deno test --coverage=./cov --allow-read --allow-write --allow-net --unstable --jobs 4

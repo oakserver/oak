@@ -239,7 +239,7 @@ export class Request {
 
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
     const { hasBody, headers, ip, ips, method, secure, url } = this;
-    return `${this.constructor.name} ${
+    return `Request ${
       inspect({
         hasBody,
         headers,
