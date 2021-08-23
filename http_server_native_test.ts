@@ -2,7 +2,11 @@
 
 import { assertEquals, assertStrictEquals, unreachable } from "./test_deps.ts";
 
-import { hasNativeHttp, NativeRequest, HttpServerNative } from "./http_server_native.ts";
+import {
+  hasNativeHttp,
+  HttpServerNative,
+  NativeRequest,
+} from "./http_server_native.ts";
 
 import { Application } from "./application.ts";
 
@@ -51,14 +55,14 @@ test({
   name: "HttpServerNative closes gracefully after serving requests",
   async fn() {
     const app = new Application();
-    const listenOptions = { port: 4505 }
+    const listenOptions = { port: 4505 };
 
     const server = new HttpServerNative(app, listenOptions);
     server.listen();
 
     const expectedBody = "test-body";
 
-    (async() => {
+    (async () => {
       for await (const nativeRequest of server) {
         nativeRequest.respond(new Response(expectedBody));
       }
@@ -72,5 +76,5 @@ test({
     } finally {
       server.close();
     }
-  }
-})
+  },
+});
