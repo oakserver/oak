@@ -98,19 +98,19 @@ designed for making custom application state available when processing requests.
 
 It can also be strongly typed in TypeScript by using generics.
 
-When a new context is create, by default the state of the application is cloned,
-so effectively changes to the context's `.state` will only endure for the
-lifetime of the request and response. There are other options for how the state
-for the context is initialized, which can be set by setting the `contextState`
-option when creating the application. Acceptable values are `"clone"`,
-`"prototype"`, `"alias"`, `"empty"`. `"clone"` is the default and clones the
-applications `.state` skipping any non-cloneable values like functions and
-symbols. `"prototype"` uses the application's `.state` as the prototype for the
-context `.state`, that means shallow property assignments on the context's state
-only last for the lifetime of the context, but other changes directly modify the
-shared state. `"alias"` means that the application's `.state` and the context's
-`.state` are the same object. `"empty"` will initialize the context's state with
-an empty object.
+When a new context is created, by default the state of the application is
+cloned, so effectively changes to the context's `.state` will only endure for
+the lifetime of the request and response. There are other options for how the
+state for the context is initialized, which can be set by setting the
+`contextState` option when creating the application. Acceptable values are
+`"clone"`, `"prototype"`, `"alias"`, `"empty"`. `"clone"` is the default and
+clones the applications `.state` skipping any non-cloneable values like
+functions and symbols. `"prototype"` uses the application's `.state` as the
+prototype for the context `.state`, that means shallow property assignments on
+the context's state only last for the lifetime of the context, but other changes
+directly modify the shared state. `"alias"` means that the application's
+`.state` and the context's `.state` are the same object. `"empty"` will
+initialize the context's state with an empty object.
 
 If you wanted to create middleware that set a user ID in requests, you would do
 something like this:
