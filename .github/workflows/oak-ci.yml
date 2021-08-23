@@ -35,6 +35,7 @@ jobs:
         run: deno test --unstable --allow-read --allow-write --allow-net --config dom.tsconfig.json --jobs 4
 
       - name: generate lcov
+        if: matrix.os == 'ubuntu-latest'
         run: deno coverage --unstable --lcov ./cov > cov.lcov
 
       - name: upload coverage
