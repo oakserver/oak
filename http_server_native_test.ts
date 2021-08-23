@@ -1,8 +1,14 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, assertStrictEquals } from "./test_deps.ts";
+import { assertEquals, assertStrictEquals, unreachable } from "./test_deps.ts";
 
-import { hasNativeHttp, NativeRequest } from "./http_server_native.ts";
+import {
+  hasNativeHttp,
+  HttpServerNative,
+  NativeRequest,
+} from "./http_server_native.ts";
+
+import { Application } from "./application.ts";
 
 const { test } = Deno;
 
@@ -42,5 +48,33 @@ test({
     const response = new Response("hello deno");
     nativeRequest.respond(response);
     assertStrictEquals(await respondWithStack[0], response);
+  },
+});
+
+test({
+  name: "HttpServerNative closes gracefully after serving requests",
+  async fn() {
+    const app = new Application();
+    const listenOptions = { port: 4505 };
+
+    const server = new HttpServerNative(app, listenOptions);
+    server.listen();
+
+    const expectedBody = "test-body";
+
+    (async () => {
+      for await (const nativeRequest of server) {
+        nativeRequest.respond(new Response(expectedBody));
+      }
+    })();
+
+    try {
+      const response = await fetch(`http://localhost:${listenOptions.port}`);
+      assertEquals(await response.text(), expectedBody);
+    } catch {
+      unreachable();
+    } finally {
+      server.close();
+    }
   },
 });

@@ -19,5 +19,6 @@ export {
   assertStrictEquals,
   assertThrows,
   assertThrowsAsync,
+  unreachable,
 } from "https://deno.land/std@0.105.0/testing/asserts.ts";
 export type { WebSocketEvent } from "https://deno.land/std@0.105.0/ws/mod.ts";
