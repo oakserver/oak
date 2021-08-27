@@ -15,7 +15,7 @@ jobs:
       - name: download deno
         uses: denoland/setup-deno@main
         with:
-          deno-version: 1.13.1
+          deno-version: canary
 
       - name: check format
         if: matrix.os == 'ubuntu-latest'
@@ -23,7 +23,7 @@ jobs:
 
       - name: check linting
         if: matrix.os == 'ubuntu-latest'
-        run: deno lint --unstable
+        run: deno lint
 
       - name: run tests
         run: deno test --allow-read --allow-write --allow-net --jobs 4

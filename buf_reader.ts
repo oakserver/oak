@@ -86,7 +86,8 @@ export class BufReader {
     try {
       line = await this.readSlice(LF);
     } catch (err) {
-      let { partial } = err;
+      assert(err instanceof Error);
+      let { partial } = err as Error & { partial?: Uint8Array };
       assert(
         partial instanceof Uint8Array,
         "Caught error from `readSlice()` without `partial` property",
@@ -173,7 +174,8 @@ export class BufReader {
       try {
         await this.#fill();
       } catch (err) {
-        err.partial = slice;
+        const e = err instanceof Error ? err : new Error("[non-object thrown]");
+        (e as Error & { partial: unknown }).partial = slice;
         throw err;
       }
     }

@@ -274,7 +274,10 @@ export async function send(
     if (err instanceof Deno.errors.NotFound) {
       throw createHttpError(404, err.message);
     }
-    throw createHttpError(500, err.message);
+    throw createHttpError(
+      500,
+      err instanceof Error ? err.message : "[non-error thrown]",
+    );
   }
 
   let mtime: number | null = null;
