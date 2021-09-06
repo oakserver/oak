@@ -843,7 +843,7 @@ bodies in the middleware) and strong tags for `string`s and `Uint8Array`s. This
 can be changed by passing a `weak` property in the `options` parameter to either
 the `factory` or `calculate` methods.
 
-There are also to helper functions which can be used in conjunction with
+There are also two helper functions which can be used in conjunction with
 requests. There is `ifNoneMatch()` and `ifMatch()`. Both take the value of a
 header and an entity to compare to.
 
