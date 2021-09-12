@@ -101,7 +101,7 @@ function createMockNativeRequest(
     ? undefined
     : (request, options) => {
       upgradeWebSocketStack.push([request, options]);
-      return { response: mockResponse, websocket: mockWebSocket };
+      return { response: mockResponse, socket: mockWebSocket };
     };
   return new NativeRequest(requestEvent, { upgradeWebSocket });
 }
