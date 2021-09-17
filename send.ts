@@ -51,7 +51,6 @@ export interface SendOptions {
    *   })
    * });
    * ```
-   *
    */
   contentTypes?: Record<string, string>;
 

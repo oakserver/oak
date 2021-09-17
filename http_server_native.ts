@@ -39,7 +39,7 @@ const serveHttp: (conn: Deno.Conn) => HttpConn = "serveHttp" in Deno
 
 interface WebSocketUpgrade {
   response: Response;
-  websocket: WebSocket;
+  socket: WebSocket;
 }
 
 export type UpgradeWebSocketFn = (
@@ -157,13 +157,13 @@ export class NativeRequest {
     if (!this.#upgradeWebSocket) {
       throw new TypeError("Upgrading web sockets not supported.");
     }
-    const { response, websocket } = this.#upgradeWebSocket(
+    const { response, socket } = this.#upgradeWebSocket(
       this.#request,
       options,
     );
     this.#resolve(response);
     this.#resolved = true;
-    return websocket;
+    return socket;
   }
 }
 
