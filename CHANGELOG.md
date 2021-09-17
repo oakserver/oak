@@ -1,5 +1,23 @@
 # oak Change Log
 
+## Version 9.0.1
+
+- feat: rename logging errors to uncaught application errors (be0390c)
+
+  For clarity, application errors are no longer labelled as coming from oak, but
+  instead are labelled as uncaught application errors.
+
+- fix: ensure can close the native server by closing open http connections
+  (#389)
+- fix: ensure code works with no check (6157784)
+- fix: upgrading connection to WebSocket (#401)
+- docs: fix typo in FAQs (#390)
+- docs: fix typo in README (#395)
+- chore: add jobs flag to tests in ci (50bbe52)
+- chore: only generate lcov on linux on ci (b956357)
+- chore: make `useUnknownInCatchVariables` type safe (6f680c9)
+- chore: move ci to Deno 1.14.0
+
 ## Version 9.0.0
 
 - **BREAKING CHANGE** refactor: move to web crypto for cookie signing (14c6b47)
