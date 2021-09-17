@@ -65,10 +65,10 @@ export interface BodyOptionsContentTypes {
   /** Content types listed here will be parsed as a JSON string. */
   json?: string[];
   /** Content types listed here will be parsed as form data and return
-     * `URLSearchParameters` as the value of the body. */
+   * `URLSearchParameters` as the value of the body. */
   form?: string[];
   /** Content types listed here will be parsed as from data and return a
-     * `FormDataBody` interface as the value of the body. */
+   * `FormDataBody` interface as the value of the body. */
   formData?: string[];
   /** Content types listed here will be parsed as text. */
   text?: string[];

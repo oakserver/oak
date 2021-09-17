@@ -63,7 +63,7 @@ export interface ProxyOptions<
    * If the value is a string the match will be true if the requests pathname
    * starts with the string. In the case of a regular expression, if the
    * pathname
-   * */
+   */
   match?:
     | string
     | RegExp

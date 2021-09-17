@@ -10,7 +10,9 @@ Deno.test({
   name: "deploy - fetch event API",
   ignore: notUnstable,
   async fn() {
-    const worker = await createWorker("./fixtures/deploy_diagnostics.ts");
+    const worker = await createWorker("./fixtures/deploy_diagnostics.ts", {
+      bundle: false,
+    });
     await worker.run(async () => {
       const [response] = await worker.fetch("/");
       assertEquals(await response.json(), {
@@ -28,7 +30,9 @@ Deno.test({
   name: "deploy - request event API",
   ignore: notUnstable,
   async fn() {
-    const worker = await createWorker("./fixtures/deploy_request_event.ts");
+    const worker = await createWorker("./fixtures/deploy_request_event.ts", {
+      bundle: false,
+    });
     await worker.run(async () => {
       const logs: string[] = [];
       (async () => {
