@@ -178,13 +178,7 @@ export class Context<
 
   /** Take the current request and upgrade it to a web socket, resolving with
    * the a web standard `WebSocket` object. This will set `.respond` to
-   * `false`.
-   *
-   * *Note* when using the `std` library HTTP server versus the Deno native
-   * HTTP server, the `std` WebSocket is wrapped by a class that provides a
-   * web standard `WebSocket` interface. The `std` WebSocket does not handle the
-   * optional options that are provided when upgrading.
-   */
+   * `false`.  If the socket cannot be upgraded, this method will throw. */
   upgrade(options?: UpgradeWebSocketOptions): WebSocket {
     if (this.#socket) {
       return this.#socket;

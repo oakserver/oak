@@ -8,10 +8,8 @@
 ![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fupdates%2Fx%2Foak%2Fmod.ts)
 [![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Flatest-version%2Fx%2Foak%2Fmod.ts)](https://doc.deno.land/https/deno.land/x/oak/mod.ts)
 
-A middleware framework for Deno's
-[std http](https://doc.deno.land/https/deno.land/std/http/mod.ts) server, native
-HTTP server and [Deno Deploy](https://deno.com/deploy). It also includes a
-middleware router.
+A middleware framework for Deno's native HTTP server and
+[Deno Deploy](https://deno.com/deploy). It also includes a middleware router.
 
 This middleware framework is inspired by [Koa](https://github.com/koajs/koa/)
 and middleware router inspired by
@@ -37,10 +35,11 @@ resources.
 
 ## Application, middleware, and context
 
-The `Application` class wraps the `serve()` function from the `http` package. It
-has two methods: `.use()` and `.listen()`. Middleware is added via the `.use()`
-method and the `.listen()` method will start the server and start processing
-requests with the registered middleware.
+The `Application` class coordinates managing the HTTP server, running
+middleware, and handling errors that occur when processing requests. Two of the
+methods are generally used: `.use()` and `.listen()`. Middleware is added via
+the `.use()` method and the `.listen()` method will start the server and start
+processing requests with the registered middleware.
 
 A basic usage, responding to every request with _Hello World!_:
 
@@ -102,6 +101,46 @@ await app.listen({ port: 8000 });
 To provide an HTTPS server, then the `app.listen()` options need to include the
 options `.secure` option set to `true` and supply a `.certFile` and a `.keyFile`
 options as well.
+
+### `.handle()` method
+
+The `.handle()` method is used to process requests and receive responses without
+having the application manage the server aspect. This though is advanced usage
+and most users will want to use `.listen()`.
+
+The `.handle()` method accepts up to three arguments. The first being a
+[`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) argument,
+and the second being a `Deno.Conn` argument. The third optional argument is a
+flag to indicate if the request was "secure" in the sense it originated from a
+TLS connection to the remote client. The method resolved with a
+[`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object
+or `undefined` if the `ctx.respond === true`.
+
+An example:
+
+```ts
+import { Application } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application();
+
+app.use((ctx) => {
+  ctx.response.body = "Hello World!";
+});
+
+const listener = Deno.listen({ hostname: "localhost", port: 8000 });
+
+for await (const conn of listener) {
+  (async () => {
+    const requests = Deno.serveHttp(conn);
+    for await (const { request, respondWith } of requests) {
+      const response = await app.handle(request, conn);
+      if (response) {
+        respondWith(response);
+      }
+    }
+  });
+}
+```
 
 An instance of application has some properties as well:
 
@@ -195,10 +234,9 @@ The context passed to middleware has some methods:
 
 - `.upgrade()`
 
-  Attempt to upgrade the connection to a web socket connection, and resolve with
-  a `WebSocket` interface. Previously this would be a Deno `std` library web
-  socket but now is the web standard `WebSocket`. This will set `.respond` to
-  `false`.
+  Attempt to upgrade the connection to a web socket connection, and return a
+  `WebSocket` interface. Previous version of oak, this would be a `Promise`
+  resolving with a `std/ws` web socket.
 
 Unlike other middleware frameworks, `context` does not have a significant amount
 of aliases. The information about the request is only located in `.request` and
@@ -246,13 +284,15 @@ several properties:
 
   A string that represents the HTTP method for the request.
 
+- `.originalRequest`
+
+  The "raw" `NativeServer` request, which is an abstraction over the DOM
+  `Request` object. `.originalRequest.request` is the DOM `Request` instance
+  that is being processed. Users should generally avoid using these.
+
 - `.secure`
 
   A shortcut for `.protocol`, returning `true` if HTTPS otherwise `false`.
-
-- `.serverRequest`
-
-  The original `net` server request.
 
 - `.url`
 
@@ -517,121 +557,6 @@ controller.abort();
 // Listen will stop listening for requests and the promise will resolve...
 await listenPromise;
 // and you can do something after the close to shutdown
-```
-
-### Deno `std/http` versus native bindings
-
-As of Deno 1.9, Deno has a _native_ HTTP server. oak automatically detects if
-these APIs are available and will listen and process requests using the native
-server. Currently the APIs are marked as _unstable_ so in order to use them, you
-need to start your server with the `--unstable` flag. For example:
-
-```
-> deno run --allow-net --unstable server.ts
-```
-
-#### Overriding the HTTP server
-
-If you wish to not utilise the default behavior of detecting the capability, you
-can force the server during application creation. For example to force the
-`std/http` server, you would do the following:
-
-```ts
-import { Application, HttpServerStd } from "https://deno.land/x/oak/mod.ts";
-
-const app = new Application({
-  serverConstructor: HttpServerStd,
-});
-```
-
-Of if you wanted to force the native:
-
-```ts
-import { Application, HttpServerNative } from "https://deno.land/x/oak/mod.ts";
-
-const app = new Application({
-  serverConstructor: HttpServerNative,
-});
-```
-
-### Just handling requests
-
-In situations where you don't want the application to listen for requests on the
-`std/http/server`, but you still want the application to process requests, you
-can use the `.handle()` method. For example if you are in a serverless function
-where the requests are arriving in a different way.
-
-The `.handle()` method will invoke the middleware, just like the middleware gets
-invoked for each request that is processed by `.listen()`. The method works with
-either `std/http` requests/responses, or it handles the _native_ Deno responses.
-
-#### Handling _native_ or Deploy requests and responses
-
-When using the native/Deploy requests, the `.handle()` method accepts up to
-three arguments. The first being a
-[`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) argument,
-and the second being a `Deno.Conn` argument. The third optional argument is a
-flag to indicate if the request was "secure" in the sense it originated from a
-TLS connection to the remote client. The method resolved with a
-[`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object
-or `undefined` if the `ctx.respond === true`.
-
-An example:
-
-```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
-
-const app = new Application();
-
-app.use((ctx) => {
-  ctx.response.body = "Hello World!";
-});
-
-const listener = Deno.listen({ hostname: "localhost", port: 8000 });
-
-for await (const conn of listener) {
-  (async () => {
-    const requests = Deno.serveHttp(conn);
-    for await (const { request, respondWith } of requests) {
-      const response = await app.handle(request, conn);
-      if (response) {
-        respondWith(response);
-      }
-    }
-  });
-}
-```
-
-#### Handling `std/http` requests and responses
-
-When using `std/http` requests the `.handle()` method accepts up to two
-arguments, one being the request which conforms to the `std/http/server`'s
-`ServerRequest` interface and an optional second argument which is if the
-request is "secure" in the sense it originated from a TLS connection to the
-remote client. The method resolves with a response that conforms to the
-`ServerResponse` interface (which can be used with the `std/http/server`'s
-`request.respond()` method) or `undefined` if the `ctx.respond === true` (e.g.
-the connection was upgraded to a web socket or is sending back server sent
-events).
-
-An example:
-
-```ts
-import { listenAndServe } from "https://deno.land/std/http/server.ts";
-import { Application } from "https://deno.land/x/oak/mod.ts";
-
-const app = new Application();
-
-app.use((ctx) => {
-  ctx.response.body = "Hello World!";
-});
-
-await listenAndServe({ port: 8000 }, async (request) => {
-  const response = await app.handle(request);
-  if (response) {
-    request.respond(response);
-  }
-});
 ```
 
 ### Error handling

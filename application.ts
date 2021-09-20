@@ -37,8 +37,7 @@ export interface HandleMethod {
    * is similar to `.listen()`, but opening the connection and retrieving
    * requests are not the responsibility of the application.  If the generated
    * context gets set to not to respond, then the method resolves with
-   * `undefined`, otherwise it resolves with a request that is compatible with
-   * `std/http/server`. */
+   * `undefined`, otherwise it resolves with a DOM `Response` object. */
   (
     request: Request,
     conn?: Deno.Conn,
@@ -125,11 +124,9 @@ export interface ApplicationOptions<S> {
   proxy?: boolean;
 
   /** A server constructor to use instead of the default server for receiving
-   * requests.  When the native HTTP server is detected in the environment, then
-   * the native server will be used, otherwise the `std/http` server will be
-   * used.  Passing either `HTTPServerStd` or `HTTPServerNative` will override
-   * this behavior.
-   */
+   * requests.
+   *
+   * Generally this is only used for testing. */
   serverConstructor?: ServerConstructor<NativeRequest>;
 
   /** The initial state object for the application, of which the type can be
