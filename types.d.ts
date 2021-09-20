@@ -79,15 +79,6 @@ export interface ServerConstructor<T> {
   prototype: Server<T>;
 }
 
-export interface FetchEvent extends Event {
-  request: Request;
-  respondWith(response: Response | Promise<Response>): Promise<Response>;
-}
-
-export interface FetchEventListenerObject {
-  handleEvent(evt: FetchEvent): void | Promise<void>;
-}
-
 export type Data = string | number[] | ArrayBuffer | Uint8Array;
 export type Key = string | number[] | ArrayBuffer | Uint8Array;
 

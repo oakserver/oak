@@ -6,12 +6,7 @@ import { HttpServerNative, NativeRequest } from "./http_server_native.ts";
 import { KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
 import { cloneState } from "./structured_clone.ts";
-import {
-  FetchEventListenerObject,
-  Key,
-  Server,
-  ServerConstructor,
-} from "./types.d.ts";
+import { Key, Server, ServerConstructor } from "./types.d.ts";
 import { assert, isConn } from "./util.ts";
 
 export interface ListenOptionsBase extends Deno.ListenOptions {
@@ -135,16 +130,6 @@ export interface ApplicationOptions<S> {
   state?: S;
 }
 
-export interface FetchEventHandlerOptions {
-  /** Sets the applications `.proxy` value, which determines if proxy headers
-   * are used when determining values in the request. This defaults to `true`.
-   */
-  proxy?: boolean;
-  /** Determines if requests handled by the fetch event handler should be
-   * treated as "secure" (e.g. served over HTTP). This defaults to `true`. */
-  secure?: boolean;
-}
-
 interface RequestState {
   handling: Set<Promise<void>>;
   closing: boolean;
@@ -229,7 +214,6 @@ export class Application<AS extends State = Record<string, any>>
   extends EventTarget {
   #composedMiddleware?: (context: Context<AS, AS>) => Promise<unknown>;
   #contextState: "clone" | "prototype" | "alias" | "empty";
-  #eventHandler?: FetchEventListenerObject;
   #keys?: KeyStack;
   #middleware: Middleware<State, Context<State, AS>>[] = [];
   #serverConstructor: ServerConstructor<NativeRequest>;
@@ -416,50 +400,6 @@ export class Application<AS extends State = Record<string, any>>
     options?: boolean | AddEventListenerOptions,
   ): void {
     super.addEventListener(type, listener, options);
-  }
-
-  /** **DEPRECATED**
-   *
-   * Deno Deploy now supports request events like the Deno CLI. Users should
-   * use `app.listen()` just like if they were running on the Deno CLI for
-   * Deploy apps.  This method will be removed in future versions of oak.
-   *
-   * @deprecated This method will be removed in future versions of oak
-   */
-  fetchEventHandler(
-    { proxy = true, secure = true }: FetchEventHandlerOptions = {},
-  ): FetchEventListenerObject {
-    if (this.#eventHandler) {
-      return this.#eventHandler;
-    }
-    this.proxy = proxy;
-    return this.#eventHandler = {
-      handleEvent: async (requestEvent) => {
-        let resolve: (response: Response) => void;
-        // deno-lint-ignore no-explicit-any
-        let reject: (reason: any) => void;
-        const responsePromise = new Promise<Response>((res, rej) => {
-          resolve = res;
-          reject = rej;
-        });
-        const respondedPromise = requestEvent.respondWith(responsePromise);
-        const response = await this.handle(
-          requestEvent.request,
-          undefined,
-          secure,
-        );
-        if (response) {
-          resolve!(response);
-        } else {
-          reject!(new Error("No response returned from app handler."));
-        }
-        try {
-          await respondedPromise;
-        } catch (error) {
-          this.dispatchEvent(new ApplicationErrorEvent({ error }));
-        }
-      },
-    };
   }
 
   /** Handle an individual server request, returning the server response.  This

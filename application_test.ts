@@ -21,7 +21,7 @@ import { Status } from "./deps.ts";
 import { HttpServerNative, NativeRequest } from "./http_server_native.ts";
 import { httpErrors } from "./httpError.ts";
 import { KeyStack } from "./keyStack.ts";
-import type { Data, FetchEvent, Server, ServerConstructor } from "./types.d.ts";
+import type { Data, Server, ServerConstructor } from "./types.d.ts";
 
 const { test } = Deno;
 
@@ -870,112 +870,6 @@ test({
     await assertThrowsAsync(async () => {
       await app.handle(new Request("http://localhost/index.html"));
     }, TypeError);
-    teardown();
-  },
-});
-
-test({
-  name: "application .fetchEventHandler()",
-  async fn() {
-    let respondCount = 0;
-    let response: Response | undefined;
-
-    async function respondWith(
-      p: Response | Promise<Response>,
-    ): Promise<Response> {
-      respondCount++;
-      response = await p;
-      return response;
-    }
-
-    const app = new Application();
-    app.use((ctx) => {
-      ctx.response.body = "hello oak";
-    });
-    const handler = app.fetchEventHandler();
-    const request = new Request("http://localhost:8000/");
-    await handler.handleEvent({ request, respondWith } as FetchEvent);
-    assertEquals(respondCount, 1);
-    assert(response);
-    assertEquals(await response.text(), "hello oak");
-    teardown();
-  },
-});
-
-test({
-  name: "application .fetchEventHandler() - proxy handling",
-  async fn() {
-    let respondCount = 0;
-    let response: Response | undefined;
-
-    async function respondWith(
-      p: Response | Promise<Response>,
-    ): Promise<Response> {
-      respondCount++;
-      response = await p;
-      return response;
-    }
-
-    const app = new Application();
-    app.use((ctx) => {
-      ctx.response.body = {
-        ip: ctx.request.ip,
-        ips: ctx.request.ips,
-      };
-      ctx.response.type = "json";
-    });
-    const handler = app.fetchEventHandler();
-    const request = new Request("http://localhost:8000/", {
-      headers: {
-        "x-forwarded-for": "127.0.0.1, 192.168.0.1",
-      },
-    });
-    await handler.handleEvent({ request, respondWith } as FetchEvent);
-    assertEquals(respondCount, 1);
-    assert(response);
-    assertEquals(await response.json(), {
-      ip: "127.0.0.1",
-      ips: ["127.0.0.1", "192.168.0.1"],
-    });
-    teardown();
-  },
-});
-
-test({
-  name: "application .fetchEventHandler() - secure option",
-  async fn() {
-    let respondCount = 0;
-    let response: Response | undefined;
-
-    async function respondWith(
-      p: Response | Promise<Response>,
-    ): Promise<Response> {
-      respondCount++;
-      response = await p;
-      return response;
-    }
-
-    let middleware = (ctx: Context) => {
-      ctx.response.body = { secure: ctx.request.secure };
-      ctx.response.type = "json";
-    };
-    let app = new Application();
-    app.use(middleware);
-    let handler = app.fetchEventHandler();
-    let request = new Request("https://localhost:8000/");
-    await handler.handleEvent({ request, respondWith } as FetchEvent);
-    assertEquals(respondCount, 1);
-    assert(response);
-    assertEquals(await response.json(), { secure: true });
-
-    app = new Application();
-    app.use(middleware);
-    handler = app.fetchEventHandler({ secure: false });
-    request = new Request("https://localhost:8000/");
-    await handler.handleEvent({ request, respondWith } as FetchEvent);
-    assertEquals(respondCount, 2);
-    assert(response);
-    assertEquals(await response.json(), { secure: false });
     teardown();
   },
 });
