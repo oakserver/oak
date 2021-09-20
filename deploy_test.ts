@@ -1,6 +1,7 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, createWorker } from "./test_deps.ts";
+import { createWorker } from "https://deno.land/x/dectyl@0.10.7/mod.ts";
+import { assertEquals } from "./test_deps.ts";
 
 const notUnstable = (() => {
   return !(Deno && "emit" in Deno && typeof Deno.emit === "function");

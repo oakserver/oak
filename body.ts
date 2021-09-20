@@ -1,11 +1,10 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assert, Buffer, readAll, readerFromStreamReader } from "./deps.ts";
-import type { ServerRequest } from "./http_server_std.ts";
+import { readerFromStreamReader } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { isMediaType } from "./isMediaType.ts";
 import { FormDataReader } from "./multipart.ts";
-import { readableStreamFromReader } from "./util.ts";
+import { assert } from "./util.ts";
 
 export type BodyType =
   | "bytes"
@@ -131,26 +130,12 @@ function resolveType(
 
 const decoder = new TextDecoder();
 
-function bodyAsReader(
-  body: ReadableStream<Uint8Array> | Deno.Reader | null,
-): Deno.Reader {
-  return body instanceof ReadableStream
-    ? readerFromStreamReader(body.getReader())
-    : body ?? new Buffer();
-}
-
-function bodyAsStream(
-  body: Deno.Reader | ReadableStream<Uint8Array>,
-): ReadableStream<Uint8Array> {
-  return body instanceof ReadableStream ? body : readableStreamFromReader(body);
-}
-
 export class RequestBody {
   #formDataReader?: FormDataReader;
   #stream?: ReadableStream<Uint8Array>;
   #has?: boolean;
   #readAllBody?: Promise<Uint8Array>;
-  #request: Request | ServerRequest;
+  #request: Request;
   #type?: "bytes" | "form-data" | "reader" | "stream" | "undefined";
 
   #parse(type: BodyType): BodyValueGetter {
@@ -166,10 +151,11 @@ export class RequestBody {
         return () => {
           const contentType = this.#request.headers.get("content-type");
           assert(contentType);
+          assert(this.#request.body);
           return this.#formDataReader ??
             (this.#formDataReader = new FormDataReader(
               contentType,
-              bodyAsReader(this.#request.body),
+              readerFromStreamReader(this.#request.body.getReader()),
             ));
         };
       case "json":
@@ -230,12 +216,12 @@ export class RequestBody {
 
   #valuePromise() {
     return this.#readAllBody ??
-      (this.#readAllBody = this.#request instanceof Request
-        ? this.#request.arrayBuffer().then((ab) => new Uint8Array(ab))
-        : readAll(this.#request.body));
+      (this.#readAllBody = this.#request.arrayBuffer().then((ab) =>
+        new Uint8Array(ab)
+      ));
   }
 
-  constructor(request: ServerRequest | Request) {
+  constructor(request: Request) {
     this.#request = request;
   }
 
@@ -244,8 +230,17 @@ export class RequestBody {
   ): Body | BodyReader | BodyStream {
     this.#validateGetArgs(type, contentTypes);
     if (type === "reader") {
+      if (!this.#request.body) {
+        this.#type = "undefined";
+        throw new TypeError(
+          `Body is undefined and cannot be returned as "reader".`,
+        );
+      }
       this.#type = "reader";
-      return { type, value: bodyAsReader(this.#request.body) };
+      return {
+        type,
+        value: readerFromStreamReader(this.#request.body.getReader()),
+      };
     }
     if (type === "stream") {
       if (!this.#request.body) {
@@ -255,7 +250,7 @@ export class RequestBody {
         );
       }
       this.#type = "stream";
-      const streams = (this.#stream ?? bodyAsStream(this.#request.body)).tee();
+      const streams = (this.#stream ?? this.#request.body).tee();
       this.#stream = streams[1];
       return { type, value: streams[0] };
     }

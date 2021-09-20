@@ -1,14 +1,7 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { AsyncIterableReader } from "./async_iterable_reader.ts";
-import {
-  contentType,
-  readerFromStreamReader,
-  Status,
-  STATUS_TEXT,
-} from "./deps.ts";
+import { contentType, Status, STATUS_TEXT } from "./deps.ts";
 import { DomResponse } from "./http_server_native.ts";
-import type { ServerResponse } from "./http_server_std.ts";
 import type { Request } from "./request.ts";
 import {
   BODY_TYPES,
@@ -17,6 +10,7 @@ import {
   isHtml,
   isReader,
   isRedirectStatus,
+  readableStreamFromAsyncIterable,
   readableStreamFromReader,
   Uint8ArrayTransformStream,
 } from "./util.ts";
@@ -52,19 +46,7 @@ type BodyFunction = () => Body | Promise<Body>;
  */
 export const REDIRECT_BACK = Symbol("redirect backwards");
 
-const encoder = new TextEncoder();
-
-function toUint8Array(body: Body): Uint8Array {
-  let bodyText: string;
-  if (BODY_TYPES.includes(typeof body)) {
-    bodyText = String(body);
-  } else {
-    bodyText = JSON.stringify(body);
-  }
-  return encoder.encode(bodyText);
-}
-
-async function convertBodyToBodyInit(
+export async function convertBodyToBodyInit(
   body: Body | BodyFunction,
   type?: string,
 ): Promise<[globalThis.BodyInit | undefined, string | undefined]> {
@@ -84,41 +66,14 @@ async function convertBodyToBodyInit(
   } else if (body instanceof FormData) {
     result = body;
     type = "multipart/form-data";
+  } else if (isAsyncIterable(body)) {
+    result = readableStreamFromAsyncIterable(body);
   } else if (body && typeof body === "object") {
     result = JSON.stringify(body);
     type = type ?? "json";
   } else if (typeof body === "function") {
     const result = body.call(null);
     return convertBodyToBodyInit(await result, type);
-  } else if (body) {
-    throw new TypeError("Response body was set but could not be converted.");
-  }
-  return [result, type];
-}
-
-async function convertBodyToStdBody(
-  body: Body | BodyFunction,
-  type?: string,
-): Promise<[Uint8Array | Deno.Reader | undefined, string | undefined]> {
-  let result: Uint8Array | Deno.Reader | undefined;
-  if (BODY_TYPES.includes(typeof body)) {
-    const bodyText = String(body);
-    result = encoder.encode(bodyText);
-    type = type ?? (isHtml(bodyText) ? "html" : "text/plain");
-  } else if (body instanceof Uint8Array || isReader(body)) {
-    result = body;
-  } else if (body instanceof ReadableStream) {
-    result = readerFromStreamReader(
-      body.pipeThrough(new Uint8ArrayTransformStream()).getReader(),
-    );
-  } else if (isAsyncIterable(body)) {
-    result = new AsyncIterableReader(body, toUint8Array);
-  } else if (body && typeof body === "object") {
-    result = encoder.encode(JSON.stringify(body));
-    type = type ?? "json";
-  } else if (typeof body === "function") {
-    const result = body.call(null);
-    return convertBodyToStdBody(await result, type);
   } else if (body) {
     throw new TypeError("Response body was set but could not be converted.");
   }
@@ -134,19 +89,12 @@ export class Response {
   #headers = new Headers();
   #request: Request;
   #resources: number[] = [];
-  #serverResponse?: ServerResponse;
   #status?: Status;
   #type?: string;
   #writable = true;
 
   async #getBodyInit(): Promise<globalThis.BodyInit | undefined> {
     const [body, type] = await convertBodyToBodyInit(this.body, this.type);
-    this.type = type;
-    return body;
-  }
-
-  async #getStdBody(): Promise<Uint8Array | Deno.Reader | undefined> {
-    const [body, type] = await convertBodyToStdBody(this.body, this.type);
     this.type = type;
     return body;
   }
@@ -260,11 +208,14 @@ export class Response {
   destroy(closeResources = true): void {
     this.#writable = false;
     this.#body = undefined;
-    this.#serverResponse = undefined;
     this.#domResponse = undefined;
     if (closeResources) {
       for (const rid of this.#resources) {
-        Deno.close(rid);
+        try {
+          Deno.close(rid);
+        } catch {
+          // we don't care about errors here
+        }
       }
     }
   }
@@ -344,42 +295,6 @@ export class Response {
     };
 
     return this.#domResponse = new DomResponse(bodyInit, responseInit);
-  }
-
-  /** Take this response and convert it to the response used by the Deno net
-   * server.  Calling this will set the response to not be writable.
-   *
-   * Most users will have no need to call this method. */
-  async toServerResponse(): Promise<ServerResponse> {
-    if (this.#serverResponse) {
-      return this.#serverResponse;
-    }
-    // Process the body
-    const body = await this.#getStdBody();
-
-    // If there is a response type, set the content type header
-    this.#setContentType();
-
-    const { headers } = this;
-
-    // If there is no body and no content type and no set length, then set the
-    // content length to 0
-    if (
-      !(
-        body ||
-        headers.has("Content-Type") ||
-        headers.has("Content-Length")
-      )
-    ) {
-      headers.append("Content-Length", "0");
-    }
-
-    this.#writable = false;
-    return this.#serverResponse = {
-      body,
-      headers,
-      status: this.status,
-    };
   }
 
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {

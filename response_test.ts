@@ -1,21 +1,11 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { readAll, Status } from "./deps.ts";
-import { assert, assertEquals, assertThrows, Buffer } from "./test_deps.ts";
+import { Status } from "./deps.ts";
+import { assert, assertEquals, assertThrows } from "./test_deps.ts";
 import type { Request } from "./request.ts";
 import { REDIRECT_BACK, Response } from "./response.ts";
 
 const { test } = Deno;
-const decoder = new TextDecoder();
-
-function decodeBody(body: Uint8Array | Deno.Reader | undefined): string {
-  return decoder.decode(body as Uint8Array);
-}
-
-function isReader(value: unknown): value is Deno.Reader {
-  return typeof value === "object" && value !== null && "read" in value &&
-    typeof (value as Record<string, unknown>).read === "function";
-}
 
 function createMockRequest({
   headers,
@@ -34,11 +24,11 @@ test({
   name: "response empty",
   async fn() {
     const response = new Response(createMockRequest());
-    const serverResponse = await response.toServerResponse();
-    assertEquals(serverResponse.body, undefined);
-    assertEquals(serverResponse.status, 404);
-    assertEquals(Array.from(serverResponse.headers.entries()).length, 1);
-    assertEquals(serverResponse.headers.get("Content-Length"), "0");
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(nativeResponse.body, null);
+    assertEquals(nativeResponse.status, 404);
+    assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
+    assertEquals(nativeResponse.headers.get("Content-Length"), "0");
   },
 });
 
@@ -47,11 +37,11 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.status = 302;
-    const serverResponse = await response.toServerResponse();
-    assertEquals(serverResponse.body, undefined);
-    assertEquals(serverResponse.status, 302);
-    assertEquals(Array.from(serverResponse.headers.entries()).length, 1);
-    assertEquals(serverResponse.headers.get("Content-Length"), "0");
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(nativeResponse.body, null);
+    assertEquals(nativeResponse.status, 302);
+    assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
+    assertEquals(nativeResponse.headers.get("Content-Length"), "0");
   },
 });
 
@@ -60,14 +50,14 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.body = "Hello world!";
-    const serverResponse = await response.toServerResponse();
-    assertEquals(decodeBody(serverResponse.body), "Hello world!");
-    assertEquals(serverResponse.status, 200);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(await nativeResponse.text(), "Hello world!");
+    assertEquals(nativeResponse.status, 200);
     assertEquals(
-      serverResponse.headers.get("content-type"),
+      nativeResponse.headers.get("content-type"),
       "text/plain; charset=utf-8",
     );
-    assertEquals(Array.from(serverResponse.headers.entries()).length, 1);
+    assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
 });
 
@@ -76,17 +66,17 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.body = "<!DOCTYPE html><html><body>Hello world!</body></html>";
-    const serverResponse = await response.toServerResponse();
+    const nativeResponse = await response.toDomResponse();
     assertEquals(
-      decodeBody(serverResponse.body),
+      await nativeResponse.text(),
       "<!DOCTYPE html><html><body>Hello world!</body></html>",
     );
-    assertEquals(serverResponse.status, 200);
+    assertEquals(nativeResponse.status, 200);
     assertEquals(
-      serverResponse.headers.get("content-type"),
+      nativeResponse.headers.get("content-type"),
       "text/html; charset=utf-8",
     );
-    assertEquals(Array.from(serverResponse.headers.entries()).length, 1);
+    assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
 });
 
@@ -95,14 +85,14 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.body = { foo: "bar" };
-    const serverResponse = await response.toServerResponse();
-    assertEquals(decodeBody(serverResponse.body), `{"foo":"bar"}`);
-    assertEquals(serverResponse.status, 200);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(await nativeResponse.text(), `{"foo":"bar"}`);
+    assertEquals(nativeResponse.status, 200);
     assertEquals(
-      serverResponse.headers.get("content-type"),
+      nativeResponse.headers.get("content-type"),
       "application/json; charset=utf-8",
     );
-    assertEquals(Array.from(serverResponse.headers.entries()).length, 1);
+    assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
 });
 
@@ -111,14 +101,14 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.body = Symbol("foo");
-    const serverResponse = await response.toServerResponse();
-    assertEquals(decodeBody(serverResponse.body), "Symbol(foo)");
-    assertEquals(serverResponse.status, 200);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(await nativeResponse.text(), "Symbol(foo)");
+    assertEquals(nativeResponse.status, 200);
     assertEquals(
-      serverResponse.headers.get("content-type"),
+      nativeResponse.headers.get("content-type"),
       "text/plain; charset=utf-8",
     );
-    assertEquals(Array.from(serverResponse.headers.entries()).length, 1);
+    assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
 });
 
@@ -127,10 +117,10 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.body = new TextEncoder().encode("Hello world!");
-    const serverResponse = await response.toServerResponse();
-    assertEquals(decodeBody(serverResponse.body), "Hello world!");
-    assertEquals(serverResponse.status, 200);
-    assertEquals(Array.from(serverResponse.headers.entries()).length, 0);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(await nativeResponse.text(), "Hello world!");
+    assertEquals(nativeResponse.status, 200);
+    assertEquals(Array.from(nativeResponse.headers.entries()).length, 0);
   },
 });
 
@@ -139,14 +129,14 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.body = () => "Hello world!";
-    const serverResponse = await response.toServerResponse();
-    assertEquals(decodeBody(serverResponse.body), "Hello world!");
-    assertEquals(serverResponse.status, 200);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(await nativeResponse.text(), "Hello world!");
+    assertEquals(nativeResponse.status, 200);
     assertEquals(
-      serverResponse.headers.get("content-type"),
+      nativeResponse.headers.get("content-type"),
       "text/plain; charset=utf-8",
     );
-    assertEquals(Array.from(serverResponse.headers.entries()).length, 1);
+    assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
 });
 
@@ -161,11 +151,9 @@ test({
         controller.close();
       },
     });
-    const serverResponse = await response.toServerResponse();
-    assert(isReader(serverResponse.body));
-    const actual = await readAll(serverResponse.body);
-    assertEquals(decoder.decode(actual), "hello deno");
-    assertEquals(serverResponse.status, 200);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(await nativeResponse.text(), "hello deno");
+    assertEquals(nativeResponse.status, 200);
   },
 });
 
@@ -180,11 +168,9 @@ test({
         return;
       },
     };
-    const serverResponse = await response.toServerResponse();
-    assert(isReader(serverResponse.body));
-    const actual = await readAll(serverResponse.body);
-    assertEquals(decoder.decode(actual), "hello deno");
-    assertEquals(serverResponse.status, 200);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(await nativeResponse.text(), "hello deno");
+    assertEquals(nativeResponse.status, 200);
   },
 });
 
@@ -193,14 +179,14 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.body = () => Promise.resolve("Hello world!");
-    const serverResponse = await response.toServerResponse();
-    assertEquals(decodeBody(serverResponse.body), "Hello world!");
-    assertEquals(serverResponse.status, 200);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(await nativeResponse.text(), "Hello world!");
+    assertEquals(nativeResponse.status, 200);
     assertEquals(
-      serverResponse.headers.get("content-type"),
+      nativeResponse.headers.get("content-type"),
       "text/plain; charset=utf-8",
     );
-    assertEquals(Array.from(serverResponse.headers.entries()).length, 1);
+    assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
 });
 
@@ -210,17 +196,17 @@ test({
     const response = new Response(createMockRequest());
     response.type = "js";
     response.body = "console.log('hello world');";
-    const serverResponse = await response.toServerResponse();
+    const nativeResponse = await response.toDomResponse();
     assertEquals(
-      decodeBody(serverResponse.body),
+      await nativeResponse.text(),
       "console.log('hello world');",
     );
-    assertEquals(serverResponse.status, 200);
+    assertEquals(nativeResponse.status, 200);
     assertEquals(
-      serverResponse.headers.get("content-type"),
+      nativeResponse.headers.get("content-type"),
       "application/javascript; charset=utf-8",
     );
-    assertEquals(Array.from(serverResponse.headers.entries()).length, 1);
+    assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
 });
 
@@ -231,14 +217,14 @@ test({
     response.type = "js";
     response.body = "console.log('hello world');";
     response.headers.set("content-type", "text/plain");
-    const serverResponse = await response.toServerResponse();
+    const nativeResponse = await response.toDomResponse();
     assertEquals(
-      decodeBody(serverResponse.body),
+      await nativeResponse.text(),
       "console.log('hello world');",
     );
-    assertEquals(serverResponse.status, 200);
-    assertEquals(serverResponse.headers.get("Content-Type"), "text/plain");
-    assertEquals(Array.from(serverResponse.headers.entries()).length, 1);
+    assertEquals(nativeResponse.status, 200);
+    assertEquals(nativeResponse.headers.get("Content-Type"), "text/plain");
+    assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
 });
 
@@ -246,8 +232,8 @@ test({
   name: "empty response sets contentLength to 0",
   async fn() {
     const response = new Response(createMockRequest());
-    const serverResponse = await response.toServerResponse();
-    assertEquals(serverResponse.headers.get("Content-Length"), "0");
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(nativeResponse.headers.get("Content-Length"), "0");
   },
 });
 
@@ -256,15 +242,15 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.redirect("./foo");
-    const serverResponse = await response.toServerResponse();
-    assertEquals(serverResponse.status, Status.Found);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(nativeResponse.status, Status.Found);
     assertEquals(
-      decodeBody(serverResponse.body),
+      await nativeResponse.text(),
       `Redirecting to <a href="./foo">./foo</a>.`,
     );
-    assertEquals(serverResponse.headers.get("Location"), "./foo");
+    assertEquals(nativeResponse.headers.get("Location"), "./foo");
     assertEquals(
-      serverResponse.headers?.get("Content-Type"),
+      nativeResponse.headers.get("Content-Type"),
       "text/html; charset=utf-8",
     );
   },
@@ -276,14 +262,14 @@ test({
     const response = new Response(createMockRequest());
     const url = new URL("https://example.com/foo");
     response.redirect(url);
-    const serverResponse = await response.toServerResponse();
-    assertEquals(serverResponse.status, Status.Found);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(nativeResponse.status, Status.Found);
     assertEquals(
-      decodeBody(serverResponse.body),
+      await nativeResponse.text(),
       `Redirecting to <a href="https://example.com/foo">https://example.com/foo</a>.`,
     );
     assertEquals(
-      serverResponse.headers.get("Location"),
+      nativeResponse.headers.get("Location"),
       "https://example.com/foo",
     );
   },
@@ -296,14 +282,14 @@ test({
       createMockRequest({ headers: [["referer", "https://example.com/foo"]] }),
     );
     response.redirect(REDIRECT_BACK);
-    const serverResponse = await response.toServerResponse();
-    assertEquals(serverResponse.status, Status.Found);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(nativeResponse.status, Status.Found);
     assertEquals(
-      decodeBody(serverResponse.body),
+      await nativeResponse.text(),
       `Redirecting to <a href="https://example.com/foo">https://example.com/foo</a>.`,
     );
     assertEquals(
-      serverResponse.headers.get("Location"),
+      nativeResponse.headers.get("Location"),
       "https://example.com/foo",
     );
   },
@@ -314,14 +300,14 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.redirect(REDIRECT_BACK, new URL("https://example.com/foo"));
-    const serverResponse = await response.toServerResponse();
-    assertEquals(serverResponse.status, Status.Found);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(nativeResponse.status, Status.Found);
     assertEquals(
-      decodeBody(serverResponse.body),
+      await nativeResponse.text(),
       `Redirecting to <a href="https://example.com/foo">https://example.com/foo</a>.`,
     );
     assertEquals(
-      serverResponse.headers.get("Location"),
+      nativeResponse.headers.get("Location"),
       "https://example.com/foo",
     );
   },
@@ -332,13 +318,13 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.redirect(REDIRECT_BACK);
-    const serverResponse = await response.toServerResponse();
-    assertEquals(serverResponse.status, Status.Found);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(nativeResponse.status, Status.Found);
     assertEquals(
-      decodeBody(serverResponse.body),
+      await nativeResponse.text(),
       `Redirecting to <a href="/">/</a>.`,
     );
-    assertEquals(serverResponse.headers.get("Location"), "/");
+    assertEquals(nativeResponse.headers.get("Location"), "/");
   },
 });
 
@@ -351,18 +337,18 @@ test({
       },
     }));
     response.redirect("https://example.com/foo");
-    const serverResponse = await response.toServerResponse();
-    assertEquals(serverResponse.status, Status.Found);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(nativeResponse.status, Status.Found);
     assertEquals(
-      decodeBody(serverResponse.body),
+      await nativeResponse.text(),
       `Redirecting to https://example.com/foo.`,
     );
     assertEquals(
-      serverResponse.headers?.get("Location"),
+      nativeResponse.headers.get("Location"),
       "https://example.com/foo",
     );
     assertEquals(
-      serverResponse.headers?.get("Content-Type"),
+      nativeResponse.headers.get("Content-Type"),
       "text/plain; charset=utf-8",
     );
   },
@@ -375,23 +361,12 @@ test({
     response.redirect(
       "https://example.com/foo?redirect=https%3A%2F%2Fdeno.land",
     );
-    const serverResponse = await response.toServerResponse();
-    assertEquals(serverResponse.status, Status.Found);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(nativeResponse.status, Status.Found);
     assertEquals(
-      serverResponse.headers?.get("Location"),
+      nativeResponse.headers.get("Location"),
       "https://example.com/foo?redirect=https%3A%2F%2Fdeno.land",
     );
-  },
-});
-
-test({
-  name: "response.body() passes Deno.Reader",
-  async fn() {
-    const response = new Response(createMockRequest());
-    const body = new Buffer();
-    response.body = body;
-    const serverResponse = await response.toServerResponse();
-    assert(serverResponse.body === body);
   },
 });
 
@@ -410,11 +385,11 @@ test({
 });
 
 test({
-  name: "response.toServerResponse() is a memo",
+  name: "response.toDomResponse() is a memo",
   async fn() {
     const response = new Response(createMockRequest());
-    const sr1 = await response.toServerResponse();
-    const sr2 = await response.toServerResponse();
+    const sr1 = await response.toDomResponse();
+    const sr2 = await response.toDomResponse();
     assert(sr1 === sr2);
   },
 });
@@ -423,7 +398,7 @@ test({
   name: "response.body cannot be set after server response",
   async fn() {
     const response = new Response(createMockRequest());
-    await response.toServerResponse();
+    await response.toDomResponse();
     assertThrows(() => {
       response.body = "";
     }, Error);
@@ -434,7 +409,7 @@ test({
   name: "response.status cannot be set after server response",
   async fn() {
     const response = new Response(createMockRequest());
-    await response.toServerResponse();
+    await response.toDomResponse();
     assertThrows(() => {
       response.status = Status.Found;
     }, Error);
@@ -446,8 +421,8 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.body = null;
-    const serverResponse = await response.toServerResponse();
-    assertEquals(serverResponse.status, Status.NoContent);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(nativeResponse.status, Status.NoContent);
   },
 });
 
@@ -456,8 +431,8 @@ test({
   async fn() {
     const response = new Response(createMockRequest());
     response.body = 0;
-    const serverResponse = await response.toServerResponse();
-    assertEquals(serverResponse.status, Status.OK);
+    const nativeResponse = await response.toDomResponse();
+    assertEquals(nativeResponse.status, Status.OK);
   },
 });
 

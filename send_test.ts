@@ -9,19 +9,12 @@ import {
 
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
-import { readAll } from "./deps.ts";
 import * as etag from "./etag.ts";
 import { httpErrors } from "./httpError.ts";
 import type { RouteParams } from "./router.ts";
 import { send } from "./send.ts";
 
 const { test } = Deno;
-
-// deno-lint-ignore no-explicit-any
-function isDenoReader(value: any): value is Deno.Reader {
-  return value && typeof value === "object" && "read" in value &&
-    typeof value.read === "function";
-}
 
 function setup<
   // deno-lint-ignore no-explicit-any
@@ -49,11 +42,9 @@ test({
       root: "./fixtures",
       maxbuffer: 0,
     });
-    const serverResponse = context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
+    const nativeResponse = await context.response.toDomResponse();
+    const ab = await nativeResponse.arrayBuffer();
+    assertEquals(new Uint8Array(ab), fixture);
     assertEquals(context.response.type, ".html");
     assertEquals(
       context.response.headers.get("content-length"),
@@ -75,11 +66,8 @@ test({
       root: "./fixtures",
       maxbuffer: 0,
     });
-    const serverResponse = context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertEquals(context.response.headers.get("content-encoding"), "gzip");
     assertEquals(
@@ -100,11 +88,8 @@ test({
       root: "./fixtures",
       maxbuffer: 0,
     });
-    const serverResponse = context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertEquals(context.response.headers.get("content-encoding"), "br");
     assertEquals(
@@ -124,11 +109,8 @@ test({
       root: "./fixtures",
       maxbuffer: 0,
     });
-    const serverResponse = context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
@@ -166,11 +148,8 @@ test({
       root: "./fixtures",
       maxbuffer: 0,
     });
-    const serverResponse = context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
@@ -227,11 +206,8 @@ test({
       hidden: true,
       maxbuffer: 0,
     });
-    const serverResponse = context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
@@ -251,11 +227,8 @@ test({
       root: "./fixtures/.test",
       maxbuffer: 0,
     });
-    const serverResponse = context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
@@ -275,11 +248,8 @@ test({
       root: "./fixtures",
       maxbuffer: 0,
     });
-    const serverResponse = context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
@@ -317,11 +287,8 @@ test({
       root: "../oak/fixtures",
       maxbuffer: 0,
     });
-    const serverResponse = context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
@@ -345,9 +312,9 @@ test({
       root: "./fixtures",
       maxbuffer: 0,
     });
-    const serverResponse = await context.response.toServerResponse();
-    assertStrictEquals(serverResponse.body, undefined);
-    assertEquals(serverResponse.status, 304);
+    const nativeResponse = await context.response.toDomResponse();
+    assertStrictEquals(nativeResponse.body, null);
+    assertEquals(nativeResponse.status, 304);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
@@ -372,12 +339,9 @@ test({
       root: "./fixtures",
       maxbuffer: 0,
     });
-    const serverResponse = await context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
-    assertEquals(serverResponse.status, 200);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
+    assertEquals(nativeResponse.status, 200);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
@@ -394,11 +358,9 @@ test({
     const { context } = setup("/test.json");
     const fixture = await Deno.readFile("./fixtures/test.json");
     await send(context, context.request.url.pathname, { root: "./fixtures" });
-    const serverResponse = await context.response.toServerResponse();
-    const body = (await serverResponse).body;
-    assert(body instanceof Uint8Array);
-    assertEquals(body, fixture);
-    assertEquals(serverResponse.status, 200);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
+    assertEquals(nativeResponse.status, 200);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
@@ -419,12 +381,9 @@ test({
       root: "./fixtures",
       maxbuffer: 300000,
     });
-    const serverResponse = await context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
-    assertEquals(serverResponse.status, 200);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
+    assertEquals(nativeResponse.status, 200);
     assertEquals(context.response.type, ".jpg");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
@@ -444,8 +403,8 @@ test({
     const fixture = await Deno.readFile("./fixtures/test.jpg");
     context.request.headers.set("If-None-Match", await etag.calculate(fixture));
     await send(context, context.request.url.pathname, { root: "./fixtures" });
-    const serverResponse = await context.response.toServerResponse();
-    assertEquals(serverResponse.status, 304);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(nativeResponse.status, 304);
     assertEquals(
       context.response.headers.get("etag"),
       await etag.calculate(fixture),
@@ -463,8 +422,8 @@ test({
       `"17-dFpfAd6+866Bo994m4Epzil7k2A"`,
     );
     await send(context, context.request.url.pathname, { root: "./fixtures" });
-    const serverResponse = await context.response.toServerResponse();
-    assertEquals(serverResponse.status, 200);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(nativeResponse.status, 200);
     assertEquals(context.response.type, ".jpg");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
@@ -549,11 +508,8 @@ test({
       },
       maxbuffer: 0,
     });
-    const serverResponse = context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, "application/importmap+json");
     assertEquals(
       context.response.headers.get("content-length"),
@@ -577,11 +533,8 @@ test({
       },
       maxbuffer: 0,
     });
-    const serverResponse = context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, "plain/text");
     assertEquals(
       context.response.headers.get("content-length"),

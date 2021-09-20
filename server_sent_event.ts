@@ -1,10 +1,7 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
-import { assert, BufWriter } from "./deps.ts";
-import { NativeRequest } from "./http_server_native.ts";
-import type { ServerRequest } from "./http_server_std.ts";
+import { assert } from "./util.ts";
 
 const encoder = new TextEncoder();
 
@@ -93,8 +90,6 @@ export class ServerSentEvent extends Event {
     }${data}\n`;
   }
 }
-
-const response = `HTTP/1.1 200 OK\n`;
 
 const responseHeaders = new Headers(
   [
@@ -309,178 +304,5 @@ export class SSEStreamTarget extends EventTarget
     return `${this.constructor.name} ${
       inspect({ "#closed": this.#closed, "#context": this.#context })
     }`;
-  }
-}
-
-export class SSEStdLibTarget extends EventTarget
-  implements ServerSentEventTarget {
-  #app: Application;
-  #closed = false;
-  #keepAliveId?: number;
-  #prev = Promise.resolve();
-  #ready: Promise<void> | true;
-  #serverRequest: ServerRequest;
-  #writer: BufWriter;
-
-  async #send(payload: string, prev: Promise<void>): Promise<void> {
-    if (this.#closed) {
-      return;
-    }
-    if (this.#ready !== true) {
-      await this.#ready;
-      this.#ready = true;
-    }
-    try {
-      await prev;
-      await this.#writer.write(encoder.encode(payload));
-      await this.#writer.flush();
-    } catch (error) {
-      this.dispatchEvent(new CloseEvent({ cancelable: false }));
-      const errorEvent = new ErrorEvent("error", { error });
-      this.dispatchEvent(errorEvent);
-      this.#app.dispatchEvent(errorEvent);
-    }
-  }
-
-  async #setup(overrideHeaders?: Headers): Promise<void> {
-    const headers = new Headers(responseHeaders);
-    if (overrideHeaders) {
-      for (const [key, value] of overrideHeaders) {
-        headers.set(key, value);
-      }
-    }
-    let payload = response;
-    for (const [key, value] of headers) {
-      payload += `${key}: ${value}\n`;
-    }
-    payload += `\n`;
-    try {
-      await this.#writer.write(encoder.encode(payload));
-      await this.#writer.flush();
-    } catch (error) {
-      this.dispatchEvent(new CloseEvent({ cancelable: false }));
-      const errorEvent = new ErrorEvent("error", { error });
-      this.dispatchEvent(errorEvent);
-      this.#app.dispatchEvent(errorEvent);
-      throw error;
-    }
-  }
-
-  get closed(): boolean {
-    return this.#closed;
-  }
-
-  constructor(
-    context: Context,
-    { headers, keepAlive = false }: ServerSentEventTargetOptions = {},
-  ) {
-    super();
-    this.#app = context.app;
-    assert(!(context.request.originalRequest instanceof NativeRequest));
-    this.#serverRequest = context.request.originalRequest;
-    this.#writer = this.#serverRequest.w;
-    this.addEventListener("close", () => {
-      this.#closed = true;
-      if (this.#keepAliveId != null) {
-        clearInterval(this.#keepAliveId);
-        this.#keepAliveId = undefined;
-      }
-      try {
-        this.#serverRequest.conn.close();
-      } catch (error) {
-        if (!(error instanceof Deno.errors.BadResource)) {
-          const errorEvent = new ErrorEvent("error", { error });
-          this.dispatchEvent(errorEvent);
-          this.#app.dispatchEvent(errorEvent);
-        }
-      }
-    });
-    if (keepAlive) {
-      const interval = typeof keepAlive === "number"
-        ? keepAlive
-        : DEFAULT_KEEP_ALIVE_INTERVAL;
-      this.#keepAliveId = setInterval(() => {
-        this.dispatchComment("keep-alive comment");
-      }, interval);
-    }
-    this.#ready = this.#setup(headers);
-  }
-
-  /** Stop sending events to the remote connection and close the connection. */
-  async close(): Promise<void> {
-    if (this.#ready !== true) {
-      await this.#ready;
-    }
-    await this.#prev;
-    this.dispatchEvent(new CloseEvent({ cancelable: false }));
-  }
-
-  /** Send a comment to the remote connection.  Comments are not exposed to the
-   * client `EventSource` but are used for diagnostics and helping ensure a
-   * connection is kept alive.
-   *
-   * ```ts
-   * import { Application } from "https://deno.land/x/oak/mod.ts";
-   *
-   * const app = new Application();
-   *
-   * app.use((ctx) => {
-   *    const sse = ctx.getSSETarget();
-   *    sse.dispatchComment("this is a comment");
-   * });
-   *
-   * await app.listen();
-   * ```
-   */
-  dispatchComment(comment: string): boolean {
-    this.#prev = this.#send(
-      `: ${comment.split("\n").join("\n: ")}\n\n`,
-      this.#prev,
-    );
-    return true;
-  }
-
-  /** Dispatch a message to the client.  This message will contain `data: ` only
-   * and be available on the client `EventSource` on the `onmessage` or an event
-   * listener of type `"message"`. */
-  // deno-lint-ignore no-explicit-any
-  dispatchMessage(data: any): boolean {
-    const event = new ServerSentEvent("__message", data);
-    return this.dispatchEvent(event);
-  }
-
-  /** Dispatch a server sent event to the client.  The event `type` will be
-   * sent as `event: ` to the client which will be raised as a `MessageEvent`
-   * on the `EventSource` in the client.
-   *
-   * Any local event handlers will be dispatched to first, and if the event
-   * is cancelled, it will not be sent to the client.
-   *
-   * ```ts
-   * import { Application, ServerSentEvent } from "https://deno.land/x/oak/mod.ts";
-   *
-   * const app = new Application();
-   *
-   * app.use((ctx) => {
-   *    const sse = ctx.getSSETarget();
-   *    const evt = new ServerSentEvent("ping", "hello");
-   *    sse.dispatchEvent(evt);
-   * });
-   *
-   * await app.listen();
-   * ```
-   */
-  dispatchEvent(event: ServerSentEvent): boolean;
-  dispatchEvent(event: CloseEvent | ErrorEvent): boolean;
-  dispatchEvent(event: ServerSentEvent | CloseEvent | ErrorEvent): boolean {
-    const dispatched = super.dispatchEvent(event);
-    if (dispatched && event instanceof ServerSentEvent) {
-      this.#prev = this.#send(String(event), this.#prev);
-    }
-    return dispatched;
-  }
-
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
-    return `${this.constructor.name} ${inspect({ "closed": this.closed })}`;
   }
 }

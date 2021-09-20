@@ -8,6 +8,7 @@
 import type { Application, State } from "./application.ts";
 import { Status } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
+import { convertBodyToBodyInit } from "./response.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
 import type { ErrorStatus } from "./types.d.ts";
 
@@ -104,22 +105,20 @@ export function createMockContext<
       destroy() {
         body = undefined;
         for (const rid of resources) {
-          Deno.close(rid);
+          try {
+            Deno.close(rid);
+          } catch {
+            // we just swallow errors here
+          }
         }
       },
       redirect(url: string | URL) {
         headers.set("Location", encodeURI(String(url)));
       },
       headers,
-      toDomResponse() {
-        return Promise.resolve(new Response(body, { status, headers }));
-      },
-      toServerResponse() {
-        return Promise.resolve({
-          status,
-          body,
-          headers,
-        });
+      async toDomResponse() {
+        const [bodyInit] = await convertBodyToBodyInit(body);
+        return new Response(bodyInit, { status, headers });
       },
     },
     state: Object.assign({}, app.state),

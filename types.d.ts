@@ -90,3 +90,7 @@ export interface FetchEventListenerObject {
 
 export type Data = string | number[] | ArrayBuffer | Uint8Array;
 export type Key = string | number[] | ArrayBuffer | Uint8Array;
+
+export interface UpgradeWebSocketOptions {
+  protocol?: string;
+}

@@ -21,6 +21,12 @@ export const DEFAULT_CHUNK_SIZE = 16_640; // 17 Kib
 /** Body types which will be coerced into strings before being sent. */
 export const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
 
+export function assert(cond: unknown, msg = "Assertion failed"): asserts cond {
+  if (!cond) {
+    throw new Error(msg);
+  }
+}
+
 /** Safely decode a URI component, where if it fails, instead of throwing,
  * just returns the original string
  */
@@ -39,7 +45,7 @@ export function encodeUrl(url: string) {
     .replace(ENCODE_CHARS_REGEXP, encodeURI);
 }
 
-export function bufferToHex(buffer: ArrayBuffer): string {
+function bufferToHex(buffer: ArrayBuffer): string {
   const arr = Array.from(new Uint8Array(buffer));
   return arr.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -64,8 +70,9 @@ export async function getBoundary(): Promise<string> {
 }
 
 /** Guard for Async Iterables */
-// deno-lint-ignore no-explicit-any
-export function isAsyncIterable(value: unknown): value is AsyncIterable<any> {
+export function isAsyncIterable(
+  value: unknown,
+): value is AsyncIterable<unknown> {
   return typeof value === "object" && value !== null &&
     Symbol.asyncIterator in value &&
     // deno-lint-ignore no-explicit-any
@@ -120,7 +127,37 @@ export interface ReadableStreamFromReaderOptions {
 }
 
 /**
- * Create a `ReadableStream<Uint8Array>` from from a `Deno.Reader`.
+ * Create a `ReadableStream<Uint8Array>` from an `AsyncIterable`.
+ */
+export function readableStreamFromAsyncIterable(
+  source: AsyncIterable<unknown>,
+): ReadableStream<Uint8Array> {
+  return new ReadableStream({
+    async start(controller) {
+      for await (const chunk of source) {
+        if (BODY_TYPES.includes(typeof chunk)) {
+          controller.enqueue(encoder.encode(String(chunk)));
+        } else if (chunk instanceof Uint8Array) {
+          controller.enqueue(chunk);
+        } else if (ArrayBuffer.isView(chunk)) {
+          controller.enqueue(new Uint8Array(chunk.buffer));
+        } else if (chunk instanceof ArrayBuffer) {
+          controller.enqueue(new Uint8Array(chunk));
+        } else {
+          try {
+            controller.enqueue(encoder.encode(JSON.stringify(chunk)));
+          } catch {
+            // we just swallow errors here
+          }
+        }
+      }
+      controller.close();
+    },
+  });
+}
+
+/**
+ * Create a `ReadableStream<Uint8Array>` from a `Deno.Reader`.
  *
  * When the pull algorithm is called on the stream, a chunk from the reader
  * will be read.  When `null` is returned from the reader, the stream will be
