@@ -1,8 +1,7 @@
 # oak
 
-A middleware framework for Deno's
-[http](https://github.com/denoland/deno/tree/master/std/http#http) server,
-including a router middleware.
+A middleware framework for Deno's native HTTP server and
+[Deno Deploy](https://deno.com/deploy). It also includes a middleware router.
 
 This middleware framework is inspired by [Koa](https://github.com/koajs/koa) and
 middleware router inspired by [@koa/router](https://github.com/koajs/router/).
@@ -25,8 +24,8 @@ versions of Deno in mind. In the examples here, we will be referring to using
 oak off of `main`, though in practice you should _pin_ to a specific version of
 oak in order to ensure compatibility.
 
-For example if you wanted to use version 4.0.0 of oak, you would want to import
-oak from `https://deno.land/x/oak@v4.0.0/mod.ts`.
+For example if you wanted to use version 9.0.0 of oak, you would want to import
+oak from `https://deno.land/x/oak@v9.0.0/mod.ts`.
 
 All of the parts of oak that are intended to be used in creating a server are
 exported from `mod.ts` and most of the time, you will simply want to import the
@@ -44,7 +43,7 @@ app.use((ctx) => {
   ctx.response.body = "Hello world!";
 });
 
-await app.listen("127.0.0.1:8000");
+await app.listen({ port: 8000 });
 ```
 
 And then you would run the following command:

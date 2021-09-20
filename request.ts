@@ -12,8 +12,7 @@ import type {
   BodyText,
 } from "./body.ts";
 import { RequestBody } from "./body.ts";
-import { NativeRequest } from "./http_server_native.ts";
-import type { ServerRequest } from "./http_server_std.ts";
+import type { NativeRequest } from "./http_server_native.ts";
 import type { HTTPMethods } from "./types.d.ts";
 import { preferredCharsets } from "./negotiation/charset.ts";
 import { preferredEncodings } from "./negotiation/encoding.ts";
@@ -25,13 +24,11 @@ export class Request {
   #body: RequestBody;
   #proxy: boolean;
   #secure: boolean;
-  #serverRequest: ServerRequest | NativeRequest;
+  #serverRequest: NativeRequest;
   #url?: URL;
 
   #getRemoteAddr(): string {
-    return this.#serverRequest instanceof NativeRequest
-      ? this.#serverRequest.remoteAddr ?? ""
-      : (this.#serverRequest?.conn?.remoteAddr as Deno.NetAddr)?.hostname ?? "";
+    return this.#serverRequest.remoteAddr ?? "";
   }
 
   /** Is `true` if the request has a body, otherwise `false`. */
@@ -72,7 +69,7 @@ export class Request {
   }
 
   /** Set to the value of the _original_ Deno server request. */
-  get originalRequest(): ServerRequest | NativeRequest {
+  get originalRequest(): NativeRequest {
     return this.#serverRequest;
   }
 
@@ -83,7 +80,7 @@ export class Request {
   get url(): URL {
     if (!this.#url) {
       const serverRequest = this.#serverRequest;
-      if (serverRequest instanceof NativeRequest && !this.#proxy) {
+      if (!this.#proxy) {
         // between 1.9.0 and 1.9.1 the request.url of the native HTTP started
         // returning the full URL, where previously it only returned the path
         // so we will try to use that URL here, but default back to old logic
@@ -119,18 +116,14 @@ export class Request {
   }
 
   constructor(
-    serverRequest: ServerRequest | NativeRequest,
+    serverRequest: NativeRequest,
     proxy = false,
     secure = false,
   ) {
     this.#proxy = proxy;
     this.#secure = secure;
     this.#serverRequest = serverRequest;
-    this.#body = new RequestBody(
-      serverRequest instanceof NativeRequest
-        ? serverRequest.request
-        : serverRequest,
-    );
+    this.#body = new RequestBody(serverRequest.request);
   }
 
   /** Returns an array of media types, accepted by the requestor, in order of

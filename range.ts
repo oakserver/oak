@@ -1,10 +1,10 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assert, concat, contentType, copyBytes, Status } from "./deps.ts";
+import { concat, contentType, copyBytes, Status } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
 import { calculate } from "./etag.ts";
 import type { FileInfo } from "./etag.ts";
-import { DEFAULT_CHUNK_SIZE } from "./util.ts";
+import { assert, DEFAULT_CHUNK_SIZE } from "./util.ts";
 
 const ETAG_RE = /(?:W\/)?"[ !#-\x7E\x80-\xFF]+"/;
 

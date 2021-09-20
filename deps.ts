@@ -8,21 +8,15 @@ export {
   concat,
   copy as copyBytes,
   equals,
-} from "https://deno.land/std@0.105.0/bytes/mod.ts";
-export * as base64 from "https://deno.land/std@0.105.0/encoding/base64.ts";
-export { serve, serveTLS } from "https://deno.land/std@0.105.0/http/server.ts";
+} from "https://deno.land/std@0.107.0/bytes/mod.ts";
+export * as base64 from "https://deno.land/std@0.107.0/encoding/base64.ts";
 export {
   Status,
   STATUS_TEXT,
-} from "https://deno.land/std@0.105.0/http/http_status.ts";
-export { Buffer } from "https://deno.land/std@0.105.0/io/buffer.ts";
-export {
-  BufReader,
-  BufWriter,
-} from "https://deno.land/std@0.105.0/io/bufio.ts";
-export { LimitedReader } from "https://deno.land/std@0.105.0/io/readers.ts";
-export { readerFromStreamReader } from "https://deno.land/std@0.105.0/io/streams.ts";
-export { readAll, writeAll } from "https://deno.land/std@0.105.0/io/util.ts";
+} from "https://deno.land/std@0.107.0/http/http_status.ts";
+export { LimitedReader } from "https://deno.land/std@0.107.0/io/readers.ts";
+export { readerFromStreamReader } from "https://deno.land/std@0.107.0/io/streams.ts";
+export { readAll, writeAll } from "https://deno.land/std@0.107.0/io/util.ts";
 export {
   basename,
   extname,
@@ -31,18 +25,7 @@ export {
   normalize,
   parse,
   sep,
-} from "https://deno.land/std@0.105.0/path/mod.ts";
-export { assert } from "https://deno.land/std@0.105.0/testing/asserts.ts";
-export {
-  acceptable,
-  acceptWebSocket,
-  isWebSocketCloseEvent,
-  isWebSocketPingEvent,
-  isWebSocketPongEvent,
-} from "https://deno.land/std@0.105.0/ws/mod.ts";
-export type {
-  WebSocket as WebSocketStd,
-} from "https://deno.land/std@0.105.0/ws/mod.ts";
+} from "https://deno.land/std@0.107.0/path/mod.ts";
 
 // 3rd party dependencies
 
@@ -50,7 +33,7 @@ export {
   contentType,
   extension,
   lookup,
-} from "https://deno.land/x/media_types@v2.10.1/mod.ts";
+} from "https://deno.land/x/media_types@v2.10.2/mod.ts";
 export {
   compile,
   match as pathMatch,

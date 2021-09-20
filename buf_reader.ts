@@ -1,7 +1,6 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-import { assert } from "./deps.ts";
-import { stripEol } from "./util.ts";
+import { assert, stripEol } from "./util.ts";
 
 export interface ReadLineResult {
   bytes: Uint8Array;

@@ -7,23 +7,17 @@ import {
   assertEquals,
   assertStrictEquals,
   assertThrows,
-  assertThrowsAsync,
-  BufReader,
-  BufWriter,
 } from "./test_deps.ts";
 import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Cookies } from "./cookies.ts";
-import { readAll } from "./deps.ts";
+import { httpErrors } from "./httpError.ts";
 import { NativeRequest } from "./http_server_native.ts";
 import type { UpgradeWebSocketFn } from "./http_server_native.ts";
-import type { ServerRequest } from "./http_server_std.ts";
 import { Request as OakRequest } from "./request.ts";
 import { Response as OakResponse } from "./response.ts";
 import { cloneState } from "./structured_clone.ts";
-import { httpErrors } from "./httpError.ts";
-import { WebSocketShim } from "./websocket.ts";
-import type { UpgradeWebSocketOptions } from "./websocket.ts";
+import type { UpgradeWebSocketOptions } from "./types.d.ts";
 
 const { test } = Deno;
 
@@ -39,38 +33,11 @@ function createMockApp<S extends State = Record<string, any>>(
   } as any;
 }
 
-interface MockServerOptions {
-  headers?: [string, string][];
-  proto?: string;
-  url?: string;
-}
-
-function createMockServerRequest(
-  {
-    url = "/",
-    proto = "HTTP/1.1",
-    headers: headersInit = [["host", "localhost"]],
-  }: MockServerOptions = {},
-): ServerRequest {
-  const headers = new Headers(headersInit);
-  return {
-    conn: {
-      close() {},
-    },
-    r: new BufReader(new Deno.Buffer(new Uint8Array())),
-    w: new BufWriter(new Deno.Buffer(new Uint8Array())),
-    headers,
-    method: "GET",
-    proto,
-    url,
-    async respond() {},
-  } as any;
-}
-
 interface MockNativeOptions {
   url?: string;
   requestInit?: RequestInit;
-  undefinedUpgrade?: boolean;
+  upgradeThrow?: boolean;
+  upgradeUndefined?: boolean;
 }
 
 let respondWithStack: (Response | Promise<Response>)[] = [];
@@ -84,7 +51,8 @@ function createMockNativeRequest(
   {
     url = "http://localhost/",
     requestInit = { headers: [["host", "localhost"]] },
-    undefinedUpgrade = false,
+    upgradeThrow = true,
+    upgradeUndefined = false,
   }: MockNativeOptions = {},
 ) {
   respondWithStack = [];
@@ -97,25 +65,23 @@ function createMockNativeRequest(
       return Promise.resolve();
     },
   };
-  const upgradeWebSocket: UpgradeWebSocketFn | undefined = undefinedUpgrade
+  const upgradeWebSocket: UpgradeWebSocketFn | undefined = upgradeUndefined
     ? undefined
     : (request, options) => {
+      if (upgradeThrow) {
+        throw new TypeError("Cannot upgrade connection.");
+      }
       upgradeWebSocketStack.push([request, options]);
       return { response: mockResponse, socket: mockWebSocket };
     };
   return new NativeRequest(requestEvent, { upgradeWebSocket });
 }
 
-function isDenoReader(value: any): value is Deno.Reader {
-  return value && typeof value === "object" && "read" in value &&
-    typeof value.read === "function";
-}
-
 test({
   name: "context",
   fn() {
     const app = createMockApp();
-    const serverRequest = createMockServerRequest();
+    const serverRequest = createMockNativeRequest();
     const context = new Context(app, serverRequest, cloneState(app.state));
     assert(context instanceof Context);
     assertEquals(context.state, app.state);
@@ -131,7 +97,7 @@ test({
   fn() {
     const context: Context = new Context(
       createMockApp(),
-      createMockServerRequest(),
+      createMockNativeRequest(),
       {},
     );
     assertThrows(
@@ -148,7 +114,7 @@ test({
 test({
   name: "context.throw()",
   fn() {
-    const context = new Context(createMockApp(), createMockServerRequest(), {});
+    const context = new Context(createMockApp(), createMockNativeRequest(), {});
     assertThrows(
       () => {
         context.throw(404, "foobar");
@@ -164,16 +130,14 @@ test({
   async fn() {
     const context = new Context(
       createMockApp(),
-      createMockServerRequest({ url: "/test.html" }),
+      createMockNativeRequest({ url: "http://localhost/test.html" }),
       {},
     );
     const fixture = await Deno.readFile("./fixtures/test.html");
     await context.send({ root: "./fixtures", maxbuffer: 0 });
-    const serverResponse = await context.response.toServerResponse();
-    const bodyReader = serverResponse.body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
+    const response = await context.response.toDomResponse();
+    const ab = await response.arrayBuffer();
+    assertEquals(new Uint8Array(ab), fixture);
     assertEquals(context.response.type, ".html");
     assertEquals(
       context.response.headers.get("content-length"),
@@ -188,18 +152,16 @@ test({
 test({
   name: "context.send() specified path",
   async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest(), {});
+    const context = new Context(createMockApp(), createMockNativeRequest(), {});
     const fixture = await Deno.readFile("./fixtures/test.html");
     await context.send({
       path: "/test.html",
       root: "./fixtures",
       maxbuffer: 0,
     });
-    const serverResponse = context.response.toServerResponse();
-    const bodyReader = (await serverResponse).body;
-    assert(isDenoReader(bodyReader));
-    const body = await readAll(bodyReader);
-    assertEquals(body, fixture);
+    const response = await context.response.toDomResponse();
+    const ab = await response.arrayBuffer();
+    assertEquals(new Uint8Array(ab), fixture);
     assertEquals(context.response.type, ".html");
     assertEquals(
       context.response.headers.get("content-length"),
@@ -212,29 +174,7 @@ test({
 });
 
 test({
-  name: "context.upgrade() - std Request",
-  async fn() {
-    const context = new Context(
-      createMockApp(),
-      createMockServerRequest({
-        headers: [["Upgrade", "websocket"], ["Sec-WebSocket-Key", "abc"], [
-          "host",
-          "localhost",
-        ]],
-      }),
-      {},
-    );
-    assert(context.socket === undefined);
-    const ws = await context.upgrade();
-    assert(ws);
-    assert(ws instanceof WebSocketShim);
-    assertStrictEquals(context.socket, ws);
-    assertEquals(context.respond, false);
-  },
-});
-
-test({
-  name: "context.upgrade() - native request",
+  name: "context.upgrade()",
   async fn() {
     const context = new Context(
       createMockApp(),
@@ -247,11 +187,12 @@ test({
             ["host", "localhost"],
           ],
         },
+        upgradeThrow: false,
       }),
       {},
     );
     assert(context.socket === undefined);
-    const ws = await context.upgrade();
+    const ws = context.upgrade();
     assert(ws);
     assertStrictEquals(context.socket, ws);
     assertStrictEquals(ws, mockWebSocket);
@@ -276,14 +217,14 @@ test({
             ["host", "localhost"],
           ],
         },
-        undefinedUpgrade: true,
+        upgradeUndefined: true,
       }),
       {},
     );
     assert(context.socket === undefined);
-    await assertThrowsAsync(
-      async () => {
-        await context.upgrade();
+    assertThrows(
+      () => {
+        context.upgrade();
       },
       TypeError,
       "Upgrading web sockets not supported.",
@@ -296,10 +237,10 @@ test({
 test({
   name: "context.upgrade() failure does not set socket/respond",
   async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest(), {});
+    const context = new Context(createMockApp(), createMockNativeRequest(), {});
     assert(context.socket === undefined);
-    await assertThrowsAsync(async () => {
-      await context.upgrade();
+    assertThrows(() => {
+      context.upgrade();
     });
     assert(context.socket === undefined);
     assertEquals(context.respond, true);
@@ -307,21 +248,7 @@ test({
 });
 
 test({
-  name: "context.isUpgradable true - std request",
-  async fn() {
-    const context = new Context(
-      createMockApp(),
-      createMockServerRequest({
-        headers: [["Upgrade", "websocket"], ["Sec-WebSocket-Key", "abc"]],
-      }),
-      {},
-    );
-    assertEquals(context.isUpgradable, true);
-  },
-});
-
-test({
-  name: "context.isUpgradable true - native request",
+  name: "context.isUpgradable true",
   async fn() {
     const context = new Context(
       createMockApp(),
@@ -342,21 +269,7 @@ test({
 });
 
 test({
-  name: "context.isUpgradable false - std request",
-  async fn() {
-    const context = new Context(
-      createMockApp(),
-      createMockServerRequest({
-        headers: [["Upgrade", "websocket"]],
-      }),
-      {},
-    );
-    assertEquals(context.isUpgradable, false);
-  },
-});
-
-test({
-  name: "context.isUpgradable false - native request",
+  name: "context.isUpgradable false",
   async fn() {
     const context = new Context(
       createMockApp(),
@@ -377,7 +290,7 @@ test({
 test({
   name: "context.getSSETarget()",
   async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest(), {});
+    const context = new Context(createMockApp(), createMockNativeRequest(), {});
     const sse = context.sendEvents();
     sse.dispatchComment(`hello world`);
     await sse.close();
@@ -389,7 +302,7 @@ test({
   fn() {
     const context = new Context(
       createMockApp(),
-      createMockServerRequest(),
+      createMockNativeRequest(),
       {},
       true,
     );
@@ -401,7 +314,7 @@ test({
   name: "Context - inspecting",
   fn() {
     const app = createMockApp();
-    const req = createMockServerRequest();
+    const req = createMockNativeRequest();
     assertEquals(
       Deno.inspect(new Context(app, req, {}), { depth: 1 }),
       `Context {\n  app: MockApplication {},\n  cookies: Cookies [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/"\n},\n  response: Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true },\n  socket: undefined,\n  state: {}\n}`,

@@ -1,14 +1,8 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 import { Context } from "./context.ts";
-import { assert, Status, STATUS_TEXT } from "./deps.ts";
-import {
-  hasNativeHttp,
-  HttpServerNative,
-  NativeRequest,
-} from "./http_server_native.ts";
-import { HttpServerStd } from "./http_server_std.ts";
-import type { ServerRequest, ServerResponse } from "./http_server_std.ts";
+import { Status, STATUS_TEXT } from "./deps.ts";
+import { HttpServerNative, NativeRequest } from "./http_server_native.ts";
 import { KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
 import { cloneState } from "./structured_clone.ts";
@@ -18,7 +12,7 @@ import {
   Server,
   ServerConstructor,
 } from "./types.d.ts";
-import { isConn } from "./util.ts";
+import { assert, isConn } from "./util.ts";
 
 export interface ListenOptionsBase extends Deno.ListenOptions {
   secure?: false;
@@ -43,18 +37,7 @@ export interface HandleMethod {
    * is similar to `.listen()`, but opening the connection and retrieving
    * requests are not the responsibility of the application.  If the generated
    * context gets set to not to respond, then the method resolves with
-   * `undefined`, otherwise it resolves with a request that is compatible with
-   * `std/http/server`. */
-  (
-    request: ServerRequest,
-    secure?: boolean,
-  ): Promise<ServerResponse | undefined>;
-  /** Handle an individual server request, returning the server response.  This
-   * is similar to `.listen()`, but opening the connection and retrieving
-   * requests are not the responsibility of the application.  If the generated
-   * context gets set to not to respond, then the method resolves with
-   * `undefined`, otherwise it resolves with a request that is compatible with
-   * `std/http/server`. */
+   * `undefined`, otherwise it resolves with a DOM `Response` object. */
   (
     request: Request,
     conn?: Deno.Conn,
@@ -94,7 +77,7 @@ interface ApplicationListenEventInit extends EventInit {
   listener: Deno.Listener;
   port: number;
   secure: boolean;
-  serverType: "std" | "native" | "custom";
+  serverType: "native" | "custom";
 }
 
 type ApplicationListenEventListenerOrEventListenerObject =
@@ -141,12 +124,10 @@ export interface ApplicationOptions<S> {
   proxy?: boolean;
 
   /** A server constructor to use instead of the default server for receiving
-   * requests.  When the native HTTP server is detected in the environment, then
-   * the native server will be used, otherwise the `std/http` server will be
-   * used.  Passing either `HTTPServerStd` or `HTTPServerNative` will override
-   * this behavior.
-   */
-  serverConstructor?: ServerConstructor<ServerRequest | NativeRequest>;
+   * requests.
+   *
+   * Generally this is only used for testing. */
+  serverConstructor?: ServerConstructor<NativeRequest>;
 
   /** The initial state object for the application, of which the type can be
    * used to infer the type of the state for both the application and any of the
@@ -168,7 +149,7 @@ interface RequestState {
   handling: Set<Promise<void>>;
   closing: boolean;
   closed: boolean;
-  server: Server<ServerRequest | NativeRequest>;
+  server: Server<NativeRequest>;
 }
 
 // deno-lint-ignore no-explicit-any
@@ -225,7 +206,7 @@ export class ApplicationListenEvent extends Event {
   listener: Deno.Listener;
   port: number;
   secure: boolean;
-  serverType: "std" | "native" | "custom";
+  serverType: "native" | "custom";
 
   constructor(eventInitDict: ApplicationListenEventInit) {
     super("listen", eventInitDict);
@@ -251,7 +232,7 @@ export class Application<AS extends State = Record<string, any>>
   #eventHandler?: FetchEventListenerObject;
   #keys?: KeyStack;
   #middleware: Middleware<State, Context<State, AS>>[] = [];
-  #serverConstructor: ServerConstructor<ServerRequest | NativeRequest>;
+  #serverConstructor: ServerConstructor<NativeRequest>;
 
   /** A set of keys, or an instance of `KeyStack` which will be used to sign
    * cookies read and set by the application to avoid tampering with the
@@ -296,7 +277,7 @@ export class Application<AS extends State = Record<string, any>>
       state,
       keys,
       proxy,
-      serverConstructor = hasNativeHttp() ? HttpServerNative : HttpServerStd,
+      serverConstructor = HttpServerNative,
       contextState = "clone",
       logErrors = true,
     } = options;
@@ -366,7 +347,7 @@ export class Application<AS extends State = Record<string, any>>
 
   /** Processing registered middleware on each request. */
   async #handleRequest(
-    request: ServerRequest | NativeRequest,
+    request: NativeRequest,
     secure: boolean,
     state: RequestState,
   ): Promise<void> {
@@ -388,25 +369,17 @@ export class Application<AS extends State = Record<string, any>>
       return;
     }
     let closeResources = true;
-    let response: Response | ServerResponse;
+    let response: Response;
     try {
-      if (request instanceof NativeRequest) {
-        closeResources = false;
-        response = await context.response.toDomResponse();
-      } else {
-        response = await context.response.toServerResponse();
-      }
+      closeResources = false;
+      response = await context.response.toDomResponse();
     } catch (err) {
       this.#handleError(context, err);
-      if (request instanceof NativeRequest) {
-        response = await context.response.toDomResponse();
-      } else {
-        response = await context.response.toServerResponse();
-      }
+      response = await context.response.toDomResponse();
     }
     assert(response);
     try {
-      await request.respond(response as Response & ServerResponse);
+      await request.respond(response);
     } catch (err) {
       this.#handleError(context, err);
     } finally {
@@ -496,30 +469,20 @@ export class Application<AS extends State = Record<string, any>>
    * `undefined`, otherwise it resolves with a request that is compatible with
    * `std/http/server`. */
   handle = (async (
-    request: ServerRequest | Request,
+    request: Request,
     secureOrConn: Deno.Conn | boolean | undefined,
     secure: boolean | undefined = false,
-  ): Promise<ServerResponse | Response | undefined> => {
+  ): Promise<Response | undefined> => {
     if (!this.#middleware.length) {
       throw new TypeError("There is no middleware to process requests.");
     }
-    let contextRequest: ServerRequest | NativeRequest;
-    if (request instanceof Request) {
-      assert(isConn(secureOrConn) || typeof secureOrConn === "undefined");
-      contextRequest = new NativeRequest({
-        request,
-        respondWith() {
-          return Promise.resolve(undefined);
-        },
-      }, { conn: secureOrConn });
-    } else {
-      assert(
-        typeof secureOrConn === "boolean" ||
-          typeof secureOrConn === "undefined",
-      );
-      secure = secureOrConn ?? false;
-      contextRequest = request;
-    }
+    assert(isConn(secureOrConn) || typeof secureOrConn === "undefined");
+    const contextRequest = new NativeRequest({
+      request,
+      respondWith() {
+        return Promise.resolve(undefined);
+      },
+    }, { conn: secureOrConn });
     const context = new Context(
       this,
       contextRequest,
@@ -536,9 +499,7 @@ export class Application<AS extends State = Record<string, any>>
       return;
     }
     try {
-      const response = contextRequest instanceof NativeRequest
-        ? await context.response.toDomResponse()
-        : await context.response.toServerResponse();
+      const response = await context.response.toDomResponse();
       context.response.destroy(false);
       return response;
     } catch (err) {
@@ -589,11 +550,7 @@ export class Application<AS extends State = Record<string, any>>
       });
     }
     const { secure = false } = options;
-    const serverType = server instanceof HttpServerStd
-      ? "std"
-      : server instanceof HttpServerNative
-      ? "native"
-      : "custom";
+    const serverType = server instanceof HttpServerNative ? "native" : "custom";
     const listener = server.listen();
     const { hostname, port } = listener.addr as Deno.NetAddr;
     this.dispatchEvent(

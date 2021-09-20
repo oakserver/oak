@@ -2,11 +2,7 @@
 
 import { assertEquals, assertStrictEquals, unreachable } from "./test_deps.ts";
 
-import {
-  hasNativeHttp,
-  HttpServerNative,
-  NativeRequest,
-} from "./http_server_native.ts";
+import { HttpServerNative, NativeRequest } from "./http_server_native.ts";
 
 import { Application } from "./application.ts";
 
@@ -19,13 +15,6 @@ function createMockConn() {
     rid: 1,
   } as Deno.Conn;
 }
-
-test({
-  name: "hasNativeHttp()",
-  fn() {
-    assertEquals(hasNativeHttp(), "serveHttp" in Deno);
-  },
-});
 
 test({
   name: "NativeRequest",

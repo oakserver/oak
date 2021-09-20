@@ -28,7 +28,6 @@
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
 import {
-  assert,
   compile,
   Key,
   ParseOptions,
@@ -40,7 +39,7 @@ import {
 import { httpErrors } from "./httpError.ts";
 import { compose, Middleware } from "./middleware.ts";
 import type { HTTPMethods, RedirectStatus } from "./types.d.ts";
-import { decodeComponent } from "./util.ts";
+import { assert, decodeComponent } from "./util.ts";
 
 interface Matches {
   path: Layer[];

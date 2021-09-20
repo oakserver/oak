@@ -4,8 +4,7 @@
 // timing safe string comparison to avoid timing attacks as described in
 // https://codahale.com/a-lesson-in-timing-attacks/.
 
-import { assert } from "./deps.ts";
-import { importKey, sign } from "./util.ts";
+import { assert, importKey, sign } from "./util.ts";
 import type { Data } from "./types.d.ts";
 
 function compareArrayBuffer(a: ArrayBuffer, b: ArrayBuffer): boolean {

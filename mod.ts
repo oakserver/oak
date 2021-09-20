@@ -29,8 +29,6 @@ export type { CookiesGetOptions, CookiesSetDeleteOptions } from "./cookies.ts";
 export * as etag from "./etag.ts";
 export { HttpServerNative } from "./http_server_native.ts";
 export type { NativeRequest } from "./http_server_native.ts";
-export { HttpServerStd } from "./http_server_std.ts";
-export type { ServerRequest, ServerResponse } from "./http_server_std.ts";
 export { HttpError, httpErrors, isHttpError } from "./httpError.ts";
 export { proxy } from "./middleware/proxy.ts";
 export type { ProxyOptions } from "./middleware/proxy.ts";

@@ -7,7 +7,6 @@ import type { Context } from "./context.ts";
 import { calculate, FileInfo, ifNoneMatch } from "./etag.ts";
 import { createHttpError } from "./httpError.ts";
 import {
-  assert,
   basename,
   extname,
   LimitedReader,
@@ -17,7 +16,7 @@ import {
 } from "./deps.ts";
 import { ifRange, MultiPartStream, parseRange } from "./range.ts";
 import type { Response } from "./response.ts";
-import { decodeComponent, getBoundary, resolvePath } from "./util.ts";
+import { assert, decodeComponent, getBoundary, resolvePath } from "./util.ts";
 
 const MAXBUFFER_DEFAULT = 1_048_576; // 1MiB;
 const BOUNDARY = await getBoundary();

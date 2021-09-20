@@ -2,9 +2,7 @@
 
 import type { Application, State } from "./application.ts";
 import { Cookies } from "./cookies.ts";
-import { acceptable, acceptWebSocket } from "./deps.ts";
 import { NativeRequest } from "./http_server_native.ts";
-import type { ServerRequest } from "./http_server_std.ts";
 import { createHttpError } from "./httpError.ts";
 import type { KeyStack } from "./keyStack.ts";
 import { Request } from "./request.ts";
@@ -12,13 +10,10 @@ import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
 import {
   ServerSentEventTargetOptions,
-  SSEStdLibTarget,
   SSEStreamTarget,
 } from "./server_sent_event.ts";
 import type { ServerSentEventTarget } from "./server_sent_event.ts";
-import type { ErrorStatus } from "./types.d.ts";
-import { WebSocketShim } from "./websocket.ts";
-import type { UpgradeWebSocketOptions } from "./websocket.ts";
+import type { ErrorStatus, UpgradeWebSocketOptions } from "./types.d.ts";
 
 export interface ContextSendOptions extends SendOptions {
   /** The filename to send, which will be resolved based on the other options.
@@ -48,7 +43,12 @@ export class Context<
    * Otherwise the value is `false`.  Use `.upgrade()` to upgrade the connection
    * and return the web socket. */
   get isUpgradable(): boolean {
-    return acceptable(this.request);
+    const upgrade = this.request.headers.get("upgrade");
+    if (!upgrade || upgrade.toLowerCase() !== "websocket") {
+      return false;
+    }
+    const secKey = this.request.headers.get("sec-websocket-key");
+    return typeof secKey === "string" && secKey != "";
   }
 
   /** Determines if the request should be responded to.  If `false` when the
@@ -98,7 +98,7 @@ export class Context<
 
   constructor(
     app: Application<AS>,
-    serverRequest: ServerRequest | NativeRequest,
+    serverRequest: NativeRequest,
     state: S,
     secure = false,
   ) {
@@ -154,12 +154,7 @@ export class Context<
    * This will set `.respond` to `false`. */
   sendEvents(options?: ServerSentEventTargetOptions): ServerSentEventTarget {
     if (!this.#sse) {
-      if (this.request.originalRequest instanceof NativeRequest) {
-        this.#sse = new SSEStreamTarget(this, options);
-      } else {
-        this.respond = false;
-        this.#sse = new SSEStdLibTarget(this, options);
-      }
+      this.#sse = new SSEStreamTarget(this, options);
     }
     return this.#sse;
   }
@@ -183,30 +178,12 @@ export class Context<
 
   /** Take the current request and upgrade it to a web socket, resolving with
    * the a web standard `WebSocket` object. This will set `.respond` to
-   * `false`.
-   *
-   * *Note* when using the `std` library HTTP server versus the Deno native
-   * HTTP server, the `std` WebSocket is wrapped by a class that provides a
-   * web standard `WebSocket` interface. The `std` WebSocket does not handle the
-   * optional options that are provided when upgrading.
-   */
-  async upgrade(options?: UpgradeWebSocketOptions): Promise<WebSocket> {
+   * `false`.  If the socket cannot be upgraded, this method will throw. */
+  upgrade(options?: UpgradeWebSocketOptions): WebSocket {
     if (this.#socket) {
       return this.#socket;
     }
-    if (this.request.originalRequest instanceof NativeRequest) {
-      this.#socket = this.request.originalRequest.upgrade(options);
-    } else {
-      const { conn, r: bufReader, w: bufWriter, headers } =
-        this.request.originalRequest;
-      this.#socket = new WebSocketShim(
-        await acceptWebSocket(
-          { conn, bufReader, bufWriter, headers },
-        ),
-        this.request.url.toString(),
-        options?.protocol,
-      );
-    }
+    this.#socket = this.request.originalRequest.upgrade(options);
     this.respond = false;
     return this.#socket;
   }

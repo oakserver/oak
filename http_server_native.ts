@@ -1,10 +1,8 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
-import { assert } from "./deps.ts";
-import type { Server } from "./types.d.ts";
-import { isListenTlsOptions } from "./util.ts";
-import type { UpgradeWebSocketOptions } from "./websocket.ts";
+import type { Server, UpgradeWebSocketOptions } from "./types.d.ts";
+import { assert, isListenTlsOptions } from "./util.ts";
 
 export type Respond = (r: Response | Promise<Response>) => void;
 export const DomResponse: typeof Response = Response;
@@ -53,15 +51,7 @@ const maybeUpgradeWebSocket: UpgradeWebSocketFn | undefined =
       (Deno as any).upgradeWebSocket.bind(Deno)
     : undefined;
 
-/**
- * Detects if the current version of Deno provides the native HTTP bindings,
- * which may be only available under the `--unstable` flag.
- */
-export function hasNativeHttp(): boolean {
-  return !!serveHttp;
-}
-
-interface NativeRequestOptions {
+export interface NativeRequestOptions {
   conn?: Deno.Conn;
   upgradeWebSocket?: UpgradeWebSocketFn;
 }

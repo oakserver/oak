@@ -7,12 +7,7 @@ import { assert, assertEquals, BufWriter, StringWriter } from "./test_deps.ts";
 import type { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { NativeRequest } from "./http_server_native.ts";
-import type { ServerRequest } from "./http_server_std.ts";
-import {
-  ServerSentEvent,
-  SSEStdLibTarget,
-  SSEStreamTarget,
-} from "./server_sent_event.ts";
+import { ServerSentEvent, SSEStreamTarget } from "./server_sent_event.ts";
 
 const { test } = Deno;
 
@@ -42,19 +37,6 @@ function createMockApp(): Application {
     },
   );
   return env.appTarget as any;
-}
-
-function createMockServerRequest(): ServerRequest {
-  env.outWriter = new StringWriter();
-  env.connCloseCalled = false;
-  return {
-    conn: {
-      close() {
-        env.connCloseCalled = true;
-      },
-    },
-    w: new BufWriter(env.outWriter),
-  } as any;
 }
 
 function createMockNativeRequest(): NativeRequest {
@@ -123,122 +105,6 @@ test({
     assertEquals(evt.type, "__message");
     assertEquals(evt.data, `{"hello":"world"}`);
     assertEquals(String(evt), `data: {"hello":"world"}\n\n`);
-  },
-});
-
-test({
-  name: "SSEStdLibTarget - construction",
-  async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest(), {});
-    const sse = new SSEStdLibTarget(context);
-    assertEquals(sse.closed, false);
-    await sse.close();
-    assert(env.connCloseCalled);
-    assertEquals(sse.closed, true);
-    const actual = String(env.outWriter);
-    assertEquals(actual, preamble);
-    assertEquals(env.appErrorEvents.length, 0);
-  },
-});
-
-test({
-  name: "SSEStdLibTarget - construction with headers",
-  async fn() {
-    const expected =
-      `HTTP/1.1 200 OK\ncache-control: special\nconnection: Keep-Alive\ncontent-type: text/event-stream\nkeep-alive: timeout=9007199254740991\nx-oak: test\n\n`;
-    const context = new Context(createMockApp(), createMockServerRequest(), {});
-    const sse = new SSEStdLibTarget(
-      context,
-      {
-        headers: new Headers([["X-Oak", "test"], ["Cache-Control", "special"]]),
-      },
-    );
-    await sse.close();
-    const actual = String(env.outWriter);
-    assertEquals(actual, expected);
-  },
-});
-
-test({
-  name: "SSEStdLibTarget - dispatchEvent",
-  async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest(), {});
-    const sse = new SSEStdLibTarget(context);
-    const evt = new ServerSentEvent("message", "foobar");
-    sse.dispatchEvent(evt);
-    await sse.close();
-    assert(env.connCloseCalled);
-    const actual = env.outWriter.toString();
-    assert(actual.endsWith(`\n\nevent: message\ndata: foobar\n\n`));
-    assertEquals(env.appErrorEvents.length, 0);
-  },
-});
-
-test({
-  name: "SSEStdLibTarget - dispatchMessage",
-  async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest(), {});
-    const sse = new SSEStdLibTarget(context);
-    sse.dispatchMessage("foobar");
-    await sse.close();
-    assert(env.connCloseCalled);
-    const actual = env.outWriter.toString();
-    assert(actual.endsWith(`\n\ndata: foobar\n\n`));
-    assertEquals(env.appErrorEvents.length, 0);
-  },
-});
-
-test({
-  name: "SSEStdLibTarget - dispatchComment",
-  async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest(), {});
-    const sse = new SSEStdLibTarget(context);
-    sse.dispatchComment("foobar");
-    await sse.close();
-    assert(env.connCloseCalled);
-    const actual = env.outWriter.toString();
-    assert(actual.endsWith(`\n\n: foobar\n\n`));
-    assertEquals(env.appErrorEvents.length, 0);
-  },
-});
-
-test({
-  name: "SSEStdLibTarget - keep-alive setting",
-  async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest(), {});
-    const sse = new SSEStdLibTarget(context, { keepAlive: 1000 });
-    const p = new Promise<void>((resolve, reject) => {
-      setTimeout(async () => {
-        try {
-          await sse.close();
-          assert(env.connCloseCalled);
-          const actual = env.outWriter.toString();
-          assert(actual.endsWith(`\n\n: keep-alive comment\n\n`));
-          assertEquals(env.appErrorEvents.length, 0);
-          resolve();
-        } catch (e) {
-          reject(e);
-        }
-      }, 1250);
-    });
-    return p;
-  },
-});
-
-test({
-  name: "SSEStdLibTarget - synchronous dispatch",
-  async fn() {
-    const context = new Context(createMockApp(), createMockServerRequest(), {});
-    const sse = new SSEStdLibTarget(context);
-    sse.dispatchComment("1");
-    sse.dispatchComment("2");
-    sse.dispatchComment("3");
-    sse.dispatchComment("4");
-    await sse.close();
-    assert(env.connCloseCalled);
-    const actual = env.outWriter.toString();
-    assert(actual.endsWith(`\n\n: 1\n\n: 2\n\n: 3\n\n: 4\n\n`));
-    assertEquals(env.appErrorEvents.length, 0);
   },
 });
 
@@ -376,17 +242,6 @@ test({
     );
     assert(closed);
     assert(!errored);
-  },
-});
-
-test({
-  name: "SSEStdLibTarget - inspecting",
-  fn() {
-    const context = new Context(createMockApp(), createMockServerRequest(), {});
-    assertEquals(
-      Deno.inspect(new SSEStdLibTarget(context)),
-      `SSEStdLibTarget { closed: false }`,
-    );
   },
 });
 
