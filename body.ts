@@ -74,6 +74,13 @@ export interface BodyOptionsContentTypes {
 }
 
 export interface BodyOptions<T extends BodyType = BodyType> {
+  /** When reading a non-streaming body, set a limit whereby if the content
+   * length is greater then the limit or not set, reading the body will throw.
+   *
+   * This is to prevent malicious requests where the body exceeds the capacity
+   * of the server. Set the limit to 0 to allow unbounded reads.  The default
+   * is 10 Mib. */
+  limit?: number;
   /** Instead of utilizing the content type of the request, attempt to parse the
    * body as the type specified. */
   type?: T;
@@ -86,6 +93,8 @@ export interface BodyContentTypes {
   form?: string[];
   text?: string[];
 }
+
+const DEFAULT_LIMIT = 10_485_760; // 10mb
 
 const defaultBodyContentTypes = {
   json: ["json", "application/*+json", "application/csp-report"],
@@ -138,10 +147,29 @@ export class RequestBody {
   #request: Request;
   #type?: "bytes" | "form-data" | "reader" | "stream" | "undefined";
 
-  #parse(type: BodyType): BodyValueGetter {
+  #exceedsLimit(limit: number): boolean {
+    if (!limit || limit === Infinity) {
+      return false;
+    }
+    const contentLength = this.#request.headers.get("content-length");
+    if (!contentLength) {
+      return true;
+    }
+    const parsed = parseInt(contentLength, 10);
+    if (isNaN(parsed)) {
+      return true;
+    }
+    return parsed > limit;
+  }
+
+  #parse(type: BodyType, limit: number): BodyValueGetter {
     switch (type) {
       case "form":
         this.#type = "bytes";
+        if (this.#exceedsLimit(limit)) {
+          return () =>
+            Promise.reject(new RangeError(`Body exceeds a limit of ${limit}.`));
+        }
         return async () =>
           new URLSearchParams(
             decoder.decode(await this.#valuePromise()).replace(/\+/g, " "),
@@ -160,13 +188,25 @@ export class RequestBody {
         };
       case "json":
         this.#type = "bytes";
+        if (this.#exceedsLimit(limit)) {
+          return () =>
+            Promise.reject(new RangeError(`Body exceeds a limit of ${limit}.`));
+        }
         return async () =>
           JSON.parse(decoder.decode(await this.#valuePromise()));
       case "bytes":
         this.#type = "bytes";
+        if (this.#exceedsLimit(limit)) {
+          return () =>
+            Promise.reject(new RangeError(`Body exceeds a limit of ${limit}.`));
+        }
         return () => this.#valuePromise();
       case "text":
         this.#type = "bytes";
+        if (this.#exceedsLimit(limit)) {
+          return () =>
+            Promise.reject(new RangeError(`Body exceeds a limit of ${limit}.`));
+        }
         return async () => decoder.decode(await this.#valuePromise());
       default:
         throw new TypeError(`Invalid body type: "${type}"`);
@@ -226,7 +266,7 @@ export class RequestBody {
   }
 
   get(
-    { type, contentTypes = {} }: BodyOptions,
+    { limit = DEFAULT_LIMIT, type, contentTypes = {} }: BodyOptions = {},
   ): Body | BodyReader | BodyStream {
     this.#validateGetArgs(type, contentTypes);
     if (type === "reader") {
@@ -290,7 +330,7 @@ export class RequestBody {
         enumerable: true,
       },
       value: {
-        get: this.#parse(type),
+        get: this.#parse(type, limit),
         configurable: true,
         enumerable: true,
       },

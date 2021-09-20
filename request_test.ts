@@ -137,11 +137,15 @@ test({
 test({
   name: "request.body()",
   async fn() {
+    const body = JSON.stringify({ hello: "world" });
     const request = new Request(
       createMockNativeRequest("https://localhost/index.html", {
-        body: JSON.stringify({ hello: "world" }),
+        body,
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "content-length": String(body.length),
+        },
       }),
     );
     assert(request.hasBody);
@@ -154,11 +158,15 @@ test({
 test({
   name: "request.body() passes args",
   async fn() {
+    const body = JSON.stringify({ hello: "world" });
     const request = new Request(
       createMockNativeRequest("https://localhost/index.html", {
-        body: JSON.stringify({ hello: "world" }),
+        body,
         method: "POST",
-        headers: { "content-type": "text/plain" },
+        headers: {
+          "content-type": "text/plain",
+          "content-length": String(body.length),
+        },
       }),
     );
     const actual = request.body({ type: "json" });
@@ -220,11 +228,15 @@ test({
 test({
   name: "request with invalid JSON",
   async fn() {
+    const body = "random text, but not JSON";
     const request = new Request(
       createMockNativeRequest("http://localhost/index.html", {
-        body: "random text, but not JSON",
+        body,
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "content-length": String(body.length),
+        },
       }),
     );
     assert(request.hasBody, "should have body");

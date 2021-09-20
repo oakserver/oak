@@ -443,6 +443,14 @@ And several methods:
   });
   ```
 
+  The option `limit` can be used when reading non-stream type bodies, like text,
+  JSON, or bytes. By default it is set to 10 Mib, and ensures that malicious
+  requests don't cause unexpected behavior in the server. When there is a body,
+  but it doesn't supply a content length, or the content length exceeds the
+  limit, trying to await the `.value` of the body will throw. To disable the
+  feature and read the body anyways, set the `limit` option to `0` (or
+  `Infinity`).
+
 #### Response
 
 The `context.response` contains information about the response which will be
