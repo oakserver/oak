@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "registries": [
+    {
+      "schema": "/x/:module([a-z0-9_]*)@:version?/:path*",
+      "variables": [
+        {
+          "key": "module",
+          "url": "https://api.deno.land/modules?simple=1"
+        },
+        {
+          "key": "version",
+          "url": "https://deno.land/_vsc1/modules/${module}"
+        },
+        {
+          "key": "path",
+          "url": "https://deno.land/_vsc1/modules/${module}/v/${{version}}"
+        }
+      ]
+    },
+    {
+      "schema": "/x/:module([a-z0-9_]*)/:path*",
+      "variables": [
+        {
+          "key": "module",
+          "url": "https://api.deno.land/modules?simple=1"
+        },
+        {
+          "key": "path",
+          "url": "https://deno.land/_vsc1/modules/${module}/v_latest"
+        }
+      ]
+    },
+    {
+      "schema": "/std@:version?/:path*",
+      "variables": [
+        {
+          "key": "version",
+          "url": "https://deno.land/_vsc1/modules/std"
+        },
+        {
+          "key": "path",
+          "url": "https://deno.land/_vsc1/modules/std/v/${{version}}"
+        }
+      ]
+    },
+    {
+      "schema": "/std/:path*",
+      "variables": [
+        {
+          "key": "path",
+          "url": "https://deno.land/_vsc1/modules/std/v_latest"
+        }
+      ]
+    }
+  ]
+}

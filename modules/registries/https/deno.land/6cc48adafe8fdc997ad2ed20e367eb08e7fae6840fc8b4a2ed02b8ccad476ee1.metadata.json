@@ -1,0 +1,18 @@
+{
+  "headers": {
+    "date": "Fri, 01 Oct 2021 11:11:33 GMT",
+    "transfer-encoding": "chunked",
+    "connection": "keep-alive",
+    "content-disposition": "inline; filename=\"deno-import-intellisense.json\"",
+    "etag": "W/\"e85fdfd09845703373f88f78547a2ec739a1320bb3ac406813f431187f6e63bb\"",
+    "age": "4515",
+    "server": "deploy/europe-west3-c",
+    "content-type": "application/json; charset=utf-8",
+    "x-vercel-id": "fra1::sl8pk-1633086693874-975ec2f98a46",
+    "cache-control": "public, max-age=0, must-revalidate",
+    "access-control-allow-origin": "*",
+    "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+    "x-vercel-cache": "HIT"
+  },
+  "url": "https://deno.land/.well-known/deno-import-intellisense.json"
+}
