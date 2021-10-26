@@ -52,7 +52,7 @@ And then you would run the following command:
 $ deno run --allow-net server.ts
 ```
 
-If you aren't overly familiar with Deno, by default it has not trust for the
+If you aren't overly familiar with Deno, by default it does not trust the
 code you are running, and need you to let it have access to your machines
 network, so `--allow-net` provides that.
 
