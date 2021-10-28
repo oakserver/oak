@@ -6,11 +6,12 @@
 // easier.
 
 import type { Application, State } from "./application.ts";
-import { Status } from "./deps.ts";
 import { createHttpError } from "./httpError.ts";
-import { convertBodyToBodyInit } from "./response.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
 import type { ErrorStatus } from "./types.d.ts";
+import { Cookies } from "./cookies.ts";
+import { Request } from "./request.ts";
+import { Response } from "./response.ts";
 
 /** Creates a mock of `Application`. */
 export function createMockApp<
@@ -41,6 +42,7 @@ export interface MockContextOptions<
   params?: P;
   path?: string;
   state?: S;
+  headers?: [string, string][];
 }
 
 /** Allows external parties to modify the context state. */
@@ -62,65 +64,38 @@ export function createMockContext<
     params,
     path = "/",
     state,
+    headers,
   }: MockContextOptions = {},
 ) {
   if (!app) {
     app = createMockApp(state);
   }
-  let body: any;
-  let status = Status.OK;
-  const headers = new Headers();
-  const resources: number[] = [];
-  return ({
-    app,
-    params,
-    request: {
+
+  function createMockRequest(): Request {
+    return {
       acceptsEncodings() {
         return mockContextState.encodingsAccepted;
       },
-      headers: new Headers(),
+      headers: new Headers(headers),
       ip,
       method,
       path,
       search: undefined,
       searchParams: new URLSearchParams(),
       url: new URL(path, "http://localhost/"),
-    },
-    response: {
-      get status(): Status {
-        return status;
-      },
-      set status(value: Status) {
-        status = value;
-      },
-      get body(): any {
-        return body;
-      },
-      set body(value: any) {
-        body = value;
-      },
-      addResource(rid: number) {
-        resources.push(rid);
-      },
-      destroy() {
-        body = undefined;
-        for (const rid of resources) {
-          try {
-            Deno.close(rid);
-          } catch {
-            // we just swallow errors here
-          }
-        }
-      },
-      redirect(url: string | URL) {
-        headers.set("Location", encodeURI(String(url)));
-      },
-      headers,
-      async toDomResponse() {
-        const [bodyInit] = await convertBodyToBodyInit(body);
-        return new Response(bodyInit, { status, headers });
-      },
-    },
+    } as any;
+  }
+
+  const request = createMockRequest();
+  const response = new Response(request);
+  const cookies = new Cookies(request, response);
+
+  return ({
+    app,
+    params,
+    request,
+    cookies,
+    response,
     state: Object.assign({}, app.state),
     assert(
       condition: any,
