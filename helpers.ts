@@ -25,18 +25,18 @@ export type GetParamsOptions = GetQueryOptionsBase | GetQueryOptionsAsMap;
 export function getQuery(
   ctx: Context | RouterContext,
   options: GetQueryOptionsAsMap,
-): Map<string, string>;
+): Map<string, string | undefined>;
 /** Given a context, return the `.request.url.searchParams` as a record object
  * of keys and values of the params. */
 export function getQuery(
   ctx: Context | RouterContext,
   options?: GetQueryOptionsBase,
-): Record<string, string>;
+): Record<string, string | undefined>;
 export function getQuery(
   ctx: Context | RouterContext,
   { mergeParams, asMap }: GetParamsOptions = {},
-): Map<string, string> | Record<string, string> {
-  const result: Record<string, string> = {};
+): Map<string, string | undefined> | Record<string, string | undefined> {
+  const result: Record<string, string | undefined> = {};
   if (mergeParams && isRouterContext(ctx)) {
     Object.assign(result, ctx.params);
   }
