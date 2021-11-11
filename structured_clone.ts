@@ -31,6 +31,7 @@ export type StructuredClonable =
 
 declare global {
   namespace Deno {
+    // deno-lint-ignore no-var
     var core: {
       deserialize(value: unknown): StructuredClonable;
       serialize(value: StructuredClonable): unknown;
