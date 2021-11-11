@@ -25,7 +25,7 @@ path is `"/a"` and if so, sets the body and a header in the response:
 
 ```ts
 import { testing } from "https://deno.land/x/oak/mod.ts";
-import type { Middleware } from "https://deno.land/x/mod.ts";
+import type { Middleware } from "https://deno.land/x/oak/mod.ts";
 import { assert, assertEquals } from "https://deno.land/std/testing/asserts.ts";
 
 const mw: Middleware = async (ctx, next) => {
