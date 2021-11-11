@@ -52,6 +52,40 @@ Deno.test({
 });
 
 Deno.test({
+  name: "testing - ctx.cookies.set()",
+  async fn() {
+    const ctx = createMockContext();
+    await ctx.cookies.set(
+      "sessionID",
+      "S7GhXzJF3n4j8JwTupr7H-h25qtt_vs0stdETXZb-Ro",
+      { httpOnly: true },
+    );
+    assertEquals([...ctx.response.headers], [
+      [
+        "set-cookie",
+        "sessionID=S7GhXzJF3n4j8JwTupr7H-h25qtt_vs0stdETXZb-Ro; path=/; httponly",
+      ],
+    ]);
+  },
+});
+
+Deno.test({
+  name: "testing - ctx.cookies.get()",
+  async fn() {
+    const ctx = createMockContext({
+      headers: [[
+        "cookie",
+        "sessionID=S7GhXzJF3n4j8JwTupr7H-h25qtt_vs0stdETXZb-Ro;",
+      ]],
+    });
+    assertEquals(
+      await ctx.cookies.get("sessionID"),
+      "S7GhXzJF3n4j8JwTupr7H-h25qtt_vs0stdETXZb-Ro",
+    );
+  },
+});
+
+Deno.test({
   name: "testing - createMockNext()",
   fn() {
     const next = createMockNext();
