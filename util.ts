@@ -79,9 +79,13 @@ export function isAsyncIterable(
     typeof (value as any)[Symbol.asyncIterator] === "function";
 }
 
-export function isRouterContext<P extends RouteParams, S extends State>(
+export function isRouterContext<
+  R extends string,
+  P extends RouteParams<R>,
+  S extends State,
+>(
   value: Context<S>,
-): value is RouterContext<P, S> {
+): value is RouterContext<R, P, S> {
   return "params" in value;
 }
 

@@ -1,7 +1,5 @@
 // Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
 
-// deno-lint-ignore-file no-explicit-any
-
 import { Application } from "../application.ts";
 import { Router } from "../router.ts";
 import { createMockContext, createMockNext } from "../testing.ts";
@@ -37,7 +35,7 @@ Deno.test({
 Deno.test({
   name: "proxy - router - type assignment",
   fn() {
-    const router = new Router<{ id: string }, any>();
+    const router = new Router();
     router.get("/", proxy("https://oakserver.github.io/oak/"));
   },
 });

@@ -33,7 +33,8 @@ export function createMockApp<
 
 /** Options that can be set in a mock context. */
 export interface MockContextOptions<
-  P extends RouteParams = RouteParams,
+  R extends string,
+  P extends RouteParams<R> = RouteParams<R>,
   S extends State = Record<string, any>,
 > {
   app?: Application<S>;
@@ -54,7 +55,8 @@ export const mockContextState = {
 
 /** Create a mock of `Context` or `RouterContext`. */
 export function createMockContext<
-  P extends RouteParams = RouteParams,
+  R extends string,
+  P extends RouteParams<R> = RouteParams<R>,
   S extends State = Record<string, any>,
 >(
   {
@@ -65,7 +67,7 @@ export function createMockContext<
     path = "/",
     state,
     headers,
-  }: MockContextOptions = {},
+  }: MockContextOptions<R> = {},
 ) {
   if (!app) {
     app = createMockApp(state);
@@ -126,7 +128,7 @@ export function createMockContext<
     [Symbol.for("Deno.customInspect")]() {
       return `MockContext {}`;
     },
-  } as unknown) as RouterContext<P, S>;
+  } as unknown) as RouterContext<R, P, S>;
 }
 
 /** Creates a mock `next()` function which can be used when calling

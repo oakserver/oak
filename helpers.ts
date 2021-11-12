@@ -23,17 +23,17 @@ export type GetParamsOptions = GetQueryOptionsBase | GetQueryOptionsAsMap;
 /** Given a context, return the `.request.url.searchParams` as a `Map` of keys
  * and values of the params. */
 export function getQuery(
-  ctx: Context | RouterContext,
+  ctx: Context | RouterContext<string>,
   options: GetQueryOptionsAsMap,
 ): Map<string, string>;
 /** Given a context, return the `.request.url.searchParams` as a record object
  * of keys and values of the params. */
 export function getQuery(
-  ctx: Context | RouterContext,
+  ctx: Context | RouterContext<string>,
   options?: GetQueryOptionsBase,
 ): Record<string, string>;
 export function getQuery(
-  ctx: Context | RouterContext,
+  ctx: Context | RouterContext<string>,
   { mergeParams, asMap }: GetParamsOptions = {},
 ): Map<string, string> | Record<string, string> {
   const result: Record<string, string> = {};

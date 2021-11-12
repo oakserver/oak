@@ -126,7 +126,7 @@ test({
     router.get("/foo", (context) => {
       callStack.push(2);
     });
-    router.get<{ id: string }>("/foo/:id", (context) => {
+    router.get("/foo/:id", (context) => {
       callStack.push(3);
       assertEquals(context.params.id, "bar");
     });
@@ -681,21 +681,19 @@ test({
     app.use(
       router.get(
         "/:id",
-        (ctx: RouterContext<{ id: string }, { session: number }>) => {
+        (ctx) => {
           ctx.params.id;
           ctx.state.session;
         },
       ).get("/:id/names", (ctx) => {
         ctx.params.id;
         ctx.state.session;
-      }).put("/:page", (ctx: RouterContext<{ page: string }>) => {
+      }).put("/:page", (ctx) => {
         ctx.params.page;
       }).put("/value", (ctx) => {
         ctx.params.id;
         ctx.params.page;
         ctx.state.session;
-        // @ts-expect-error
-        ctx.params.foo;
       }).routes(),
     ).use((ctx) => {
       ctx.state.id;
@@ -819,7 +817,7 @@ test({
     const mw = router.routes();
     await mw(context, next);
     assertEquals(callStack, [1]);
-    assertStrictEquals((context as RouterContext).router, router);
+    assertStrictEquals((context as RouterContext<"/foo/bar">).router, router);
   },
 });
 
@@ -870,7 +868,7 @@ test({
     const router = new Router();
     const subRouter = new Router();
     const subSubRouter = new Router();
-    subSubRouter.get<{ id: string; name: string }>("/", (context) => {
+    subSubRouter.get("/", (context) => {
       assertEquals(context.params.id, "bar");
       assertEquals(context.params.name, "beep");
       callStack.push(1);
@@ -878,15 +876,15 @@ test({
     subRouter.get("/baz", () => {
       callStack.push(2);
     });
-    subRouter.use<{ name: string }>("/baz/:name", subSubRouter.routes());
+    subRouter.use("/baz/:name", subSubRouter.routes());
     router.get("/foo", () => {
       callStack.push(3);
     });
-    router.use<{ id: string }>("/foo/:id", subRouter.routes());
+    router.use("/foo/:id", subRouter.routes());
     const mw = router.routes();
     await mw(context, next);
     assertEquals(callStack, [1]);
-    assertStrictEquals((context as RouterContext).router, router);
+    assertStrictEquals((context as RouterContext<string>).router, router);
   },
 });
 
@@ -936,7 +934,7 @@ test({
       "/foo/bar",
       "/foo(.*)/bar",
     ]);
-    assertStrictEquals((context as RouterContext).router, router);
+    assertStrictEquals((context as RouterContext<string>).router, router);
 
     callStack = [];
     matches = [];
@@ -947,7 +945,7 @@ test({
     assertEquals(matches, [
       "/foo(.*)/bar",
     ]);
-    assertStrictEquals((context2 as RouterContext).router, router);
+    assertStrictEquals((context2 as RouterContext<string>).router, router);
   },
 });
 
