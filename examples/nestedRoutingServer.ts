@@ -2,10 +2,10 @@ import { Application } from "../application.ts";
 import { Router } from "../router.ts";
 
 const posts = new Router()
-  .get<{ forumId: string }>("/", (ctx) => {
+  .get("/", (ctx) => {
     ctx.response.body = `Forum: ${ctx.params.forumId}`;
   })
-  .get<{ postId: string; forumId: string }>("/:postId", (ctx) => {
+  .get("/:postId", (ctx) => {
     ctx.response.body =
       `Forum: ${ctx.params.forumId}, Post: ${ctx.params.postId}`;
   });

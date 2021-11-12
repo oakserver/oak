@@ -47,7 +47,7 @@ router
   .get("/book", (context) => {
     context.response.body = Array.from(books.values());
   })
-  .post("/book", async (context: RouterContext) => {
+  .post("/book", async (context: RouterContext<"/book">) => {
     console.log("post book");
     if (!context.request.hasBody) {
       context.throw(Status.BadRequest, "Bad Request");
@@ -75,7 +75,7 @@ router
     }
     context.throw(Status.BadRequest, "Bad Request");
   })
-  .get<{ id: string }>("/book/:id", (context) => {
+  .get("/book/:id", (context) => {
     if (context.params && books.has(context.params.id)) {
       context.response.body = books.get(context.params.id);
     } else {
