@@ -6,7 +6,6 @@ import {
   assert,
   assertEquals,
   assertStrictEquals,
-  assertThrows,
   assertThrowsAsync,
 } from "./test_deps.ts";
 
@@ -304,18 +303,14 @@ test({
 
 test({
   name: "body - type - body undefined",
-  fn() {
+  async fn() {
     const requestBody = new RequestBody(
       new Request("http://localhost/index.html"),
     );
     assertEquals(requestBody.has(), false);
-    assertThrows(
-      () => {
-        requestBody.get({ type: "text" });
-      },
-      TypeError,
-      `Body is undefined and cannot be returned as "text".`,
-    );
+    const body = requestBody.get({ type: "text" });
+    assert(body.type === "text");
+    assertEquals(await body.value, "");
   },
 });
 

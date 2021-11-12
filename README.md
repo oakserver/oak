@@ -273,8 +273,20 @@ several properties:
 
 - `.hasBody`
 
-  Set to `true` if the request has a body, or `false` if it does not. It does
-  not validate if the body is supported by the built in body parser though.
+  Set to `true` if the request might have a body, or `false` if it does not. It
+  does not validate if the body is supported by the built in body parser though.
+
+  **WARNING** this is an unreliable API. In HTTP/2 in many situations you cannot
+  determine if a request has a body or not unless you attempt to read the body,
+  due to the streaming nature of HTTP/2. As of Deno 1.16.1, for HTTP/1.1, Deno
+  also reflects that behavior. The only reliable way to determine if a request
+  has a body or not is to attempt to read the body.
+
+  It is best to determine if a body might be meaningful to you with a given
+  method, and then attempt to read and process the body if it is meaningful in a
+  given context. For example `GET` and `HEAD` should never have a body, but
+  methods like `DELETE` and `OPTIONS` _might_ have a body and should be have
+  their body conditionally processed if it is meaningful to your application.
 
 - `.headers`
 
@@ -382,11 +394,9 @@ And several methods:
 
   ```ts
   app.use(async (ctx) => {
-    if (ctx.request.hasBody) {
-      const result = ctx.request.body({ type: "text" });
-      const text = await result.value;
-      // do some validation of the body as a string
-    }
+    const result = ctx.request.body({ type: "text" });
+    const text = await result.value;
+    // do some validation of the body as a string
   });
 
   app.use(async (ctx) => {
@@ -396,9 +406,6 @@ And several methods:
     }
   });
   ```
-
-  When specifying a `type`, it is always good to check that `.request.hasBody`
-  is `true`, as the `.request.body()` will throw if the body is undefined.
 
   You can use the option `contentTypes` to set additional media types that when
   present as the content type for the request, the body will be parsed

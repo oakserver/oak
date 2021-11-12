@@ -31,7 +31,14 @@ export class Request {
     return this.#serverRequest.remoteAddr ?? "";
   }
 
-  /** Is `true` if the request has a body, otherwise `false`. */
+  /** Is `true` if the request might have a body, otherwise `false`.
+   *
+   * **WARNING** this is an unreliable API. In HTTP/2 in many situations you
+   * cannot determine if a request has a body or not unless you attempt to read
+   * the body, due to the streaming nature of HTTP/2. As of Deno 1.16.1, for
+   * HTTP/1.1, Deno also reflects that behaviour.  The only reliable way to
+   * determine if a request has a body or not is to attempt to read the body.
+   */
   get hasBody(): boolean {
     return this.#body.has();
   }

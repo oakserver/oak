@@ -142,13 +142,15 @@ const decoder = new TextDecoder();
 export class RequestBody {
   #formDataReader?: FormDataReader;
   #stream?: ReadableStream<Uint8Array>;
-  #has?: boolean;
   #readAllBody?: Promise<Uint8Array>;
   #request: Request;
   #type?: "bytes" | "form-data" | "reader" | "stream" | "undefined";
 
   #exceedsLimit(limit: number): boolean {
     if (!limit || limit === Infinity) {
+      return false;
+    }
+    if (!this.#request.body) {
       return false;
     }
     const contentLength = this.#request.headers.get("content-length");
@@ -179,11 +181,11 @@ export class RequestBody {
         return () => {
           const contentType = this.#request.headers.get("content-type");
           assert(contentType);
-          assert(this.#request.body);
+          const readableStream = this.#request.body ?? new ReadableStream();
           return this.#formDataReader ??
             (this.#formDataReader = new FormDataReader(
               contentType,
-              readerFromStreamReader(this.#request.body.getReader()),
+              readerFromStreamReader(readableStream.getReader()),
             ));
         };
       case "json":
@@ -305,12 +307,7 @@ export class RequestBody {
         );
       }
     }
-    if (this.#type === "undefined") {
-      if (type && type !== "undefined") {
-        throw new TypeError(
-          `Body is undefined and cannot be returned as "${type}".`,
-        );
-      }
+    if (this.#type === "undefined" && (!type || type === "undefined")) {
       return { type: "undefined", value: undefined };
     }
     if (!type) {
@@ -338,16 +335,15 @@ export class RequestBody {
     return body;
   }
 
-  /** Returns if the request's has a body or not, without attempting to consume
-   * the body. */
+  /** Returns if the request might have a body or not, without attempting to
+   * consume it.
+   *
+   * **WARNING** This is an unreliable API. In HTTP/2 it is not possible to
+   * determine if certain HTTP methods have a body or not without attempting to
+   * read the body. As of Deno 1.16.1 and later, for HTTP/1.1 aligns to the
+   * HTTP/2 behaviour.
+   */
   has(): boolean {
-    return this.#has !== undefined
-      ? this.#has
-      : (this.#has = this.#request.body != null &&
-          (this.#request.headers.has("transfer-encoding") ||
-            !!parseInt(
-              this.#request.headers.get("content-length") ?? "",
-              10,
-            )) || this.#request.body instanceof ReadableStream);
+    return this.#request.body != null;
   }
 }

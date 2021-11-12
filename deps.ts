@@ -15,7 +15,7 @@ export {
   STATUS_TEXT,
 } from "https://deno.land/std@0.114.0/http/http_status.ts";
 export { LimitedReader } from "https://deno.land/std@0.114.0/io/readers.ts";
-export { readerFromStreamReader } from "https://deno.land/std@0.114.0/io/streams.ts";
+export { readerFromStreamReader } from "https://deno.land/std@0.114.0/streams/conversion.ts";
 export { readAll, writeAll } from "https://deno.land/std@0.114.0/io/util.ts";
 export {
   basename,
