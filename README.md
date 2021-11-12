@@ -531,8 +531,10 @@ const app = new Application();
 
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
-    `Listening on: ${secure ? "https://" : "http://"}${hostname ??
-      "localhost"}:${port}`,
+    `Listening on: ${secure ? "https://" : "http://"}${
+      hostname ??
+        "localhost"
+    }:${port}`,
   );
 });
 
@@ -735,9 +737,12 @@ assets instead of re-downloading them.
 
 ## Uploading files
 
-When receiving form data from the client that includes a file, it is possible to parse it as form-data and save the file to the place of our choosing or interact with it as a stream.
+When receiving form data from the client that includes a file, it is possible to
+parse it as form-data and save the file to the place of our choosing or interact
+with it as a stream.
 
 A basic usage where we save the file to the disk would look something like this:
+
 ```ts
 import { Application } from "https://deno.land/x/oak/mod.ts";
 import { normalize } from "https://deno.land/std@0.109.0/path/mod.ts";
@@ -749,10 +754,12 @@ app.use(async (context) => {
     if (context.request.hasBody) {
       const formData = context.request.body({ type: "form-data" }); // oak can also automatically identify the type
       const options = {
-        outPath: normalize('./saved_files'),
+        outPath: normalize("./saved_files"),
       };
-      const { fields: textualFields, files } = await formData.value.read(options);
-      files.forEach(file => {
+      const { fields: textualFields, files } = await formData.value.read(
+        options,
+      );
+      files.forEach((file) => {
         // this is where our files are saved
         console.log(file.filename);
       });
@@ -766,7 +773,9 @@ app.use(async (context) => {
 await app.listen({ port: 8000 });
 ```
 
-If you'd like to have access to the file as a stream instead (to upload it to S3 for example) you can follow this example:
+If you'd like to have access to the file as a stream instead (to upload it to S3
+for example) you can follow this example:
+
 ```ts
 import { Application } from "https://deno.land/x/oak/mod.ts";
 import { normalize } from "https://deno.land/std@0.109.0/path/mod.ts";
@@ -777,7 +786,7 @@ app.use(async (context) => {
   if (context.request.hasBody) {
     const formData = context.request.body({ type: "form-data" }); // oak can also automatically identify the type
     const options = {
-      outPath: normalize('./saved_files'),
+      outPath: normalize("./saved_files"),
     };
     /* Returns an iterator which will asynchronously yield each part of the form
      * data.  The yielded value is a tuple, where the first element is the name
