@@ -195,3 +195,32 @@ Deno.test({
     await mw(ctx, next);
   },
 });
+
+Deno.test({
+  name: "proxy - forwarded - regex test",
+  async fn() {
+    function fetch(request: Request): Promise<Response> {
+      assertEquals(
+        request.headers.get("forwarded"),
+        "for=127.0.0.1, for=127.0.0.1",
+      );
+      return Promise.resolve(new Response("hello world"));
+    }
+
+    const mw = proxy("https://oakserver.github.io/", { fetch });
+    const ctx = createMockContext({
+      path: "/oak/FAQ",
+    });
+    ctx.request.headers.append("forwarded", "for=127.0.0.1");
+    const next = createMockNext();
+    await mw(ctx, next);
+
+    const mw2 = proxy("https://oakserver.github.io/", { fetch });
+    const ctx2 = createMockContext({
+      path: "/oak/FAQ2",
+    });
+    ctx2.request.headers.append("forwarded", "for=127.0.0.1");
+    const next2 = createMockNext();
+    await mw2(ctx2, next2);
+  },
+});
