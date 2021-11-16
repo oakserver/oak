@@ -1,5 +1,82 @@
 # oak Change Log
 
+## Version 10.0.0
+
+- feat: remove `std/http` and `std/ws` (#408)
+
+  **BREAKING CHANGE**
+
+  All HTTP native server implementations have been stabilized in Deno, so the
+  support of `std/http` and `std/ws` have been removed. There is no way to
+  "force" oak to use the Deno `std/http`.
+
+- feat: remove deprecated fetchEventHandler (6749922)
+
+  **BREAKING CHANGE**
+
+  The `.fetchEventHandler()` used with Deno Deploy which was deprecated has been
+  removed. Deploy users should invoke oak just like they were using oak in the
+  Deno CLI.
+
+- feat: add limit when getting a request body (34c179b)
+
+  **BREAKING CHANGE**
+
+  There is a default limit when reading a body to avoid DDOS attacks where a
+  malicious client can send a body that is too large for the server to handle.
+  To disable the feature, set the `limit` option when reading a body to `0` or
+  `Infinity`.
+
+- feat: mocked contexts provide the cookies property (#422)
+
+  The testing utilities now allow cookies to be provided when creating a mock
+  context.
+
+- feat: infer RouteParam types (9cf12d0)
+
+  **BREAKING CHANGE**
+
+  When using the `Router()` and adding middleware, the types have been updated
+  to infer the route params property of the context from the route provided.
+
+  This means in certain situations where the route params were asserted by
+  setting the generic value is no longer necessary and can actually cause type
+  errors. Users should just remove explicit generic settings and instead allow
+  the type to be inferred from the route string.
+
+- feat: add ignoreInsecure when setting a cookie (16cdcc1)
+
+  Users attempting to set secure cookies in what appears to be an insecure
+  context can use the `ignoreInsecure` option when setting the cookie to
+  suppress the error.
+
+- fix: refactor `request.hasBody` and `request.body()` (b1e2921)
+
+  In HTTP/2 many requests with a body would actually be set to a zero length
+  body, since the body cannot be reliably determined until it is attempted to be
+  read. As of Deno 1.16.1 this behavior is also reflected in HTTP/1.1 requests.
+  This highlighted that `.hasBody` is not a reliable API, and code was
+  refactored to handle this better, as well as handle zero length and undefined
+  bodies in `request.body()`. When asserting a specific body type, and there is
+  not a body present, a zero length body of the type requested is returned,
+  previously this would have thrown. This means it is now always safe to request
+  a specific body type from `request.body()`.
+
+- fix: proxy middleware doesn't use global flag on regex (#429)
+- fix: decode path as URL, not component (dd4c091)
+
+  This fixed issues where path separators that are encoded in the path are not
+  decoded, which is better aligned to expectations and other middleware
+  frameworks.
+
+- docs: fix typo in Middleware import (#426)
+- docs: Improved readability for getting started section (#421)
+- docs: simplify code example (#414)
+- chore: update to Deno 1.16.1, std 0.114.0, media_types 2.11.0 (1a4e488)
+- chore: re-enable code cov upload (14b61cc)
+- chore: ignore lint rule (950cf48)
+- chore: update router examples (8463c22)
+
 ## Version 9.0.1
 
 - feat: rename logging errors to uncaught application errors (be0390c)
