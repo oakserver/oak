@@ -1,0 +1,32 @@
+{
+  "module": "./esm/mod.js",
+  "main": "./umd/mod.js",
+  "types": "./types/mod.d.ts",
+  "name": "@oakserver/oak",
+  "description": "A middleware framework for handling HTTP with Deno and Node.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oakserver/oak.git"
+  },
+  "bugs": {
+    "url": "https://github.com/oakserver/oak/issues"
+  },
+  "exports": {
+    ".": {
+      "import": "./esm/mod.js",
+      "require": "./umd/mod.js",
+      "types": "./types/mod.d.ts"
+    }
+  },
+  "scripts": {
+    "test": "node test_runner.js"
+  },
+  "dependencies": {
+    "deno.ns": "0.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "16.11.1",
+    "chalk": "4.1.2"
+  }
+}

@@ -1,0 +1,10 @@
+"use strict";
+///<reference path="../lib.deno.d.ts" />
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.fstatSync = void 0;
+const fs_1 = require("fs");
+const stat_js_1 = require("./stat.js");
+const fstatSync = function fstatSync(fd) {
+    return (0, stat_js_1.denoifyFileInfo)((0, fs_1.fstatSync)(fd));
+};
+exports.fstatSync = fstatSync;

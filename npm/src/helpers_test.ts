@@ -1,0 +1,40 @@
+import * as denoShim from "deno.ns";
+// Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
+
+import { getQuery } from "./helpers.js";
+import { assertEquals } from "./test_deps.js";
+import { createMockContext } from "./testing.js";
+
+const { test } = denoShim.Deno;
+
+test({
+  name: "getQuery - basic",
+  fn() {
+    const ctx = createMockContext({ path: "/?foo=bar&bar=baz" });
+    assertEquals(getQuery(ctx), { foo: "bar", bar: "baz" });
+  },
+});
+
+test({
+  name: "getQuery - asMap",
+  fn() {
+    const ctx = createMockContext({ path: "/?foo=bar&bar=baz" });
+    assertEquals(
+      Array.from(getQuery(ctx, { asMap: true })),
+      [["foo", "bar"], ["bar", "baz"]],
+    );
+  },
+});
+
+test({
+  name: "getQuery - merge params",
+  fn() {
+    const ctx = createMockContext(
+      { params: { foo: "qat", baz: "qat" }, path: "/?foo=bar&bar=baz" },
+    );
+    assertEquals(
+      getQuery(ctx, { mergeParams: true }),
+      { foo: "bar", baz: "qat", bar: "baz" },
+    );
+  },
+});

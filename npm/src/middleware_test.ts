@@ -1,0 +1,81 @@
+import * as denoShim from "deno.ns";
+// Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
+
+// deno-lint-ignore-file
+
+import { assert, assertEquals, assertStrictEquals } from "./test_deps.js";
+import { httpErrors } from "./httpError.js";
+import { createMockContext } from "./testing.js";
+import { compose, Middleware } from "./middleware.js";
+
+const { test } = denoShim.Deno;
+
+test({
+  name: "test compose()",
+  async fn() {
+    const callStack: number[] = [];
+    const mockContext = createMockContext();
+    const mw1: Middleware = async (context, next) => {
+      assertStrictEquals(context, mockContext);
+      assertEquals(typeof next, "function");
+      callStack.push(1);
+      await next();
+    };
+    const mw2: Middleware = async (context, next) => {
+      assertStrictEquals(context, mockContext);
+      assertEquals(typeof next, "function");
+      callStack.push(2);
+      await next();
+    };
+    await compose([mw1, mw2])(mockContext);
+    assertEquals(callStack, [1, 2]);
+  },
+});
+
+test({
+  name: "next() is catchable",
+  async fn() {
+    let caught: any;
+    const mw1: Middleware = async (ctx, next) => {
+      try {
+        await next();
+      } catch (err) {
+        caught = err;
+      }
+    };
+    const mw2: Middleware = async (ctx) => {
+      ctx.throw(500);
+    };
+    const context = createMockContext();
+    await compose([mw1, mw2])(context);
+    assert(caught instanceof httpErrors.InternalServerError);
+  },
+});
+
+test({
+  name: "composed middleware accepts next middleware",
+  async fn() {
+    const callStack: number[] = [];
+    const mockContext = createMockContext();
+
+    const mw0: Middleware = async (context, next): Promise<void> => {
+      assertEquals(typeof next, "function");
+      callStack.push(3);
+      await next();
+    };
+
+    const mw1: Middleware = async (context, next) => {
+      assertEquals(typeof next, "function");
+      callStack.push(1);
+      await next();
+    };
+    const mw2: Middleware = async (context, next) => {
+      assertEquals(typeof next, "function");
+      callStack.push(2);
+      await next();
+    };
+
+    await compose([mw1, mw2])(mockContext, mw0 as () => Promise<void>);
+    assertEquals(callStack, [1, 2, 3]);
+  },
+});
