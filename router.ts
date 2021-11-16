@@ -1072,7 +1072,7 @@ export class Router<
         return Promise.reject(e);
       }
       const path = this.#opts.routerPath ?? ctx.routerPath ??
-        decodeURIComponent(pathname);
+        decodeURI(pathname);
       const matches = this.#match(path, method);
 
       if (ctx.matched) {

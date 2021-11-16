@@ -462,6 +462,24 @@ test({
 });
 
 test({
+  name: "router match encoded path",
+  async fn() {
+    const { context, next } = setup("/user%2f1", "GET");
+    const callStack: number[] = [];
+    const router = new Router();
+    router.get("/user/:id", () => {
+      callStack.push(0);
+    });
+    router.get("/:path", () => {
+      callStack.push(1);
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [1]);
+  },
+});
+
+test({
   name: "router as iterator",
   fn() {
     const router = new Router();
