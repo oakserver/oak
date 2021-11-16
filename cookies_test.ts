@@ -2,7 +2,7 @@
 
 // deno-lint-ignore-file
 
-import { assertEquals } from "./test_deps.ts";
+import { assertEquals, assertThrowsAsync } from "./test_deps.ts";
 
 import { Cookies } from "./cookies.ts";
 import { KeyStack } from "./keyStack.ts";
@@ -11,11 +11,12 @@ import type { Response } from "./response.ts";
 
 const { test } = Deno;
 
-function createMockRequest(cookieValue?: string[]): Request {
+function createMockRequest(cookieValue?: string[], secure = false): Request {
   return {
     headers: new Headers(
       cookieValue ? [["Cookie", cookieValue.join("; ")]] : undefined,
     ),
+    secure,
   } as any;
 }
 
@@ -163,6 +164,52 @@ test({
     assertEquals(
       response.headers.get("set-cookie"),
       "bar=foo; path=/; httponly, bar.sig=S7GhXzJF3n4j8JwTupr7H-h25qtt_vs0stdETXZb-Ro; path=/; httponly",
+    );
+  },
+});
+
+test({
+  name: "set secure cookie",
+  async fn() {
+    const request = createMockRequest([], true);
+    const response = createMockResponse();
+    const cookies = new Cookies(request, response, { secure: true });
+    await cookies.set("bar", "foo", { secure: true });
+
+    assertEquals(
+      response.headers.get("set-cookie"),
+      "bar=foo; path=/; secure; httponly",
+    );
+  },
+});
+
+test({
+  name: "set secure cookie on insecure context fails",
+  async fn() {
+    const request = createMockRequest();
+    const response = createMockResponse();
+    const cookies = new Cookies(request, response);
+    await assertThrowsAsync(
+      async () => {
+        await cookies.set("bar", "foo", { secure: true });
+      },
+      TypeError,
+      "Cannot send secure cookie over unencrypted connection.",
+    );
+  },
+});
+
+test({
+  name: "set secure cookie on insecure context with ignoreInsecure",
+  async fn() {
+    const request = createMockRequest();
+    const response = createMockResponse();
+    const cookies = new Cookies(request, response);
+    await cookies.set("bar", "foo", { secure: true, ignoreInsecure: true });
+
+    assertEquals(
+      response.headers.get("set-cookie"),
+      "bar=foo; path=/; secure; httponly",
     );
   },
 });

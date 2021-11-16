@@ -20,6 +20,9 @@ export interface CookiesSetDeleteOptions {
   domain?: string;
   expires?: Date;
   httpOnly?: boolean;
+  /** For use in situations where requests are presented to Deno as "insecure"
+   * but are otherwise secure and so secure cookies can be treated as secure. */
+  ignoreInsecure?: boolean;
   maxAge?: number;
   overwrite?: boolean;
   path?: string;
@@ -299,7 +302,7 @@ export class Cookies {
     const secure = this.#secure !== undefined ? this.#secure : request.secure;
     const signed = options.signed ?? !!this.#keys;
 
-    if (!secure && options.secure) {
+    if (!secure && options.secure && !options.ignoreInsecure) {
       throw new TypeError(
         "Cannot send secure cookie over unencrypted connection.",
       );
