@@ -35,6 +35,8 @@ Deno.test({
     assertEquals(ctx.request.url.pathname, "/");
     assertEquals(ctx.state, {});
     assertEquals(ctx.request.acceptsEncodings("identity"), "identity");
+    ctx.response.redirect("/hello/world");
+    assertEquals(ctx.response.headers.get("Location"), "/hello/world");
   },
 });
 
