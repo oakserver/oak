@@ -60,19 +60,15 @@ export function createMockContext<
   S extends State = Record<string, any>,
 >(
   {
-    app,
     ip = "127.0.0.1",
     method = "GET",
     params,
     path = "/",
     state,
+    app = createMockApp(state),
     headers,
   }: MockContextOptions<R> = {},
 ) {
-  if (!app) {
-    app = createMockApp(state);
-  }
-
   function createMockRequest(): Request {
     return {
       acceptsEncodings() {
