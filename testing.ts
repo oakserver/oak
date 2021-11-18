@@ -25,7 +25,7 @@ export function createMockApp<
       return app;
     },
     [Symbol.for("Deno.customInspect")]() {
-      return `MockApplication {}`;
+      return "MockApplication {}";
     },
   } as any;
   return app;
