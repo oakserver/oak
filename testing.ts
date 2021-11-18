@@ -12,6 +12,7 @@ import type { ErrorStatus } from "./types.d.ts";
 import { Cookies } from "./cookies.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
+import { preferredMediaTypes } from "./negotiation/mediaType.ts";
 
 /** Creates a mock of `Application`. */
 export function createMockApp<
@@ -70,11 +71,22 @@ export function createMockContext<
   }: MockContextOptions<R> = {},
 ) {
   function createMockRequest(): Request {
+    const headerMap = new Headers(headers);
     return {
+      accepts(...types: string[]) {
+        const acceptValue = headerMap.get("Accept");
+        if (!acceptValue) {
+          return;
+        }
+        if (types.length) {
+          return preferredMediaTypes(acceptValue, types)[0];
+        }
+        return preferredMediaTypes(acceptValue);
+      },
       acceptsEncodings() {
         return mockContextState.encodingsAccepted;
       },
-      headers: new Headers(headers),
+      headers: headerMap,
       ip,
       method,
       path,
