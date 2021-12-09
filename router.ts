@@ -220,11 +220,11 @@ type UrlOptions = TokensToRegexpOptions & ParseOptions & {
  * values. */
 function toUrl<R extends string>(
   url: string,
-  params: RouteParams<R> = {},
+  params = {} as RouteParams<R>,
   options?: UrlOptions,
 ) {
   const tokens = pathParse(url);
-  let replace: RouteParams<R> = {};
+  let replace = {} as RouteParams<R>;
 
   if (tokens.some((token) => typeof token === "object")) {
     replace = params;
@@ -298,7 +298,7 @@ class Layer<
 
   params(
     captures: string[],
-    existingParams: RouteParams<R> = {},
+    existingParams = {} as RouteParams<R>,
   ): RouteParams<R> {
     const params = existingParams;
     for (let i = 0; i < captures.length; i++) {
@@ -318,7 +318,7 @@ class Layer<
   }
 
   url(
-    params: RouteParams<R> = {},
+    params = {} as RouteParams<R>,
     options?: UrlOptions,
   ): string {
     const url = this.path.replace(/\(\.\*\)/g, "");
