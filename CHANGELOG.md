@@ -1,5 +1,13 @@
 # oak Change Log
 
+## Version 10.1.0
+
+- fix: type assignment issues with TS 4.5 and later (2e76d12)
+- fix: implement mock for Request#accepts (#432)
+- chore: update to Deno 1.17.0, std 0.118.0 and media_types 2.11.1 (aa4e961)
+- chore: remove dectyl (5aa9d23)
+- chore: add bundling tests (50f311e)
+
 ## Version 10.0.0
 
 - feat: remove `std/http` and `std/ws` (#408)
