@@ -25,6 +25,9 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: deno lint
 
+      - name: generate bundle
+        run: deno bundle mod.ts oak.bundle.js
+
       - name: run tests
         run: deno test --allow-read --allow-write --allow-net --jobs 4
       
