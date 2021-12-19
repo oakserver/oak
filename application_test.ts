@@ -5,8 +5,8 @@
 import {
   assert,
   assertEquals,
+  assertRejects,
   assertStrictEquals,
-  assertThrowsAsync,
 } from "./test_deps.ts";
 
 import { Application } from "./application.ts";
@@ -683,7 +683,7 @@ test({
   async fn() {
     const [serverConstructor] = setup([]);
     const app = new Application({ serverConstructor });
-    await assertThrowsAsync(async () => {
+    await assertRejects(async () => {
       await app.listen(":8000");
     }, TypeError);
     teardown();
@@ -867,7 +867,7 @@ test({
   name: "application .handle() no middleware throws",
   async fn() {
     const app = new Application();
-    await assertThrowsAsync(async () => {
+    await assertRejects(async () => {
       await app.handle(new Request("http://localhost/index.html"));
     }, TypeError);
     teardown();

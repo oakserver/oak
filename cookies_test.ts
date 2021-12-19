@@ -2,7 +2,7 @@
 
 // deno-lint-ignore-file
 
-import { assertEquals, assertThrowsAsync } from "./test_deps.ts";
+import { assertEquals, assertRejects } from "./test_deps.ts";
 
 import { Cookies } from "./cookies.ts";
 import { KeyStack } from "./keyStack.ts";
@@ -189,7 +189,7 @@ test({
     const request = createMockRequest();
     const response = createMockResponse();
     const cookies = new Cookies(request, response);
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await cookies.set("bar", "foo", { secure: true });
       },

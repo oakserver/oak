@@ -3,7 +3,7 @@
 import {
   assert,
   assertEquals,
-  assertThrowsAsync,
+  assertRejects,
   Buffer,
   writeAllSync,
 } from "./test_deps.ts";
@@ -208,7 +208,7 @@ test({
   async fn() {
     const [, body] = createBodyFile("fileA", "./fixtures/test.jpg");
     const fdr = new FormDataReader(fixtureContentType, body);
-    await assertThrowsAsync(async () => {
+    await assertRejects(async () => {
       await fdr.read({ maxFileSize: 100000 });
     }, httpErrors.RequestEntityTooLarge);
   },

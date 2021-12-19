@@ -4,8 +4,8 @@
 
 import {
   assertEquals,
+  assertRejects,
   assertStrictEquals,
-  assertThrowsAsync,
 } from "./test_deps.ts";
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
@@ -503,7 +503,7 @@ test({
       ctx.throw(404);
     });
     const mw = router.routes();
-    await assertThrowsAsync(async () => {
+    await assertRejects(async () => {
       await mw(context, next);
     });
   },
@@ -654,7 +654,7 @@ test({
     const routes = router.routes();
     const mw = router.allowedMethods({ throw: true });
     await routes(context, next);
-    await assertThrowsAsync(async () => {
+    await assertRejects(async () => {
       await mw(context, next);
     }, httpErrors.NotImplemented);
   },
@@ -671,7 +671,7 @@ test({
     const routes = router.routes();
     const mw = router.allowedMethods({ throw: true });
     await routes(context, next);
-    await assertThrowsAsync(async () => {
+    await assertRejects(async () => {
       await mw(context, next);
     }, httpErrors.MethodNotAllowed);
   },
@@ -808,7 +808,7 @@ test({
     });
 
     const mw = router.routes();
-    assertThrowsAsync(
+    assertRejects(
       async () => await mw(context, next),
       TypeError,
       "bad url",

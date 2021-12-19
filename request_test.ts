@@ -5,8 +5,8 @@
 import {
   assert,
   assertEquals,
+  assertRejects,
   assertStrictEquals,
-  assertThrowsAsync,
 } from "./test_deps.ts";
 import { NativeRequest } from "./http_server_native.ts";
 import type { NativeRequestOptions } from "./http_server_native.ts";
@@ -242,7 +242,7 @@ test({
     assert(request.hasBody, "should have body");
     const actual = request.body();
     assert(actual.type === "json", "should be a JSON body");
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await actual.value;
       },

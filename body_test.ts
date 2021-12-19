@@ -5,8 +5,8 @@ import { readAll } from "./deps.ts";
 import {
   assert,
   assertEquals,
+  assertRejects,
   assertStrictEquals,
-  assertThrowsAsync,
 } from "./test_deps.ts";
 
 const { test } = Deno;
@@ -507,7 +507,7 @@ test({
       }),
     );
     const actual = requestBody.get();
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await actual.value;
       },
@@ -585,7 +585,7 @@ test({
       }),
     );
     const actual = requestBody.get({ type: "text", limit: 2 });
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await actual.value;
       },
@@ -610,7 +610,7 @@ test({
       }),
     );
     let actual = requestBody.get({ type: "text", limit: 2 });
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await actual.value;
       },
