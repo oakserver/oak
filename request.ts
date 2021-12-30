@@ -135,7 +135,7 @@ export class Request {
 
   /** Returns an array of media types, accepted by the requestor, in order of
    * preference.  If there are no encodings supplied by the requestor,
-   * `undefined` is returned.
+   * then accepting any is implied is returned.
    */
   accepts(): string[] | undefined;
   /** For a given set of media types, return the best match accepted by the
@@ -146,7 +146,7 @@ export class Request {
   accepts(...types: string[]): string | string[] | undefined {
     const acceptValue = this.#serverRequest.headers.get("Accept");
     if (!acceptValue) {
-      return;
+      return types.length ? types[0] : ["*/*"];
     }
     if (types.length) {
       return preferredMediaTypes(acceptValue, types)[0];
@@ -154,21 +154,20 @@ export class Request {
     return preferredMediaTypes(acceptValue);
   }
 
-  /** Returns an array of charsets, accepted by the requestor, in order of
-   * preference.  If there are no charsets supplied by the requestor,
-   * `undefined` is returned.
+  /**
+   * @deprecated the header behind this is no longer used in browsers
    */
   acceptsCharsets(): string[] | undefined;
-  /** For a given set of charsets, return the best match accepted by the
-   * requestor.  If there are no charsets that match, then the method returns
-   * `undefined`. */
+  /**
+   * @deprecated the header behind this is no longer used in browsers
+   */
   acceptsCharsets(...charsets: string[]): string | undefined;
   acceptsCharsets(...charsets: string[]): string[] | string | undefined {
     const acceptCharsetValue = this.#serverRequest.headers.get(
       "Accept-Charset",
     );
     if (!acceptCharsetValue) {
-      return;
+      return charsets.length ? charsets[0] : ["*"];
     }
     if (charsets.length) {
       return preferredCharsets(acceptCharsetValue, charsets)[0];
@@ -178,7 +177,7 @@ export class Request {
 
   /** Returns an array of encodings, accepted by the requestor, in order of
    * preference.  If there are no encodings supplied by the requestor,
-   * `undefined` is returned.
+   * then `["*"]` is returned, matching any.
    */
   acceptsEncodings(): string[] | undefined;
   /** For a given set of encodings, return the best match accepted by the
@@ -195,7 +194,7 @@ export class Request {
       "Accept-Encoding",
     );
     if (!acceptEncodingValue) {
-      return;
+      return encodings.length ? encodings[0] : ["*"];
     }
     if (encodings.length) {
       return preferredEncodings(acceptEncodingValue, encodings)[0];
@@ -205,7 +204,7 @@ export class Request {
 
   /** Returns an array of languages, accepted by the requestor, in order of
    * preference.  If there are no languages supplied by the requestor,
-   * `undefined` is returned.
+   * `["*"]` is returned, indicating any language is accepted.
    */
   acceptsLanguages(): string[] | undefined;
   /** For a given set of languages, return the best match accepted by the
@@ -217,7 +216,7 @@ export class Request {
       "Accept-Language",
     );
     if (!acceptLanguageValue) {
-      return;
+      return langs.length ? langs[0] : ["*"];
     }
     if (langs.length) {
       return preferredLanguages(acceptLanguageValue, langs)[0];

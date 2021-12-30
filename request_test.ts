@@ -87,6 +87,26 @@ test({
 });
 
 test({
+  name: "request.acceptsEncodings - no header",
+  fn() {
+    const request = new Request(
+      createMockNativeRequest("https://localhost/index.html"),
+    );
+    assertEquals(request.acceptsEncodings("gzip", "identity"), "gzip");
+  },
+});
+
+test({
+  name: "request.acceptsEncodings - no header no encodings",
+  fn() {
+    const request = new Request(
+      createMockNativeRequest("https://localhost/index.html"),
+    );
+    assertEquals(request.acceptsEncodings(), ["*"]);
+  },
+});
+
+test({
   name: "request.accepts()",
   fn() {
     const request = new Request(
@@ -115,10 +135,18 @@ test({
 });
 
 test({
-  name: "request.accepts none",
+  name: "request.accepts no header",
   fn() {
     const request = new Request(createMockNativeRequest("https://localhost/"));
-    assertEquals(request.accepts("application/json"), undefined);
+    assertEquals(request.accepts("application/json"), "application/json");
+  },
+});
+
+test({
+  name: "request.accepts no header, no args",
+  fn() {
+    const request = new Request(createMockNativeRequest("https://localhost/"));
+    assertEquals(request.accepts(), ["*/*"]);
   },
 });
 
