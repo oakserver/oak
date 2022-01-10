@@ -319,34 +319,22 @@ And several methods:
   Negotiates the content type supported by the request for the response. If no
   content types are passed, the method returns a prioritized array of accepted
   content types. If content types are passed, the best negotiated content type
-  is returned. If there is no content type matched, then `undefined` is
-  returned.
-
-- `.acceptsCharsets(...charsets: string[])`
-
-  Negotiates the character encoding supported by the request for the response.
-  If no character encodings are passed, the method returns a prioritized array
-  of accepted character encodings. If character encodings are passed, the best
-  negotiated charset is returned. If there are no encodings matched, then
-  `undefined` is returned.
-
-  Most browsers simply to not send a character encoding header anymore, and it
-  is just expected UTF-8 will be used.
+  is returned. If no content type match `undefined` is returned.
 
 - `.acceptsEncodings(...encodings: string[])`
 
   Negotiates the content encoding supported by the request for the response. If
   no encodings are passed, the method returns a prioritized array of accepted
   encodings. If encodings are passed, the best negotiated encoding is returned.
-  If there are no encodings matched, then `undefined` is returned.
+  If no encodings match `undefined` is returned.
 
 - `.acceptsLanguages(...languages: string[])`
 
   Negotiates the language the client is able to understand. Where a locale
   variant takes preference. If no encodings are passed, the method returns a
   prioritized array of understood languages. If languages are passed, the best
-  negotiated language is returned. If there are no languages matched, then
-  `undefined` is returned.
+  negotiated language is returned. If no languages match `undefined` is
+  returned.
 
 - `.body(options?: BodyOptions)`
 
