@@ -722,15 +722,19 @@ system relative to the root from the requested path.
 A basic usage would look something like this:
 
 ```ts
-import { Application, send } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "https://deno.land/x/oak/mod.ts";
 
 const app = new Application();
 
-app.use(async (context) => {
-  await send(context, context.request.url.pathname, {
-    root: `${Deno.cwd()}/examples/static`,
-    index: "index.html",
-  });
+app.use(async (context, next) => {
+  try {
+    await context.send({
+      root: `${Deno.cwd()}/examples/static`,
+      index: "index.html",
+    });
+  } catch {
+    next();
+  }
 });
 
 await app.listen({ port: 8000 });
