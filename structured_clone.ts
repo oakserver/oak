@@ -29,14 +29,10 @@ export type StructuredClonable =
   | TypeError
   | URIError;
 
-declare global {
-  namespace Deno {
-    // deno-lint-ignore no-var
-    var core: {
-      deserialize(value: unknown): StructuredClonable;
-      serialize(value: StructuredClonable): unknown;
-    };
-  }
+/** Internal functions on the `Deno.core` namespace */
+interface DenoCore {
+  deserialize(value: unknown): StructuredClonable;
+  serialize(value: StructuredClonable): unknown;
 }
 
 const objectCloneMemo = new WeakMap();
@@ -145,7 +141,8 @@ function cloneValue(value: any): any {
   }
 }
 
-const core = Deno?.core;
+// deno-lint-ignore no-explicit-any
+const core = (Deno as any)?.core as DenoCore | undefined;
 const structuredClone: ((value: unknown) => unknown) | undefined =
   // deno-lint-ignore no-explicit-any
   (globalThis as any).structuredClone;
