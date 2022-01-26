@@ -1,5 +1,16 @@
 # oak Change Log
 
+## Version 10.1.1
+
+- fix: correct negotiation algorithm (ad6b896)
+- fix: use interface to represent Deno.core instead of modifying global type
+  scope (#444)
+- chore: update to Deno 1.18, std 0.122.0, media_types 2.12.0 (26a22e9)
+- chore: update CI to Deno 1.18 (a4d4c47)
+- chore: update copyright dates (dd3910f)
+- docs: Update README to represent changes made (#447)
+- docs: improve static content (#450)
+
 ## Version 10.1.0
 
 - fix: type assignment issues with TS 4.5 and later (2e76d12)
