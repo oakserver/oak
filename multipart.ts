@@ -1,4 +1,4 @@
-// Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import { BufReader, ReadLineResult } from "./buf_reader.ts";
 import { getFilename } from "./content_disposition.ts";

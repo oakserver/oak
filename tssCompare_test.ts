@@ -1,4 +1,4 @@
-// Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 import { assert } from "./test_deps.ts";
 import { compare } from "./tssCompare.ts";
 

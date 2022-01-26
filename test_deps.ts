@@ -1,4 +1,4 @@
-// Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 export { Buffer } from "https://deno.land/std@0.122.0/io/buffer.ts";
 export { BufWriter } from "https://deno.land/std@0.122.0/io/bufio.ts";

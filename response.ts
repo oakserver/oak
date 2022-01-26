@@ -1,4 +1,4 @@
-// Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import { contentType, Status, STATUS_TEXT } from "./deps.ts";
 import { DomResponse } from "./http_server_native.ts";

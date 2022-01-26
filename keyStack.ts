@@ -1,4 +1,4 @@
-// Copyright 2018-2021 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 // This was inspired by [keygrip](https://github.com/crypto-utils/keygrip/)
 // which allows signing of data (cookies) to prevent tampering, but also allows
