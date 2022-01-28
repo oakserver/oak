@@ -26,7 +26,10 @@ jobs:
         run: deno lint
 
       - name: generate bundle
-        run: deno bundle mod.ts oak.bundle.js
+        run: deno bundle _bundle_test.ts oak.bundle.js
+      
+      - name: run bundle
+        run: deno run oak.bundle.js
 
       - name: run tests
         run: deno test --allow-read --allow-write --allow-net --jobs 4
