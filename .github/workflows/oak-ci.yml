@@ -25,6 +25,9 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: deno lint
 
+      - name: generate bundle
+        run: deno bundle _bundle_test.ts oak.bundle.js
+
       - name: run tests
         run: deno test --allow-read --allow-write --allow-net --jobs 4
       
@@ -36,12 +39,6 @@ jobs:
 
       - name: run tests using dom libs
         run: deno test --unstable --allow-read --allow-write --allow-net --config dom.tsconfig.json --jobs 4
-
-      - name: generate bundle
-        run: deno bundle _bundle_test.ts oak.bundle.js
-      
-      - name: run bundle
-        run: deno run oak.bundle.js
 
       - name: generate lcov
         if: matrix.os == 'ubuntu-latest'
