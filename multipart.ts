@@ -55,6 +55,35 @@ export interface FormDataReadOptions {
    * This defaults to 1mb. */
   bufferSize?: number;
 
+  /** A mapping of custom media types that are supported, mapped to their
+   * extension when determining the extension for a file. The key should be an
+   * all lowercase media type with the value being the extension (without an
+   * initial period), to be used when decoding the file.
+   *
+   * ### Example
+   *
+   * Form data that is sent with content having a type of `text/vdn.custom` will
+   * be decoded and assigned a filename ending with `.txt`:
+   *
+   * ```ts
+   * import { Application } from "https://deno.land/x/oak/mod.ts";
+   *
+   * const app = new Application();
+   * app.use(async (ctx) => {
+   *   const body = ctx.request.body();
+   *   if (body.type === "form-data") {
+   *     const formatData = await body.value.read({
+   *       customContentTypes: {
+   *         "text/vnd.custom": "txt"
+   *       }
+   *     });
+   *     console.log(formData);
+   *   }
+   * });
+   * ```
+   */
+  customContentTypes?: Record<string, string>;
+
   /** The maximum file size that can be handled.  This defaults to 10MB when
    * not specified.  This is to try to avoid DOS attacks where someone would
    * continue to try to send a "file" continuously until a host limit was
@@ -82,6 +111,7 @@ export interface FormDataReadOptions {
 
 interface PartsOptions {
   body: BufReader;
+  customContentTypes?: Record<string, string>;
   final: Uint8Array;
   maxFileSize: number;
   maxSize: number;
@@ -123,12 +153,24 @@ async function readToStartOrEnd(
 /** Yield up individual parts by reading the body and parsing out the ford
  * data values. */
 async function* parts(
-  { body, final, part, maxFileSize, maxSize, outPath, prefix }: PartsOptions,
+  {
+    body,
+    customContentTypes = {},
+    final,
+    part,
+    maxFileSize,
+    maxSize,
+    outPath,
+    prefix,
+  }: PartsOptions,
 ): AsyncIterableIterator<[string, string | FormDataFile]> {
   async function getFile(contentType: string): Promise<[string, Deno.File]> {
-    const ext = extension(contentType);
+    const ext = customContentTypes[contentType.toLowerCase()] ??
+      extension(contentType);
     if (!ext) {
-      throw new httpErrors.BadRequest(`Invalid media type for part: ${ext}`);
+      throw new httpErrors.BadRequest(
+        `The form contained content type "${contentType}" which is not supported by the server.`,
+      );
     }
     if (!outPath) {
       outPath = await Deno.makeTempDir();
@@ -294,6 +336,7 @@ export class FormDataReader {
       maxFileSize = DEFAULT_MAX_FILE_SIZE,
       maxSize = DEFAULT_MAX_SIZE,
       bufferSize = DEFAULT_BUFFER_SIZE,
+      customContentTypes,
     } = options;
     const body = new BufReader(this.#body, bufferSize);
     const result: FormDataBody = { fields: {} };
@@ -306,6 +349,7 @@ export class FormDataReader {
       for await (
         const part of parts({
           body,
+          customContentTypes,
           part: this.#boundaryPart,
           final: this.#boundaryFinal,
           maxFileSize,
@@ -346,6 +390,7 @@ export class FormDataReader {
     this.#reading = true;
     const {
       outPath,
+      customContentTypes,
       maxFileSize = DEFAULT_MAX_FILE_SIZE,
       maxSize = DEFAULT_MAX_SIZE,
       bufferSize = 32000,
@@ -360,6 +405,7 @@ export class FormDataReader {
       for await (
         const part of parts({
           body,
+          customContentTypes,
           part: this.#boundaryPart,
           final: this.#boundaryFinal,
           maxFileSize,

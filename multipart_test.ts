@@ -76,9 +76,10 @@ function createBody(value: string): Buffer {
 function createBodyFile(
   name: string,
   filename: string,
+  contentType?: string,
 ): [Uint8Array, Buffer] {
   const fileData = Deno.readFileSync(filename);
-  const mediaType = lookup(filename);
+  const mediaType = contentType ?? lookup(filename);
   const basename = parse(filename).base;
   const pre = `
 --OAK-SERVER-BOUNDARY
@@ -211,6 +212,24 @@ test({
     await assertRejects(async () => {
       await fdr.read({ maxFileSize: 100000 });
     }, httpErrors.RequestEntityTooLarge);
+  },
+});
+
+test({
+  name: "multipart - FormDataReader - .read() custom content type",
+  async fn() {
+    const [, body] = createBodyFile(
+      "fileA",
+      "./fixtures/test.txt",
+      "text/vnd.custom",
+    );
+    const fdr = new FormDataReader(fixtureContentType, body);
+    const actual = await fdr.read({
+      customContentTypes: { "text/vnd.custom": "txt" },
+    });
+    assertEquals(actual.files?.length, 1);
+    assertEquals(actual.files?.[0].contentType, "text/vnd.custom");
+    assert(actual.files?.[0].filename?.endsWith(".txt"));
   },
 });
 
