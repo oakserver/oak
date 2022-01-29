@@ -397,7 +397,29 @@ class Layer<
 
 /** An interface for registering middleware that will run when certain HTTP
  * methods and paths are requested, as well as provides a way to parameterize
- * parts of the requested path. */
+ * parts of the requested path.
+ *
+ * ### Basic example
+ *
+ * ```ts
+ * import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+ *
+ * const router = new Router();
+ * router.get("/", (ctx, next) => {
+ *   // handle the GET endpoint here
+ * });
+ * router.all("/item/:item", (ctx, next) => {
+ *   // called for all HTTP verbs/requests
+ *   ctx.params.item; // contains the value of `:item` from the parsed URL
+ * });
+ *
+ * const app = new Application();
+ * app.use(router.routes());
+ * app.use(router.allowedMethods());
+ *
+ * app.listen({ port: 8080 });
+ * ```
+ */
 export class Router<
   // deno-lint-ignore no-explicit-any
   RS extends State = Record<string, any>,
