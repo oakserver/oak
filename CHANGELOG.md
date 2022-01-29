@@ -1,5 +1,15 @@
 # oak Change Log
 
+## Version 10.2.0
+
+- feat: add support for custom content types when reading formdata (6cd2d53)
+
+  When reading a form data body, you can now supply a record of custom content
+  types to extension to use when handling custom content types.
+
+- chore: update to Deno 1.18.1, std 0.123.0, media_types 2.12.1 (f399784)
+- docs: improve inline docs (8831d51)
+
 ## Version 10.1.1
 
 - fix: correct negotiation algorithm (ad6b896)
