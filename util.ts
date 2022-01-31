@@ -435,8 +435,7 @@ export function encodeBase64Safe(data: string | ArrayBuffer): string {
 export function importKey(key: Key): Promise<CryptoKey> {
   if (typeof key === "string") {
     key = encoder.encode(key);
-  } else if (Array.isArray(key) || key instanceof ArrayBuffer) {
-    // TODO(@kitsonk) don't transform AB when https://github.com/denoland/deno/issues/11664 is fixed
+  } else if (Array.isArray(key)) {
     key = new Uint8Array(key);
   }
   return globalThis.crypto.subtle.importKey(
