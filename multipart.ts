@@ -102,19 +102,19 @@ export interface FormDataReadOptions {
    */
   customContentTypes?: Record<string, string>;
 
-  /** The maximum file size that can be handled.  This defaults to 10MB when
-   * not specified.  This is to try to avoid DOS attacks where someone would
-   * continue to try to send a "file" continuously until a host limit was
-   * reached crashing the server or the host. */
+  /** The maximum file size (in bytes) that can be handled.  This defaults to
+   * 10MB when not specified.  This is to try to avoid DOS attacks where
+   * someone would continue to try to send a "file" continuously until a host
+   * limit was reached crashing the server or the host. Also see `maxSize`. */
   maxFileSize?: number;
 
-  /** The maximum size of a file to hold in memory, and not write to disk. This
-   * defaults to `0`, so that all multipart form files are written to disk.
-   * When set to a positive integer, if the form data file is smaller, it will
-   * be retained in memory and available in the `.content` property of the
-   * `FormDataFile` object.  If the file exceeds the `maxSize` it will be
-   * written to disk and the `.filename` property will contain the full path to
-   * the output file. */
+  /** The maximum size (in bytes) of a file to hold in memory, and not write
+   * to disk. This defaults to `0`, so that all multipart form files are
+   * written to disk. When set to a positive integer, if the form data file is
+   * smaller, it will be retained in memory and available in the `.content`
+   * property of the `FormDataFile` object.  If the file exceeds the `maxSize`
+   * it will be written to disk and the `.filename` property will contain the
+   * full path to the output file. */
   maxSize?: number;
 
   /** When writing form data files to disk, the output path.  This will default
