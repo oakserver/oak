@@ -20,8 +20,10 @@ export type BodyBytes = {
   readonly type: "bytes";
   readonly value: Promise<Uint8Array>;
 };
-// deno-lint-ignore no-explicit-any
-export type BodyJson = { readonly type: "json"; readonly value: Promise<any> };
+export type BodyJson = {
+  readonly type: "json";
+  readonly value: Promise<unknown>;
+};
 export type BodyForm = {
   readonly type: "form";
   readonly value: Promise<URLSearchParams>;
