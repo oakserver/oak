@@ -60,7 +60,8 @@ export async function convertBodyToBodyInit(
     ArrayBuffer.isView(body) || body instanceof ArrayBuffer ||
     body instanceof Blob || body instanceof URLSearchParams
   ) {
-    result = body;
+    // deno-lint-ignore no-explicit-any
+    result = body as any;
   } else if (body instanceof ReadableStream) {
     result = body.pipeThrough(new Uint8ArrayTransformStream());
   } else if (body instanceof FormData) {

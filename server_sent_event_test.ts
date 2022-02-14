@@ -119,7 +119,7 @@ test({
     await sse.close();
     assert(env.response);
     assert(env.response.body);
-    const reader = env.response.body.getReader();
+    const reader = (env.response.body as any).getReader();
     await reader.closed;
     assertEquals(env.response.status, 200);
     assertEquals(env.response.headers.get("content-type"), "text/event-stream");

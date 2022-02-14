@@ -228,7 +228,9 @@ export class RequestBody {
           return this.#formDataReader ??
             (this.#formDataReader = new FormDataReader(
               contentType,
-              readerFromStreamReader(readableStream.getReader()),
+              readerFromStreamReader(
+                (readableStream as ReadableStream<Uint8Array>).getReader(),
+              ),
             ));
         };
       case "json":
@@ -324,7 +326,10 @@ export class RequestBody {
       this.#type = "reader";
       return {
         type,
-        value: readerFromStreamReader(this.#request.body.getReader()),
+        // when shimming with undici in Node.js, this is
+        // `ControlledAsyncIterable` and not a web stream.
+        // deno-lint-ignore no-explicit-any
+        value: readerFromStreamReader((this.#request.body as any).getReader()),
       };
     }
     if (type === "stream") {
@@ -335,7 +340,9 @@ export class RequestBody {
         );
       }
       this.#type = "stream";
-      const streams = (this.#stream ?? this.#request.body).tee();
+      const streams =
+        ((this.#stream ?? this.#request.body) as ReadableStream<Uint8Array>)
+          .tee();
       this.#stream = streams[1];
       return { type, value: streams[0] };
     }

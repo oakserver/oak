@@ -153,6 +153,7 @@ const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 const DEFAULT_SERVER: ServerConstructor<ServerRequest> = isNode()
   ? (await import("./http_server_node.ts")).HttpServerNode
   : HttpServerNative;
+// deno-lint-ignore no-explicit-any
 const LocalErrorEvent: typeof ErrorEvent = (globalThis as any).ErrorEvent ??
   (await import("./node_shims.ts")).ErrorEvent;
 

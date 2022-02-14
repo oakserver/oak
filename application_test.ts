@@ -28,6 +28,7 @@ import type {
   ServerConstructor,
   ServerRequest,
 } from "./types.d.ts";
+import { isNode } from "./util.ts";
 
 const { test } = Deno;
 
@@ -904,6 +905,7 @@ test({
 
 test({
   name: "Application - inspecting",
+  ignore: isNode(),
   fn() {
     assertEquals(
       Deno.inspect(new Application()),

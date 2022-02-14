@@ -2,16 +2,31 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import { build, emptyDir } from "https://deno.land/x/dnt@0.17.0/mod.ts";
+import { copy } from "https://deno.land/std@0.125.0/fs/copy.ts";
 
 async function start() {
   await emptyDir("./npm");
+  await copy("fixtures", "npm/esm/fixtures", { overwrite: true });
 
   await build({
     entryPoints: ["./mod.ts"],
     outDir: "./npm",
-    shims: { deno: true },
+    shims: {
+      blob: true,
+      crypto: true,
+      deno: true,
+      undici: true,
+      custom: [{
+        package: {
+          name: "stream/web",
+        },
+        globalNames: ["ReadableStream", "TransformStream"],
+      }],
+    },
     scriptModule: false,
+    test: false,
     compilerOptions: {
+      importHelpers: true,
       target: "ES2021",
     },
     package: {
@@ -28,6 +43,12 @@ async function start() {
       },
       bugs: {
         url: "https://github.com/oakserver/oak/issues",
+      },
+      dependencies: {
+        "tslib": "~2.3.1",
+      },
+      devDependencies: {
+        "@types/node": "^16",
       },
     },
   });

@@ -100,7 +100,10 @@ export class NativeRequest {
   }
 
   get body(): ReadableStream<Uint8Array> | null {
-    return this.#request.body;
+    // when shimming with undici under Node.js, this is a
+    // `ControlledAsyncIterable`
+    // deno-lint-ignore no-explicit-any
+    return this.#request.body as any;
   }
 
   get donePromise(): Promise<void> {

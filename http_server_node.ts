@@ -46,8 +46,7 @@ export class HttpServerNode implements Server<NodeRequest> {
   constructor() {
     this.#host = `localhost`;
     this.#port = 0;
-    // deno-lint-ignore no-explicit-any
-    this.#server = http.createServer((req: any, res: any) => {});
+    this.#server = http.createServer((req, res) => {});
   }
 
   close(): void {
