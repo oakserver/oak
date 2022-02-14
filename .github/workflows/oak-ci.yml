@@ -29,16 +29,16 @@ jobs:
         run: deno bundle mod.ts oak.bundle.js
 
       - name: run tests
-        run: deno test --allow-read --allow-write --allow-net --jobs 4
+        run: deno test --allow-read --allow-write --allow-net --jobs 4 --ignore=npm
       
       - name: run tests no check
-        run: deno test --allow-read --allow-write --allow-net --no-check --jobs 4
+        run: deno test --allow-read --allow-write --allow-net --no-check --jobs 4 --ignore=npm
 
       - name: run tests unstable
-        run: deno test --coverage=./cov --allow-read --allow-write --allow-net --unstable --jobs 4
+        run: deno test --coverage=./cov --allow-read --allow-write --allow-net --unstable --jobs 4 --ignore=npm
 
       - name: run tests using dom libs
-        run: deno test --unstable --allow-read --allow-write --allow-net --config dom.tsconfig.json --jobs 4
+        run: deno test --unstable --allow-read --allow-write --allow-net --config dom.tsconfig.json --jobs 4 --ignore=npm
 
       - name: generate lcov
         if: matrix.os == 'ubuntu-latest'

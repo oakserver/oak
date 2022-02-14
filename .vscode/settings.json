@@ -2,6 +2,7 @@
   "deno.enable": true,
   "deno.unstable": true,
   "deno.lint": true,
+  "deno.importMap": "./import-map.json",
   "deno.codeLens.testArgs": [
     "--allow-net",
     "--allow-read",

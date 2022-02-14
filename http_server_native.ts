@@ -1,7 +1,7 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
-import type { Server, UpgradeWebSocketOptions } from "./types.d.ts";
+import type { Listener, Server, UpgradeWebSocketOptions } from "./types.d.ts";
 import { assert, isListenTlsOptions } from "./util.ts";
 
 // this is included so when down-emitting to npm/Node.js, ReadableStream has
@@ -16,7 +16,9 @@ declare global {
 }
 
 export type Respond = (r: Response | Promise<Response>) => void;
-export const DomResponse: typeof Response = Response;
+// deno-lint-ignore no-explicit-any
+export const DomResponse: typeof Response = (globalThis as any).Response ??
+  class MockResponse {};
 
 // This type is part of Deno, but not part of lib.dom.d.ts, therefore add it here
 // so that type checking can occur properly under `lib.dom.d.ts`.
@@ -224,10 +226,10 @@ export class HttpServerNative<AS extends State = Record<string, any>>
     this.#httpConnections.clear();
   }
 
-  listen(): Deno.Listener {
-    return this.#listener = isListenTlsOptions(this.#options)
+  listen(): Listener {
+    return (this.#listener = isListenTlsOptions(this.#options)
       ? Deno.listenTls(this.#options)
-      : Deno.listen(this.#options);
+      : Deno.listen(this.#options)) as Listener;
   }
 
   #trackHttpConnection(httpConn: HttpConn): void {

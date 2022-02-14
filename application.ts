@@ -6,8 +6,14 @@ import { HttpServerNative, NativeRequest } from "./http_server_native.ts";
 import { KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
 import { cloneState } from "./structured_clone.ts";
-import { Key, Server, ServerConstructor } from "./types.d.ts";
-import { assert, isConn } from "./util.ts";
+import {
+  Key,
+  Listener,
+  Server,
+  ServerConstructor,
+  ServerRequest,
+} from "./types.d.ts";
+import { assert, isConn, isNode } from "./util.ts";
 
 export interface ListenOptionsBase extends Deno.ListenOptions {
   secure?: false;
@@ -69,7 +75,7 @@ interface ApplicationListenEventListenerObject {
 
 interface ApplicationListenEventInit extends EventInit {
   hostname: string;
-  listener: Deno.Listener;
+  listener: Listener;
   port: number;
   secure: boolean;
   serverType: "native" | "custom";
@@ -81,7 +87,7 @@ type ApplicationListenEventListenerOrEventListenerObject =
 
 /** Available options that are used when creating a new instance of
  * {@linkcode Application}. */
-export interface ApplicationOptions<S> {
+export interface ApplicationOptions<S, R extends ServerRequest> {
   /** Determine how when creating a new context, the state from the application
    * should be applied. A value of `"clone"` will set the state as a clone of
    * the app state. Any non-cloneable or non-enumerable properties will not be
@@ -124,7 +130,7 @@ export interface ApplicationOptions<S> {
    * requests.
    *
    * Generally this is only used for testing. */
-  serverConstructor?: ServerConstructor<NativeRequest>;
+  serverConstructor?: ServerConstructor<R>;
 
   /** The initial state object for the application, of which the type can be
    * used to infer the type of the state for both the application and any of the
@@ -136,7 +142,7 @@ interface RequestState {
   handling: Set<Promise<void>>;
   closing: boolean;
   closed: boolean;
-  server: Server<NativeRequest>;
+  server: Server<ServerRequest>;
 }
 
 // deno-lint-ignore no-explicit-any
@@ -144,8 +150,14 @@ export type State = Record<string | number | symbol, any>;
 
 const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 
+const DEFAULT_SERVER: ServerConstructor<ServerRequest> = isNode()
+  ? (await import("./http_server_node.ts")).HttpServerNode
+  : HttpServerNative;
+const LocalErrorEvent: typeof ErrorEvent = (globalThis as any).ErrorEvent ??
+  (await import("./node_shims.ts")).ErrorEvent;
+
 export class ApplicationErrorEvent<S extends AS, AS extends State>
-  extends ErrorEvent {
+  extends LocalErrorEvent {
   context?: Context<S, AS>;
 
   constructor(eventInitDict: ApplicationErrorEventInit<S, AS>) {
@@ -190,7 +202,7 @@ function logErrorListener<S extends AS, AS extends State>(
 
 export class ApplicationListenEvent extends Event {
   hostname: string;
-  listener: Deno.Listener;
+  listener: Listener;
   port: number;
   secure: boolean;
   serverType: "native" | "custom";
@@ -239,7 +251,7 @@ export class Application<AS extends State = Record<string, any>>
   #contextState: "clone" | "prototype" | "alias" | "empty";
   #keys?: KeyStack;
   #middleware: Middleware<State, Context<State, AS>>[] = [];
-  #serverConstructor: ServerConstructor<NativeRequest>;
+  #serverConstructor: ServerConstructor<ServerRequest>;
 
   /** A set of keys, or an instance of `KeyStack` which will be used to sign
    * cookies read and set by the application to avoid tampering with the
@@ -278,13 +290,13 @@ export class Application<AS extends State = Record<string, any>>
    */
   state: AS;
 
-  constructor(options: ApplicationOptions<AS> = {}) {
+  constructor(options: ApplicationOptions<AS, ServerRequest> = {}) {
     super();
     const {
       state,
       keys,
       proxy,
-      serverConstructor = HttpServerNative,
+      serverConstructor = DEFAULT_SERVER,
       contextState = "clone",
       logErrors = true,
     } = options;
@@ -354,7 +366,7 @@ export class Application<AS extends State = Record<string, any>>
 
   /** Processing registered middleware on each request. */
   async #handleRequest(
-    request: NativeRequest,
+    request: ServerRequest,
     secure: boolean,
     state: RequestState,
   ): Promise<void> {

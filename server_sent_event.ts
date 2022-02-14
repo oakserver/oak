@@ -123,14 +123,12 @@ export class ServerSentEvent extends Event {
   }
 }
 
-const responseHeaders = new Headers(
-  [
-    ["Connection", "Keep-Alive"],
-    ["Content-Type", "text/event-stream"],
-    ["Cache-Control", "no-cache"],
-    ["Keep-Alive", `timeout=${Number.MAX_SAFE_INTEGER}`],
-  ],
-);
+const RESPONSE_HEADERS = [
+  ["Connection", "Keep-Alive"],
+  ["Content-Type", "text/event-stream"],
+  ["Cache-Control", "no-cache"],
+  ["Keep-Alive", `timeout=${Number.MAX_SAFE_INTEGER}`],
+] as const;
 
 export interface ServerSentEventTarget extends EventTarget {
   /** Is set to `true` if events cannot be sent to the remote connection.
@@ -278,7 +276,7 @@ export class SSEStreamTarget extends EventTarget
         context.response.headers.set(key, value);
       }
     }
-    for (const [key, value] of responseHeaders) {
+    for (const [key, value] of RESPONSE_HEADERS) {
       context.response.headers.set(key, value);
     }
 

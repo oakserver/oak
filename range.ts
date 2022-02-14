@@ -96,6 +96,10 @@ async function readRange(
 
 const encoder = new TextEncoder();
 
+const ReadableStream = globalThis.ReadableStream ??
+  // deno-lint-ignore no-explicit-any
+  ((await import("stream/web")) as any).ReadableStream;
+
 /** A class that takes a file (either a Deno.File or Uint8Array) and bytes
  * and streams the ranges as a multi-part encoded HTTP body.
  *

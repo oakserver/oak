@@ -41,6 +41,7 @@ function calcStatTag(entity: FileInfo): string {
 }
 
 const encoder = new TextEncoder();
+const { subtle } = globalThis.crypto ?? (await import("crypto")).webcrypto;
 
 async function calcEntityTag(entity: string | Uint8Array): Promise<string> {
   if (entity.length === 0) {
@@ -51,7 +52,7 @@ async function calcEntityTag(entity: string | Uint8Array): Promise<string> {
     entity = encoder.encode(entity);
   }
 
-  const hash = base64.encode(await crypto.subtle.digest("SHA-1", entity))
+  const hash = base64.encode(await subtle.digest("SHA-1", entity))
     .substring(0, 27);
 
   return `"${entity.length.toString(16)}-${hash}"`;

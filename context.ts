@@ -2,7 +2,6 @@
 
 import type { Application, State } from "./application.ts";
 import { Cookies } from "./cookies.ts";
-import { NativeRequest } from "./http_server_native.ts";
 import { createHttpError } from "./httpError.ts";
 import type { KeyStack } from "./keyStack.ts";
 import { Request } from "./request.ts";
@@ -13,7 +12,11 @@ import {
   SSEStreamTarget,
 } from "./server_sent_event.ts";
 import type { ServerSentEventTarget } from "./server_sent_event.ts";
-import type { ErrorStatus, UpgradeWebSocketOptions } from "./types.d.ts";
+import type {
+  ErrorStatus,
+  ServerRequest,
+  UpgradeWebSocketOptions,
+} from "./types.d.ts";
 
 export interface ContextSendOptions extends SendOptions {
   /** The filename to send, which will be resolved based on the other options.
@@ -130,7 +133,7 @@ export class Context<
 
   constructor(
     app: Application<AS>,
-    serverRequest: NativeRequest,
+    serverRequest: ServerRequest,
     state: S,
     secure = false,
   ) {
@@ -230,6 +233,11 @@ export class Context<
   upgrade(options?: UpgradeWebSocketOptions): WebSocket {
     if (this.#socket) {
       return this.#socket;
+    }
+    if (!this.request.originalRequest.upgrade) {
+      throw new TypeError(
+        "Web socket upgrades not supported for this type of server.",
+      );
     }
     this.#socket = this.request.originalRequest.upgrade(options);
     this.respond = false;

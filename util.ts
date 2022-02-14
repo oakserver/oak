@@ -7,6 +7,10 @@ import { createHttpError } from "./httpError.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
 import type { Data, ErrorStatus, Key, RedirectStatus } from "./types.d.ts";
 
+const TransformStream = globalThis.TransformStream ??
+  // deno-lint-ignore no-explicit-any
+  ((await import("stream/web")) as any).TransformStream;
+
 const ENCODE_CHARS_REGEXP =
   /(?:[^\x21\x25\x26-\x3B\x3D\x3F-\x5B\x5D\x5F\x61-\x7A\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g;
 const HTAB = "\t".charCodeAt(0);
@@ -50,11 +54,16 @@ function bufferToHex(buffer: ArrayBuffer): string {
   return arr.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+const crypto = globalThis.crypto ??
+  (await import("crypto")).webcrypto;
+const { subtle } = crypto;
+const getRandomValues = crypto.getRandomValues.bind(crypto);
+
 export async function getRandomFilename(
   prefix = "",
   extension = "",
 ): Promise<string> {
-  const buffer = await crypto.subtle.digest(
+  const buffer = await subtle.digest(
     "SHA-1",
     crypto.getRandomValues(new Uint8Array(256)),
   );
@@ -62,9 +71,9 @@ export async function getRandomFilename(
 }
 
 export async function getBoundary(): Promise<string> {
-  const buffer = await crypto.subtle.digest(
+  const buffer = await subtle.digest(
     "SHA-1",
-    crypto.getRandomValues(new Uint8Array(256)),
+    getRandomValues(new Uint8Array(256)),
   );
   return `oak_${bufferToHex(buffer)}`;
 }
@@ -432,13 +441,17 @@ export function encodeBase64Safe(data: string | ArrayBuffer): string {
   return base64.encode(data).replace(/\/|\+|=/g, (c) => replacements[c]);
 }
 
+export function isNode(): boolean {
+  return "process" in globalThis && "global" in globalThis;
+}
+
 export function importKey(key: Key): Promise<CryptoKey> {
   if (typeof key === "string") {
     key = encoder.encode(key);
   } else if (Array.isArray(key)) {
     key = new Uint8Array(key);
   }
-  return globalThis.crypto.subtle.importKey(
+  return subtle.importKey(
     "raw",
     key,
     {
@@ -456,5 +469,5 @@ export function sign(data: Data, key: CryptoKey): Promise<ArrayBuffer> {
   } else if (Array.isArray(data)) {
     data = Uint8Array.from(data);
   }
-  return crypto.subtle.sign("HMAC", key, data);
+  return subtle.sign("HMAC", key, data);
 }

@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "crypto": "https://deno.land/x/std@0.125.0/node/crypto.ts",
+    "http": "https://deno.land/x/std@0.125.0/node/http.ts",
+    "http2": "https://deno.land/x/std@0.125.0/node/http2.ts",
+    "stream/web": "https://deno.land/x/std@0.125.0/node/stream/web.ts"
+  }
+}

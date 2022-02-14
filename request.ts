@@ -12,8 +12,7 @@ import type {
   BodyText,
 } from "./body.ts";
 import { RequestBody } from "./body.ts";
-import type { NativeRequest } from "./http_server_native.ts";
-import type { HTTPMethods } from "./types.d.ts";
+import type { HTTPMethods, ServerRequest } from "./types.d.ts";
 import { preferredCharsets } from "./negotiation/charset.ts";
 import { preferredEncodings } from "./negotiation/encoding.ts";
 import { preferredLanguages } from "./negotiation/language.ts";
@@ -31,7 +30,7 @@ export class Request {
   #body: RequestBody;
   #proxy: boolean;
   #secure: boolean;
-  #serverRequest: NativeRequest;
+  #serverRequest: ServerRequest;
   #url?: URL;
 
   #getRemoteAddr(): string {
@@ -83,7 +82,7 @@ export class Request {
   }
 
   /** Set to the value of the _original_ Deno server request. */
-  get originalRequest(): NativeRequest {
+  get originalRequest(): ServerRequest {
     return this.#serverRequest;
   }
 
@@ -130,7 +129,7 @@ export class Request {
   }
 
   constructor(
-    serverRequest: NativeRequest,
+    serverRequest: ServerRequest,
     proxy = false,
     secure = false,
   ) {

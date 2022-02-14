@@ -10,11 +10,18 @@ async function start() {
     entryPoints: ["./mod.ts"],
     outDir: "./npm",
     shims: { deno: true },
+    scriptModule: false,
+    compilerOptions: {
+      target: "ES2021",
+    },
     package: {
-      name: "oak",
+      name: "@oakserver/oak",
       version: Deno.args[0],
       description: "A middleware framework for handling HTTP requests",
       license: "MIT",
+      engines: {
+        node: ">=16.5.0 <18",
+      },
       repository: {
         type: "git",
         url: "git+https://github.com/oakserver/oak.git",

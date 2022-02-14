@@ -9,7 +9,7 @@ import {
   green,
   red,
   yellow,
-} from "https://deno.land/std@0.123.0/fmt/colors.ts";
+} from "https://raw.githubusercontent.com/denoland/deno_std/main/fmt/colors.ts";
 
 import { Application, HttpError, Status } from "../mod.ts";
 
