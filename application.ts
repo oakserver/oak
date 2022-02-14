@@ -79,6 +79,8 @@ type ApplicationListenEventListenerOrEventListenerObject =
   | ApplicationListenEventListener
   | ApplicationListenEventListenerObject;
 
+/** Available options that are used when creating a new instance of
+ * {@linkcode Application}. */
 export interface ApplicationOptions<S> {
   /** Determine how when creating a new context, the state from the application
    * should be applied. A value of `"clone"` will set the state as a clone of
@@ -94,7 +96,7 @@ export interface ApplicationOptions<S> {
    */
   contextState?: "clone" | "prototype" | "alias" | "empty";
 
-  /** An initial set of keys (or instance of `KeyGrip`) to be used for signing
+  /** An initial set of keys (or instance of {@linkcode KeyStack}) to be used for signing
    * cookies produced by the application. */
   keys?: KeyStack | Key[];
 
@@ -207,7 +209,9 @@ export class ApplicationListenEvent extends Event {
  * inbound requests against that middleware (via `.listen()`).
  *
  * The `context.state` can be typed via passing a generic argument when
- * constructing an instance of `Application`.
+ * constructing an instance of `Application`. It can also be inferred by setting
+ * the {@linkcode ApplicationOptions.state} option when constructing the
+ * application.
  *
  * ### Basic example
  *
@@ -224,6 +228,9 @@ export class ApplicationListenEvent extends Event {
  *
  * app.listen({ port: 8080 });
  * ```
+ *
+ * @template AS the type of the application state which extends
+ *              {@linkcode State} and defaults to a simple string record.
  */
 // deno-lint-ignore no-explicit-any
 export class Application<AS extends State = Record<string, any>>

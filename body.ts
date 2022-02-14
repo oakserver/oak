@@ -6,6 +6,25 @@ import { isMediaType } from "./isMediaType.ts";
 import { FormDataReader } from "./multipart.ts";
 import { assert } from "./util.ts";
 
+/** The type of the body, where:
+ *
+ * - `"bytes"` - the body is provided as a promise which resolves to an
+ *   {@linkcode Uint8Array}. This is essentially a "raw" body type.
+ * - `"form"` - the body was decoded as a form with the contents provided as a
+ *   promise which resolves with a {@linkcode URLSearchParams}.
+ * - `"form-data"` - the body was decoded as a multi-part form data and the
+ *   contents are provided as a promise which resolves with a
+ *   {@linkcode FormDataReader}.
+ * - `"json"` - the body was decoded as JSON, where the contents are provided as
+ *   the result of using `JSON.parse()` on the string contents of the body.
+ * - `"text"` - the body was decoded as text, where the contents are provided as
+ *   a string.
+ * - `"reader"` - the body is provided as {@linkcode Deno.Reader} interface for
+ *   reading the "raw" body.
+ * - `"stream"` - the body is provided as a
+ *   {@linkcode ReadableStream<Uint8Array>} for reading the "raw" body.
+ * - `"undefined"` - there is no request body or it could not be decoded.
+ */
 export type BodyType =
   | "bytes"
   | "form"
@@ -16,40 +35,53 @@ export type BodyType =
   | "stream"
   | "undefined";
 
+/** The tagged type for `"bytes"` bodies. */
 export type BodyBytes = {
   readonly type: "bytes";
   readonly value: Promise<Uint8Array>;
 };
+/** The tagged type for `"json"` bodies. */
 export type BodyJson = {
   readonly type: "json";
-  readonly value: Promise<unknown>;
+  // deno-lint-ignore no-explicit-any
+  readonly value: Promise<any>;
 };
+/** The tagged type for `"form"` bodies. */
 export type BodyForm = {
   readonly type: "form";
   readonly value: Promise<URLSearchParams>;
 };
+/** The tagged type for `"form-data"` bodies. */
 export type BodyFormData = {
   readonly type: "form-data";
   readonly value: FormDataReader;
 };
+/** The tagged type for `"text"` bodies. */
 export type BodyText = {
   readonly type: "text";
   readonly value: Promise<string>;
 };
+/** The tagged type for `"undefined"` bodies. */
 export type BodyUndefined = {
   readonly type: "undefined";
   readonly value: undefined;
 };
-
+/** The tagged type for `"reader"` bodies. */
 export type BodyReader = {
   readonly type: "reader";
   readonly value: Deno.Reader;
 };
+/** The tagged type for `"stream"` bodies. */
 export type BodyStream = {
   readonly type: "stream";
   readonly value: ReadableStream<Uint8Array>;
 };
 
+/** The type returned from the `.body()` function, which is a tagged union type
+ * of all the different types of bodies which can be identified by the `.type`
+ * property which will be of type {@linkcode BodyType} and the `.value`
+ * property being a `Promise` which resolves with the appropriate value, or
+ * `undefined` if there is no body. */
 export type Body =
   | BodyBytes
   | BodyJson
@@ -60,6 +92,10 @@ export type Body =
 
 type BodyValueGetter = () => Body["value"];
 
+/** When setting the `contentTypes` property of {@linkcode BodyOptions}, provide
+ * additional content types which can influence how the body is decoded. This
+ * is specifically designed to allow a server to support custom or specialized
+ * media types that are not part of the public database. */
 export interface BodyOptionsContentTypes {
   /** Content types listed here will always return an Uint8Array. */
   bytes?: string[];
@@ -75,6 +111,11 @@ export interface BodyOptionsContentTypes {
   text?: string[];
 }
 
+/** Options which can be used when accessing the `.body()` of a request.
+ *
+ * @template T the {@linkcode BodyType} to attempt to use when decoding the
+ *             request body.
+ */
 export interface BodyOptions<T extends BodyType = BodyType> {
   /** When reading a non-streaming body, set a limit whereby if the content
    * length is greater then the limit or not set, reading the body will throw.
@@ -84,7 +125,7 @@ export interface BodyOptions<T extends BodyType = BodyType> {
    * is 10 Mib. */
   limit?: number;
   /** Instead of utilizing the content type of the request, attempt to parse the
-   * body as the type specified. */
+   * body as the type specified. The value has to be of {@linkcode BodyType}. */
   type?: T;
   /** A map of extra content types to determine how to parse the body. */
   contentTypes?: BodyOptionsContentTypes;

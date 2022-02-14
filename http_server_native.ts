@@ -56,6 +56,8 @@ export interface NativeRequestOptions {
   upgradeWebSocket?: UpgradeWebSocketFn;
 }
 
+/** An internal oak abstraction for handling a Deno native request. Most users
+ * of oak do not need to worry about this abstraction. */
 export class NativeRequest {
   #conn?: Deno.Conn;
   // deno-lint-ignore no-explicit-any
@@ -157,6 +159,9 @@ export class NativeRequest {
   }
 }
 
+/** The oak abstraction of the Deno native HTTP server which is used internally
+ * for handling native HTTP requests. Generally users of oak do not need to
+ * worry about this class. */
 // deno-lint-ignore no-explicit-any
 export class HttpServerNative<AS extends State = Record<string, any>>
   implements Server<NativeRequest> {

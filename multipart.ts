@@ -16,6 +16,9 @@ const DEFAULT_MAX_FILE_SIZE = 10_485_760; // 10mb
 const DEFAULT_MAX_SIZE = 0; // all files written to disc
 const NAME_PARAM_REGEX = toParamRegExp("name", "i");
 
+/** When reading a body in full via `.read()` from a {@linkcode FormDataReader}
+ * this is what is what the value is resolved, providing a split between any
+ * fields, and multi-part files that were provided. */
 export interface FormDataBody {
   /** A record of form parts where the key was the `name` of the part and the
    * value was the value of the part. This record does not include any files
@@ -23,18 +26,28 @@ export interface FormDataBody {
    *
    * *Note*: Duplicate names are not included in this record, if there are
    * duplicates, the last value will be the value that is set here.  If there
-   * is a possibility of duplicate values, use the `.stream()` method to
-   * iterate over the values. */
+   * is a possibility of duplicate values, use the `.stream()` method on
+   * {@linkcode FormDataReader} to iterate over the values. */
   fields: Record<string, string>;
 
   /** An array of any files that were part of the form data. */
   files?: FormDataFile[];
 }
 
-/** A representation of a file that has been read from a form data body. */
-export type FormDataFile = {
+/** A representation of a file that has been read from a form data body. Based
+ * on the {@linkcode FormDataReadOptions} that were passed when reading will
+ * determine if files are written to disk or not and how they are written to
+ * disk.  When written to disk, the extension of the file will be determined by
+ * the content type, with the `.filename` property containing the full path to
+ * the file.
+ *
+ * The original filename as part of the form data is available in
+ * `originalName`, but for security and stability reasons, it is not used to
+ * determine the name of the file on disk. If further processing or renaming
+ * is required, the implementor should do that processing. */
+export interface FormDataFile {
   /** When the file has not been written out to disc, the contents of the file
-   * as a `Uint8Array`. */
+   * as a {@linkcode Uint8Array}. */
   content?: Uint8Array;
 
   /** The content type og the form data file. */
@@ -48,8 +61,14 @@ export type FormDataFile = {
 
   /** The `filename` that was provided in the form data file. */
   originalName: string;
-};
+}
 
+/** Options which impact how the form data is decoded for a
+ * {@linkcode FormDataReader}. All these options have sensible defaults for
+ * most applications, but can be modified for different use cases. Many of these
+ * options can have an impact on the stability of a server, especially if there
+ * is someone attempting a denial of service attack on your server, so be
+ * careful when changing the defaults. */
 export interface FormDataReadOptions {
   /** The size of the buffer to read from the request body at a single time.
    * This defaults to 1mb. */
@@ -296,8 +315,54 @@ async function* parts(
   }
 }
 
-/** A class which provides an interface to access the fields of a
- * `multipart/form-data` body. */
+/** An interface which provides an interface to access the fields of a
+ * `multipart/form-data` body.
+ *
+ * Normally an instance of this is accessed when handling a request body, and
+ * dealing with decoding it.  There are options that can be set when attempting
+ * to read a multi-part body (see: {@linkcode FormDataReadOptions}).
+ *
+ * If you `.read()` the value, then a promise is provided of type
+ * {@linkcode FormDataBody}. If you use the `.stream()` property, it is an async
+ * iterator which yields up a tuple of with the first element being a
+ *
+ * ### Examples
+ *
+ * Using `.read()`:
+ *
+ * ```ts
+ * import { Application } from "https://deno.land/x/oak/mod.ts";
+ *
+ * const app = new Application();
+ *
+ * app.use(async (ctx) => {
+ *   const body = ctx.request.body();
+ *   if (body.type === "form-data") {
+ *     const value = await body.value;
+ *     const formData = await value.read();
+ *     // the form data is fully available
+ *   }
+ * });
+ * ```
+ *
+ *  Using `.stream()`:
+ *
+ * ```ts
+ * import { Application } from "https://deno.land/x/oak/mod.ts";
+ *
+ * const app = new Application();
+ *
+ * app.use(async (ctx) => {
+ *   const body = ctx.request.body();
+ *   if (body.type === "form-data") {
+ *     const value = await body.value;
+ *     for await (const [name, value] of value.stream()) {
+ *       // asynchronously iterate each part of the body
+ *     }
+ *   }
+ * });
+ * ```
+ */
 export class FormDataReader {
   #body: Deno.Reader;
   #boundaryFinal: Uint8Array;
@@ -383,7 +448,7 @@ export class FormDataReader {
    * object. */
   async *stream(
     options: FormDataReadOptions = {},
-  ): AsyncIterableIterator<[string, string | FormDataFile]> {
+  ): AsyncIterableIterator<[name: string, value: string | FormDataFile]> {
     if (this.#reading) {
       throw new Error("Body is already being read.");
     }

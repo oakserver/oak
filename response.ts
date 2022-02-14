@@ -15,7 +15,7 @@ import {
   Uint8ArrayTransformStream,
 } from "./util.ts";
 
-type Body =
+export type ResponseBody =
   | string
   | number
   | bigint
@@ -25,7 +25,7 @@ type Body =
   | object
   | undefined
   | null;
-type BodyFunction = () => Body | Promise<Body>;
+export type ResponseBodyFunction = () => ResponseBody | Promise<ResponseBody>;
 
 /** A symbol that indicates to `response.redirect()` to attempt to redirect
  * back to the request referrer.  For example:
@@ -47,7 +47,7 @@ type BodyFunction = () => Body | Promise<Body>;
 export const REDIRECT_BACK = Symbol("redirect backwards");
 
 export async function convertBodyToBodyInit(
-  body: Body | BodyFunction,
+  body: ResponseBody | ResponseBodyFunction,
   type?: string,
 ): Promise<[globalThis.BodyInit | undefined, string | undefined]> {
   let result: globalThis.BodyInit | undefined;
@@ -81,9 +81,26 @@ export async function convertBodyToBodyInit(
 }
 
 /** An interface to control what response will be sent when the middleware
- * finishes processing the request. */
+ * finishes processing the request.
+ *
+ * The response is usually accessed via the context's `.response` property.
+ *
+ * ### Example
+ *
+ * ```ts
+ * import { Application, Status } from "https://deno.land/x/oak/mod.ts";
+ *
+ * const app = new Application();
+ *
+ * app.use((ctx) => {
+ *   ctx.response.body = { hello: "oak" };
+ *   ctx.response.type = "json";
+ *   ctx.response.status = Status.OK;
+ * });
+ * ```
+ */
 export class Response {
-  #body?: Body | BodyFunction;
+  #body?: ResponseBody | ResponseBodyFunction;
   #bodySet = false;
   #domResponse?: globalThis.Response;
   #headers = new Headers();
@@ -113,7 +130,7 @@ export class Response {
    * `Deno.Reader`.
    *
    * Automatic conversion to a `Deno.Reader` occurs for async iterables. */
-  get body(): Body | BodyFunction {
+  get body(): ResponseBody | ResponseBodyFunction {
     return this.#body;
   }
 
@@ -122,7 +139,7 @@ export class Response {
    * `Deno.Reader`.
    *
    * Automatic conversion to a `Deno.Reader` occurs for async iterables. */
-  set body(value: Body | BodyFunction) {
+  set body(value: ResponseBody | ResponseBodyFunction) {
     if (!this.#writable) {
       throw new Error("The response is not writable.");
     }

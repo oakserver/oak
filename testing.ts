@@ -2,8 +2,12 @@
 
 // deno-lint-ignore-file no-explicit-any
 
-// A module of utility functions which can make testing an oak application
-// easier.
+/**
+ * A collection of utility APIs which can make testing of an oak application
+ * easier.
+ *
+ * @module
+ */
 
 import type { Application, State } from "./application.ts";
 import { createHttpError } from "./httpError.ts";

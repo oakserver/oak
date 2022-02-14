@@ -148,7 +148,30 @@ class Cookie implements CookieAttributes {
 }
 
 /** An interface which allows setting and accessing cookies related to both the
- * current request and response. */
+ * current request and response. Each {@linkcode Context} has a property
+ * `.cookies` which is an instance of this class.
+ *
+ * Because oak supports automatic encryption, most methods (except `.delete`)
+ * are asynchronous. This is because oak leverages the Web Crypto APIs, which
+ * are asynchronous by nature.
+ *
+ * ### Example
+ *
+ * ```ts
+ * import { Application } from "https://deno.land/x/oak/mod.ts";
+ *
+ * const app = new Application();
+ *
+ * app.use(async (ctx) => {
+ *   for await (const cookie of ctx.cookies) {
+ *     // iterating over each cookie
+ *   }
+ *   await ctx.cookie.set("myCookie", "a value"); // setting or updating a cookie
+ *   const id = await ctx.cookie.get("my-id"); // getting a value of a cookie if present
+ *   ctx.cookie.delete();
+ * });
+ * ```
+ */
 export class Cookies {
   #cookieKeys?: string[];
   #keys?: KeyStack;

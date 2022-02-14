@@ -71,7 +71,7 @@ const errorStatusMap = {
   "NetworkAuthenticationRequired": 511,
 };
 
-/** A base class for individual classes of HTTP errors. */
+/** The base class for individual classes of HTTP errors. */
 export class HttpError extends Error {
   /** Determines if details about the error should be automatically exposed
    * in a response.  This is automatically set to `true` for 4XX errors, as

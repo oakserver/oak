@@ -23,7 +23,39 @@ export interface ContextSendOptions extends SendOptions {
 }
 
 /** Provides context about the current request and response to middleware
- * functions. */
+ * functions, and the current instance being processed is the first argument
+ * provided a {@linkcode Middleware} function.
+ *
+ * _Typically this is only used as a type annotation and shouldn't be
+ * constructed directly._
+ *
+ * ### Example
+ *
+ * ```ts
+ * import { Application, Context } from "https://deno.land/x/oak/mod.ts";
+ *
+ * const app = new Application();
+ *
+ * app.use((ctx) => {
+ *   // information about the request is here:
+ *   ctx.request;
+ *   // information about the response is here:
+ *   ctx.response;
+ *   // the cookie store is here:
+ *   ctx.cookies;
+ * });
+ *
+ * // Needs a type annotation because it cannot be inferred.
+ * function mw(ctx: Context) {
+ *   // process here...
+ * }
+ *
+ * app.use(mw);
+ * ```
+ *
+ * @template S the state which extends the application state (`AS`)
+ * @template AS the type of the state derived from the application
+ */
 export class Context<
   S extends AS = State,
   // deno-lint-ignore no-explicit-any
@@ -116,6 +148,22 @@ export class Context<
   /** Asserts the condition and if the condition fails, creates an HTTP error
    * with the provided status (which defaults to `500`).  The error status by
    * default will be set on the `.response.status`.
+   *
+   * Because of limitation of TypeScript, any assertion type function requires
+   * specific type annotations, so the {@linkcode Context} type should be used
+   * even if it can be inferred from the context.
+   *
+   * ### Example
+   *
+   * ```ts
+   * import { Context, Status } from "https://deno.land/x/oak/mod.ts";
+   *
+   * export function mw(ctx: Context) {
+   *   const body = ctx.request.body();
+   *   ctx.assert(body.type === "json", Status.NotAcceptable);
+   *   // process the body and send a response...
+   * }
+   * ```
    */
   assert(
     // deno-lint-ignore no-explicit-any

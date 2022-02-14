@@ -47,12 +47,13 @@ export type {
   State,
 } from "./application.ts";
 export type {
-  Body,
   BodyBytes,
+  BodyContentTypes,
   BodyForm,
   BodyFormData,
   BodyJson,
   BodyOptions,
+  BodyOptionsContentTypes,
   BodyReader,
   BodyStream,
   BodyText,
@@ -99,6 +100,7 @@ export type {
   ServerSentEventInit,
   ServerSentEventTarget,
 } from "./server_sent_event.ts";
+/** Utilities for making testing oak servers easier. */
 export * as testing from "./testing.ts";
 export type {
   ErrorStatus,

@@ -1,5 +1,11 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
+/**
+ * A collection of APIs for dealing with ETags in requests and responses.
+ *
+ * @module
+ */
+
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
 import { base64 } from "./deps.ts";

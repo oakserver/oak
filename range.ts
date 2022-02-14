@@ -97,7 +97,12 @@ async function readRange(
 const encoder = new TextEncoder();
 
 /** A class that takes a file (either a Deno.File or Uint8Array) and bytes
- * and streams the ranges as a multi-part encoded HTTP body. */
+ * and streams the ranges as a multi-part encoded HTTP body.
+ *
+ * This is specifically used by the `.send()` functionality to fulfill range
+ * requests it receives, and could be used by others when trying to deal with
+ * range requests, but is generally a low level API that most users of oak
+ * would not need to worry about. */
 export class MultiPartStream extends ReadableStream<Uint8Array> {
   #contentLength: number;
   #postscript: Uint8Array;

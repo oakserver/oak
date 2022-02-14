@@ -19,7 +19,14 @@ import { preferredEncodings } from "./negotiation/encoding.ts";
 import { preferredLanguages } from "./negotiation/language.ts";
 import { preferredMediaTypes } from "./negotiation/mediaType.ts";
 
-/** An interface which provides information about the current request. */
+/** An interface which provides information about the current request. The
+ * instance related to the current request is available on the
+ * {@linkcode Context}'s `.request` property.
+ *
+ * The interface contains several properties to get information about the
+ * request as well as several methods, which include content negotiation and
+ * the ability to decode a request body.
+ */
 export class Request {
   #body: RequestBody;
   #proxy: boolean;
@@ -162,6 +169,7 @@ export class Request {
    * @deprecated the header behind this is no longer used in browsers
    */
   acceptsCharsets(...charsets: string[]): string | undefined;
+  /** @deprecated the header behind this is no longer used in browsers */
   acceptsCharsets(...charsets: string[]): string[] | string | undefined {
     const acceptCharsetValue = this.#serverRequest.headers.get(
       "Accept-Charset",
@@ -232,6 +240,9 @@ export class Request {
   body(options: BodyOptions<"stream">): BodyStream;
   body(options: BodyOptions<"text">): BodyText;
   body(options?: BodyOptions): Body;
+  /** Access the body of the request. This is a method, because there are
+   * several options which can be provided which can influence how the body is
+   * handled. */
   body(options: BodyOptions = {}): Body | BodyReader | BodyStream {
     return this.#body.get(options);
   }

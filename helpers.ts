@@ -1,5 +1,11 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
+/**
+ * A collection of APIs to help assist in creating middleware.
+ *
+ * @module
+ */
+
 import type { Context } from "./context.ts";
 import type { RouterContext } from "./router.ts";
 import { isRouterContext } from "./util.ts";

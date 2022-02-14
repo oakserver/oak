@@ -43,19 +43,51 @@ class CloseEvent extends Event {
 }
 
 /** An event which contains information which will be sent to the remote
- * connection and be made available in an `EventSource` as an event. */
+ * connection and be made available in an `EventSource` as an event. A server
+ * creates new events and dispatches them on the target which will then be
+ * sent to a client.
+ *
+ * See more about Server-sent events on [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
+ *
+ * ### Example
+ *
+ * ```ts
+ * import { Application, ServerSentEvent } from "https://deno.land/x/oak/mod.ts";
+ *
+ * const app = new Application();
+ *
+ * app.use((ctx) => {
+ *   const target = ctx.sendEvents();
+ *   const evt = new ServerSentEvent(
+ *     "message",
+ *     { hello: "world" },
+ *     { id: 1 },
+ *   );
+ *   target.dispatchEvent(evt);
+ * });
+ * ```
+ */
 export class ServerSentEvent extends Event {
   #data: string;
   #id?: number;
   #type: string;
 
+  /**
+   * @param type the event type that will be available on the client. The type
+   *             of `"message"` will be handled specifically as a message
+   *             server-side event.
+   * @param data  arbitrary data to send to the client, data this is a string
+   *              will be sent unmodified, otherwise `JSON.parse()` will be used
+   *              to serialize the value
+   * @param eventInit initialization options for the event
+   */
   constructor(
     type: string,
-    // deno-lint-ignore no-explicit-any
-    data: any,
-    { replacer, space, ...eventInit }: ServerSentEventInit = {},
+    data: unknown,
+    eventInit: ServerSentEventInit = {},
   ) {
     super(type, eventInit);
+    const { replacer, space } = eventInit;
     this.#type = type;
     try {
       this.#data = typeof data === "string"
@@ -133,8 +165,7 @@ export interface ServerSentEventTarget extends EventTarget {
   /** Dispatch a message to the client.  This message will contain `data: ` only
    * and be available on the client `EventSource` on the `onmessage` or an event
    * listener of type `"message"`. */
-  // deno-lint-ignore no-explicit-any
-  dispatchMessage(data: any): boolean;
+  dispatchMessage(data: unknown): boolean;
 
   /** Dispatch a server sent event to the client.  The event `type` will be
    * sent as `event: ` to the client which will be raised as a `MessageEvent`
