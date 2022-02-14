@@ -219,7 +219,10 @@ export class SSEStreamTarget extends EventTarget
   #closed = false;
   #context: Context;
   #controller?: ReadableStreamDefaultController<Uint8Array>;
-  #keepAliveId?: number;
+  // we are ignoring any here, because when exporting to npn/Node.js, the timer
+  // handle isn't a number.
+  // deno-lint-ignore no-explicit-any
+  #keepAliveId?: any;
 
   // deno-lint-ignore no-explicit-any
   #error(error: any) {

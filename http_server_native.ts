@@ -4,6 +4,17 @@ import type { Application, State } from "./application.ts";
 import type { Server, UpgradeWebSocketOptions } from "./types.d.ts";
 import { assert, isListenTlsOptions } from "./util.ts";
 
+// this is included so when down-emitting to npm/Node.js, ReadableStream has
+// async iterators
+declare global {
+  // deno-lint-ignore no-explicit-any
+  interface ReadableStream<R = any> {
+    [Symbol.asyncIterator](options?: {
+      preventCancel?: boolean;
+    }): AsyncIterableIterator<R>;
+  }
+}
+
 export type Respond = (r: Response | Promise<Response>) => void;
 export const DomResponse: typeof Response = Response;
 
@@ -168,7 +179,7 @@ export class HttpServerNative<AS extends State = Record<string, any>>
   #app: Application<AS>;
   #closed = false;
   #listener?: Deno.Listener;
-  #httpConnections: Set<Deno.HttpConn> = new Set();
+  #httpConnections: Set<HttpConn> = new Set();
   #options: Deno.ListenOptions | Deno.ListenTlsOptions;
 
   constructor(
@@ -219,11 +230,11 @@ export class HttpServerNative<AS extends State = Record<string, any>>
       : Deno.listen(this.#options);
   }
 
-  #trackHttpConnection(httpConn: Deno.HttpConn): void {
+  #trackHttpConnection(httpConn: HttpConn): void {
     this.#httpConnections.add(httpConn);
   }
 
-  #untrackHttpConnection(httpConn: Deno.HttpConn): void {
+  #untrackHttpConnection(httpConn: HttpConn): void {
     this.#httpConnections.delete(httpConn);
   }
 
