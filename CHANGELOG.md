@@ -1,5 +1,10 @@
 # oak Change Log
 
+## Version 10.2.1
+
+- docs: improve inline documentation (bd7e692)
+- chore: remove a workaround for a Deno bug (60327f9)
+
 ## Version 10.2.0
 
 - feat: add support for custom content types when reading formdata (6cd2d53)
