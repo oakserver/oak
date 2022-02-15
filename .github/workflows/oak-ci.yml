@@ -26,7 +26,7 @@ jobs:
         run: deno lint
 
       - name: generate bundle
-        run: deno bundle mod.ts oak.bundle.js
+        run: deno bundle --import-map import-map.json mod.ts oak.bundle.js
 
       - name: run tests
         run: deno test --allow-read --allow-write --allow-net --jobs 4 --ignore=npm
