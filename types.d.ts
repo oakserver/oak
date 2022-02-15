@@ -81,6 +81,7 @@ export interface ServerRequest {
   readonly rawUrl: string;
   readonly request: Request;
   readonly url: string;
+  // deno-lint-ignore no-explicit-any
   error(reason?: any): void;
   respond(response: Response): Promise<void>;
   upgrade?(options?: UpgradeWebSocketOptions): WebSocket;

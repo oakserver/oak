@@ -46,7 +46,7 @@ export class HttpServerNode implements Server<NodeRequest> {
   constructor() {
     this.#host = `localhost`;
     this.#port = 0;
-    this.#server = http.createServer((req, res) => {});
+    this.#server = http.createServer((_req, _res) => {});
   }
 
   close(): void {
