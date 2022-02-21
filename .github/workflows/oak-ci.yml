@@ -37,9 +37,6 @@ jobs:
       - name: run tests unstable
         run: deno test --coverage=./cov --import-map import-map.json --allow-read --allow-write --allow-net --unstable --jobs 4 --ignore=npm
 
-      - name: run tests using dom libs
-        run: deno test --unstable --import-map import-map.json --allow-read --allow-write --allow-net --config dom.tsconfig.json --jobs 4 --ignore=npm
-
       - name: test build for Node.js
         if: matrix.os == 'ubuntu-latest'
         run: deno run --allow-read --allow-write --allow-net --allow-env --allow-run _build_npm.ts
