@@ -8,6 +8,7 @@ import type { Application } from "./application.ts";
 import { Context } from "./context.ts";
 import { NativeRequest } from "./http_server_native.ts";
 import { ServerSentEvent, SSEStreamTarget } from "./server_sent_event.ts";
+import { isNode } from "./util.ts";
 
 const { test } = Deno;
 
@@ -119,7 +120,7 @@ test({
     await sse.close();
     assert(env.response);
     assert(env.response.body);
-    const reader = env.response.body.getReader();
+    const reader = (env.response.body as any).getReader();
     await reader.closed;
     assertEquals(env.response.status, 200);
     assertEquals(env.response.headers.get("content-type"), "text/event-stream");
@@ -252,7 +253,9 @@ test({
     const context = new Context(createMockApp(), request, {});
     assertEquals(
       Deno.inspect(new SSEStreamTarget(context)),
-      `SSEStreamTarget {\n  "#closed": false,\n  "#context": Context {\n  app: EventTarget {
+      isNode()
+        ? `SSEStreamTarget {\n  '#closed': false,\n  '#context': Context {\n    app: EventTarget,\n    cookies: [Cookies],\n    isUpgradable: false,\n    respond: true,\n    request: [Request],\n    response: [Response],\n    socket: undefined,\n    state: {}\n  }\n}`
+        : `SSEStreamTarget {\n  "#closed": false,\n  "#context": Context {\n  app: EventTarget {
     [Symbol()]: {
       assignedSlot: false,
       hasActivationBehavior: false,

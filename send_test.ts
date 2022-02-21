@@ -13,6 +13,7 @@ import * as etag from "./etag.ts";
 import { httpErrors } from "./httpError.ts";
 import type { RouteParams } from "./router.ts";
 import { send } from "./send.ts";
+import { isNode } from "./util.ts";
 
 const { test } = Deno;
 
@@ -136,6 +137,7 @@ test({
         root: "./fixtures",
       });
     } catch (e) {
+      console.log(e);
       assert(e instanceof httpErrors.NotFound);
       didThrow = true;
     }
@@ -288,7 +290,7 @@ test({
     const { context } = setup("/test.json");
     const fixture = await Deno.readFile("./fixtures/test.json");
     await send(context, context.request.url.pathname, {
-      root: "../oak/fixtures",
+      root: isNode() ? "../esm/fixtures" : "../oak/fixtures",
       maxbuffer: 0,
     });
     const nativeResponse = await context.response.toDomResponse();

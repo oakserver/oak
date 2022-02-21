@@ -64,13 +64,35 @@ export type HTTPMethods =
   | "POST"
   | "DELETE";
 
+export interface Listener {
+  addr: { hostname: string; port: number };
+}
+
 export interface Server<T> extends AsyncIterable<T> {
   close(): void;
-  listen(): Deno.Listener;
+  listen(): Listener;
   [Symbol.asyncIterator](): AsyncIterableIterator<T>;
 }
 
-export interface ServerConstructor<T> {
+export interface ServerRequestBody {
+  body: ReadableStream<Uint8Array> | null;
+  readBody: () => Promise<Uint8Array>;
+}
+
+export interface ServerRequest {
+  readonly remoteAddr: string | undefined;
+  readonly headers: Headers;
+  readonly method: string;
+  readonly rawUrl?: string;
+  readonly url: string;
+  // deno-lint-ignore no-explicit-any
+  error(reason?: any): void;
+  getBody(): ServerRequestBody;
+  respond(response: Response): Promise<void>;
+  upgrade?(options?: UpgradeWebSocketOptions): WebSocket;
+}
+
+export interface ServerConstructor<T extends ServerRequest> {
   // deno-lint-ignore no-explicit-any
   new <AS extends State = Record<string, any>>(
     app: Application<AS>,

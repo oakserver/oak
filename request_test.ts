@@ -11,6 +11,7 @@ import {
 import { NativeRequest } from "./http_server_native.ts";
 import type { NativeRequestOptions } from "./http_server_native.ts";
 import { Request } from "./request.ts";
+import { isNode } from "./util.ts";
 
 const { test } = Deno;
 
@@ -291,7 +292,9 @@ test({
           }),
         ),
       ),
-      `Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/foo?bar=baz&qat=qux"\n}`,
+      isNode()
+        ? `Request {\n  hasBody: false,\n  headers: HeadersList(2) [ 'host', 'localhost' ],\n  ip: '',\n  ips: [],\n  method: 'GET',\n  secure: false,\n  url: URL {\n    href: 'http://localhost/foo?bar=baz&qat=qux',\n    origin: 'http://localhost',\n    protocol: 'http:',\n    username: '',\n    password: '',\n    host: 'localhost',\n    hostname: 'localhost',\n    port: '',\n    pathname: '/foo',\n    search: '?bar=baz&qat=qux',\n    searchParams: URLSearchParams { 'bar' => 'baz', 'qat' => 'qux' },\n    hash: ''\n  }\n}`
+        : `Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/foo?bar=baz&qat=qux"\n}`,
     );
   },
 });

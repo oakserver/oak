@@ -21,7 +21,14 @@ import { Status } from "./deps.ts";
 import { HttpServerNative, NativeRequest } from "./http_server_native.ts";
 import { httpErrors } from "./httpError.ts";
 import { KeyStack } from "./keyStack.ts";
-import type { Data, Server, ServerConstructor } from "./types.d.ts";
+import type {
+  Data,
+  Listener,
+  Server,
+  ServerConstructor,
+  ServerRequest,
+} from "./types.d.ts";
+import { isNode } from "./util.ts";
 
 const { test } = Deno;
 
@@ -56,7 +63,7 @@ function setup(
 
   return [
     class MockNativeServer<AS extends State = Record<string, any>>
-      implements Server<NativeRequest> {
+      implements Server<ServerRequest> {
       constructor(
         _app: Application<AS>,
         private options: Deno.ListenOptions | Deno.ListenTlsOptions,
@@ -68,14 +75,14 @@ function setup(
         serverClosed = true;
       }
 
-      listen(): Deno.Listener {
+      listen(): Listener {
         return {
           addr: {
             transport: "tcp",
-            hostname: this.options.hostname,
+            hostname: this.options.hostname ?? "localhost",
             port: this.options.port,
           },
-        } as Deno.Listener;
+        } as Listener;
       }
 
       async *[Symbol.asyncIterator]() {
@@ -901,7 +908,9 @@ test({
   fn() {
     assertEquals(
       Deno.inspect(new Application()),
-      `Application { "#middleware": [], keys: undefined, proxy: false, state: {} }`,
+      isNode()
+        ? `Application { '#middleware': [], keys: undefined, proxy: false, state: {} }`
+        : `Application { "#middleware": [], keys: undefined, proxy: false, state: {} }`,
     );
     teardown();
   },

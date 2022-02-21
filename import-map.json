@@ -1,0 +1,30 @@
+{
+  "imports": {
+    "buffer": "https://cdn.esm.sh/@types/node@16.11.9/buffer.d.ts",
+    "crypto": "https://deno.land/x/std@0.126.0/node/crypto.ts",
+    "dns": "https://cdn.esm.sh/@types/node@16.11.9/dns.d.ts",
+    "dns/promises": "https://cdn.esm.sh/@types/node@16.11.9/dns/promises.d.ts",
+    "http": "https://deno.land/x/std@0.126.0/node/http.ts",
+    "http2": "https://deno.land/x/std@0.126.0/node/http2.ts",
+    "net": "https://cdn.esm.sh/@types/node@16.11.9/net.d.ts",
+    "node:buffer": "https://cdn.esm.sh/@types/node@16.11.9/buffer.d.ts",
+    "node:crypto": "https://cdn.esm.sh/@types/node@16.11.9/crypto.d.ts",
+    "node:dns": "https://cdn.esm.sh/@types/node@16.11.9/dns.d.ts",
+    "node:dns/promises": "https://cdn.esm.sh/@types/node@16.11.9/dns/promises.d.ts",
+    "node:events": "https://cdn.esm.sh/@types/node@16.11.9/events.d.ts",
+    "node:http": "https://cdn.esm.sh/@types/node@16.11.9/http.d.ts",
+    "node:net": "https://cdn.esm.sh/@types/node@16.11.9/net.d.ts",
+    "node:querystring": "https://cdn.esm.sh/@types/node@16.11.9/querystring.d.ts",
+    "node:stream": "https://cdn.esm.sh/@types/node@16.11.9/stream.d.ts",
+    "node:stream/consumers": "https://cdn.esm.sh/@types/node@16.11.9/stream/consumers.d.ts",
+    "node:stream/promises": "https://cdn.esm.sh/@types/node@16.11.9/stream/promises.d.ts",
+    "node:tls": "https://cdn.esm.sh/@types/node@16.11.9/tls.d.ts",
+    "node:url": "https://cdn.esm.sh/@types/node@16.11.9/url.d.ts",
+    "querystring": "https://cdn.esm.sh/@types/node@16.11.9/querystring.d.ts",
+    "stream/consumers": "https://cdn.esm.sh/@types/node@16.11.9/stream/consumers.d.ts",
+    "stream/promises": "https://cdn.esm.sh/@types/node@16.11.9/stream/promises.d.ts",
+    "stream/web": "https://deno.land/x/std@0.126.0/node/stream/web.ts",
+    "tls": "https://cdn.esm.sh/@types/node@16.11.9/tls.d.ts",
+    "url": "https://cdn.esm.sh/@types/node@16.11.9/url.d.ts"
+  }
+}

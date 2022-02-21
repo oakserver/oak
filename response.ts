@@ -60,7 +60,8 @@ export async function convertBodyToBodyInit(
     ArrayBuffer.isView(body) || body instanceof ArrayBuffer ||
     body instanceof Blob || body instanceof URLSearchParams
   ) {
-    result = body;
+    // deno-lint-ignore no-explicit-any
+    result = body as any;
   } else if (body instanceof ReadableStream) {
     result = body.pipeThrough(new Uint8ArrayTransformStream());
   } else if (body instanceof FormData) {
@@ -316,6 +317,30 @@ export class Response {
 
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
     const { body, headers, status, type, writable } = this;
-    return `Response ${inspect({ body, headers, status, type, writable })}`;
+    return `${this.constructor.name} ${
+      inspect({ body, headers, status, type, writable })
+    }`;
+  }
+
+  [Symbol.for("nodejs.util.inspect.custom")](
+    depth: number,
+    // deno-lint-ignore no-explicit-any
+    options: any,
+    inspect: (value: unknown, options?: unknown) => string,
+  ) {
+    if (depth < 0) {
+      return options.stylize(`[${this.constructor.name}]`, "special");
+    }
+
+    const newOptions = Object.assign({}, options, {
+      depth: options.depth === null ? null : options.depth - 1,
+    });
+    const { body, headers, status, type, writable } = this;
+    return `${options.stylize(this.constructor.name, "special")} ${
+      inspect(
+        { body, headers, status, type, writable },
+        newOptions,
+      )
+    }`;
   }
 }

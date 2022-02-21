@@ -1,11 +1,30 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
-import type { Server, UpgradeWebSocketOptions } from "./types.d.ts";
+import type {
+  Listener,
+  Server,
+  ServerRequest,
+  ServerRequestBody,
+  UpgradeWebSocketOptions,
+} from "./types.d.ts";
 import { assert, isListenTlsOptions } from "./util.ts";
 
+// this is included so when down-emitting to npm/Node.js, ReadableStream has
+// async iterators
+declare global {
+  // deno-lint-ignore no-explicit-any
+  interface ReadableStream<R = any> {
+    [Symbol.asyncIterator](options?: {
+      preventCancel?: boolean;
+    }): AsyncIterableIterator<R>;
+  }
+}
+
 export type Respond = (r: Response | Promise<Response>) => void;
-export const DomResponse: typeof Response = Response;
+// deno-lint-ignore no-explicit-any
+export const DomResponse: typeof Response = (globalThis as any).Response ??
+  class MockResponse {};
 
 // This type is part of Deno, but not part of lib.dom.d.ts, therefore add it here
 // so that type checking can occur properly under `lib.dom.d.ts`.
@@ -58,7 +77,7 @@ export interface NativeRequestOptions {
 
 /** An internal oak abstraction for handling a Deno native request. Most users
  * of oak do not need to worry about this abstraction. */
-export class NativeRequest {
+export class NativeRequest implements ServerRequest {
   #conn?: Deno.Conn;
   // deno-lint-ignore no-explicit-any
   #reject!: (reason?: any) => void;
@@ -87,7 +106,10 @@ export class NativeRequest {
   }
 
   get body(): ReadableStream<Uint8Array> | null {
-    return this.#request.body;
+    // when shimming with undici under Node.js, this is a
+    // `ControlledAsyncIterable`
+    // deno-lint-ignore no-explicit-any
+    return this.#request.body as any;
   }
 
   get donePromise(): Promise<void> {
@@ -133,6 +155,19 @@ export class NativeRequest {
     this.#resolved = true;
   }
 
+  getBody(): ServerRequestBody {
+    return {
+      // when emitting to Node.js, the body is not compatible, and thought it
+      // doesn't run at runtime, it still gets type checked.
+      // deno-lint-ignore no-explicit-any
+      body: this.#request.body as any,
+      readBody: async () => {
+        const ab = await this.#request.arrayBuffer();
+        return new Uint8Array(ab);
+      },
+    };
+  }
+
   respond(response: Response): Promise<void> {
     if (this.#resolved) {
       throw new Error("Request already responded to.");
@@ -168,7 +203,7 @@ export class HttpServerNative<AS extends State = Record<string, any>>
   #app: Application<AS>;
   #closed = false;
   #listener?: Deno.Listener;
-  #httpConnections: Set<Deno.HttpConn> = new Set();
+  #httpConnections: Set<HttpConn> = new Set();
   #options: Deno.ListenOptions | Deno.ListenTlsOptions;
 
   constructor(
@@ -213,17 +248,17 @@ export class HttpServerNative<AS extends State = Record<string, any>>
     this.#httpConnections.clear();
   }
 
-  listen(): Deno.Listener {
-    return this.#listener = isListenTlsOptions(this.#options)
+  listen(): Listener {
+    return (this.#listener = isListenTlsOptions(this.#options)
       ? Deno.listenTls(this.#options)
-      : Deno.listen(this.#options);
+      : Deno.listen(this.#options)) as Listener;
   }
 
-  #trackHttpConnection(httpConn: Deno.HttpConn): void {
+  #trackHttpConnection(httpConn: HttpConn): void {
     this.#httpConnections.add(httpConn);
   }
 
-  #untrackHttpConnection(httpConn: Deno.HttpConn): void {
+  #untrackHttpConnection(httpConn: HttpConn): void {
     this.#httpConnections.delete(httpConn);
   }
 

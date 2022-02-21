@@ -393,6 +393,34 @@ class Layer<
       })
     }`;
   }
+
+  [Symbol.for("nodejs.util.inspect.custom")](
+    depth: number,
+    // deno-lint-ignore no-explicit-any
+    options: any,
+    inspect: (value: unknown, options?: unknown) => string,
+  ) {
+    if (depth < 0) {
+      return options.stylize(`[${this.constructor.name}]`, "special");
+    }
+
+    const newOptions = Object.assign({}, options, {
+      depth: options.depth === null ? null : options.depth - 1,
+    });
+    return `${options.stylize(this.constructor.name, "special")} ${
+      inspect(
+        {
+          methods: this.methods,
+          middleware: this.stack,
+          options: this.#opts,
+          paramNames: this.#paramNames.map((key) => key.name),
+          path: this.path,
+          regexp: this.#regexp,
+        },
+        newOptions,
+      )
+    }`;
+  }
 }
 
 /** An interface for registering middleware that will run when certain HTTP
@@ -1226,6 +1254,27 @@ export class Router<
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
     return `${this.constructor.name} ${
       inspect({ "#params": this.#params, "#stack": this.#stack })
+    }`;
+  }
+
+  [Symbol.for("nodejs.util.inspect.custom")](
+    depth: number,
+    // deno-lint-ignore no-explicit-any
+    options: any,
+    inspect: (value: unknown, options?: unknown) => string,
+  ) {
+    if (depth < 0) {
+      return options.stylize(`[${this.constructor.name}]`, "special");
+    }
+
+    const newOptions = Object.assign({}, options, {
+      depth: options.depth === null ? null : options.depth - 1,
+    });
+    return `${options.stylize(this.constructor.name, "special")} ${
+      inspect(
+        { "#params": this.#params, "#stack": this.#stack },
+        newOptions,
+      )
     }`;
   }
 }

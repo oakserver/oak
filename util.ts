@@ -432,13 +432,17 @@ export function encodeBase64Safe(data: string | ArrayBuffer): string {
   return base64.encode(data).replace(/\/|\+|=/g, (c) => replacements[c]);
 }
 
+export function isNode(): boolean {
+  return "process" in globalThis && "global" in globalThis;
+}
+
 export function importKey(key: Key): Promise<CryptoKey> {
   if (typeof key === "string") {
     key = encoder.encode(key);
   } else if (Array.isArray(key)) {
     key = new Uint8Array(key);
   }
-  return globalThis.crypto.subtle.importKey(
+  return crypto.subtle.importKey(
     "raw",
     key,
     {

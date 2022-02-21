@@ -123,14 +123,12 @@ export class ServerSentEvent extends Event {
   }
 }
 
-const responseHeaders = new Headers(
-  [
-    ["Connection", "Keep-Alive"],
-    ["Content-Type", "text/event-stream"],
-    ["Cache-Control", "no-cache"],
-    ["Keep-Alive", `timeout=${Number.MAX_SAFE_INTEGER}`],
-  ],
-);
+const RESPONSE_HEADERS = [
+  ["Connection", "Keep-Alive"],
+  ["Content-Type", "text/event-stream"],
+  ["Cache-Control", "no-cache"],
+  ["Keep-Alive", `timeout=${Number.MAX_SAFE_INTEGER}`],
+] as const;
 
 export interface ServerSentEventTarget extends EventTarget {
   /** Is set to `true` if events cannot be sent to the remote connection.
@@ -219,7 +217,10 @@ export class SSEStreamTarget extends EventTarget
   #closed = false;
   #context: Context;
   #controller?: ReadableStreamDefaultController<Uint8Array>;
-  #keepAliveId?: number;
+  // we are ignoring any here, because when exporting to npn/Node.js, the timer
+  // handle isn't a number.
+  // deno-lint-ignore no-explicit-any
+  #keepAliveId?: any;
 
   // deno-lint-ignore no-explicit-any
   #error(error: any) {
@@ -275,7 +276,7 @@ export class SSEStreamTarget extends EventTarget
         context.response.headers.set(key, value);
       }
     }
-    for (const [key, value] of responseHeaders) {
+    for (const [key, value] of RESPONSE_HEADERS) {
       context.response.headers.set(key, value);
     }
 
@@ -334,6 +335,27 @@ export class SSEStreamTarget extends EventTarget
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
     return `${this.constructor.name} ${
       inspect({ "#closed": this.#closed, "#context": this.#context })
+    }`;
+  }
+
+  [Symbol.for("nodejs.util.inspect.custom")](
+    depth: number,
+    // deno-lint-ignore no-explicit-any
+    options: any,
+    inspect: (value: unknown, options?: unknown) => string,
+  ) {
+    if (depth < 0) {
+      return options.stylize(`[${this.constructor.name}]`, "special");
+    }
+
+    const newOptions = Object.assign({}, options, {
+      depth: options.depth === null ? null : options.depth - 1,
+    });
+    return `${options.stylize(this.constructor.name, "special")} ${
+      inspect(
+        { "#closed": this.#closed, "#context": this.#context },
+        newOptions,
+      )
     }`;
   }
 }

@@ -12,8 +12,7 @@ import type {
   BodyText,
 } from "./body.ts";
 import { RequestBody } from "./body.ts";
-import type { NativeRequest } from "./http_server_native.ts";
-import type { HTTPMethods } from "./types.d.ts";
+import type { HTTPMethods, ServerRequest } from "./types.d.ts";
 import { preferredCharsets } from "./negotiation/charset.ts";
 import { preferredEncodings } from "./negotiation/encoding.ts";
 import { preferredLanguages } from "./negotiation/language.ts";
@@ -31,7 +30,7 @@ export class Request {
   #body: RequestBody;
   #proxy: boolean;
   #secure: boolean;
-  #serverRequest: NativeRequest;
+  #serverRequest: ServerRequest;
   #url?: URL;
 
   #getRemoteAddr(): string {
@@ -83,7 +82,7 @@ export class Request {
   }
 
   /** Set to the value of the _original_ Deno server request. */
-  get originalRequest(): NativeRequest {
+  get originalRequest(): ServerRequest {
     return this.#serverRequest;
   }
 
@@ -100,8 +99,10 @@ export class Request {
         // so we will try to use that URL here, but default back to old logic
         // if the URL isn't valid.
         try {
-          this.#url = new URL(serverRequest.rawUrl);
-          return this.#url;
+          if (serverRequest.rawUrl) {
+            this.#url = new URL(serverRequest.rawUrl);
+            return this.#url;
+          }
         } catch {
           // we don't care about errors here
         }
@@ -130,14 +131,17 @@ export class Request {
   }
 
   constructor(
-    serverRequest: NativeRequest,
+    serverRequest: ServerRequest,
     proxy = false,
     secure = false,
   ) {
     this.#proxy = proxy;
     this.#secure = secure;
     this.#serverRequest = serverRequest;
-    this.#body = new RequestBody(serverRequest.request);
+    this.#body = new RequestBody(
+      serverRequest.getBody(),
+      serverRequest.headers,
+    );
   }
 
   /** Returns an array of media types, accepted by the requestor, in order of
@@ -249,7 +253,7 @@ export class Request {
 
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
     const { hasBody, headers, ip, ips, method, secure, url } = this;
-    return `Request ${
+    return `${this.constructor.name} ${
       inspect({
         hasBody,
         headers,
@@ -259,6 +263,28 @@ export class Request {
         secure,
         url: url.toString(),
       })
+    }`;
+  }
+
+  [Symbol.for("nodejs.util.inspect.custom")](
+    depth: number,
+    // deno-lint-ignore no-explicit-any
+    options: any,
+    inspect: (value: unknown, options?: unknown) => string,
+  ) {
+    if (depth < 0) {
+      return options.stylize(`[${this.constructor.name}]`, "special");
+    }
+
+    const newOptions = Object.assign({}, options, {
+      depth: options.depth === null ? null : options.depth - 1,
+    });
+    const { hasBody, headers, ip, ips, method, secure, url } = this;
+    return `${options.stylize(this.constructor.name, "special")} ${
+      inspect(
+        { hasBody, headers, ip, ips, method, secure, url },
+        newOptions,
+      )
     }`;
   }
 }

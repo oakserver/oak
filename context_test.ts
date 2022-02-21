@@ -18,6 +18,7 @@ import { Request as OakRequest } from "./request.ts";
 import { Response as OakResponse } from "./response.ts";
 import { cloneState } from "./structured_clone.ts";
 import type { UpgradeWebSocketOptions } from "./types.d.ts";
+import { isNode } from "./util.ts";
 
 const { test } = Deno;
 
@@ -29,6 +30,22 @@ function createMockApp<S extends State = Record<string, any>>(
     dispatchEvent() {},
     [Symbol.for("Deno.customInspect")]() {
       return `MockApplication {}`;
+    },
+    [Symbol.for("nodejs.util.inspect.custom")](
+      depth: number,
+      options: any,
+      inspect: (value: unknown, options?: unknown) => string,
+    ) {
+      if (depth < 0) {
+        return options.stylize(`[MockApplication]`, "special");
+      }
+
+      const newOptions = Object.assign({}, options, {
+        depth: options.depth === null ? null : options.depth - 1,
+      });
+      return `${options.stylize("MockApplication", "special")} ${
+        inspect({}, newOptions)
+      }`;
     },
   } as any;
 }
@@ -317,7 +334,9 @@ test({
     const req = createMockNativeRequest();
     assertEquals(
       Deno.inspect(new Context(app, req, {}), { depth: 1 }),
-      `Context {\n  app: MockApplication {},\n  cookies: Cookies [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/"\n},\n  response: Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true },\n  socket: undefined,\n  state: {}\n}`,
+      isNode()
+        ? `Context {\n  app: [MockApplication],\n  cookies: [Cookies],\n  isUpgradable: false,\n  respond: true,\n  request: [Request],\n  response: [Response],\n  socket: undefined,\n  state: {}\n}`
+        : `Context {\n  app: MockApplication {},\n  cookies: Cookies [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/"\n},\n  response: Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true },\n  socket: undefined,\n  state: {}\n}`,
     );
   },
 });

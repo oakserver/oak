@@ -32,6 +32,22 @@ export function createMockApp<
     [Symbol.for("Deno.customInspect")]() {
       return "MockApplication {}";
     },
+    [Symbol.for("nodejs.util.inspect.custom")](
+      depth: number,
+      options: any,
+      inspect: (value: unknown, options?: unknown) => string,
+    ) {
+      if (depth < 0) {
+        return options.stylize(`[MockApplication]`, "special");
+      }
+
+      const newOptions = Object.assign({}, options, {
+        depth: options.depth === null ? null : options.depth - 1,
+      });
+      return `${options.stylize("MockApplication", "special")} ${
+        inspect({}, newOptions)
+      }`;
+    },
   } as any;
   return app;
 }
@@ -139,6 +155,22 @@ export function createMockContext<
     },
     [Symbol.for("Deno.customInspect")]() {
       return `MockContext {}`;
+    },
+    [Symbol.for("nodejs.util.inspect.custom")](
+      depth: number,
+      options: any,
+      inspect: (value: unknown, options?: unknown) => string,
+    ) {
+      if (depth < 0) {
+        return options.stylize(`[MockContext]`, "special");
+      }
+
+      const newOptions = Object.assign({}, options, {
+        depth: options.depth === null ? null : options.depth - 1,
+      });
+      return `${options.stylize("MockContext", "special")} ${
+        inspect({}, newOptions)
+      }`;
     },
   } as unknown) as RouterContext<R, P, S>;
 }

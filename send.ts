@@ -272,6 +272,10 @@ export async function send(
     if (err instanceof Deno.errors.NotFound) {
       throw createHttpError(404, err.message);
     }
+    // TODO(@kitsonk) remove when https://github.com/denoland/node_deno_shims/issues/87 resolved
+    if (err instanceof Error && err.message.startsWith("ENOENT:")) {
+      throw createHttpError(404, err.message);
+    }
     throw createHttpError(
       500,
       err instanceof Error ? err.message : "[non-error thrown]",

@@ -11,7 +11,7 @@ import {
 import { httpErrors } from "./httpError.ts";
 import { FormDataFile, FormDataReader } from "./multipart.ts";
 import { equals, lookup, parse } from "./deps.ts";
-import { stripEol } from "./util.ts";
+import { isNode, stripEol } from "./util.ts";
 
 const { test } = Deno;
 
@@ -97,6 +97,7 @@ Content-Type: ${mediaType}
 
 test({
   name: "multipart - FormDataReader - .read() basic",
+  ignore: isNode(),
   async fn() {
     const body = createBody(fixture);
     const fdr = new FormDataReader(fixtureContentType, body);
@@ -116,6 +117,7 @@ test({
 
 test({
   name: "multipart - FormDataReader - .stream() basic",
+  ignore: isNode(),
   async fn() {
     const body = createBody(fixture);
     const fdr = new FormDataReader(fixtureContentType, body);
@@ -137,6 +139,7 @@ test({
 
 test({
   name: "multipart - FormDataReader - .stream() file default",
+  ignore: isNode(),
   async fn() {
     const [expected, body] = createBodyFile("fileA", "./fixtures/test.jpg");
     const fdr = new FormDataReader(fixtureContentType, body);
@@ -182,6 +185,7 @@ test({
 
 test({
   name: "multipart - FormDataReader - .stream() file maxSize overflow",
+  ignore: isNode(),
   async fn() {
     const [expected, body] = createBodyFile("fileA", "./fixtures/test.jpg");
     const fdr = new FormDataReader(fixtureContentType, body);
@@ -217,6 +221,7 @@ test({
 
 test({
   name: "multipart - FormDataReader - .read() custom content type",
+  ignore: isNode(),
   async fn() {
     const [, body] = createBodyFile(
       "fileA",
@@ -246,6 +251,7 @@ test({
 
 test({
   name: "multipart - FormDataReader - body with mbc filename part",
+  ignore: isNode(),
   async fn() {
     const body = createBody(fixtureUtf8Filename);
     const fdr = new FormDataReader(fixtureContentType, body);
@@ -262,6 +268,7 @@ test({
 test({
   name:
     "multipart - FormDataReader - .read() no extra CRLF at the end of result file if origin file doesn't end with newline",
+  ignore: isNode(),
   async fn() {
     const body = createBody(fixtureNoNewline);
     const fdr = new FormDataReader(fixtureContentType, body);
