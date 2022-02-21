@@ -1,5 +1,14 @@
 # oak Change Log
 
+## Version 10.3.0
+
+- feat: add experimental support for Node.js (#479)
+
+  oak is now available as an Node.js npm package: `@oakserver/oak`. See
+  [oak and Node.js](https://oakserver.github.io/oak/node) for more information.
+
+- chore: update to Deno 1.19.0, media_types 2.12.2 (a4104a6)
+
 ## Version 10.2.1
 
 - docs: improve inline documentation (bd7e692)
