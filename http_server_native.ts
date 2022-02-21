@@ -1,7 +1,13 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
-import type { Listener, Server, UpgradeWebSocketOptions } from "./types.d.ts";
+import type {
+  Listener,
+  Server,
+  ServerRequest,
+  ServerRequestBody,
+  UpgradeWebSocketOptions,
+} from "./types.d.ts";
 import { assert, isListenTlsOptions } from "./util.ts";
 
 // this is included so when down-emitting to npm/Node.js, ReadableStream has
@@ -71,7 +77,7 @@ export interface NativeRequestOptions {
 
 /** An internal oak abstraction for handling a Deno native request. Most users
  * of oak do not need to worry about this abstraction. */
-export class NativeRequest {
+export class NativeRequest implements ServerRequest {
   #conn?: Deno.Conn;
   // deno-lint-ignore no-explicit-any
   #reject!: (reason?: any) => void;
@@ -147,6 +153,19 @@ export class NativeRequest {
     }
     this.#reject(reason);
     this.#resolved = true;
+  }
+
+  getBody(): ServerRequestBody {
+    return {
+      // when emitting to Node.js, the body is not compatible, and thought it
+      // doesn't run at runtime, it still gets type checked.
+      // deno-lint-ignore no-explicit-any
+      body: this.#request.body as any,
+      readBody: async () => {
+        const ab = await this.#request.arrayBuffer();
+        return new Uint8Array(ab);
+      },
+    };
   }
 
   respond(response: Response): Promise<void> {

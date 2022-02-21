@@ -8,6 +8,7 @@ import { Cookies } from "./cookies.ts";
 import { KeyStack } from "./keyStack.ts";
 import type { Request } from "./request.ts";
 import type { Response } from "./response.ts";
+import { isNode } from "./util.ts";
 
 const { test } = Deno;
 
@@ -120,11 +121,17 @@ test({
     await cookies.set("a", "a");
     await cookies.set("b", "b");
     await cookies.set("c", "c");
-    assertEquals([...response.headers], [
-      ["set-cookie", "a=a; path=/; httponly"],
-      ["set-cookie", "b=b; path=/; httponly"],
-      ["set-cookie", "c=c; path=/; httponly"],
-    ]);
+    const expected = isNode()
+      ? [[
+        "set-cookie",
+        "a=a; path=/; httponly, b=b; path=/; httponly, c=c; path=/; httponly",
+      ]]
+      : [
+        ["set-cookie", "a=a; path=/; httponly"],
+        ["set-cookie", "b=b; path=/; httponly"],
+        ["set-cookie", "c=c; path=/; httponly"],
+      ];
+    assertEquals([...response.headers], expected);
   },
 });
 
@@ -300,9 +307,9 @@ test({
       path: "/baz",
       sameSite: "strict",
     });
-    assertEquals(
-      response.headers.get("set-cookie"),
-      "a=b; path=/a; expires=Wed, 01 Jan 2020 00:00:00 GMT; domain=*.example.com; samesite=strict, foo=baz; path=/baz; expires=Wed, 01 Jan 2020 00:00:00 GMT; domain=*.example.com; samesite=strict",
-    );
+    const expected = isNode()
+      ? "foo=baz; path=/baz; expires=Wed, 01 Jan 2020 00:00:00 GMT; domain=*.example.com; samesite=strict"
+      : "a=b; path=/a; expires=Wed, 01 Jan 2020 00:00:00 GMT; domain=*.example.com; samesite=strict, foo=baz; path=/baz; expires=Wed, 01 Jan 2020 00:00:00 GMT; domain=*.example.com; samesite=strict";
+    assertEquals(response.headers.get("set-cookie"), expected);
   },
 });

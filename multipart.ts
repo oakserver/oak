@@ -492,4 +492,22 @@ export class FormDataReader {
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
     return `${this.constructor.name} ${inspect({})}`;
   }
+
+  [Symbol.for("nodejs.util.inspect.custom")](
+    depth: number,
+    // deno-lint-ignore no-explicit-any
+    options: any,
+    inspect: (value: unknown, options?: unknown) => string,
+  ) {
+    if (depth < 0) {
+      return options.stylize(`[${this.constructor.name}]`, "special");
+    }
+
+    const newOptions = Object.assign({}, options, {
+      depth: options.depth === null ? null : options.depth - 1,
+    });
+    return `${options.stylize(this.constructor.name, "special")} ${
+      inspect({}, newOptions)
+    }`;
+  }
 }

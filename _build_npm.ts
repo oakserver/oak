@@ -1,8 +1,15 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-net --allow-env --allow-run
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
-import { build, emptyDir } from "https://deno.land/x/dnt@0.17.0/mod.ts";
-import { copy } from "https://deno.land/std@0.125.0/fs/copy.ts";
+/**
+ * This is the build script for building the oak framework into a Node.js
+ * compatible npm package.
+ *
+ * @module
+ */
+
+import { build, emptyDir } from "https://deno.land/x/dnt@0.19.0/mod.ts";
+import { copy } from "https://deno.land/std@0.126.0/fs/copy.ts";
 
 async function start() {
   await emptyDir("./npm");
@@ -24,7 +31,7 @@ async function start() {
       }],
     },
     scriptModule: false,
-    test: false,
+    test: true,
     compilerOptions: {
       importHelpers: true,
       target: "ES2021",

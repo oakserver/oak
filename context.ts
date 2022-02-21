@@ -236,7 +236,7 @@ export class Context<
     }
     if (!this.request.originalRequest.upgrade) {
       throw new TypeError(
-        "Web socket upgrades not supported for this type of server.",
+        "Web socket upgrades not currently supported for this type of server.",
       );
     }
     this.#socket = this.request.originalRequest.upgrade(options);
@@ -266,6 +266,43 @@ export class Context<
         socket,
         state,
       })
+    }`;
+  }
+
+  [Symbol.for("nodejs.util.inspect.custom")](
+    depth: number,
+    // deno-lint-ignore no-explicit-any
+    options: any,
+    inspect: (value: unknown, options?: unknown) => string,
+  ) {
+    if (depth < 0) {
+      return options.stylize(`[${this.constructor.name}]`, "special");
+    }
+
+    const newOptions = Object.assign({}, options, {
+      depth: options.depth === null ? null : options.depth - 1,
+    });
+    const {
+      app,
+      cookies,
+      isUpgradable,
+      respond,
+      request,
+      response,
+      socket,
+      state,
+    } = this;
+    return `${options.stylize(this.constructor.name, "special")} ${
+      inspect({
+        app,
+        cookies,
+        isUpgradable,
+        respond,
+        request,
+        response,
+        socket,
+        state,
+      }, newOptions)
     }`;
   }
 }

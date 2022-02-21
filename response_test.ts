@@ -4,6 +4,7 @@ import { Status } from "./deps.ts";
 import { assert, assertEquals, assertThrows } from "./test_deps.ts";
 import type { Request } from "./request.ts";
 import { REDIRECT_BACK, Response } from "./response.ts";
+import { isNode } from "./util.ts";
 
 const { test } = Deno;
 
@@ -441,7 +442,9 @@ test({
   fn() {
     assertEquals(
       Deno.inspect(new Response(createMockRequest())),
-      `Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true }`,
+      isNode()
+        ? `Response {\n  body: undefined,\n  headers: HeadersList(0) [],\n  status: 404,\n  type: undefined,\n  writable: true\n}`
+        : `Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true }`,
     );
   },
 });

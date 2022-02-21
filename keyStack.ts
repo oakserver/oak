@@ -68,10 +68,26 @@ export class KeyStack {
   }
 
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
-    return `${this.constructor.name} ${
-      inspect({
-        length: this.length,
-      })
+    const { length } = this;
+    return `${this.constructor.name} ${inspect({ length })}`;
+  }
+
+  [Symbol.for("nodejs.util.inspect.custom")](
+    depth: number,
+    // deno-lint-ignore no-explicit-any
+    options: any,
+    inspect: (value: unknown, options?: unknown) => string,
+  ) {
+    if (depth < 0) {
+      return options.stylize(`[${this.constructor.name}]`, "special");
+    }
+
+    const newOptions = Object.assign({}, options, {
+      depth: options.depth === null ? null : options.depth - 1,
+    });
+    const { length } = this;
+    return `${options.stylize(this.constructor.name, "special")} ${
+      inspect({ length }, newOptions)
     }`;
   }
 }

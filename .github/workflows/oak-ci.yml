@@ -40,6 +40,9 @@ jobs:
       - name: run tests using dom libs
         run: deno test --unstable --allow-read --allow-write --allow-net --config dom.tsconfig.json --jobs 4 --ignore=npm
 
+      - name: test build for Node.js
+        run: deno run --allow-read --allow-write --allow-net --allow-env --allow-run _build_npm.ts
+
       - name: generate lcov
         if: matrix.os == 'ubuntu-latest'
         run: deno coverage --unstable --lcov ./cov > cov.lcov

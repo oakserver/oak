@@ -8,6 +8,7 @@ import {
   assertRejects,
   assertStrictEquals,
 } from "./test_deps.ts";
+import type { ServerRequestBody } from "./types.d.ts";
 
 const { test } = Deno;
 
@@ -24,21 +25,34 @@ world
 --OAK-SERVER-BOUNDARY--
 `;
 
+function toServerRequestBody(request: Request): [ServerRequestBody, Headers] {
+  return [{
+    // deno-lint-ignore no-explicit-any
+    body: request.body as any,
+    readBody: async () => {
+      const ab = await request.arrayBuffer();
+      return new Uint8Array(ab);
+    },
+  }, request.headers];
+}
+
 test({
   name: "body - form",
   async fn() {
     const rBody = `foo=bar&bar=1&baz=qux+%2B+quux`;
     const requestBody = new RequestBody(
-      new Request(
-        "http://localhost/index.html",
-        {
-          body: rBody,
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Content-Length": String(rBody.length),
+      ...toServerRequestBody(
+        new Request(
+          "http://localhost/index.html",
+          {
+            body: rBody,
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              "Content-Length": String(rBody.length),
+            },
           },
-        },
+        ),
       ),
     );
     assert(requestBody.has());
@@ -55,7 +69,7 @@ test({
 test({
   name: "body - form-data",
   async fn() {
-    const requestBody = new RequestBody(
+    const requestBody = new RequestBody(...toServerRequestBody(
       new Request(
         "http://localhost/index.html",
         {
@@ -66,7 +80,7 @@ test({
           },
         },
       ),
-    );
+    ));
     assert(requestBody.has());
     const body = requestBody.get({});
     assert(body.type === "form-data");
@@ -80,16 +94,18 @@ test({
   async fn() {
     const rBody = JSON.stringify({ hello: "world" });
     const requestBody = new RequestBody(
-      new Request(
-        "http://localhost/index.html",
-        {
-          body: rBody,
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "content-length": String(rBody.length),
+      ...toServerRequestBody(
+        new Request(
+          "http://localhost/index.html",
+          {
+            body: rBody,
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              "content-length": String(rBody.length),
+            },
           },
-        },
+        ),
       ),
     );
     assert(requestBody.has());
@@ -104,16 +120,18 @@ test({
   async fn() {
     const rBody = `console.log("hello world!");\n`;
     const requestBody = new RequestBody(
-      new Request(
-        "http://localhost/index.html",
-        {
-          body: rBody,
-          method: "POST",
-          headers: {
-            "content-type": "application/javascript",
-            "content-length": String(rBody.length),
+      ...toServerRequestBody(
+        new Request(
+          "http://localhost/index.html",
+          {
+            body: rBody,
+            method: "POST",
+            headers: {
+              "content-type": "application/javascript",
+              "content-length": String(rBody.length),
+            },
           },
-        },
+        ),
       ),
     );
     assert(requestBody.has());
@@ -129,14 +147,16 @@ test({
   async fn() {
     const rBody = "hello";
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: rBody,
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-          "content-length": String(rBody.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: rBody,
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+            "content-length": String(rBody.length),
+          },
+        }),
+      ),
     );
     assert(requestBody.has());
     const body = requestBody.get({});
@@ -149,7 +169,7 @@ test({
   name: "body - undefined",
   fn() {
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html"),
+      ...toServerRequestBody(new Request("http://localhost/index.html")),
     );
     assertEquals(requestBody.has(), false);
     const body = requestBody.get({});
@@ -162,13 +182,15 @@ test({
   name: "body - type: reader",
   async fn() {
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: "hello world",
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: "hello world",
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+          },
+        }),
+      ),
     );
     const body = requestBody.get({ type: "reader" });
     assert(body.type === "reader");
@@ -181,13 +203,15 @@ test({
   name: "body - type: stream",
   async fn() {
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: "hello world",
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: "hello world",
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+          },
+        }),
+      ),
     );
     const body = requestBody.get({ type: "stream" });
     assert(body.type === "stream");
@@ -201,14 +225,16 @@ test({
   async fn() {
     const rBody = `foo=bar&bar=1&baz=qux+%2B+quux`;
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: rBody,
-        method: "POST",
-        headers: {
-          "Content-Type": "application/javascript",
-          "content-length": String(rBody.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: rBody,
+          method: "POST",
+          headers: {
+            "Content-Type": "application/javascript",
+            "content-length": String(rBody.length),
+          },
+        }),
+      ),
     );
     const body = requestBody.get({ type: "form" });
     assert(body.type === "form");
@@ -224,14 +250,16 @@ test({
   name: "body - type: form-data",
   async fn() {
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: multipartFixture,
-        method: "POST",
-        headers: {
-          "content-type":
-            "application/javascript; boundary=OAK-SERVER-BOUNDARY",
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: multipartFixture,
+          method: "POST",
+          headers: {
+            "content-type":
+              "application/javascript; boundary=OAK-SERVER-BOUNDARY",
+          },
+        }),
+      ),
     );
     const body = requestBody.get({ type: "form-data" });
     assert(body.type === "form-data");
@@ -245,14 +273,16 @@ test({
   async fn() {
     const rBody = `console.log("hello world!");\n`;
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: rBody,
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-          "content-length": String(rBody.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: rBody,
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+            "content-length": String(rBody.length),
+          },
+        }),
+      ),
     );
     const body = requestBody.get({ type: "bytes" });
     assert(body.type === "bytes");
@@ -266,14 +296,16 @@ test({
   async fn() {
     const rBody = JSON.stringify({ hello: "world" });
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: rBody,
-        method: "POST",
-        headers: {
-          "content-type": "application/javascript",
-          "content-length": String(rBody.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: rBody,
+          method: "POST",
+          headers: {
+            "content-type": "application/javascript",
+            "content-length": String(rBody.length),
+          },
+        }),
+      ),
     );
     const body = requestBody.get({ type: "json" });
     assert(body.type === "json");
@@ -286,14 +318,16 @@ test({
   async fn() {
     const rBody = "hello";
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: rBody,
-        method: "POST",
-        headers: {
-          "content-type": "application/javascript",
-          "content-length": String(rBody.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: rBody,
+          method: "POST",
+          headers: {
+            "content-type": "application/javascript",
+            "content-length": String(rBody.length),
+          },
+        }),
+      ),
     );
     const body = requestBody.get({ type: "text" });
     assert(body.type === "text");
@@ -305,7 +339,7 @@ test({
   name: "body - type - body undefined",
   async fn() {
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html"),
+      ...toServerRequestBody(new Request("http://localhost/index.html")),
     );
     assertEquals(requestBody.has(), false);
     const body = requestBody.get({ type: "text" });
@@ -319,14 +353,16 @@ test({
   async fn() {
     const rBody = `foo=bar&bar=1&baz=qux+%2B+quux`;
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: rBody,
-        method: "POST",
-        headers: {
-          "Content-Type": "application/javascript",
-          "content-length": String(rBody.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: rBody,
+          method: "POST",
+          headers: {
+            "Content-Type": "application/javascript",
+            "content-length": String(rBody.length),
+          },
+        }),
+      ),
     );
     const body = requestBody.get(
       { contentTypes: { form: ["application/javascript"] } },
@@ -344,14 +380,16 @@ test({
   name: "body - contentTypes: form-data",
   async fn() {
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: multipartFixture,
-        method: "POST",
-        headers: {
-          "content-type":
-            "application/javascript; boundary=OAK-SERVER-BOUNDARY",
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: multipartFixture,
+          method: "POST",
+          headers: {
+            "content-type":
+              "application/javascript; boundary=OAK-SERVER-BOUNDARY",
+          },
+        }),
+      ),
     );
     const body = requestBody.get(
       { contentTypes: { formData: ["application/javascript"] } },
@@ -367,14 +405,16 @@ test({
   async fn() {
     const rBody = `console.log("hello world!");\n`;
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: rBody,
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-          "content-length": String(rBody.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: rBody,
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+            "content-length": String(rBody.length),
+          },
+        }),
+      ),
     );
     const body = requestBody.get({ contentTypes: { bytes: ["text/plain"] } });
     assert(body.type === "bytes");
@@ -388,14 +428,16 @@ test({
   async fn() {
     const rBody = JSON.stringify({ hello: "world" });
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: rBody,
-        method: "POST",
-        headers: {
-          "content-type": "application/javascript",
-          "content-length": String(rBody.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: rBody,
+          method: "POST",
+          headers: {
+            "content-type": "application/javascript",
+            "content-length": String(rBody.length),
+          },
+        }),
+      ),
     );
     const body = requestBody.get(
       { contentTypes: { json: ["application/javascript"] } },
@@ -410,14 +452,16 @@ test({
   async fn() {
     const rBody = "hello";
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: rBody,
-        method: "POST",
-        headers: {
-          "content-type": "application/javascript",
-          "content-length": String(rBody.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: rBody,
+          method: "POST",
+          headers: {
+            "content-type": "application/javascript",
+            "content-length": String(rBody.length),
+          },
+        }),
+      ),
     );
     const body = requestBody.get(
       { contentTypes: { text: ["application/javascript"] } },
@@ -432,14 +476,16 @@ test({
   fn() {
     const rBody = `console.log("hello world!");\n`;
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: rBody,
-        method: "POST",
-        headers: {
-          "content-type": "application/javascript",
-          "content-length": String(rBody.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: rBody,
+          method: "POST",
+          headers: {
+            "content-type": "application/javascript",
+            "content-length": String(rBody.length),
+          },
+        }),
+      ),
     );
     const a = requestBody.get({});
     const b = requestBody.get({});
@@ -454,14 +500,16 @@ test({
   async fn() {
     const body = JSON.stringify({ hello: "world" });
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body,
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "content-length": String(body.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body,
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "content-length": String(body.length),
+          },
+        }),
+      ),
     );
     const textBody = requestBody.get({ type: "text" });
     assert(textBody.type === "text");
@@ -476,13 +524,15 @@ test({
   name: "body - multiple streams",
   async fn() {
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: "hello world",
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: "hello world",
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+          },
+        }),
+      ),
     );
     const a = requestBody.get({ type: "stream" });
     const b = requestBody.get({ type: "stream" });
@@ -498,13 +548,15 @@ test({
   name: "body - default limit no content type",
   async fn() {
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: "hello world",
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: "hello world",
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+          },
+        }),
+      ),
     );
     const actual = requestBody.get();
     await assertRejects(
@@ -521,13 +573,15 @@ test({
   name: "body - limit set to 0",
   async fn() {
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: "hello world",
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: "hello world",
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+          },
+        }),
+      ),
     );
     const actual = requestBody.get({ type: "text", limit: 0 });
     assertEquals(await actual.value, "hello world");
@@ -538,13 +592,15 @@ test({
   name: "body - limit set to Infinity",
   async fn() {
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body: "hello world",
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: "hello world",
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+          },
+        }),
+      ),
     );
     const actual = requestBody.get({ type: "text", limit: Infinity });
     assertEquals(await actual.value, "hello world");
@@ -556,14 +612,16 @@ test({
   async fn() {
     const body = "hello world";
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body,
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-          "content-length": String(body.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body,
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+            "content-length": String(body.length),
+          },
+        }),
+      ),
     );
     const actual = requestBody.get({ type: "text", limit: 1000 });
     assertEquals(await actual.value, "hello world");
@@ -575,14 +633,16 @@ test({
   async fn() {
     const body = "hello world";
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body,
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-          "content-length": String(body.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body,
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+            "content-length": String(body.length),
+          },
+        }),
+      ),
     );
     const actual = requestBody.get({ type: "text", limit: 2 });
     await assertRejects(
@@ -600,14 +660,16 @@ test({
   async fn() {
     const body = "hello world";
     const requestBody = new RequestBody(
-      new Request("http://localhost/index.html", {
-        body,
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-          "content-length": String(body.length),
-        },
-      }),
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body,
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+            "content-length": String(body.length),
+          },
+        }),
+      ),
     );
     let actual = requestBody.get({ type: "text", limit: 2 });
     await assertRejects(

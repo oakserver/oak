@@ -8,8 +8,9 @@
 ![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fupdates%2Fx%2Foak%2Fmod.ts)
 [![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Flatest-version%2Fx%2Foak%2Fmod.ts)](https://doc.deno.land/https/deno.land/x/oak/mod.ts)
 
-A middleware framework for Deno's native HTTP server and
-[Deno Deploy](https://deno.com/deploy). It also includes a middleware router.
+A middleware framework for Deno's native HTTP server,
+[Deno Deploy](https://deno.com/deploy) and Node.js 16.5 and later. It also
+includes a middleware router.
 
 This middleware framework is inspired by [Koa](https://github.com/koajs/koa/)
 and middleware router inspired by
@@ -25,13 +26,13 @@ Also, check out our [FAQs](https://oakserver.github.io/oak/FAQ) and the
 [awesome-oak](https://oakserver.github.io/awesome-oak/) site of community
 resources.
 
-> ⚠️ _Warning_ The examples in this README pull from `main`, which may not make
-> sense to do when you are looking to actually deploy a workload. You would want
-> to "pin" to a particular version which is compatible with the version of Deno
-> you are using and has a fixed set of APIs you would expect.
-> `https://deno.land/x/` supports using git tags in the URL to direct you at a
-> particular version. So to use version 3.0.0 of oak, you would want to import
-> `https://deno.land/x/oak@v3.0.0/mod.ts`.
+> ⚠️ _Warning_ The examples in this README pull from `main` and are designed for
+> Deno CLI or Deno Deploy, which may not make sense to do when you are looking
+> to actually deploy a workload. You would want to "pin" to a particular version
+> which is compatible with the version of Deno you are using and has a fixed set
+> of APIs you would expect. `https://deno.land/x/` supports using git tags in
+> the URL to direct you at a particular version. So to use version 3.0.0 of oak,
+> you would want to import `https://deno.land/x/oak@v3.0.0/mod.ts`.
 
 ## Application, middleware, and context
 
@@ -847,6 +848,38 @@ The `mod.ts` exports an object named `testing` which contains some utilities for
 testing oak middleware you might create. See the
 [Testing with oak](https://oakserver.github.io/oak/testing) for more
 information.
+
+## Node.js
+
+As of oak v10.3, oak is experimentally supported on Node.js 16.5 and later. The
+package is available on npm as `@oakserver/oak`. The package exports are the
+same as the exports of the `mod.ts` when using under Deno and the package
+auto-detects it is running under Node.js.
+
+A basic example:
+
+**main.mjs**
+
+```js
+import { Application } from "@oakserver/oak";
+
+const app = new Application();
+
+app.use((ctx) => {
+  ctx.response.body = "Hello from oak under Node.js";
+});
+
+app.listen({ port: 8000 });
+```
+
+There are a few notes about the support:
+
+- The package is only available as an ESM distribution. This is because there
+  are a couple places where the framework takes advantage of top level await,
+  which can only be supported in ES modules under Node.js.
+- Currently only HTTP/1.1 support is available. There are plans to add HTTP/2.
+- Web Socket upgrades are not currently supported. This is planned for the
+  future. Trying to upgrade to a web socket will cause an error to be thrown.
 
 ---
 

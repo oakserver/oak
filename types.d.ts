@@ -74,15 +74,20 @@ export interface Server<T> extends AsyncIterable<T> {
   [Symbol.asyncIterator](): AsyncIterableIterator<T>;
 }
 
+export interface ServerRequestBody {
+  body: ReadableStream<Uint8Array> | null;
+  readBody: () => Promise<Uint8Array>;
+}
+
 export interface ServerRequest {
   readonly remoteAddr: string | undefined;
   readonly headers: Headers;
   readonly method: string;
-  readonly rawUrl: string;
-  readonly request: Request;
+  readonly rawUrl?: string;
   readonly url: string;
   // deno-lint-ignore no-explicit-any
   error(reason?: any): void;
+  getBody(): ServerRequestBody;
   respond(response: Response): Promise<void>;
   upgrade?(options?: UpgradeWebSocketOptions): WebSocket;
 }

@@ -8,18 +8,18 @@ export {
   concat,
   copy as copyBytes,
   equals,
-} from "https://raw.githubusercontent.com/denoland/deno_std/main/bytes/mod.ts";
-export * as base64 from "https://raw.githubusercontent.com/denoland/deno_std/main/encoding/base64.ts";
+} from "https://deno.land/std@0.126.0/bytes/mod.ts";
+export * as base64 from "https://deno.land/std@0.126.0/encoding/base64.ts";
 export {
   Status,
   STATUS_TEXT,
-} from "https://raw.githubusercontent.com/denoland/deno_std/main/http/http_status.ts";
-export { LimitedReader } from "https://raw.githubusercontent.com/denoland/deno_std/main/io/readers.ts";
-export { readerFromStreamReader } from "https://raw.githubusercontent.com/denoland/deno_std/main/streams/conversion.ts";
+} from "https://deno.land/std@0.126.0/http/http_status.ts";
+export { LimitedReader } from "https://deno.land/std@0.126.0/io/readers.ts";
 export {
   readAll,
+  readerFromStreamReader,
   writeAll,
-} from "https://raw.githubusercontent.com/denoland/deno_std/main/io/util.ts";
+} from "https://deno.land/std@0.126.0/streams/conversion.ts";
 export {
   basename,
   extname,
@@ -28,7 +28,7 @@ export {
   normalize,
   parse,
   sep,
-} from "https://raw.githubusercontent.com/denoland/deno_std/main/path/mod.ts";
+} from "https://deno.land/std@0.126.0/path/mod.ts";
 
 // 3rd party dependencies
 

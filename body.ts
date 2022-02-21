@@ -4,6 +4,7 @@ import { readerFromStreamReader } from "./deps.ts";
 import { httpErrors } from "./httpError.ts";
 import { isMediaType } from "./isMediaType.ts";
 import { FormDataReader } from "./multipart.ts";
+import type { ServerRequestBody } from "./types.d.ts";
 import { assert } from "./util.ts";
 
 /** The type of the body, where:
@@ -183,20 +184,22 @@ function resolveType(
 const decoder = new TextDecoder();
 
 export class RequestBody {
+  #body: ReadableStream<Uint8Array> | null;
   #formDataReader?: FormDataReader;
+  #headers: Headers;
   #stream?: ReadableStream<Uint8Array>;
   #readAllBody?: Promise<Uint8Array>;
-  #request: Request;
+  #readBody: () => Promise<Uint8Array>;
   #type?: "bytes" | "form-data" | "reader" | "stream" | "undefined";
 
   #exceedsLimit(limit: number): boolean {
     if (!limit || limit === Infinity) {
       return false;
     }
-    if (!this.#request.body) {
+    if (!this.#body) {
       return false;
     }
-    const contentLength = this.#request.headers.get("content-length");
+    const contentLength = this.#headers.get("content-length");
     if (!contentLength) {
       return true;
     }
@@ -222,9 +225,9 @@ export class RequestBody {
       case "form-data":
         this.#type = "form-data";
         return () => {
-          const contentType = this.#request.headers.get("content-type");
+          const contentType = this.#headers.get("content-type");
           assert(contentType);
-          const readableStream = this.#request.body ?? new ReadableStream();
+          const readableStream = this.#body ?? new ReadableStream();
           return this.#formDataReader ??
             (this.#formDataReader = new FormDataReader(
               contentType,
@@ -302,14 +305,13 @@ export class RequestBody {
   }
 
   #valuePromise() {
-    return this.#readAllBody ??
-      (this.#readAllBody = this.#request.arrayBuffer().then((ab) =>
-        new Uint8Array(ab)
-      ));
+    return this.#readAllBody ?? (this.#readAllBody = this.#readBody());
   }
 
-  constructor(request: Request) {
-    this.#request = request;
+  constructor({ body, readBody }: ServerRequestBody, headers: Headers) {
+    this.#body = body;
+    this.#headers = headers;
+    this.#readBody = readBody;
   }
 
   get(
@@ -317,7 +319,7 @@ export class RequestBody {
   ): Body | BodyReader | BodyStream {
     this.#validateGetArgs(type, contentTypes);
     if (type === "reader") {
-      if (!this.#request.body) {
+      if (!this.#body) {
         this.#type = "undefined";
         throw new TypeError(
           `Body is undefined and cannot be returned as "reader".`,
@@ -326,14 +328,11 @@ export class RequestBody {
       this.#type = "reader";
       return {
         type,
-        // when shimming with undici in Node.js, this is
-        // `ControlledAsyncIterable` and not a web stream.
-        // deno-lint-ignore no-explicit-any
-        value: readerFromStreamReader((this.#request.body as any).getReader()),
+        value: readerFromStreamReader(this.#body.getReader()),
       };
     }
     if (type === "stream") {
-      if (!this.#request.body) {
+      if (!this.#body) {
         this.#type = "undefined";
         throw new TypeError(
           `Body is undefined and cannot be returned as "stream".`,
@@ -341,7 +340,7 @@ export class RequestBody {
       }
       this.#type = "stream";
       const streams =
-        ((this.#stream ?? this.#request.body) as ReadableStream<Uint8Array>)
+        ((this.#stream ?? this.#body) as ReadableStream<Uint8Array>)
           .tee();
       this.#stream = streams[1];
       return { type, value: streams[0] };
@@ -349,7 +348,7 @@ export class RequestBody {
     if (!this.has()) {
       this.#type = "undefined";
     } else if (!this.#type) {
-      const encoding = this.#request.headers.get("content-encoding") ??
+      const encoding = this.#headers.get("content-encoding") ??
         "identity";
       if (encoding !== "identity") {
         throw new httpErrors.UnsupportedMediaType(
@@ -361,7 +360,7 @@ export class RequestBody {
       return { type: "undefined", value: undefined };
     }
     if (!type) {
-      const contentType = this.#request.headers.get("content-type");
+      const contentType = this.#headers.get("content-type");
       assert(
         contentType,
         "The Content-Type header is missing from the request",
@@ -394,6 +393,6 @@ export class RequestBody {
    * HTTP/2 behaviour.
    */
   has(): boolean {
-    return this.#request.body != null;
+    return this.#body != null;
   }
 }

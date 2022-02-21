@@ -99,8 +99,10 @@ export class Request {
         // so we will try to use that URL here, but default back to old logic
         // if the URL isn't valid.
         try {
-          this.#url = new URL(serverRequest.rawUrl);
-          return this.#url;
+          if (serverRequest.rawUrl) {
+            this.#url = new URL(serverRequest.rawUrl);
+            return this.#url;
+          }
         } catch {
           // we don't care about errors here
         }
@@ -136,7 +138,10 @@ export class Request {
     this.#proxy = proxy;
     this.#secure = secure;
     this.#serverRequest = serverRequest;
-    this.#body = new RequestBody(serverRequest.request);
+    this.#body = new RequestBody(
+      serverRequest.getBody(),
+      serverRequest.headers,
+    );
   }
 
   /** Returns an array of media types, accepted by the requestor, in order of
@@ -248,7 +253,7 @@ export class Request {
 
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
     const { hasBody, headers, ip, ips, method, secure, url } = this;
-    return `Request ${
+    return `${this.constructor.name} ${
       inspect({
         hasBody,
         headers,
@@ -258,6 +263,28 @@ export class Request {
         secure,
         url: url.toString(),
       })
+    }`;
+  }
+
+  [Symbol.for("nodejs.util.inspect.custom")](
+    depth: number,
+    // deno-lint-ignore no-explicit-any
+    options: any,
+    inspect: (value: unknown, options?: unknown) => string,
+  ) {
+    if (depth < 0) {
+      return options.stylize(`[${this.constructor.name}]`, "special");
+    }
+
+    const newOptions = Object.assign({}, options, {
+      depth: options.depth === null ? null : options.depth - 1,
+    });
+    const { hasBody, headers, ip, ips, method, secure, url } = this;
+    return `${options.stylize(this.constructor.name, "special")} ${
+      inspect(
+        { hasBody, headers, ip, ips, method, secure, url },
+        newOptions,
+      )
     }`;
   }
 }

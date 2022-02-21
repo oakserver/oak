@@ -905,11 +905,12 @@ test({
 
 test({
   name: "Application - inspecting",
-  ignore: isNode(),
   fn() {
     assertEquals(
       Deno.inspect(new Application()),
-      `Application { "#middleware": [], keys: undefined, proxy: false, state: {} }`,
+      isNode()
+        ? `Application { '#middleware': [], keys: undefined, proxy: false, state: {} }`
+        : `Application { "#middleware": [], keys: undefined, proxy: false, state: {} }`,
     );
     teardown();
   },

@@ -594,4 +594,26 @@ export class Application<AS extends State = Record<string, any>>
       inspect({ "#middleware": this.#middleware, keys, proxy, state })
     }`;
   }
+
+  [Symbol.for("nodejs.util.inspect.custom")](
+    depth: number,
+    // deno-lint-ignore no-explicit-any
+    options: any,
+    inspect: (value: unknown, options?: unknown) => string,
+  ) {
+    if (depth < 0) {
+      return options.stylize(`[${this.constructor.name}]`, "special");
+    }
+
+    const newOptions = Object.assign({}, options, {
+      depth: options.depth === null ? null : options.depth - 1,
+    });
+    const { keys, proxy, state } = this;
+    return `${options.stylize(this.constructor.name, "special")} ${
+      inspect(
+        { "#middleware": this.#middleware, keys, proxy, state },
+        newOptions,
+      )
+    }`;
+  }
 }
