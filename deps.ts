@@ -36,7 +36,7 @@ export {
   contentType,
   extension,
   lookup,
-} from "https://deno.land/x/media_types@v2.12.1/mod.ts";
+} from "https://deno.land/x/media_types@v2.12.2/mod.ts";
 export {
   compile,
   match as pathMatch,

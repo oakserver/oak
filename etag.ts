@@ -72,6 +72,8 @@ export function getEntity<S extends State = Record<string, any>>(
   context: Context<S>,
 ): Promise<string | Uint8Array | Deno.FileInfo | undefined> {
   const { body } = context.response;
+  // TODO(@kitsonk) refactor when denoland/node_deno_shims#88 is resolved
+  // deno-lint-ignore no-deprecated-deno-api
   if (body instanceof Deno.File) {
     return fstat(body);
   }
