@@ -29,16 +29,16 @@ jobs:
         run: deno bundle --import-map import-map.json mod.ts oak.bundle.js
 
       - name: run tests
-        run: deno test --allow-read --allow-write --allow-net --jobs 4 --ignore=npm
+        run: deno test --import-map import-map.json --allow-read --allow-write --allow-net --jobs 4 --ignore=npm
       
       - name: run tests no check
-        run: deno test --allow-read --allow-write --allow-net --no-check --jobs 4 --ignore=npm
+        run: deno test --import-map import-map.json --allow-read --allow-write --allow-net --no-check --jobs 4 --ignore=npm
 
       - name: run tests unstable
-        run: deno test --coverage=./cov --allow-read --allow-write --allow-net --unstable --jobs 4 --ignore=npm
+        run: deno test --coverage=./cov --import-map import-map.json --allow-read --allow-write --allow-net --unstable --jobs 4 --ignore=npm
 
       - name: run tests using dom libs
-        run: deno test --unstable --allow-read --allow-write --allow-net --config dom.tsconfig.json --jobs 4 --ignore=npm
+        run: deno test --unstable --import-map import-map.json --allow-read --allow-write --allow-net --config dom.tsconfig.json --jobs 4 --ignore=npm
 
       - name: test build for Node.js
         if: matrix.os == 'ubuntu-latest'

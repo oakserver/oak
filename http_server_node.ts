@@ -7,7 +7,7 @@ import * as http from "http";
 // typings for Node.js for `"http"`. Since we develop everything in Deno, but
 // type check in Deno and Node.js we have to provide the API surface we depend
 // on here, instead of accepting what comes in via the import.
-type IncomingMessage = {
+export type IncomingMessage = {
   headers: Record<string, string>;
   method: string | null;
   socket: {
@@ -26,7 +26,7 @@ type IncomingMessage = {
 type HttpServer = {
   listen(options: { port: number; host: string; signal: AbortSignal }): void;
 };
-type ServerResponse = {
+export type ServerResponse = {
   destroy(error?: Error): void;
   end(callback?: () => void): void;
   setHeader(key: string, value: string): void;
