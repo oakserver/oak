@@ -856,9 +856,9 @@ package is available on npm as `@oakserver/oak`. The package exports are the
 same as the exports of the `mod.ts` when using under Deno and the package
 auto-detects it is running under Node.js.
 
-A basic example:
+A basic example using ESM:
 
-**main.mjs**
+**index.mjs**
 
 ```js
 import { Application } from "@oakserver/oak";
@@ -872,11 +872,26 @@ app.use((ctx) => {
 app.listen({ port: 8000 });
 ```
 
+A basic example using CommonJS:
+
+**index.js**
+
+```js
+const { Application } = require("@oakserver/oak");
+
+const app = new Application();
+
+app.use((ctx) => {
+  ctx.response.body = "Hello from oak under Node.js";
+});
+
+app.listen({ port: 8000 });
+```
+
 There are a few notes about the support:
 
-- The package is only available as an ESM distribution. This is because there
-  are a couple places where the framework takes advantage of top level await,
-  which can only be supported in ES modules under Node.js.
+- Currently `FormData` bodies do not properly write binary files to disk. This
+  will be fixed in future versions.
 - Currently only HTTP/1.1 support is available. There are plans to add HTTP/2.
 - Web Socket upgrades are not currently supported. This is planned for the
   future. Trying to upgrade to a web socket will cause an error to be thrown.

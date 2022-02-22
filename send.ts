@@ -19,7 +19,10 @@ import type { Response } from "./response.ts";
 import { assert, decodeComponent, getBoundary, resolvePath } from "./util.ts";
 
 const MAXBUFFER_DEFAULT = 1_048_576; // 1MiB;
-const BOUNDARY = await getBoundary();
+
+// this will be lazily set as it needs to be done asynchronously and we want to
+// avoid top level await
+let boundary: string | undefined;
 
 export interface SendOptions {
   /** Try to serve the brotli version of a file automatically when brotli is
@@ -169,16 +172,19 @@ async function sendRange(
     }
   } else {
     assert(response.type);
+    if (!boundary) {
+      boundary = await getBoundary();
+    }
     response.headers.set(
       "content-type",
-      `multipart/byteranges; boundary=${BOUNDARY}`,
+      `multipart/byteranges; boundary=${boundary}`,
     );
     const multipartBody = new MultiPartStream(
       body,
       response.type,
       ranges,
       size,
-      BOUNDARY,
+      boundary,
     );
     response.headers.set(
       "content-length",

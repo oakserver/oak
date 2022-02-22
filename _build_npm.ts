@@ -14,6 +14,7 @@ import { copy } from "https://deno.land/std@0.126.0/fs/copy.ts";
 async function start() {
   await emptyDir("./npm");
   await copy("fixtures", "npm/esm/fixtures", { overwrite: true });
+  await copy("fixtures", "npm/script/fixtures", { overwrite: true });
 
   await build({
     entryPoints: ["./mod.ts"],
@@ -36,7 +37,6 @@ async function start() {
         globalNames: ["ErrorEvent"],
       }],
     },
-    scriptModule: false,
     test: true,
     compilerOptions: {
       importHelpers: true,
