@@ -6,7 +6,7 @@ import { assert, assertEquals, BufWriter, StringWriter } from "./test_deps.ts";
 
 import type { Application } from "./application.ts";
 import { Context } from "./context.ts";
-import { NativeRequest } from "./http_server_native.ts";
+import { NativeRequest } from "./http_server_native_request.ts";
 import { ServerSentEvent, SSEStreamTarget } from "./server_sent_event.ts";
 import { isNode } from "./util.ts";
 

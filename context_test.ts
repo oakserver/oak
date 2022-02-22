@@ -12,12 +12,12 @@ import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Cookies } from "./cookies.ts";
 import { httpErrors } from "./httpError.ts";
-import { NativeRequest } from "./http_server_native.ts";
-import type { UpgradeWebSocketFn } from "./http_server_native.ts";
+import { NativeRequest } from "./http_server_native_request.ts";
+import type {} from "./http_server_native.ts";
 import { Request as OakRequest } from "./request.ts";
 import { Response as OakResponse } from "./response.ts";
 import { cloneState } from "./structured_clone.ts";
-import type { UpgradeWebSocketOptions } from "./types.d.ts";
+import type { UpgradeWebSocketFn, UpgradeWebSocketOptions } from "./types.d.ts";
 import { isNode } from "./util.ts";
 
 const { test } = Deno;

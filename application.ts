@@ -2,7 +2,8 @@
 
 import { Context } from "./context.ts";
 import { Status, STATUS_TEXT } from "./deps.ts";
-import { HttpServerNative, NativeRequest } from "./http_server_native.ts";
+import { HttpServer } from "./http_server_native.ts";
+import { NativeRequest } from "./http_server_native_request.ts";
 import { KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
 import { cloneState } from "./structured_clone.ts";
@@ -13,7 +14,7 @@ import {
   ServerConstructor,
   ServerRequest,
 } from "./types.d.ts";
-import { assert, isConn, isNode } from "./util.ts";
+import { assert, isConn } from "./util.ts";
 
 export interface ListenOptionsBase extends Deno.ListenOptions {
   secure?: false;
@@ -150,15 +151,10 @@ export type State = Record<string | number | symbol, any>;
 
 const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 
-const DEFAULT_SERVER: ServerConstructor<ServerRequest> = isNode()
-  ? (await import("./http_server_node.ts")).HttpServerNode
-  : HttpServerNative;
-// deno-lint-ignore no-explicit-any
-const LocalErrorEvent: typeof ErrorEvent = (globalThis as any).ErrorEvent ??
-  (await import("./node_shims.ts")).ErrorEvent;
+const DEFAULT_SERVER: ServerConstructor<ServerRequest> = HttpServer;
 
 export class ApplicationErrorEvent<S extends AS, AS extends State>
-  extends LocalErrorEvent {
+  extends ErrorEvent {
   context?: Context<S, AS>;
 
   constructor(eventInitDict: ApplicationErrorEventInit<S, AS>) {
@@ -526,7 +522,7 @@ export class Application<AS extends State = Record<string, any>>
       });
     }
     const { secure = false } = options;
-    const serverType = server instanceof HttpServerNative ? "native" : "custom";
+    const serverType = server instanceof HttpServer ? "native" : "custom";
     const listener = server.listen();
     const { hostname, port } = listener.addr as Deno.NetAddr;
     this.dispatchEvent(

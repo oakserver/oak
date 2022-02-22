@@ -107,3 +107,28 @@ export type Key = string | number[] | ArrayBuffer | Uint8Array;
 export interface UpgradeWebSocketOptions {
   protocol?: string;
 }
+
+export type UpgradeWebSocketFn = (
+  request: Request,
+  options?: UpgradeWebSocketOptions,
+) => WebSocketUpgrade;
+
+interface WebSocketUpgrade {
+  response: Response;
+  socket: WebSocket;
+}
+
+// Since the native bindings are currently unstable in Deno, we will add the
+// interfaces here, so that we can type check oak without requiring the
+// `--unstable` flag to be used.
+
+export interface RequestEvent {
+  readonly request: Request;
+  respondWith(r: Response | Promise<Response>): Promise<void>;
+}
+
+export interface HttpConn extends AsyncIterable<RequestEvent> {
+  readonly rid: number;
+  nextRequest(): Promise<RequestEvent | null>;
+  close(): void;
+}

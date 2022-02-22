@@ -1,13 +1,8 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
-import type {
-  Listener,
-  Server,
-  ServerRequest,
-  ServerRequestBody,
-  UpgradeWebSocketOptions,
-} from "./types.d.ts";
+import { NativeRequest } from "./http_server_native_request.ts";
+import type { HttpConn, Listener, Server } from "./types.d.ts";
 import { assert, isListenTlsOptions } from "./util.ts";
 
 // this is included so when down-emitting to npm/Node.js, ReadableStream has
@@ -22,29 +17,11 @@ declare global {
 }
 
 export type Respond = (r: Response | Promise<Response>) => void;
-// deno-lint-ignore no-explicit-any
-export const DomResponse: typeof Response = (globalThis as any).Response ??
-  class MockResponse {};
 
 // This type is part of Deno, but not part of lib.dom.d.ts, therefore add it here
 // so that type checking can occur properly under `lib.dom.d.ts`.
 interface ReadableStreamDefaultControllerCallback<R> {
   (controller: ReadableStreamDefaultController<R>): void | PromiseLike<void>;
-}
-
-// Since the native bindings are currently unstable in Deno, we will add the
-// interfaces here, so that we can type check oak without requiring the
-// `--unstable` flag to be used.
-
-interface RequestEvent {
-  readonly request: Request;
-  respondWith(r: Response | Promise<Response>): Promise<void>;
-}
-
-interface HttpConn extends AsyncIterable<RequestEvent> {
-  readonly rid: number;
-  nextRequest(): Promise<RequestEvent | null>;
-  close(): void;
 }
 
 const serveHttp: (conn: Deno.Conn) => HttpConn = "serveHttp" in Deno
@@ -54,151 +31,11 @@ const serveHttp: (conn: Deno.Conn) => HttpConn = "serveHttp" in Deno
     )
   : undefined;
 
-interface WebSocketUpgrade {
-  response: Response;
-  socket: WebSocket;
-}
-
-export type UpgradeWebSocketFn = (
-  request: Request,
-  options?: UpgradeWebSocketOptions,
-) => WebSocketUpgrade;
-
-const maybeUpgradeWebSocket: UpgradeWebSocketFn | undefined =
-  "upgradeWebSocket" in Deno
-    ? // deno-lint-ignore no-explicit-any
-      (Deno as any).upgradeWebSocket.bind(Deno)
-    : undefined;
-
-export interface NativeRequestOptions {
-  conn?: Deno.Conn;
-  upgradeWebSocket?: UpgradeWebSocketFn;
-}
-
-/** An internal oak abstraction for handling a Deno native request. Most users
- * of oak do not need to worry about this abstraction. */
-export class NativeRequest implements ServerRequest {
-  #conn?: Deno.Conn;
-  // deno-lint-ignore no-explicit-any
-  #reject!: (reason?: any) => void;
-  #request: Request;
-  #requestPromise: Promise<void>;
-  #resolve!: (value: Response) => void;
-  #resolved = false;
-  #upgradeWebSocket?: UpgradeWebSocketFn;
-
-  constructor(
-    requestEvent: RequestEvent,
-    options: NativeRequestOptions = {},
-  ) {
-    const { conn } = options;
-    this.#conn = conn;
-    // this allows for the value to be explicitly undefined in the options
-    this.#upgradeWebSocket = "upgradeWebSocket" in options
-      ? options["upgradeWebSocket"]
-      : maybeUpgradeWebSocket;
-    this.#request = requestEvent.request;
-    const p = new Promise<Response>((resolve, reject) => {
-      this.#resolve = resolve;
-      this.#reject = reject;
-    });
-    this.#requestPromise = requestEvent.respondWith(p);
-  }
-
-  get body(): ReadableStream<Uint8Array> | null {
-    // when shimming with undici under Node.js, this is a
-    // `ControlledAsyncIterable`
-    // deno-lint-ignore no-explicit-any
-    return this.#request.body as any;
-  }
-
-  get donePromise(): Promise<void> {
-    return this.#requestPromise;
-  }
-
-  get headers(): Headers {
-    return this.#request.headers;
-  }
-
-  get method(): string {
-    return this.#request.method;
-  }
-
-  get remoteAddr(): string | undefined {
-    return (this.#conn?.remoteAddr as Deno.NetAddr)?.hostname;
-  }
-
-  get request(): Request {
-    return this.#request;
-  }
-
-  get url(): string {
-    try {
-      const url = new URL(this.#request.url);
-      return this.#request.url.replace(url.origin, "");
-    } catch {
-      // we don't care about errors, we just want to fall back
-    }
-    return this.#request.url;
-  }
-
-  get rawUrl(): string {
-    return this.#request.url;
-  }
-
-  // deno-lint-ignore no-explicit-any
-  error(reason?: any): void {
-    if (this.#resolved) {
-      throw new Error("Request already responded to.");
-    }
-    this.#reject(reason);
-    this.#resolved = true;
-  }
-
-  getBody(): ServerRequestBody {
-    return {
-      // when emitting to Node.js, the body is not compatible, and thought it
-      // doesn't run at runtime, it still gets type checked.
-      // deno-lint-ignore no-explicit-any
-      body: this.#request.body as any,
-      readBody: async () => {
-        const ab = await this.#request.arrayBuffer();
-        return new Uint8Array(ab);
-      },
-    };
-  }
-
-  respond(response: Response): Promise<void> {
-    if (this.#resolved) {
-      throw new Error("Request already responded to.");
-    }
-    this.#resolve(response);
-    this.#resolved = true;
-    return this.#requestPromise;
-  }
-
-  upgrade(options?: UpgradeWebSocketOptions): WebSocket {
-    if (this.#resolved) {
-      throw new Error("Request already responded to.");
-    }
-    if (!this.#upgradeWebSocket) {
-      throw new TypeError("Upgrading web sockets not supported.");
-    }
-    const { response, socket } = this.#upgradeWebSocket(
-      this.#request,
-      options,
-    );
-    this.#resolve(response);
-    this.#resolved = true;
-    return socket;
-  }
-}
-
 /** The oak abstraction of the Deno native HTTP server which is used internally
  * for handling native HTTP requests. Generally users of oak do not need to
  * worry about this class. */
 // deno-lint-ignore no-explicit-any
-export class HttpServerNative<AS extends State = Record<string, any>>
+export class HttpServer<AS extends State = Record<string, any>>
   implements Server<NativeRequest> {
   #app: Application<AS>;
   #closed = false;

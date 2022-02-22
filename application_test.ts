@@ -18,7 +18,8 @@ import type {
 } from "./application.ts";
 import { Context } from "./context.ts";
 import { Status } from "./deps.ts";
-import { HttpServerNative, NativeRequest } from "./http_server_native.ts";
+import { HttpServer } from "./http_server_native.ts";
+import { NativeRequest } from "./http_server_native_request.ts";
 import { httpErrors } from "./httpError.ts";
 import { KeyStack } from "./keyStack.ts";
 import type {
@@ -896,9 +897,9 @@ test({
 });
 
 test({
-  name: "new Application() - HttpServerNative",
+  name: "new Application() - HttpServer",
   fn() {
-    new Application({ serverConstructor: HttpServerNative });
+    new Application({ serverConstructor: HttpServer });
     teardown();
   },
 });

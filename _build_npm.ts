@@ -18,6 +18,9 @@ async function start() {
   await build({
     entryPoints: ["./mod.ts"],
     outDir: "./npm",
+    mappings: {
+      "./http_server_native.ts": "./http_server_node.ts",
+    },
     shims: {
       blob: true,
       crypto: true,
@@ -28,6 +31,9 @@ async function start() {
           name: "stream/web",
         },
         globalNames: ["ReadableStream", "TransformStream"],
+      }, {
+        module: "./node_shims.ts",
+        globalNames: ["ErrorEvent"],
       }],
     },
     scriptModule: false,

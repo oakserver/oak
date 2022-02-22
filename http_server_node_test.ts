@@ -5,7 +5,7 @@
 import { assertEquals, unreachable } from "./test_deps.ts";
 
 import {
-  HttpServerNode,
+  HttpServer,
   type IncomingMessage,
   NodeRequest,
   type ServerResponse,
@@ -83,13 +83,13 @@ Deno.test({
 });
 
 Deno.test({
-  name: "HttpServerNode closes gracefully after serving requests",
+  name: "HttpServer closes gracefully after serving requests",
   ignore: !isNode(),
   async fn() {
     const app = new Application();
     const listenOptions = { port: 4505 };
 
-    const server = new HttpServerNode(app, listenOptions);
+    const server = new HttpServer(app, listenOptions);
     server.listen();
 
     const expectedBody = "test-body";

@@ -23,7 +23,7 @@ export type IncomingMessage = {
   on(method: "error", listener: (err: Error) => void): void;
   on(method: "end", listener: () => void): void;
 };
-type HttpServer = {
+type NodeHttpServer = {
   listen(options: { port: number; host: string; signal: AbortSignal }): void;
 };
 export type ServerResponse = {
@@ -174,12 +174,12 @@ export class NodeRequest implements ServerRequest {
   }
 }
 
-export class HttpServerNode implements Server<NodeRequest> {
+export class HttpServer implements Server<NodeRequest> {
   #abortController = new AbortController();
   #host: string;
   #port: number;
   #requestStream: ReadableStream<NodeRequest>;
-  #server!: HttpServer;
+  #server!: NodeHttpServer;
 
   constructor(
     _app: unknown,

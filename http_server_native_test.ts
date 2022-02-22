@@ -2,7 +2,8 @@
 
 import { assertEquals, assertStrictEquals, unreachable } from "./test_deps.ts";
 
-import { HttpServerNative, NativeRequest } from "./http_server_native.ts";
+import { HttpServer } from "./http_server_native.ts";
+import { NativeRequest } from "./http_server_native_request.ts";
 
 import { Application } from "./application.ts";
 import { isNode } from "./util.ts";
@@ -43,13 +44,13 @@ test({
 });
 
 test({
-  name: "HttpServerNative closes gracefully after serving requests",
+  name: "HttpServer closes gracefully after serving requests",
   ignore: isNode(),
   async fn() {
     const app = new Application();
     const listenOptions = { port: 4505 };
 
-    const server = new HttpServerNative(app, listenOptions);
+    const server = new HttpServer(app, listenOptions);
     server.listen();
 
     const expectedBody = "test-body";
