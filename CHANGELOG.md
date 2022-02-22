@@ -1,5 +1,14 @@
 # oak Change Log
 
+## Version 10.4.0
+
+- feat: support CJS for npm package (2f38652)
+
+  The npm distribution now includes ESM and CJS modules, enabling oak to be
+  imported with `require()` in Node.js.
+
+- refactor: remove dynamic import (e776011)
+
 ## Version 10.3.0
 
 - feat: add experimental support for Node.js (#479)
