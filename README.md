@@ -768,7 +768,7 @@ import { etag } from "https://deno.land/x/oak/mod.ts";
 
 export async function mw(context, next) {
   await next();
-  const value = etag.calculate("hello deno");
+  const value = await etag.calculate("hello deno");
   context.response.headers.set("ETag", value);
 }
 ```
