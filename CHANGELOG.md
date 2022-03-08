@@ -1,5 +1,17 @@
 # oak Change Log
 
+## Version 10.5.0
+
+- feat: application supports omitting options, defaults to port 0
+
+  You can now avoid "boilerplate" code, especially on Deploy with `Application`
+  `listen()` by not passing any config options to start listening.
+
+- fix: update npm and fix issues
+- tests: de-duplicate test name
+- docs: add await to `etag.calculate` example (#480)
+- chore: update to Deno 1.19.2, std 0.128.0, media_types 2.12.3
+
 ## Version 10.4.0
 
 - feat: support CJS for npm package (2f38652)
