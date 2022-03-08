@@ -916,3 +916,18 @@ test({
     teardown();
   },
 });
+
+test({
+  name: "Application.listen() - no options",
+  async fn() {
+    const controller = new AbortController();
+    const app = new Application();
+    app.use((ctx) => {
+      ctx.response.body = "hello world";
+    });
+    const p = app.listen({ signal: controller.signal });
+    controller.abort();
+    await p;
+    teardown();
+  },
+});

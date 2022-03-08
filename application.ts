@@ -16,8 +16,20 @@ import {
 } from "./types.d.ts";
 import { assert, isConn } from "./util.ts";
 
-export interface ListenOptionsBase extends Deno.ListenOptions {
+export interface ListenOptionsBase {
+  /** The port to listen on. If not specified, defaults to `0`, which allows the
+   * operating system to determine the value. */
+  port?: number;
+  /** A literal IP address or host name that can be resolved to an IP address.
+   * If not specified, defaults to `0.0.0.0`.
+   *
+   * __Note about `0.0.0.0`__ While listening `0.0.0.0` works on all platforms,
+   * the browsers on Windows don't work with the address `0.0.0.0`.
+   * You should show the message like `server running on localhost:8080` instead of
+   * `server running on 0.0.0.0:8080` if your program supports Windows. */
+  hostname?: string;
   secure?: false;
+  /** An optional abort signal which can be used to close the listener. */
   signal?: AbortSignal;
 }
 
@@ -31,6 +43,7 @@ export interface ListenOptionsTls extends Deno.ListenTlsOptions {
    */
   alpnProtocols?: string[];
   secure: true;
+  /** An optional abort signal which can be used to close the listener. */
   signal?: AbortSignal;
 }
 
@@ -490,9 +503,12 @@ export class Application<AS extends State = Record<string, any>>
    * request.  If the options `.secure` is undefined or `false`, the listening
    * will be over HTTP.  If the options `.secure` property is `true`, a
    * `.certFile` and a `.keyFile` property need to be supplied and requests
-   * will be processed over HTTPS. */
-  async listen(options: ListenOptions): Promise<void>;
-  async listen(options: string | ListenOptions): Promise<void> {
+   * will be processed over HTTPS.
+   *
+   * Omitting options will default to `{ port: 0 }` which allows the operating
+   * system to select the port. */
+  async listen(options?: ListenOptions): Promise<void>;
+  async listen(options: string | ListenOptions = { port: 0 }): Promise<void> {
     if (!this.#middleware.length) {
       throw new TypeError("There is no middleware to process requests.");
     }
@@ -504,7 +520,11 @@ export class Application<AS extends State = Record<string, any>>
       const [, hostname, portStr] = match;
       options = { hostname, port: parseInt(portStr, 10) };
     }
-    const server = new this.#serverConstructor(this, options);
+    options = Object.assign({ port: 0 }, options);
+    const server = new this.#serverConstructor(
+      this,
+      options as Deno.ListenOptions,
+    );
     const { signal } = options;
     const state = {
       closed: false,
