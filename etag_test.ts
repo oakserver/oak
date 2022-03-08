@@ -63,7 +63,7 @@ test({
 });
 
 test({
-  name: "etag - calculate - Uint8Array - empty",
+  name: "etag - calculate - Uint8Array",
   async fn() {
     const actual = await calculate(encoder.encode("hello deno"));
     assertEquals(actual, `"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`);
