@@ -136,7 +136,7 @@ test({
   name: "etag - middleware - body File",
   async fn() {
     const { context } = setup();
-    let file: Deno.File;
+    let file: Deno.FsFile;
     async function next() {
       file = await Deno.open("./fixtures/test.jpg", {
         read: true,
@@ -206,7 +206,7 @@ test({
 test({
   name: "etag - middleware - body async iterator",
   async fn() {
-    // The only async readable we can really support is Deno.File, because we
+    // The only async readable we can really support is Deno.FsFile, because we
     // know how to get the meta data in order to build a weak tag.  Other async
     // iterables should be ignored and not serialized as JSON.
     const { context } = setup();

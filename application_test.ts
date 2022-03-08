@@ -919,6 +919,7 @@ test({
 
 test({
   name: "Application.listen() - no options",
+  ignore: isNode(),
   async fn() {
     const controller = new AbortController();
     const app = new Application();

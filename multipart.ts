@@ -183,7 +183,7 @@ async function* parts(
     prefix,
   }: PartsOptions,
 ): AsyncIterableIterator<[string, string | FormDataFile]> {
-  async function getFile(contentType: string): Promise<[string, Deno.File]> {
+  async function getFile(contentType: string): Promise<[string, Deno.FsFile]> {
     const ext = customContentTypes[contentType.toLowerCase()] ??
       extension(contentType);
     if (!ext) {
@@ -224,7 +224,7 @@ async function* parts(
     if (contentType) {
       const originalName = getFilename(contentDisposition);
       let byteLength = 0;
-      let file: Deno.File | undefined;
+      let file: Deno.FsFile | undefined;
       let filename: string | undefined;
       let buf: Uint8Array | undefined;
       if (maxSize) {

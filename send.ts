@@ -121,8 +121,8 @@ async function getEntity(
   stats: Deno.FileInfo,
   maxbuffer: number,
   response: Response,
-): Promise<[Uint8Array | Deno.File, Uint8Array | FileInfo]> {
-  let body: Uint8Array | Deno.File;
+): Promise<[Uint8Array | Deno.FsFile, Uint8Array | FileInfo]> {
+  let body: Uint8Array | Deno.FsFile;
   let entity: Uint8Array | FileInfo;
   const file = await Deno.open(path, { read: true });
   if (stats.size < maxbuffer) {
@@ -142,7 +142,7 @@ async function getEntity(
 
 async function sendRange(
   response: Response,
-  body: Uint8Array | Deno.File,
+  body: Uint8Array | Deno.FsFile,
   range: string,
   size: number,
 ) {
@@ -312,7 +312,7 @@ export async function send(
   }
 
   let entity: Uint8Array | FileInfo | null = null;
-  let body: Uint8Array | Deno.File | null = null;
+  let body: Uint8Array | Deno.FsFile | null = null;
 
   if (request.headers.has("If-None-Match") && mtime) {
     [body, entity] = await getEntity(path, mtime, stats, maxbuffer, response);

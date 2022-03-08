@@ -57,7 +57,7 @@ async function calcEntityTag(entity: string | Uint8Array): Promise<string> {
   return `"${entity.length.toString(16)}-${hash}"`;
 }
 
-function fstat(file: Deno.File): Promise<Deno.FileInfo | undefined> {
+function fstat(file: Deno.FsFile): Promise<Deno.FileInfo | undefined> {
   if ("fstat" in Deno) {
     // deno-lint-ignore no-explicit-any
     return (Deno as any).fstat(file.rid);
@@ -72,9 +72,7 @@ export function getEntity<S extends State = Record<string, any>>(
   context: Context<S>,
 ): Promise<string | Uint8Array | Deno.FileInfo | undefined> {
   const { body } = context.response;
-  // TODO(@kitsonk) refactor when denoland/node_deno_shims#88 is resolved
-  // deno-lint-ignore no-deprecated-deno-api
-  if (body instanceof Deno.File) {
+  if (body instanceof Deno.FsFile) {
     return fstat(body);
   }
   if (body instanceof Uint8Array) {

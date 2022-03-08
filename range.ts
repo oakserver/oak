@@ -96,7 +96,7 @@ async function readRange(
 
 const encoder = new TextEncoder();
 
-/** A class that takes a file (either a Deno.File or Uint8Array) and bytes
+/** A class that takes a file (either a Deno.FsFile or Uint8Array) and bytes
  * and streams the ranges as a multi-part encoded HTTP body.
  *
  * This is specifically used by the `.send()` functionality to fulfill range

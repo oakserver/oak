@@ -203,7 +203,9 @@ function iterableHeaders(
   } else if (Array.isArray(headers)) {
     return headers.values() as IterableIterator<[string, string]>;
   } else {
-    return Object.entries(headers).values();
+    return Object.entries(headers).values() as IterableIterator<
+      [string, string]
+    >;
   }
 }
 

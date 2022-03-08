@@ -773,10 +773,10 @@ export async function mw(context, next) {
 }
 ```
 
-By default, `etag` will calculate weak tags for `Deno.FileInfo` (or `Deno.File`
-bodies in the middleware) and strong tags for `string`s and `Uint8Array`s. This
-can be changed by passing a `weak` property in the `options` parameter to either
-the `factory` or `calculate` methods.
+By default, `etag` will calculate weak tags for `Deno.FileInfo` (or
+`Deno.FsFile` bodies in the middleware) and strong tags for `string`s and
+`Uint8Array`s. This can be changed by passing a `weak` property in the `options`
+parameter to either the `factory` or `calculate` methods.
 
 There are also two helper functions which can be used in conjunction with
 requests. There is `ifNoneMatch()` and `ifMatch()`. Both take the value of a
