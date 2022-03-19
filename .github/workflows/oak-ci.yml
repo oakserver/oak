@@ -47,6 +47,6 @@ jobs:
 
       - name: upload coverage
         if: matrix.os == 'ubuntu-latest'
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2
         with:
           files: cov.lcov
