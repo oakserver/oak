@@ -1,5 +1,11 @@
 # oak Change Log
 
+## Version 10.5.1
+
+- chore: update to std 0.131.0, media_types 3.0.2, dnt 0.22.0 (c1e0ea9)
+- chore: update codecov action (#494)
+- chore: migrate to deno task and deno.jsonc (ccc39db)
+
 ## Version 10.5.0
 
 - feat: application supports omitting options, defaults to port 0
