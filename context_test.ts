@@ -12,7 +12,10 @@ import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
 import { Cookies } from "./cookies.ts";
 import { httpErrors } from "./httpError.ts";
-import { NativeRequest } from "./http_server_native_request.ts";
+import {
+  isNativeRequest,
+  NativeRequest,
+} from "./http_server_native_request.ts";
 import type {} from "./http_server_native.ts";
 import { Request as OakRequest } from "./request.ts";
 import { Response as OakResponse } from "./response.ts";
@@ -105,6 +108,7 @@ test({
     assertStrictEquals(context.app, app);
     assert(context.cookies instanceof Cookies);
     assert(context.request instanceof OakRequest);
+    assert(isNativeRequest(context.request.originalRequest));
     assert(context.response instanceof OakResponse);
   },
 });
