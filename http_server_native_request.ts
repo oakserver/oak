@@ -18,6 +18,11 @@ const maybeUpgradeWebSocket: UpgradeWebSocketFn | undefined =
       (Deno as any).upgradeWebSocket.bind(Deno)
     : undefined;
 
+export function isNativeRequest(r: ServerRequest): r is NativeRequest {
+  // deno-lint-ignore no-explicit-any
+  return (r as any).request instanceof Request;
+}
+
 export interface NativeRequestOptions {
   conn?: Deno.Conn;
   upgradeWebSocket?: UpgradeWebSocketFn;
