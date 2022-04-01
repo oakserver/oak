@@ -19,8 +19,7 @@ const maybeUpgradeWebSocket: UpgradeWebSocketFn | undefined =
     : undefined;
 
 export function isNativeRequest(r: ServerRequest): r is NativeRequest {
-  // deno-lint-ignore no-explicit-any
-  return (r as any).request instanceof Request;
+  return r instanceof NativeRequest;
 }
 
 export interface NativeRequestOptions {
