@@ -138,5 +138,5 @@ state), therefore oak does not just "ignore" them, but provides them.
 
 You can disabled automatic logging by setting `logErrors` to `false` in the
 `Application` options. You can also use the
-`.addEventHandler("error", (evt) => {});` to register your own event handler for
+`.addEventListener("error", (evt) => {});` to register your own event handler for
 uncaught errors.
