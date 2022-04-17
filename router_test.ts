@@ -711,6 +711,12 @@ test({
         ctx.params.id;
         ctx.params.page;
         ctx.state.session;
+      }).post<{ id: string }>("/:id\\:archive", (ctx) => {
+        ctx.params.id;
+        // @ts-expect-error
+        ctx.params["id:archive"];
+        // @ts-expect-error
+        ctx.params["id\\:archive"];
       }).routes(),
     ).use((ctx) => {
       ctx.state.id;
