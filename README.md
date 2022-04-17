@@ -675,6 +675,12 @@ Check out the
 [documentation for that library](https://github.com/pillarjs/path-to-regexp#parameters)
 if you have advanced use cases.
 
+In most cases, the type of `context.params` is automatically inferred from the
+path template string through typescript magic. In more complex scenarios this
+might not yield the correct result however. In that case you can override the
+type with `router.get<RouteParams>`, where `RouteParams` is the explicit type
+for `context.params`.
+
 ### Nested routers
 
 Nesting routers is supported. The following example responds to
