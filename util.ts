@@ -111,8 +111,9 @@ export function isConn(value: unknown): value is Deno.Conn {
 export function isListenTlsOptions(
   value: unknown,
 ): value is Deno.ListenTlsOptions {
-  return typeof value === "object" && value !== null && "certFile" in value &&
-    "keyFile" in value && "port" in value;
+  return typeof value === "object" && value !== null &&
+    ("cert" in value || "certFile" in value) &&
+    ("key" in value || "keyFile" in value) && "port" in value;
 }
 
 export interface ReadableStreamFromReaderOptions {
