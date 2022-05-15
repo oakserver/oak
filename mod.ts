@@ -68,7 +68,7 @@ export type { CookiesGetOptions, CookiesSetDeleteOptions } from "./cookies.ts";
 export * as etag from "./etag.ts";
 export { HttpServer as HttpServerNative } from "./http_server_native.ts";
 export type { NativeRequest } from "./http_server_native_request.ts";
-export { HttpError, httpErrors, isHttpError } from "./httpError.ts";
+export { HttpError, httpErrors, isHttpError, createHttpError} from "./httpError.ts";
 export { proxy } from "./middleware/proxy.ts";
 export type { ProxyOptions } from "./middleware/proxy.ts";
 export { compose as composeMiddleware } from "./middleware.ts";
