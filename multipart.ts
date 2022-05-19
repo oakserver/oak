@@ -50,7 +50,7 @@ export interface FormDataFile {
    * as a {@linkcode Uint8Array}. */
   content?: Uint8Array;
 
-  /** The content type og the form data file. */
+  /** The content type of the form data file. */
   contentType: string;
 
   /** When the file has been written out to disc, the full path to the file. */
