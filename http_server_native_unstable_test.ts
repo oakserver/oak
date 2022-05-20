@@ -4,7 +4,6 @@ import { assertEquals, deferred, unreachable } from "./test_deps.ts";
 import type { Deferred } from "./test_deps.ts";
 
 import { HttpServer } from "./http_server_native.ts";
-import { NativeRequest } from "./http_server_native_request.ts";
 
 import { Application } from "./application.ts";
 import { isNode } from "./util.ts";
@@ -36,7 +35,7 @@ test({
       ...new Array(requestCount),
     ].map(() => deferred<void>());
     const requestHandlers: Array<
-      (nativeRequest: NativeRequest) => Promise<void>
+      (nativeRequest: unknown) => Promise<void>
     > = [];
 
     let responseCounter = 0;
@@ -47,7 +46,9 @@ test({
       // 2. Wait for all subsequent handlers to respond first
       // 3. Responds to the request with the current response counter
       // 4. Resolves it's responseDeferreds entry so previous requests can be responded to
-      requestHandlers.push(async (nativeRequest: NativeRequest) => {
+
+      // deno-lint-ignore no-explicit-any
+      requestHandlers.push(async (nativeRequest: any) => {
         requestDeferreds[i].resolve();
 
         if (i + 1 < requestCount) {
