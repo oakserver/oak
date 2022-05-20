@@ -8,8 +8,11 @@ export { writeAllSync } from "https://deno.land/std@0.131.0/streams/conversion.t
 export {
   assert,
   assertEquals,
+  assertInstanceOf,
   assertRejects,
   assertStrictEquals,
   assertThrows,
   unreachable,
 } from "https://deno.land/std@0.131.0/testing/asserts.ts";
+export { deferred } from "https://deno.land/std@0.131.0/async/deferred.ts";
+export type { Deferred } from "https://deno.land/std@0.131.0/async/deferred.ts";

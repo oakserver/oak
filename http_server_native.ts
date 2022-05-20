@@ -26,9 +26,7 @@ interface ReadableStreamDefaultControllerCallback<R> {
 
 const serveHttp: (conn: Deno.Conn) => HttpConn = "serveHttp" in Deno
   ? // deno-lint-ignore no-explicit-any
-    (Deno as any).serveHttp.bind(
-      Deno,
-    )
+    (Deno as any).serveHttp.bind(Deno)
   : undefined;
 
 /** The oak abstraction of the Deno native HTTP server which is used internally
@@ -119,7 +117,9 @@ export class HttpServer<AS extends State = Record<string, any>>
 
             const nativeRequest = new NativeRequest(requestEvent, { conn });
             controller.enqueue(nativeRequest);
-            await nativeRequest.donePromise;
+            nativeRequest.donePromise.catch((error) => {
+              server.app.dispatchEvent(new ErrorEvent("error", { error }));
+            });
           } catch (error) {
             server.app.dispatchEvent(new ErrorEvent("error", { error }));
           }
