@@ -86,7 +86,7 @@ test({
   ignore: isNode(),
   async fn() {
     const app = new Application();
-    const listenOptions = { port: 4505 };
+    const listenOptions = { port: 4506 };
 
     const server = new HttpServer(app, listenOptions);
     server.listen();
