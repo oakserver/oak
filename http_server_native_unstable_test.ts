@@ -1,7 +1,11 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, deferred, unreachable } from "./test_deps.ts";
-import type { Deferred } from "./test_deps.ts";
+import {
+  assertEquals,
+  type Deferred,
+  deferred,
+  unreachable,
+} from "./test_deps.ts";
 
 import { HttpServer } from "./http_server_native.ts";
 

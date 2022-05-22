@@ -117,6 +117,8 @@ export class HttpServer<AS extends State = Record<string, any>>
 
             const nativeRequest = new NativeRequest(requestEvent, { conn });
             controller.enqueue(nativeRequest);
+            // if we await here, this becomes blocking, and really all we want
+            // it to dispatch any errors that occur on the promise
             nativeRequest.donePromise.catch((error) => {
               server.app.dispatchEvent(new ErrorEvent("error", { error }));
             });
