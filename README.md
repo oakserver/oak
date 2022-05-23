@@ -722,7 +722,7 @@ app.use(async (context, next) => {
       index: "index.html",
     });
   } catch {
-    next();
+    await next();
   }
 });
 
