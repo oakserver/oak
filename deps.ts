@@ -8,18 +8,18 @@ export {
   concat,
   copy as copyBytes,
   equals,
-} from "https://deno.land/std@0.131.0/bytes/mod.ts";
-export * as base64 from "https://deno.land/std@0.131.0/encoding/base64.ts";
+} from "https://deno.land/std@0.140.0/bytes/mod.ts";
+export * as base64 from "https://deno.land/std@0.140.0/encoding/base64.ts";
 export {
   Status,
   STATUS_TEXT,
-} from "https://deno.land/std@0.131.0/http/http_status.ts";
-export { LimitedReader } from "https://deno.land/std@0.131.0/io/readers.ts";
+} from "https://deno.land/std@0.140.0/http/http_status.ts";
+export { LimitedReader } from "https://deno.land/std@0.140.0/io/readers.ts";
 export {
   readAll,
   readerFromStreamReader,
   writeAll,
-} from "https://deno.land/std@0.131.0/streams/conversion.ts";
+} from "https://deno.land/std@0.140.0/streams/conversion.ts";
 export {
   basename,
   extname,
@@ -28,7 +28,7 @@ export {
   normalize,
   parse,
   sep,
-} from "https://deno.land/std@0.131.0/path/mod.ts";
+} from "https://deno.land/std@0.140.0/path/mod.ts";
 
 // 3rd party dependencies
 
@@ -36,7 +36,7 @@ export {
   contentType,
   extension,
   lookup,
-} from "https://deno.land/x/media_types@v3.0.2/mod.ts";
+} from "https://deno.land/x/media_types@v3.0.3/mod.ts";
 export {
   compile,
   match as pathMatch,
