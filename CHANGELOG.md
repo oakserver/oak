@@ -1,5 +1,17 @@
 # oak Change Log
 
+## Version 10.6.0
+
+- feat: expose createHttpError (#525)
+- fix: don't block subsequent requests on a connection (#529)
+- fix: Deno.ListenTlsOptions detection (#521)
+- docs: add missing await in README static content example. (#506)
+- docs: "sever" to "server" in README (#509)
+- docs: fix FAQ entry for addEventListener (#511)
+- docs: fix typo in `multipart.ts` (#527)
+- chore: update to Deno 1.22.0, std 0.140.0, media_types 3.0.3 (17d9e61)
+- chore: fix ci (00ddfcd)
+
 ## Version 10.5.1
 
 - chore: update to std 0.131.0, media_types 3.0.2, dnt 0.22.0 (c1e0ea9)
