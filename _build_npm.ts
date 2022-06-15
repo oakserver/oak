@@ -8,8 +8,8 @@
  * @module
  */
 
-import { build, emptyDir } from "https://deno.land/x/dnt@0.22.0/mod.ts";
-import { copy } from "https://deno.land/std@0.140.0/fs/copy.ts";
+import { build, emptyDir } from "https://deno.land/x/dnt@0.26.0/mod.ts";
+import { copy } from "https://deno.land/std@0.143.0/fs/copy.ts";
 
 async function start() {
   await emptyDir("./npm");
@@ -31,7 +31,14 @@ async function start() {
         package: {
           name: "stream/web",
         },
-        globalNames: ["ReadableStream", "TransformStream"],
+        globalNames: [
+          {
+            name: "QueuingStrategy",
+            typeOnly: true,
+          },
+          "ReadableStream",
+          "TransformStream",
+        ],
       }, {
         module: "./node_shims.ts",
         globalNames: ["ErrorEvent"],
@@ -41,6 +48,7 @@ async function start() {
     compilerOptions: {
       importHelpers: true,
       target: "ES2021",
+      lib: ["es2021", "dom"],
     },
     package: {
       name: "@oakserver/oak",

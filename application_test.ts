@@ -329,7 +329,7 @@ test({
     });
     let called = false;
     app.use((ctx) => {
-      assertEquals(ctx.state, { b: "string", c: /c/ });
+      assertEquals<unknown>(ctx.state, { b: "string", c: /c/ });
       assert(ctx.state !== ctx.app.state);
       called = true;
     });

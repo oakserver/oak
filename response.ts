@@ -309,7 +309,7 @@ export class Response {
     const responseInit: ResponseInit = {
       headers,
       status,
-      statusText: STATUS_TEXT.get(status),
+      statusText: STATUS_TEXT[status],
     };
 
     return this.#domResponse = new DomResponse(bodyInit, responseInit);

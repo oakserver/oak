@@ -90,7 +90,7 @@ function createHttpErrorConstructor<E extends typeof HttpError>(
   const name = `${Status[status]}Error`;
   const Ctor = class extends HttpError {
     constructor(message?: string) {
-      super(message || STATUS_TEXT.get(status));
+      super(message || STATUS_TEXT[status]);
       this.status = status;
       this.expose = status >= 400 && status < 500;
       Object.defineProperty(this, "name", {

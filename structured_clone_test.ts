@@ -21,6 +21,6 @@ test({
   fn() {
     const fixture = { a: "a", b: () => {}, c: true };
     const actual = cloneState(fixture);
-    assertEquals(actual, { a: "a", c: true });
+    assertEquals<unknown>(actual, { a: "a", c: true });
   },
 });
