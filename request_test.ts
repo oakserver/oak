@@ -284,13 +284,6 @@ test({
 test({
   name: "Request - inspecting",
   fn() {
-    console.log(Deno.inspect(
-      new Request(
-        createMockNativeRequest("http://localhost/foo?bar=baz&qat=qux", {
-          headers: { host: "localhost" },
-        }),
-      ),
-    ));
     assertEquals(
       Deno.inspect(
         new Request(
