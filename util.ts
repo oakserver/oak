@@ -434,6 +434,7 @@ export function encodeBase64Safe(data: string | ArrayBuffer): string {
 }
 
 export function isNode(): boolean {
+  // dnt-shim-ignore
   return "process" in globalThis && "global" in globalThis;
 }
 
