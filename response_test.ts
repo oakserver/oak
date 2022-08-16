@@ -85,9 +85,9 @@ test({
   name: "response.body as JSON",
   async fn() {
     const response = new Response(createMockRequest());
-    response.body = { foo: "bar" };
+    response.body = { foo: "bar", longNumber: BigInt(1) };
     const nativeResponse = await response.toDomResponse();
-    assertEquals(await nativeResponse.text(), `{"foo":"bar"}`);
+    assertEquals(await nativeResponse.text(), `{"foo":"bar","longNumber":"1"}`);
     assertEquals(nativeResponse.status, 200);
     assertEquals(
       nativeResponse.headers.get("content-type"),

@@ -70,7 +70,10 @@ export async function convertBodyToBodyInit(
   } else if (isAsyncIterable(body)) {
     result = readableStreamFromAsyncIterable(body);
   } else if (body && typeof body === "object") {
-    result = JSON.stringify(body);
+    result = JSON.stringify(
+      body,
+      (_key, value) => typeof value === "bigint" ? value.toString() : value,
+    );
     type = type ?? "json";
   } else if (typeof body === "function") {
     const result = body.call(null);
