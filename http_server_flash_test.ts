@@ -3,7 +3,7 @@
 import { hasFlash } from "./http_server_flash.ts";
 
 Deno.test({
-  name: "",
+  name: "FlashServer - experiment",
   ignore: !hasFlash(),
   fn() {},
 });
