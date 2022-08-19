@@ -29,6 +29,7 @@ import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
 import {
   compile,
+  errors,
   Key,
   ParseOptions,
   pathParse,
@@ -36,7 +37,6 @@ import {
   Status,
   TokensToRegexpOptions,
 } from "./deps.ts";
-import { httpErrors } from "./httpError.ts";
 import { compose, Middleware } from "./middleware.ts";
 import type { HTTPMethods, RedirectStatus } from "./types.d.ts";
 import { assert, decodeComponent } from "./util.ts";
@@ -191,14 +191,14 @@ export type RouteParams<Route extends string> = string extends Route
   ? ParamsDictionary
   : Route extends `${string}(${string}` ? ParamsDictionary
   : Route extends `${string}:${infer Rest}` ? 
-    & (
-      GetRouteParams<Rest> extends never ? ParamsDictionary
-        : GetRouteParams<Rest> extends `${infer ParamName}?`
-          ? { [P in ParamName]?: string }
-        : { [P in GetRouteParams<Rest>]: string }
-    )
-    & (Rest extends `${GetRouteParams<Rest>}${infer Next}` ? RouteParams<Next>
-      : unknown)
+      & (
+        GetRouteParams<Rest> extends never ? ParamsDictionary
+          : GetRouteParams<Rest> extends `${infer ParamName}?`
+            ? { [P in ParamName]?: string }
+          : { [P in GetRouteParams<Rest>]: string }
+      )
+      & (Rest extends `${GetRouteParams<Rest>}${infer Next}` ? RouteParams<Next>
+        : unknown)
   : Record<string | number, string | undefined>;
 
 type LayerOptions = TokensToRegexpOptions & ParseOptions & {
@@ -685,7 +685,7 @@ export class Router<
           if (options.throw) {
             throw options.notImplemented
               ? options.notImplemented()
-              : new httpErrors.NotImplemented();
+              : new errors.NotImplemented();
           } else {
             ctx.response.status = Status.NotImplemented;
             ctx.response.headers.set("Allowed", allowedStr);
@@ -698,7 +698,7 @@ export class Router<
             if (options.throw) {
               throw options.methodNotAllowed
                 ? options.methodNotAllowed()
-                : new httpErrors.MethodNotAllowed();
+                : new errors.MethodNotAllowed();
             } else {
               ctx.response.status = Status.MethodNotAllowed;
               ctx.response.headers.set("Allowed", allowedStr);

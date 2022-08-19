@@ -56,7 +56,7 @@ test({
     assertEquals(nativeResponse.status, 200);
     assertEquals(
       nativeResponse.headers.get("content-type"),
-      "text/plain; charset=utf-8",
+      "text/plain; charset=UTF-8",
     );
     assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
@@ -75,7 +75,7 @@ test({
     assertEquals(nativeResponse.status, 200);
     assertEquals(
       nativeResponse.headers.get("content-type"),
-      "text/html; charset=utf-8",
+      "text/html; charset=UTF-8",
     );
     assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
@@ -91,7 +91,7 @@ test({
     assertEquals(nativeResponse.status, 200);
     assertEquals(
       nativeResponse.headers.get("content-type"),
-      "application/json; charset=utf-8",
+      "application/json; charset=UTF-8",
     );
     assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
@@ -107,7 +107,7 @@ test({
     assertEquals(nativeResponse.status, 200);
     assertEquals(
       nativeResponse.headers.get("content-type"),
-      "text/plain; charset=utf-8",
+      "text/plain; charset=UTF-8",
     );
     assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
@@ -135,7 +135,7 @@ test({
     assertEquals(nativeResponse.status, 200);
     assertEquals(
       nativeResponse.headers.get("content-type"),
-      "text/plain; charset=utf-8",
+      "text/plain; charset=UTF-8",
     );
     assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
@@ -185,7 +185,7 @@ test({
     assertEquals(nativeResponse.status, 200);
     assertEquals(
       nativeResponse.headers.get("content-type"),
-      "text/plain; charset=utf-8",
+      "text/plain; charset=UTF-8",
     );
     assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
@@ -205,7 +205,7 @@ test({
     assertEquals(nativeResponse.status, 200);
     assertEquals(
       nativeResponse.headers.get("content-type"),
-      "application/javascript; charset=utf-8",
+      "application/javascript; charset=UTF-8",
     );
     assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },
@@ -252,7 +252,7 @@ test({
     assertEquals(nativeResponse.headers.get("Location"), "./foo");
     assertEquals(
       nativeResponse.headers.get("Content-Type"),
-      "text/html; charset=utf-8",
+      "text/html; charset=UTF-8",
     );
   },
 });
@@ -350,7 +350,7 @@ test({
     );
     assertEquals(
       nativeResponse.headers.get("Content-Type"),
-      "text/plain; charset=utf-8",
+      "text/plain; charset=UTF-8",
     );
   },
 });
@@ -443,7 +443,7 @@ test({
     assertEquals(
       Deno.inspect(new Response(createMockRequest())),
       isNode()
-        ? `Response {\n  body: undefined,\n  headers: HeadersList(0) [],\n  status: 404,\n  type: undefined,\n  writable: true\n}`
+        ? `Response {\n  body: undefined,\n  headers: HeadersList {\n    [Symbol(headers map)]: Map(0) {},\n    [Symbol(headers map sorted)]: null\n  },\n  status: 404,\n  type: undefined,\n  writable: true\n}`
         : `Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true }`,
     );
   },

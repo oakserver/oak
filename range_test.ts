@@ -2,9 +2,8 @@
 
 import { assert, assertEquals, assertThrows } from "./test_deps.ts";
 
-import { concat, copyBytes } from "./deps.ts";
+import { concat, copyBytes, errors } from "./deps.ts";
 import { calculate } from "./etag.ts";
-import { httpErrors } from "./httpError.ts";
 import { ifRange, MultiPartStream, parseRange } from "./range.ts";
 
 const { test } = Deno;
@@ -127,16 +126,16 @@ test({
   fn() {
     assertThrows(() => {
       parseRange(`special=0-199`, 400);
-    }, httpErrors["RequestedRangeNotSatisfiable"]);
+    }, errors["RequestedRangeNotSatisfiable"]);
     assertThrows(() => {
       parseRange(`special=0-499`, 400);
-    }, httpErrors["RequestedRangeNotSatisfiable"]);
+    }, errors["RequestedRangeNotSatisfiable"]);
     assertThrows(() => {
       parseRange(`special=200-0`, 400);
-    }, httpErrors["RequestedRangeNotSatisfiable"]);
+    }, errors["RequestedRangeNotSatisfiable"]);
     assertThrows(() => {
       parseRange(`special=400-`, 400);
-    }, httpErrors["RequestedRangeNotSatisfiable"]);
+    }, errors["RequestedRangeNotSatisfiable"]);
   },
 });
 
@@ -161,7 +160,7 @@ test({
     const actual = decoder.decode(concat(...parts));
     assertEquals(
       actual,
-      "\n--test_boundary\nContent-Type: text/plain; charset=utf-8\nContent-Range: 0-5/10\n\nhello \n--test_boundary\nContent-Type: text/plain; charset=utf-8\nContent-Range: 6-9/10\n\ndeno\n--test_boundary--\n",
+      "\n--test_boundary\nContent-Type: text/plain; charset=UTF-8\nContent-Range: 0-5/10\n\nhello \n--test_boundary\nContent-Type: text/plain; charset=UTF-8\nContent-Range: 6-9/10\n\ndeno\n--test_boundary--\n",
     );
     assertEquals(actual.length, contentLength);
   },
@@ -188,7 +187,7 @@ test({
     const actual = decoder.decode(concat(...parts));
     assertEquals(
       actual,
-      "\n--test_boundary\nContent-Type: text/plain; charset=utf-8\nContent-Range: 0-5/10\n\nhello \n--test_boundary\nContent-Type: text/plain; charset=utf-8\nContent-Range: 6-9/10\n\ndeno\n--test_boundary--\n",
+      "\n--test_boundary\nContent-Type: text/plain; charset=UTF-8\nContent-Range: 0-5/10\n\nhello \n--test_boundary\nContent-Type: text/plain; charset=UTF-8\nContent-Range: 6-9/10\n\ndeno\n--test_boundary--\n",
     );
     assertEquals(actual.length, contentLength);
     assert(fixture.closed === true);

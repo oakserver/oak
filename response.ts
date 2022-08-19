@@ -272,11 +272,11 @@ export class Response {
 
     if (this.#request.accepts("html")) {
       url = encodeURI(url);
-      this.type = "text/html; charset=utf-8";
+      this.type = "text/html; charset=UTF-8";
       this.body = `Redirecting to <a href="${url}">${url}</a>.`;
       return;
     }
-    this.type = "text/plain; charset=utf-8";
+    this.type = "text/plain; charset=UTF-8";
     this.body = `Redirecting to ${url}.`;
   }
 
@@ -309,7 +309,7 @@ export class Response {
     const responseInit: ResponseInit = {
       headers,
       status,
-      statusText: STATUS_TEXT.get(status),
+      statusText: STATUS_TEXT[status],
     };
 
     return this.#domResponse = new DomResponse(bodyInit, responseInit);

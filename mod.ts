@@ -60,20 +60,16 @@ export type {
   BodyType,
   BodyUndefined,
 } from "./body.ts";
-export { Context } from "./context.ts";
-export type { ContextSendOptions } from "./context.ts";
+export { Context, type ContextSendOptions } from "./context.ts";
 export * as helpers from "./helpers.ts";
-export { Cookies } from "./cookies.ts";
-export type { CookiesGetOptions, CookiesSetDeleteOptions } from "./cookies.ts";
+export {
+  Cookies,
+  type CookiesGetOptions,
+  type CookiesSetDeleteOptions,
+} from "./cookies.ts";
 export * as etag from "./etag.ts";
 export { HttpServer as HttpServerNative } from "./http_server_native.ts";
-export type { NativeRequest } from "./http_server_native_request.ts";
-export {
-  createHttpError,
-  HttpError,
-  httpErrors,
-  isHttpError,
-} from "./httpError.ts";
+export { type NativeRequest } from "./http_server_native_request.ts";
 export { proxy } from "./middleware/proxy.ts";
 export type { ProxyOptions } from "./middleware/proxy.ts";
 export { compose as composeMiddleware } from "./middleware.ts";
@@ -115,5 +111,12 @@ export type {
 } from "./types.d.ts";
 export { isErrorStatus, isRedirectStatus } from "./util.ts";
 
-// Re-exported from `net`
-export { Status, STATUS_TEXT } from "./deps.ts";
+// Re-exported from `std/http`
+export {
+  createHttpError,
+  errors as httpErrors,
+  HttpError,
+  isHttpError,
+  Status,
+  STATUS_TEXT,
+} from "./deps.ts";

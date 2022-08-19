@@ -322,7 +322,7 @@ export class Application<AS extends State = Record<string, any>>
     }
   }
 
-  #getComposed(): ((context: Context<AS, AS>) => Promise<unknown>) {
+  #getComposed(): (context: Context<AS, AS>) => Promise<unknown> {
     if (!this.#composedMiddleware) {
       this.#composedMiddleware = compose(this.#middleware);
     }
@@ -369,9 +369,7 @@ export class Application<AS extends State = Record<string, any>>
         : error.status && typeof error.status === "number"
         ? error.status
         : 500;
-    context.response.body = error.expose
-      ? error.message
-      : STATUS_TEXT.get(status);
+    context.response.body = error.expose ? error.message : STATUS_TEXT[status];
   }
 
   /** Processing registered middleware on each request. */

@@ -2,9 +2,8 @@
 
 import { BufReader, ReadLineResult } from "./buf_reader.ts";
 import { getFilename } from "./content_disposition.ts";
-import { equals, extension, writeAll } from "./deps.ts";
+import { equals, errors, extension, writeAll } from "./deps.ts";
 import { readHeaders, toParamRegExp, unquote } from "./headers.ts";
-import { httpErrors } from "./httpError.ts";
 import { getRandomFilename, skipLWSPChar, stripEol } from "./util.ts";
 
 const decoder = new TextDecoder();
@@ -164,7 +163,7 @@ async function readToStartOrEnd(
       return false;
     }
   }
-  throw new httpErrors.BadRequest(
+  throw new errors.BadRequest(
     "Unable to find multi-part boundary.",
   );
 }
@@ -187,7 +186,7 @@ async function* parts(
     const ext = customContentTypes[contentType.toLowerCase()] ??
       extension(contentType);
     if (!ext) {
-      throw new httpErrors.BadRequest(
+      throw new errors.BadRequest(
         `The form contained content type "${contentType}" which is not supported by the server.`,
       );
     }
@@ -204,18 +203,18 @@ async function* parts(
     const contentType = headers["content-type"];
     const contentDisposition = headers["content-disposition"];
     if (!contentDisposition) {
-      throw new httpErrors.BadRequest(
+      throw new errors.BadRequest(
         "Form data part missing content-disposition header",
       );
     }
     if (!contentDisposition.match(/^form-data;/i)) {
-      throw new httpErrors.BadRequest(
+      throw new errors.BadRequest(
         `Unexpected content-disposition header: "${contentDisposition}"`,
       );
     }
     const matches = NAME_PARAM_REGEX.exec(contentDisposition);
     if (!matches) {
-      throw new httpErrors.BadRequest(
+      throw new errors.BadRequest(
         `Unable to determine name of form body part`,
       );
     }
@@ -237,7 +236,7 @@ async function* parts(
       while (true) {
         const readResult = await body.readLine(false);
         if (!readResult) {
-          throw new httpErrors.BadRequest("Unexpected EOF reached");
+          throw new errors.BadRequest("Unexpected EOF reached");
         }
         const { bytes } = readResult;
         const strippedBytes = stripEol(bytes);
@@ -275,7 +274,7 @@ async function* parts(
           if (file) {
             file.close();
           }
-          throw new httpErrors.RequestEntityTooLarge(
+          throw new errors.RequestEntityTooLarge(
             `File size exceeds limit of ${maxFileSize} bytes.`,
           );
         }
@@ -299,7 +298,7 @@ async function* parts(
       while (true) {
         const readResult = await body.readLine();
         if (!readResult) {
-          throw new httpErrors.BadRequest("Unexpected EOF reached");
+          throw new errors.BadRequest("Unexpected EOF reached");
         }
         const { bytes } = readResult;
         if (isEqual(bytes, part) || isEqual(bytes, final)) {
@@ -372,7 +371,7 @@ export class FormDataReader {
   constructor(contentType: string, body: Deno.Reader) {
     const matches = contentType.match(BOUNDARY_PARAM_REGEX);
     if (!matches) {
-      throw new httpErrors.BadRequest(
+      throw new errors.BadRequest(
         `Content type "${contentType}" does not contain a valid boundary.`,
       );
     }

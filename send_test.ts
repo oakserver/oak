@@ -9,8 +9,8 @@ import {
 
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
+import { errors } from "./deps.ts";
 import * as etag from "./etag.ts";
-import { httpErrors } from "./httpError.ts";
 import type { RouteParams } from "./router.ts";
 import { send } from "./send.ts";
 import { isNode } from "./util.ts";
@@ -138,7 +138,7 @@ test({
       });
     } catch (e) {
       console.log(e);
-      assert(e instanceof httpErrors.NotFound);
+      assert(e instanceof errors.NotFound);
       didThrow = true;
     }
     assert(didThrow);
@@ -177,7 +177,7 @@ test({
         root: "./fixtures",
       });
     } catch (e) {
-      assert(e instanceof httpErrors.Forbidden);
+      assert(e instanceof errors.Forbidden);
       didThrow = true;
     }
     assert(didThrow);
@@ -195,7 +195,7 @@ test({
         root: "./fixtures",
       });
     } catch (e) {
-      assert(e instanceof httpErrors.Forbidden);
+      assert(e instanceof errors.Forbidden);
       didThrow = true;
     }
     assert(didThrow);
@@ -277,7 +277,7 @@ test({
         root: "./fixtures",
       });
     } catch (e) {
-      assert(e instanceof httpErrors.Forbidden);
+      assert(e instanceof errors.Forbidden);
       didThrow = true;
     }
     assert(didThrow);
@@ -491,12 +491,12 @@ test({
     const actual = await response.text();
     assert(
       actual.includes(
-        `\nContent-Type: application/json; charset=utf-8\nContent-Range: 0-5/23\n\n{\n  "h\n`,
+        `\nContent-Type: application/json; charset=UTF-8\nContent-Range: 0-5/23\n\n{\n  "h\n`,
       ),
     );
     assert(
       actual.includes(
-        `\nContent-Type: application/json; charset=utf-8\nContent-Range: 6-9/23\n\nello\n`,
+        `\nContent-Type: application/json; charset=UTF-8\nContent-Range: 6-9/23\n\nello\n`,
       ),
     );
   },

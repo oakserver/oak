@@ -2,8 +2,15 @@
 
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
-import { base64, isAbsolute, join, normalize, sep, Status } from "./deps.ts";
-import { createHttpError } from "./httpError.ts";
+import {
+  base64,
+  createHttpError,
+  isAbsolute,
+  join,
+  normalize,
+  sep,
+  Status,
+} from "./deps.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
 import type { Data, ErrorStatus, Key, RedirectStatus } from "./types.d.ts";
 

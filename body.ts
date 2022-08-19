@@ -1,7 +1,6 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
-import { readerFromStreamReader } from "./deps.ts";
-import { httpErrors } from "./httpError.ts";
+import { errors, readerFromStreamReader } from "./deps.ts";
 import { isMediaType } from "./isMediaType.ts";
 import { FormDataReader } from "./multipart.ts";
 import type { ServerRequestBody } from "./types.d.ts";
@@ -351,7 +350,7 @@ export class RequestBody {
       const encoding = this.#headers.get("content-encoding") ??
         "identity";
       if (encoding !== "identity") {
-        throw new httpErrors.UnsupportedMediaType(
+        throw new errors.UnsupportedMediaType(
           `Unsupported content-encoding: ${encoding}`,
         );
       }

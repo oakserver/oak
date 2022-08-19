@@ -9,8 +9,7 @@ import {
 } from "./test_deps.ts";
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
-import { Status } from "./deps.ts";
-import { httpErrors } from "./httpError.ts";
+import { errors, Status } from "./deps.ts";
 import { Router, RouterContext } from "./router.ts";
 
 const { test } = Deno;
@@ -656,7 +655,7 @@ test({
     await routes(context, next);
     await assertRejects(async () => {
       await mw(context, next);
-    }, httpErrors.NotImplemented);
+    }, errors.NotImplemented);
   },
 });
 
@@ -673,7 +672,7 @@ test({
     await routes(context, next);
     await assertRejects(async () => {
       await mw(context, next);
-    }, httpErrors.MethodNotAllowed);
+    }, errors.MethodNotAllowed);
   },
 });
 

@@ -12,11 +12,8 @@ import type {
   BodyText,
 } from "./body.ts";
 import { RequestBody } from "./body.ts";
+import { accepts, acceptsEncodings, acceptsLanguages } from "./deps.ts";
 import type { HTTPMethods, ServerRequest } from "./types.d.ts";
-import { preferredCharsets } from "./negotiation/charset.ts";
-import { preferredEncodings } from "./negotiation/encoding.ts";
-import { preferredLanguages } from "./negotiation/language.ts";
-import { preferredMediaTypes } from "./negotiation/mediaType.ts";
 
 /** An interface which provides information about the current request. The
  * instance related to the current request is available on the
@@ -155,36 +152,13 @@ export class Request {
    */
   accepts(...types: string[]): string | undefined;
   accepts(...types: string[]): string | string[] | undefined {
-    const acceptValue = this.#serverRequest.headers.get("Accept");
-    if (!acceptValue) {
+    if (!this.#serverRequest.headers.has("Accept")) {
       return types.length ? types[0] : ["*/*"];
     }
     if (types.length) {
-      return preferredMediaTypes(acceptValue, types)[0];
+      return accepts(this.#serverRequest, ...types);
     }
-    return preferredMediaTypes(acceptValue);
-  }
-
-  /**
-   * @deprecated the header behind this is no longer used in browsers
-   */
-  acceptsCharsets(): string[] | undefined;
-  /**
-   * @deprecated the header behind this is no longer used in browsers
-   */
-  acceptsCharsets(...charsets: string[]): string | undefined;
-  /** @deprecated the header behind this is no longer used in browsers */
-  acceptsCharsets(...charsets: string[]): string[] | string | undefined {
-    const acceptCharsetValue = this.#serverRequest.headers.get(
-      "Accept-Charset",
-    );
-    if (!acceptCharsetValue) {
-      return charsets.length ? charsets[0] : ["*"];
-    }
-    if (charsets.length) {
-      return preferredCharsets(acceptCharsetValue, charsets)[0];
-    }
-    return preferredCharsets(acceptCharsetValue);
+    return accepts(this.#serverRequest);
   }
 
   /** Returns an array of encodings, accepted by the requestor, in order of
@@ -202,16 +176,13 @@ export class Request {
    */
   acceptsEncodings(...encodings: string[]): string | undefined;
   acceptsEncodings(...encodings: string[]): string[] | string | undefined {
-    const acceptEncodingValue = this.#serverRequest.headers.get(
-      "Accept-Encoding",
-    );
-    if (!acceptEncodingValue) {
+    if (!this.#serverRequest.headers.has("Accept-Encoding")) {
       return encodings.length ? encodings[0] : ["*"];
     }
     if (encodings.length) {
-      return preferredEncodings(acceptEncodingValue, encodings)[0];
+      return acceptsEncodings(this.#serverRequest, ...encodings);
     }
-    return preferredEncodings(acceptEncodingValue);
+    return acceptsEncodings(this.#serverRequest);
   }
 
   /** Returns an array of languages, accepted by the requestor, in order of
@@ -224,16 +195,13 @@ export class Request {
    * `undefined`. */
   acceptsLanguages(...langs: string[]): string | undefined;
   acceptsLanguages(...langs: string[]): string[] | string | undefined {
-    const acceptLanguageValue = this.#serverRequest.headers.get(
-      "Accept-Language",
-    );
-    if (!acceptLanguageValue) {
+    if (!this.#serverRequest.headers.get("Accept-Language")) {
       return langs.length ? langs[0] : ["*"];
     }
     if (langs.length) {
-      return preferredLanguages(acceptLanguageValue, langs)[0];
+      return acceptsLanguages(this.#serverRequest, ...langs);
     }
-    return preferredLanguages(acceptLanguageValue);
+    return acceptsLanguages(this.#serverRequest);
   }
 
   body(options: BodyOptions<"bytes">): BodyBytes;

@@ -5,9 +5,9 @@
 
 import type { Context } from "./context.ts";
 import { calculate, FileInfo, ifNoneMatch } from "./etag.ts";
-import { createHttpError } from "./httpError.ts";
 import {
   basename,
+  createHttpError,
   extname,
   LimitedReader,
   parse,
