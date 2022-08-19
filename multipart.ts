@@ -113,8 +113,8 @@ export interface FormDataReadOptions {
    * When set to a positive integer, if the form data file is smaller, it will
    * be retained in memory and available in the `.content` property of the
    * `FormDataFile` object.  If the file exceeds the `maxSize` it will be
-   * written to disk and the `filename` file will contain the full path to the
-   * output file. */
+   * written to disk and the `.filename` property will contain the full path to
+   * the output file. */
   maxSize?: number;
 
   /** When writing form data files to disk, the output path.  This will default
