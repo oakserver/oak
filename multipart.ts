@@ -337,7 +337,7 @@ async function* parts(
  * app.use(async (ctx) => {
  *   const body = ctx.request.body();
  *   if (body.type === "form-data") {
- *     const value = await body.value;
+ *     const value = body.value;
  *     const formData = await value.read();
  *     // the form data is fully available
  *   }
@@ -354,7 +354,7 @@ async function* parts(
  * app.use(async (ctx) => {
  *   const body = ctx.request.body();
  *   if (body.type === "form-data") {
- *     const value = await body.value;
+ *     const value = body.value;
  *     for await (const [name, value] of value.stream()) {
  *       // asynchronously iterate each part of the body
  *     }
