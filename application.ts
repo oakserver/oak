@@ -2,6 +2,7 @@
 
 import { Context } from "./context.ts";
 import { Status, STATUS_TEXT } from "./deps.ts";
+import { FlashServer, hasFlash } from "./http_server_flash.ts";
 import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import { KeyStack } from "./keyStack.ts";
@@ -92,7 +93,7 @@ interface ApplicationListenEventInit extends EventInit {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "custom";
+  serverType: "native" | "flash" | "custom";
 }
 
 type ApplicationListenEventListenerOrEventListenerObject =
@@ -164,7 +165,9 @@ export type State = Record<string | number | symbol, any>;
 
 const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 
-const DEFAULT_SERVER: ServerConstructor<ServerRequest> = HttpServer;
+const DEFAULT_SERVER: ServerConstructor<ServerRequest> = hasFlash()
+  ? FlashServer
+  : HttpServer;
 
 export class ApplicationErrorEvent<S extends AS, AS extends State>
   extends ErrorEvent {
@@ -215,7 +218,7 @@ export class ApplicationListenEvent extends Event {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "custom";
+  serverType: "native" | "flash" | "custom";
 
   constructor(eventInitDict: ApplicationListenEventInit) {
     super("listen", eventInitDict);
@@ -540,8 +543,12 @@ export class Application<AS extends State = Record<string, any>>
       });
     }
     const { secure = false } = options;
-    const serverType = server instanceof HttpServer ? "native" : "custom";
-    const listener = server.listen();
+    const serverType = server instanceof HttpServer
+      ? "native"
+      : server instanceof FlashServer
+      ? "flash"
+      : "custom";
+    const listener = await server.listen();
     const { hostname, port } = listener.addr as Deno.NetAddr;
     this.dispatchEvent(
       new ApplicationListenEvent({
