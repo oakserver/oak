@@ -630,6 +630,17 @@ export class Router<
     middleware: RouterMiddleware<R, P, S>,
     ...middlewares: RouterMiddleware<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
+  /** Register middleware for the specified routes when the `DELETE`,
+   * `GET`, `POST`, or `PUT` method is requested with explicit path parameters.
+   */
+  all<
+    P extends RouteParams<string>,
+    S extends State = RS,
+  >(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
+    ...middleware: RouterMiddleware<string, S>[]
+  ): Router<S extends RS ? S : (S & RS)>;
   all<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
@@ -734,6 +745,16 @@ export class Router<
     middleware: RouterMiddleware<R, P, S>,
     ...middlewares: RouterMiddleware<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
+  /** Register middleware for the specified routes when the `DELETE`,
+   * method is requested with explicit path parameters. */
+  delete<
+    P extends RouteParams<string>,
+    S extends State = RS,
+  >(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
+    ...middleware: RouterMiddleware<string, P, S>[]
+  ): Router<S extends RS ? S : (S & RS)>;
   delete<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
@@ -801,6 +822,16 @@ export class Router<
     middleware: RouterMiddleware<R, P, S>,
     ...middlewares: RouterMiddleware<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
+  /** Register middleware for the specified routes when the `GET`,
+   * method is requested with explicit path parameters. */
+  get<
+    P extends RouteParams<string>,
+    S extends State = RS,
+  >(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
+    ...middleware: RouterMiddleware<string, P, S>[]
+  ): Router<S extends RS ? S : (S & RS)>;
   get<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
@@ -840,6 +871,16 @@ export class Router<
     path: R,
     middleware: RouterMiddleware<R, P, S>,
     ...middlewares: RouterMiddleware<R, P, S>[]
+  ): Router<S extends RS ? S : (S & RS)>;
+  /** Register middleware for the specified routes when the `HEAD`,
+   * method is requested with explicit path parameters. */
+  head<
+    P extends RouteParams<string>,
+    S extends State = RS,
+  >(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
+    ...middleware: RouterMiddleware<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   head<
     P extends RouteParams<string> = RouteParams<string>,
@@ -888,6 +929,16 @@ export class Router<
     path: R,
     middleware: RouterMiddleware<R, P, S>,
     ...middlewares: RouterMiddleware<R, P, S>[]
+  ): Router<S extends RS ? S : (S & RS)>;
+  /** Register middleware for the specified routes when the `OPTIONS`,
+   * method is requested with explicit path parameters. */
+  options<
+    P extends RouteParams<string>,
+    S extends State = RS,
+  >(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
+    ...middleware: RouterMiddleware<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   options<
     P extends RouteParams<string> = RouteParams<string>,
@@ -942,6 +993,16 @@ export class Router<
     middleware: RouterMiddleware<R, P, S>,
     ...middlewares: RouterMiddleware<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
+  /** Register middleware for the specified routes when the `PATCH`,
+   * method is requested with explicit path parameters. */
+  patch<
+    P extends RouteParams<string>,
+    S extends State = RS,
+  >(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
+    ...middleware: RouterMiddleware<string, S>[]
+  ): Router<S extends RS ? S : (S & RS)>;
   patch<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
@@ -981,6 +1042,16 @@ export class Router<
     path: R,
     middleware: RouterMiddleware<R, P, S>,
     ...middlewares: RouterMiddleware<R, P, S>[]
+  ): Router<S extends RS ? S : (S & RS)>;
+  /** Register middleware for the specified routes when the `POST`,
+   * method is requested with explicit path parameters. */
+  post<
+    P extends RouteParams<string>,
+    S extends State = RS,
+  >(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
+    ...middleware: RouterMiddleware<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   post<
     P extends RouteParams<string> = RouteParams<string>,
@@ -1031,6 +1102,16 @@ export class Router<
     path: R,
     middleware: RouterMiddleware<R, P, S>,
     ...middlewares: RouterMiddleware<R, P, S>[]
+  ): Router<S extends RS ? S : (S & RS)>;
+  /** Register middleware for the specified routes when the `PUT`
+   * method is requested with explicit path parameters. */
+  put<
+    P extends RouteParams<string>,
+    S extends State = RS,
+  >(
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
+    ...middleware: RouterMiddleware<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   put<
     P extends RouteParams<string> = RouteParams<string>,
@@ -1189,6 +1270,16 @@ export class Router<
     path: R,
     middleware: RouterMiddleware<R, P, S>,
     ...middlewares: RouterMiddleware<R, P, S>[]
+  ): Router<S extends RS ? S : (S & RS)>;
+  /** Register middleware to be used on every route that matches the supplied
+   * `path` with explicit path parameters. */
+  use<
+    P extends RouteParams<string>,
+    S extends State = RS,
+  >(
+    path: string,
+    middleware: RouterMiddleware<string, P, S>,
+    ...middlewares: RouterMiddleware<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   use<
     P extends RouteParams<string> = RouteParams<string>,
