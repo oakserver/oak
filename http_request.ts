@@ -14,7 +14,15 @@ const maybeUpgradeWebSocket: UpgradeWebSocketFn | undefined =
       (Deno as any).upgradeWebSocket.bind(Deno)
     : undefined;
 
-export class FlashRequest implements ServerRequest {
+/** An abstraction which wraps a {@linkcode Request} from Deno's flash server.
+ * The constructor takes a {@linkcode Deferred} which it will resolve when the
+ * response is ready.
+ *
+ * This request can be used in situations where there isn't a specific method
+ * to respond with, but where a `Promise<Response>` is accepted as a value. It
+ * is specifically designed to work with Deno's flash server.
+ */
+export class HttpRequest implements ServerRequest {
   #deferred: Deferred<Response>;
   #request: Request;
   #resolved = false;

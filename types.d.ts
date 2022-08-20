@@ -69,7 +69,7 @@ export interface Listener {
 }
 
 export interface Server<T> extends AsyncIterable<T> {
-  close(): void;
+  close(): void | Promise<void>;
   listen(): Listener | Promise<Listener>;
   [Symbol.asyncIterator](): AsyncIterableIterator<T>;
 }

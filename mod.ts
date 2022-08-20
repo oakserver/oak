@@ -35,6 +35,25 @@
  * app.listen({ port: 8080 });
  * ```
  *
+ * ### Using Deno's flash server
+ *
+ * Currently, Deno's flash server is not the default, even with the `--unstable`
+ * flag. In order to use the flash server, you need to provide the
+ * {@linkcode FlashServer} to the {@linkcode Application} constructor:
+ *
+ * ```ts
+ * import { Application, FlashServer } from "https://deno.land/x/oak/mod.ts";
+ *
+ * const app = new Application({ serverConstructor: FlashServer });
+ *
+ * // register middleware
+ *
+ * app.listen({ port: 8080 });
+ * ```
+ *
+ * Note the currently Deno's flash server requires the `--unstable` flag. If it
+ * isn't present, the application will error on listening.
+ *
  * @module
  */
 
@@ -68,6 +87,8 @@ export {
   type CookiesSetDeleteOptions,
 } from "./cookies.ts";
 export * as etag from "./etag.ts";
+export { HttpRequest } from "./http_request.ts";
+export { FlashServer, hasFlash } from "./http_server_flash.ts";
 export { HttpServer as HttpServerNative } from "./http_server_native.ts";
 export { type NativeRequest } from "./http_server_native_request.ts";
 export { proxy } from "./middleware/proxy.ts";

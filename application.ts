@@ -2,7 +2,7 @@
 
 import { Context } from "./context.ts";
 import { Status, STATUS_TEXT } from "./deps.ts";
-import { FlashServer, hasFlash } from "./http_server_flash.ts";
+import { FlashServer } from "./http_server_flash.ts";
 import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import { KeyStack } from "./keyStack.ts";
@@ -165,9 +165,7 @@ export type State = Record<string | number | symbol, any>;
 
 const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 
-const DEFAULT_SERVER: ServerConstructor<ServerRequest> = hasFlash()
-  ? FlashServer
-  : HttpServer;
+const DEFAULT_SERVER: ServerConstructor<ServerRequest> = HttpServer;
 
 export class ApplicationErrorEvent<S extends AS, AS extends State>
   extends ErrorEvent {
@@ -417,7 +415,7 @@ export class Application<AS extends State = Record<string, any>>
       resolve!();
       state.handling.delete(handlingPromise);
       if (state.closing) {
-        state.server.close();
+        await state.server.close();
         state.closed = true;
       }
     }
