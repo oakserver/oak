@@ -5,6 +5,10 @@
 // `std` dependencies
 
 export {
+  type Deferred,
+  deferred,
+} from "https://deno.land/std@0.152.0/async/deferred.ts";
+export {
   concat,
   copy as copyBytes,
   equals,

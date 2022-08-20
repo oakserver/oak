@@ -14,12 +14,15 @@ test({
     assertEquals(typeof mod.etag, "object");
     assertEquals(typeof mod.etag.calculate, "function");
     assertEquals(typeof mod.etag.factory, "function");
+    assertEquals(typeof mod.FlashServer, "function");
     assertEquals(typeof mod.FormDataReader, "function");
+    assertEquals(typeof mod.hasFlash, "function");
     assertEquals(typeof mod.helpers, "object");
     assertEquals(typeof mod.helpers.getQuery, "function");
     assertEquals(Object.keys(mod.helpers).length, 1);
     assertEquals(typeof mod.HttpError, "function");
     assertEquals(typeof mod.httpErrors, "object");
+    assertEquals(typeof mod.HttpRequest, "function");
     assertEquals(typeof mod.HttpServerNative, "function");
     assertEquals(typeof mod.isErrorStatus, "function");
     assertEquals(typeof mod.isHttpError, "function");
@@ -40,6 +43,6 @@ test({
     assertEquals(typeof mod.send, "function");
     assertEquals(typeof mod.testing, "object");
     assertEquals(Object.keys(mod.testing).length, 4);
-    assertEquals(Object.keys(mod).length, 27);
+    assertEquals(Object.keys(mod).length, 30);
   },
 });
