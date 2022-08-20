@@ -203,6 +203,9 @@ const app = new Application(appOptions);
 app.listen();
 ```
 
+Currently to enable the flash server, you need to pass the `--unstable` flag to
+Deno CLI on startup. An example is contained in `examples/flashEchoServer.ts`.
+
 ### Context
 
 The context passed to middleware has several properties:
