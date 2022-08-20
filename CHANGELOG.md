@@ -1,5 +1,34 @@
 # oak Change Log
 
+## Version 11.0.0
+
+- feat: make overriding router parameter types easier (#513)
+
+  When route type inference breaks down, it was previously difficult to provide
+  a different set of asserted route parameters. This now makes it easier.
+
+- feat: support Deno's experimental flash server (#545)
+
+  As of this release Deno canary includes the experimental flash HTTP server
+  which dramatically increases performance when running in Deno CLI. It is
+  expected to ship as unstable in Deno 1.25. See the README and module doc for
+  information on how to enable the flash server.
+
+  oak's support for flash is also experimental at this point.
+
+- refactor: update deps, migrate more to std/http
+
+  Much of the common parts of oak have been being contributed back to `std/http`
+  and refactoring to support this migration is underway. Because there are
+  likely to be minor and subtle differences in how things operate, this release
+  of oak is a major release. I am not currently aware of any major breaking
+  changes, but wanted to ensure that people were consciously aware.
+
+- docs: don't await body.value in examples (dbabc1c)
+- docs: fix typo in multipart.ts JSDocs (#466)
+- docs: improve maxSize and maxFileSize in multipart.ts (#467)
+- chore: unpin deno version for CI (728ba71)
+
 ## Version 10.6.0
 
 - feat: expose createHttpError (#525)
