@@ -4,9 +4,28 @@
 // which allows signing of data (cookies) to prevent tampering, but also allows
 // for easy key rotation without needing to resign the data.
 
-import { compare } from "./tssCompare.ts";
+import { timingSafeEqual } from "./deps.ts";
 import { encodeBase64Safe, importKey, sign } from "./util.ts";
 import type { Data, Key } from "./types.d.ts";
+
+/** Compare two strings, Uint8Arrays, ArrayBuffers, or arrays of numbers in a
+ * way that avoids timing based attacks on the comparisons on the values.
+ *
+ * The function will return `true` if the values match, or `false`, if they
+ * do not match.
+ *
+ * This was inspired by https://github.com/suryagh/tsscmp which provides a
+ * timing safe string comparison to avoid timing attacks as described in
+ * https://codahale.com/a-lesson-in-timing-attacks/.
+ */
+async function compare(a: Data, b: Data): Promise<boolean> {
+  const key = new Uint8Array(32);
+  globalThis.crypto.getRandomValues(key);
+  const cryptoKey = await importKey(key);
+  const ah = await sign(a, cryptoKey);
+  const bh = await sign(b, cryptoKey);
+  return timingSafeEqual(ah, bh);
+}
 
 export class KeyStack {
   #cryptoKeys = new Map<Key, CryptoKey>();

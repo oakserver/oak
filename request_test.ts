@@ -276,7 +276,6 @@ test({
         await actual.value;
       },
       SyntaxError,
-      "Unexpected token r in JSON at position 0",
     );
   },
 });
@@ -293,7 +292,7 @@ test({
         ),
       ),
       isNode()
-        ? `Request {\n  hasBody: false,\n  headers: HeadersList(2) [ 'host', 'localhost' ],\n  ip: '',\n  ips: [],\n  method: 'GET',\n  secure: false,\n  url: URL {\n    href: 'http://localhost/foo?bar=baz&qat=qux',\n    origin: 'http://localhost',\n    protocol: 'http:',\n    username: '',\n    password: '',\n    host: 'localhost',\n    hostname: 'localhost',\n    port: '',\n    pathname: '/foo',\n    search: '?bar=baz&qat=qux',\n    searchParams: URLSearchParams { 'bar' => 'baz', 'qat' => 'qux' },\n    hash: ''\n  }\n}`
+        ? `Request {\n  hasBody: false,\n  headers: HeadersList {\n    [Symbol(headers map)]: [Map],\n    [Symbol(headers map sorted)]: null\n  },\n  ip: '',\n  ips: [],\n  method: 'GET',\n  secure: false,\n  url: URL {\n    href: 'http://localhost/foo?bar=baz&qat=qux',\n    origin: 'http://localhost',\n    protocol: 'http:',\n    username: '',\n    password: '',\n    host: 'localhost',\n    hostname: 'localhost',\n    port: '',\n    pathname: '/foo',\n    search: '?bar=baz&qat=qux',\n    searchParams: URLSearchParams { 'bar' => 'baz', 'qat' => 'qux' },\n    hash: ''\n  }\n}`
         : `Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/foo?bar=baz&qat=qux"\n}`,
     );
   },

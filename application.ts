@@ -2,6 +2,7 @@
 
 import { Context } from "./context.ts";
 import { Status, STATUS_TEXT } from "./deps.ts";
+import { FlashServer } from "./http_server_flash.ts";
 import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import { KeyStack } from "./keyStack.ts";
@@ -92,7 +93,7 @@ interface ApplicationListenEventInit extends EventInit {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "custom";
+  serverType: "native" | "flash" | "custom";
 }
 
 type ApplicationListenEventListenerOrEventListenerObject =
@@ -215,7 +216,7 @@ export class ApplicationListenEvent extends Event {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "custom";
+  serverType: "native" | "flash" | "custom";
 
   constructor(eventInitDict: ApplicationListenEventInit) {
     super("listen", eventInitDict);
@@ -322,7 +323,7 @@ export class Application<AS extends State = Record<string, any>>
     }
   }
 
-  #getComposed(): ((context: Context<AS, AS>) => Promise<unknown>) {
+  #getComposed(): (context: Context<AS, AS>) => Promise<unknown> {
     if (!this.#composedMiddleware) {
       this.#composedMiddleware = compose(this.#middleware);
     }
@@ -369,9 +370,7 @@ export class Application<AS extends State = Record<string, any>>
         : error.status && typeof error.status === "number"
         ? error.status
         : 500;
-    context.response.body = error.expose
-      ? error.message
-      : STATUS_TEXT.get(status);
+    context.response.body = error.expose ? error.message : STATUS_TEXT[status];
   }
 
   /** Processing registered middleware on each request. */
@@ -416,7 +415,7 @@ export class Application<AS extends State = Record<string, any>>
       resolve!();
       state.handling.delete(handlingPromise);
       if (state.closing) {
-        state.server.close();
+        await state.server.close();
         state.closed = true;
       }
     }
@@ -542,8 +541,12 @@ export class Application<AS extends State = Record<string, any>>
       });
     }
     const { secure = false } = options;
-    const serverType = server instanceof HttpServer ? "native" : "custom";
-    const listener = server.listen();
+    const serverType = server instanceof HttpServer
+      ? "native"
+      : server instanceof FlashServer
+      ? "flash"
+      : "custom";
+    const listener = await server.listen();
     const { hostname, port } = listener.addr as Deno.NetAddr;
     this.dispatchEvent(
       new ApplicationListenEvent({

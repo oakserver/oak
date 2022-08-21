@@ -1,7 +1,7 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import type { BufReader } from "./buf_reader.ts";
-import { httpErrors } from "./httpError.ts";
+import { errors } from "./deps.ts";
 
 const COLON = ":".charCodeAt(0);
 const HTAB = "\t".charCodeAt(0);
@@ -41,13 +41,13 @@ export async function readHeaders(
     }
     let i = bytes.indexOf(COLON);
     if (i === -1) {
-      throw new httpErrors.BadRequest(
+      throw new errors.BadRequest(
         `Malformed header: ${decoder.decode(bytes)}`,
       );
     }
     const key = decoder.decode(bytes.subarray(0, i)).trim().toLowerCase();
     if (key === "") {
-      throw new httpErrors.BadRequest("Invalid header key.");
+      throw new errors.BadRequest("Invalid header key.");
     }
     i++;
     while (i < bytes.byteLength && (bytes[i] === SPACE || bytes[i] === HTAB)) {
@@ -57,7 +57,7 @@ export async function readHeaders(
     headers[key] = value;
     readResult = await body.readLine();
   }
-  throw new httpErrors.BadRequest("Unexpected end of body reached.");
+  throw new errors.BadRequest("Unexpected end of body reached.");
 }
 
 /** Unquotes attribute values that might be pass as part of a header. */

@@ -3,7 +3,7 @@
 // deno-lint-ignore-file
 
 import { assert, assertEquals, assertStrictEquals } from "./test_deps.ts";
-import { httpErrors } from "./httpError.ts";
+import { errors } from "./deps.ts";
 import { createMockContext } from "./testing.ts";
 import { compose, Middleware } from "./middleware.ts";
 
@@ -47,7 +47,7 @@ test({
     };
     const context = createMockContext();
     await compose([mw1, mw2])(context);
-    assert(caught instanceof httpErrors.InternalServerError);
+    assert(caught instanceof errors.InternalServerError);
   },
 });
 

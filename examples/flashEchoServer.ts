@@ -10,9 +10,11 @@ import {
   yellow,
 } from "https://deno.land/std@0.152.0/fmt/colors.ts";
 
-import { Application } from "../mod.ts";
+import { Application, FlashServer, hasFlash } from "../mod.ts";
 
-const app = new Application();
+const app = new Application(
+  hasFlash() ? { serverConstructor: FlashServer } : undefined,
+);
 
 // Logger
 app.use(async (ctx, next) => {

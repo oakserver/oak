@@ -17,10 +17,9 @@ import type {
   State,
 } from "./application.ts";
 import { Context } from "./context.ts";
-import { Status } from "./deps.ts";
+import { errors, Status } from "./deps.ts";
 import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
-import { httpErrors } from "./httpError.ts";
 import { KeyStack } from "./keyStack.ts";
 import type {
   Data,
@@ -329,6 +328,7 @@ test({
     });
     let called = false;
     app.use((ctx) => {
+      // @ts-ignore we shouldn't have type inference in asserts!
       assertEquals(ctx.state, { b: "string", c: /c/ });
       assert(ctx.state !== ctx.app.state);
       called = true;
@@ -514,7 +514,7 @@ test({
       logErrors: false,
     });
     app.addEventListener("error", (evt) => {
-      assert(evt.error instanceof httpErrors.InternalServerError);
+      assert(evt.error instanceof errors.InternalServerError);
     });
     app.use((ctx) => {
       ctx.throw(500, "oops!");
@@ -562,7 +562,7 @@ test({
     const [response] = responseStack;
     assertEquals([...response.headers], [[
       "content-type",
-      "text/plain; charset=utf-8",
+      "text/plain; charset=UTF-8",
     ]]);
     teardown();
   },

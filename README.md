@@ -168,6 +168,44 @@ An instance of application has some properties as well:
   generic argument when constructing an `Application()`, or inferred by passing
   a state object (e.g. `Application({ state })`).
 
+### Using Deno's experimental flash server
+
+Deno has an experimental flash server which dramatically increases the
+performance of HTTP/HTTPS under Deno. oak supports this server. There are
+currently a few caveats:
+
+- There currently isn't a way to obtain the remote connection IP address,
+  meaning `ctx.request.ip` and `ctx.request.ips` do not work properly.
+- There appears to be an issue with streaming large files with flash.
+- Some of the exception handling with flash isn't as flexible as the "native"
+  implementation, meaning that certain errors result in a hard coded 500
+  internal server error as well as "invalid" responses result in a server hang.
+
+Because of these current caveats, the flash server is not turned on by default
+when detected in the environment.
+
+To use the flash server, you need to import it and pass it as an option when
+constructing the application:
+
+```ts
+import {
+  Application,
+  FlashServer,
+  hasFlash,
+} from "https://deno.land/x/oak/mod.ts";
+
+const appOptions = hasFlash() ? { serverConstructor: FlashServer } : undefined;
+
+const app = new Application(appOptions);
+
+// ... register middleware ...
+
+app.listen();
+```
+
+Currently to enable the flash server, you need to pass the `--unstable` flag to
+Deno CLI on startup. An example is contained in `examples/flashEchoServer.ts`.
+
 ### Context
 
 The context passed to middleware has several properties:
@@ -674,6 +712,12 @@ advanced usage which can create complex patterns which can be used for matching.
 Check out the
 [documentation for that library](https://github.com/pillarjs/path-to-regexp#parameters)
 if you have advanced use cases.
+
+In most cases, the type of `context.params` is automatically inferred from the
+path template string through typescript magic. In more complex scenarios this
+might not yield the correct result however. In that case you can override the
+type with `router.get<RouteParams>`, where `RouteParams` is the explicit type
+for `context.params`.
 
 ### Nested routers
 
