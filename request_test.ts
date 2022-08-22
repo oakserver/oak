@@ -38,6 +38,7 @@ test({
   fn() {
     const request = new Request(
       createMockNativeRequest("http://localhost/foo?bar=baz&qat=qux"),
+      {},
     );
     assertEquals(request.url.pathname, "/foo");
     assertEquals(request.url.search, "?bar=baz&qat=qux");
@@ -55,7 +56,10 @@ test({
     const mockServerRequest = createMockNativeRequest(
       "https://oakserver.github.io:8080/foo/bar/baz?up=down",
     );
-    const request = new Request(mockServerRequest, false, true);
+    const request = new Request(mockServerRequest, {
+      proxy: false,
+      secure: true,
+    });
     assert(request.url instanceof URL);
     assertEquals(request.url.protocol, "https:");
     assertEquals(request.url.hostname, "oakserver.github.io");
@@ -217,8 +221,7 @@ test({
   fn() {
     const request = new Request(
       createMockNativeRequest("https://localhost/index.html"),
-      false,
-      true,
+      { proxy: false, secure: true },
     );
     assertEquals(request.secure, true);
   },
@@ -243,8 +246,7 @@ test({
           },
         } as Deno.Conn,
       }),
-      true,
-      true,
+      { proxy: true, secure: true },
     );
     assertEquals(request.secure, true);
     assertEquals(request.url.hostname, "10.10.10.10");

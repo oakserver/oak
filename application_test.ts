@@ -882,6 +882,77 @@ test({
   },
 });
 
+function isBigInitValue(value: unknown): value is { __bigint: string } {
+  return value != null && typeof value === "object" && "__bigint" in value &&
+    typeof (value as any).__bigint === "string";
+}
+
+test({
+  name: "application - json reviver is passed",
+  async fn() {
+    let called = 0;
+    const app = new Application({
+      jsonBodyReviver(_, value, ctx) {
+        assert(ctx);
+        called++;
+        if (isBigInitValue(value)) {
+          return BigInt(value.__bigint);
+        } else {
+          return value;
+        }
+      },
+    });
+    app.use(async (ctx) => {
+      const body = ctx.request.body();
+      assert(body.type === "json");
+      const actual = await body.value;
+      assertEquals(actual, { a: 123456n });
+      ctx.response.body = {};
+      called++;
+    });
+    const body = JSON.stringify({
+      a: {
+        __bigint: "123456",
+      },
+    });
+    const actual = await app.handle(
+      new Request("http://localhost/index.html", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "content-length": String(body.length),
+        },
+        body,
+      }),
+    );
+    assertEquals(called, 4);
+    assertEquals(actual?.status, 200);
+  },
+});
+
+test({
+  name: "application - json replacer is passed",
+  async fn() {
+    let called = 0;
+    const app = new Application({
+      jsonBodyReplacer(_, value, ctx) {
+        assert(ctx);
+        called++;
+        return typeof value === "bigint"
+          ? { __bigint: value.toString(10) }
+          : value;
+      },
+    });
+    app.use(async (ctx) => {
+      ctx.response.body = { a: 123456n };
+    });
+    const actual = await app.handle(new Request("http://localhost/index.html"));
+    assertEquals(called, 3);
+    const body = await actual?.json();
+    assertEquals(body, { a: { __bigint: "123456" } });
+  },
+});
+
 test({
   name: "application.use() - type checking - at least one middleware is passed",
   fn() {

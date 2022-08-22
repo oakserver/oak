@@ -321,7 +321,7 @@ test({
       createMockApp(),
       createMockNativeRequest(),
       {},
-      true,
+      { secure: true },
     );
     assertEquals(context.request.secure, true);
   },

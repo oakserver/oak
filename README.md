@@ -145,6 +145,19 @@ for await (const conn of listener) {
 
 An instance of application has some properties as well:
 
+- `contextState` - Determines the method used to create state for a new context.
+  A value of `"clone"` will set the state as a clone of the app state. A value
+  of `"prototype"` means the app's state will be used as the prototype of the
+  context's state. A value of `"alias"` means that the application's state and
+  the context's state will be a reference to the same object. A value of
+  `"empty"` will initialize the context's state with an empty object.
+
+- `.jsonBodyReplacer` - An optional replacer function which will be applied to
+  JSON bodies when forming a response.
+
+- `.jsonBodyReviver` - An optional reviver function which will be applied when
+  reading JSON bodies in a request.
+
 - `.keys`
 
   Keys to be used when signing and verifying cookies. The value can be set to an

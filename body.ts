@@ -186,6 +186,7 @@ export class RequestBody {
   #body: ReadableStream<Uint8Array> | null;
   #formDataReader?: FormDataReader;
   #headers: Headers;
+  #jsonBodyReviver?: (key: string, value: unknown) => unknown;
   #stream?: ReadableStream<Uint8Array>;
   #readAllBody?: Promise<Uint8Array>;
   #readBody: () => Promise<Uint8Array>;
@@ -242,7 +243,10 @@ export class RequestBody {
             Promise.reject(new RangeError(`Body exceeds a limit of ${limit}.`));
         }
         return async () =>
-          JSON.parse(decoder.decode(await this.#valuePromise()));
+          JSON.parse(
+            decoder.decode(await this.#valuePromise()),
+            this.#jsonBodyReviver,
+          );
       case "bytes":
         this.#type = "bytes";
         if (this.#exceedsLimit(limit)) {
@@ -307,9 +311,14 @@ export class RequestBody {
     return this.#readAllBody ?? (this.#readAllBody = this.#readBody());
   }
 
-  constructor({ body, readBody }: ServerRequestBody, headers: Headers) {
+  constructor(
+    { body, readBody }: ServerRequestBody,
+    headers: Headers,
+    jsonBodyReviver?: (key: string, value: unknown) => unknown,
+  ) {
     this.#body = body;
     this.#headers = headers;
+    this.#jsonBodyReviver = jsonBodyReviver;
     this.#readBody = readBody;
   }
 

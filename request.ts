@@ -15,6 +15,12 @@ import { RequestBody } from "./body.ts";
 import { accepts, acceptsEncodings, acceptsLanguages } from "./deps.ts";
 import type { HTTPMethods, ServerRequest } from "./types.d.ts";
 
+export interface OakRequestOptions {
+  jsonBodyReviver?: (key: string, value: unknown) => unknown;
+  proxy?: boolean;
+  secure?: boolean;
+}
+
 /** An interface which provides information about the current request. The
  * instance related to the current request is available on the
  * {@linkcode Context}'s `.request` property.
@@ -129,8 +135,7 @@ export class Request {
 
   constructor(
     serverRequest: ServerRequest,
-    proxy = false,
-    secure = false,
+    { proxy = false, secure = false, jsonBodyReviver }: OakRequestOptions = {},
   ) {
     this.#proxy = proxy;
     this.#secure = secure;
@@ -138,6 +143,7 @@ export class Request {
     this.#body = new RequestBody(
       serverRequest.getBody(),
       serverRequest.headers,
+      jsonBodyReviver,
     );
   }
 

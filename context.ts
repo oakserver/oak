@@ -3,7 +3,7 @@
 import type { Application, State } from "./application.ts";
 import { Cookies } from "./cookies.ts";
 import { createHttpError } from "./deps.ts";
-import type { KeyStack } from "./keyStack.ts";
+import { KeyStack } from "./keyStack.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
@@ -17,6 +17,24 @@ import type {
   ServerRequest,
   UpgradeWebSocketOptions,
 } from "./types.d.ts";
+
+export interface ContextOptions<
+  S extends AS = State,
+  // deno-lint-ignore no-explicit-any
+  AS extends State = Record<string, any>,
+> {
+  jsonBodyReplacer?: (
+    key: string,
+    value: unknown,
+    context: Context<S>,
+  ) => unknown;
+  jsonBodyReviver?: (
+    key: string,
+    value: unknown,
+    context: Context<S>,
+  ) => unknown;
+  secure?: boolean;
+}
 
 export interface ContextSendOptions extends SendOptions {
   /** The filename to send, which will be resolved based on the other options.
@@ -66,6 +84,14 @@ export class Context<
 > {
   #socket?: WebSocket;
   #sse?: ServerSentEventTarget;
+
+  #wrapReviverReplacer(
+    reviver?: (key: string, value: unknown, context: this) => unknown,
+  ): undefined | ((key: string, value: unknown) => unknown) {
+    return reviver
+      ? (key: string, value: unknown) => reviver(key, value, this)
+      : undefined;
+  }
 
   /** A reference to the current application. */
   app: Application<AS>;
@@ -135,13 +161,28 @@ export class Context<
     app: Application<AS>,
     serverRequest: ServerRequest,
     state: S,
-    secure = false,
+    {
+      secure = false,
+      jsonBodyReplacer,
+      jsonBodyReviver,
+    }: ContextOptions<S, AS> = {},
   ) {
     this.app = app;
     this.state = state;
-    this.request = new Request(serverRequest, app.proxy, secure);
+    const { proxy } = app;
+    this.request = new Request(
+      serverRequest,
+      {
+        proxy,
+        secure,
+        jsonBodyReviver: this.#wrapReviverReplacer(jsonBodyReviver),
+      },
+    );
     this.respond = true;
-    this.response = new Response(this.request);
+    this.response = new Response(
+      this.request,
+      this.#wrapReviverReplacer(jsonBodyReplacer),
+    );
     this.cookies = new Cookies(this.request, this.response, {
       keys: this.app.keys as KeyStack | undefined,
       secure: this.request.secure,

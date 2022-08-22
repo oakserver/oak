@@ -117,6 +117,43 @@ export interface ApplicationOptions<S, R extends ServerRequest> {
    */
   contextState?: "clone" | "prototype" | "alias" | "empty";
 
+  /** An optional replacer function to be used when serializing a JSON
+   * response. The replacer will be used with `JSON.stringify()` to encode any
+   * response bodies that need to be converted before sending the response.
+   *
+   * This is intended to allow responses to contain bigints and circular
+   * references and encoding other values which JSON does not support directly.
+   *
+   * This can be used in conjunction with `jsonBodyReviver` to handle decoding
+   * of request bodies if the same semantics are used for client requests.
+   *
+   * If more detailed or conditional usage is required, then serialization
+   * should be implemented directly in middleware. */
+  jsonBodyReplacer?: (
+    key: string,
+    value: unknown,
+    context: Context<S>,
+  ) => unknown;
+
+  /** An optional reviver function to be used when parsing a JSON request. The
+   * reviver will be used with `JSON.parse()` to decode any response bodies that
+   * are being converted as JSON.
+   *
+   * This is intended to allow requests to deserialize to bigints, circular
+   * references, or other values which JSON does not support directly.
+   *
+   * This can be used in conjunction with `jsonBodyReplacer` to handle decoding
+   * of response bodies if the same semantics are used for responses.
+   *
+   * If more detailed or conditional usage is required, then deserialization
+   * should be implemented directly in the middleware.
+   */
+  jsonBodyReviver?: (
+    key: string,
+    value: unknown,
+    context: Context<S>,
+  ) => unknown;
+
   /** An initial set of keys (or instance of {@linkcode KeyStack}) to be used for signing
    * cookies produced by the application. */
   keys?: KeyStack | Key[];
@@ -259,6 +296,10 @@ export class ApplicationListenEvent extends Event {
 export class Application<AS extends State = Record<string, any>>
   extends EventTarget {
   #composedMiddleware?: (context: Context<AS, AS>) => Promise<unknown>;
+  #contextOptions: Pick<
+    ApplicationOptions<AS, ServerRequest>,
+    "jsonBodyReplacer" | "jsonBodyReviver"
+  >;
   #contextState: "clone" | "prototype" | "alias" | "empty";
   #keys?: KeyStack;
   #middleware: Middleware<State, Context<State, AS>>[] = [];
@@ -310,12 +351,14 @@ export class Application<AS extends State = Record<string, any>>
       serverConstructor = DEFAULT_SERVER,
       contextState = "clone",
       logErrors = true,
+      ...contextOptions
     } = options;
 
     this.proxy = proxy ?? false;
     this.keys = keys;
     this.state = state ?? {} as AS;
     this.#serverConstructor = serverConstructor;
+    this.#contextOptions = contextOptions;
     this.#contextState = contextState;
 
     if (logErrors) {
@@ -379,7 +422,12 @@ export class Application<AS extends State = Record<string, any>>
     secure: boolean,
     state: RequestState,
   ): Promise<void> {
-    const context = new Context(this, request, this.#getContextState(), secure);
+    const context = new Context(
+      this,
+      request,
+      this.#getContextState(),
+      { secure, ...this.#contextOptions },
+    );
     let resolve: () => void;
     const handlingPromise = new Promise<void>((res) => resolve = res);
     state.handling.add(handlingPromise);
@@ -471,7 +519,7 @@ export class Application<AS extends State = Record<string, any>>
       this,
       contextRequest,
       this.#getContextState(),
-      secure,
+      { secure, ...this.#contextOptions },
     );
     try {
       await this.#getComposed()(context);
