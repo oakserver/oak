@@ -639,7 +639,7 @@ export class Router<
   >(
     nameOrPath: string,
     pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, S>[]
+    ...middleware: RouterMiddleware<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   all<
     P extends RouteParams<string> = RouteParams<string>,
@@ -647,7 +647,7 @@ export class Router<
   >(
     nameOrPath: string,
     pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, S>[]
+    ...middleware: RouterMiddleware<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)> {
     this.#useVerb(
       nameOrPath,
@@ -1001,7 +1001,7 @@ export class Router<
   >(
     nameOrPath: string,
     pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, S>[]
+    ...middleware: RouterMiddleware<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   patch<
     P extends RouteParams<string> = RouteParams<string>,
@@ -1009,7 +1009,7 @@ export class Router<
   >(
     nameOrPath: string,
     pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, S>[]
+    ...middleware: RouterMiddleware<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)> {
     this.#useVerb(
       nameOrPath,

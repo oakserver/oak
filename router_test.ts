@@ -725,6 +725,24 @@ test({
 });
 
 test({
+  name: "router state types",
+  fn() {
+    const router = new Router<{ foo: string }>();
+    router.patch<{ id: string }>(
+      "/:id\\:archive",
+      (ctx) => {
+        ctx.params.id;
+        ctx.state.foo;
+      },
+      (ctx) => {
+        ctx.params.id;
+        ctx.state.foo;
+      },
+    );
+  },
+});
+
+test({
   name: "middleware returned from router.routes() passes next",
   async fn() {
     const { context } = setup("/foo", "GET");
