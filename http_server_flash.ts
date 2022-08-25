@@ -10,7 +10,7 @@ type ServeHandler = (
   request: Request,
 ) => Response | Promise<Response> | void | Promise<void>;
 
-interface ServeInit {
+interface ServeOptions {
   port?: number;
   hostname?: string;
   signal?: AbortSignal;
@@ -18,39 +18,30 @@ interface ServeInit {
   onListen?: (params: { hostname: string; port: number }) => void;
 }
 
-interface ServeTlsInit extends ServeInit {
+interface ServeTlsOptions extends ServeOptions {
   cert: string;
   key: string;
 }
 
-type FlashServerOptions = Omit<Partial<ServeTlsInit>, "onListen" | "signal">;
+type FlashServerOptions = Omit<Partial<ServeTlsOptions>, "onListen" | "signal">;
 
 const serve: (
   handler: ServeHandler,
-  options?: ServeInit,
+  options?: ServeOptions | ServeTlsOptions,
 ) => Promise<void> = "serve" in Deno
   // deno-lint-ignore no-explicit-any
   ? (Deno as any).serve.bind(Deno)
   : undefined;
 
-const serveTls: (
-  handler: ServeHandler,
-  options?: ServeTlsInit,
-) => Promise<void> = "serveTls" in Deno
-  // deno-lint-ignore no-explicit-any
-  ? (Deno as any).serveTls.bind(Deno)
-  : undefined;
-
-function isServeTlsInit(
-  value: ServeInit | ServeTlsInit,
-): value is ServeTlsInit {
+function isServeTlsOptions(
+  value: ServeOptions | ServeTlsOptions,
+): value is ServeTlsOptions {
   return "cert" in value && "key" in value;
 }
 
 /** A function that determines if the current environment supports Deno flash.*/
 export function hasFlash(): boolean {
-  // @ts-expect-error they might not actually be defined!
-  return !!(serve && serveTls);
+  return Boolean(serve);
 }
 
 /** A server abstraction which manages requests from Deno's flash server.
@@ -70,7 +61,7 @@ export class FlashServer implements Server<HttpRequest> {
 
   // deno-lint-ignore no-explicit-any
   constructor(app: Application<any>, options: FlashServerOptions) {
-    if (!serve || !serveTls) {
+    if (!serve) {
       throw new Error("The flash bindings for serving HTTP are not available.");
     }
     this.#app = app;
@@ -102,7 +93,7 @@ export class FlashServer implements Server<HttpRequest> {
       controller,
     ) => {
       this.#controller = controller;
-      const options: ServeInit | ServeTlsInit = {
+      const options: ServeOptions | ServeTlsOptions = {
         ...this.#options,
         signal: this.#abortController.signal,
         onListen: (addr) => p.resolve({ addr }),
@@ -120,11 +111,7 @@ export class FlashServer implements Server<HttpRequest> {
         controller.enqueue(flashRequest);
         return resolve;
       };
-      if (isServeTlsInit(options)) {
-        this.#servePromise = serveTls(handler, options);
-      } else {
-        this.#servePromise = serve(handler, options);
-      }
+      this.#servePromise = serve(handler, options);
     };
     this.#stream = new ReadableStream({ start });
     return p;
