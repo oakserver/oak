@@ -1,5 +1,19 @@
 # oak Change Log
 
+## Version 11.1.0
+
+- feat: provide options for JSON replacing and reviving (855ecf0)
+
+  You can now set `jsonBodyReplacer` and `jsonBodyReviver` to assist when
+  automatic decoding of JSON bodies in requests or responses occur. This allows
+  custom logic to achieve things like handling bigints, circular references, and
+  custom serialization of things like `RegExp`.
+
+- fix: add missing generic parameters for multiple middlewares (#549)
+- fix: refactor flash to align to Deno 1.25 release (f3976fc)
+- fix: add flash support to staticServer example (48130a2)
+- docs: repoint doc URL to just deno.land/x (8237e7a)
+
 ## Version 11.0.0
 
 - feat: make overriding router parameter types easier (#513)
