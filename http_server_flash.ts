@@ -33,12 +33,6 @@ const serve: (
   ? (Deno as any).serve.bind(Deno)
   : undefined;
 
-function isServeTlsOptions(
-  value: ServeOptions | ServeTlsOptions,
-): value is ServeTlsOptions {
-  return "cert" in value && "key" in value;
-}
-
 /** A function that determines if the current environment supports Deno flash.*/
 export function hasFlash(): boolean {
   return Boolean(serve);
