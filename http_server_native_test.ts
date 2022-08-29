@@ -72,7 +72,8 @@ test({
     try {
       const response = await fetch(`http://localhost:${listenOptions.port}`);
       assertEquals(await response.text(), expectedBody);
-    } catch {
+    } catch (e) {
+      console.error(e);
       unreachable();
     } finally {
       server.close();

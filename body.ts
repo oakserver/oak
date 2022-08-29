@@ -200,7 +200,7 @@ export class RequestBody {
       return false;
     }
     const contentLength = this.#headers.get("content-length");
-    if (!contentLength) {
+    if (typeof contentLength !== "string") {
       return true;
     }
     const parsed = parseInt(contentLength, 10);

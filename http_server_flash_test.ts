@@ -29,7 +29,7 @@ Deno.test({
   ignore: !hasFlash(),
   async fn() {
     const app = new Application();
-    const listenOptions = { port: 4505 };
+    const listenOptions = { port: 4507 };
 
     const server = new FlashServer(app, listenOptions);
     server.listen();
@@ -63,7 +63,7 @@ Deno.test({
   ignore: true,
   async fn() {
     const app = new Application();
-    const listenOptions = { port: 4506 };
+    const listenOptions = { port: 4508 };
 
     const server = new FlashServer(app, listenOptions);
     server.listen();
