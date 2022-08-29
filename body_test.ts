@@ -570,6 +570,27 @@ test({
 });
 
 test({
+  name:
+    "body - default limit, 0 content-length (content-length greater than or equal to zero is a valid value - https://datatracker.ietf.org/doc/html/rfc2616#section-14.13)",
+  async fn() {
+    const requestBody = new RequestBody(
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: "",
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+            "content-length": "0",
+          },
+        }),
+      ),
+    );
+    const actual = requestBody.get({ type: "text" });
+    assertEquals(await actual.value, "");
+  },
+});
+
+test({
   name: "body - limit set to 0",
   async fn() {
     const requestBody = new RequestBody(
