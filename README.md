@@ -131,7 +131,7 @@ app.use((ctx) => {
 const listener = Deno.listen({ hostname: "localhost", port: 8000 });
 
 for await (const conn of listener) {
-  (async () => {
+  async () => {
     const requests = Deno.serveHttp(conn);
     for await (const { request, respondWith } of requests) {
       const response = await app.handle(request, conn);
@@ -139,7 +139,7 @@ for await (const conn of listener) {
         respondWith(response);
       }
     }
-  });
+  };
 }
 ```
 
@@ -447,6 +447,25 @@ And several methods:
   });
   ```
 
+  You can specify the maximum file size in options of the `read` method of the `FormDataReader` to filter incoming files which are larger than that. It'll return `undefined` if the size exceeds or it'll return the file as `Uint8Array` like this:
+
+  ```ts
+  app.use(async (ctx) => {
+    try {
+      const formDataReader = ctx.request.body({ type: "form-data" }).value;
+      const formDataBody = await formDataReader.read({ maxSize: 10000000 }); // Max file size to handle
+      const files = formDataBody.files; //Return array of files
+      if (files) {
+        files.map((file) => {
+          file.content; // "undefined" or "Uint8Array"
+        });
+      }
+    } catch (error) {
+      // Handle error response
+    }
+  });
+  ```
+
   You can use the option `contentTypes` to set additional media types that when
   present as the content type for the request, the body will be parsed
   accordingly. The options takes possibly five keys: `json`, `form`, `formData`,
@@ -579,9 +598,8 @@ const app = new Application();
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
     `Listening on: ${secure ? "https://" : "http://"}${
-      hostname ??
-        "localhost"
-    }:${port}`,
+      hostname ?? "localhost"
+    }:${port}`
   );
 });
 
@@ -642,7 +660,7 @@ app.use(async (ctx, next) => {
           // handle NotFound
           break;
         default:
-          // handle other statuses
+        // handle other statuses
       }
     } else {
       // rethrow if you can't handle the error
@@ -746,16 +764,16 @@ const posts = new Router()
     ctx.response.body = `Forum: ${ctx.params.forumId}`;
   })
   .get("/:postId", (ctx) => {
-    ctx.response.body =
-      `Forum: ${ctx.params.forumId}, Post: ${ctx.params.postId}`;
+    ctx.response.body = `Forum: ${ctx.params.forumId}, Post: ${ctx.params.postId}`;
   });
 
-const forums = new Router()
-  .use("/forums/:forumId/posts", posts.routes(), posts.allowedMethods());
+const forums = new Router().use(
+  "/forums/:forumId/posts",
+  posts.routes(),
+  posts.allowedMethods()
+);
 
-await new Application()
-  .use(forums.routes())
-  .listen({ port: 8000 });
+await new Application().use(forums.routes()).listen({ port: 8000 });
 ```
 
 ## Static content
