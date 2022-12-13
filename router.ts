@@ -45,6 +45,7 @@ interface Matches<R extends string> {
   path: Layer<R>[];
   pathAndMethod: Layer<R>[];
   route: boolean;
+  name?: string;
 }
 
 export interface RouterAllowedMethodsOptions {
@@ -472,6 +473,7 @@ export class Router<
           matches.pathAndMethod.push(route);
           if (route.methods.length) {
             matches.route = true;
+            matches.name = route.name;
           }
         }
       }
@@ -1217,6 +1219,8 @@ export class Router<
 
       if (!matches.route) return next();
 
+      ctx.routeName = matches.name;
+
       const { pathAndMethod: matchedRoutes } = matches;
 
       const chain = matchedRoutes.reduce(
@@ -1225,7 +1229,6 @@ export class Router<
           (ctx, next) => {
             ctx.captures = route.captures(path);
             ctx.params = route.params(ctx.captures, ctx.params);
-            ctx.routeName = route.name;
             return next();
           },
           ...route.stack,
