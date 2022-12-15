@@ -64,10 +64,12 @@ export interface HandleMethod {
 export type ListenOptions = ListenOptionsTls | ListenOptionsBase;
 
 interface ApplicationErrorEventListener<S extends AS, AS> {
+  // @ts-ignore
   (evt: ApplicationErrorEvent<S, AS>): void | Promise<void>;
 }
 
 interface ApplicationErrorEventListenerObject<S extends AS, AS> {
+  // @ts-ignore
   handleEvent(evt: ApplicationErrorEvent<S, AS>): void | Promise<void>;
 }
 
@@ -102,7 +104,7 @@ type ApplicationListenEventListenerOrEventListenerObject =
 
 /** Available options that are used when creating a new instance of
  * {@linkcode Application}. */
-export interface ApplicationOptions<S, R extends ServerRequest> {
+export interface ApplicationOptions<S extends State, R extends ServerRequest> {
   /** Determine how when creating a new context, the state from the application
    * should be applied. A value of `"clone"` will set the state as a clone of
    * the app state. Any non-cloneable or non-enumerable properties will not be

@@ -14,10 +14,10 @@ export type Fetch = (input: Request) => Promise<Response>;
 
 export type ProxyMatchFunction<
   R extends string,
-  P extends RouteParams<R> = RouteParams<R>,
   // deno-lint-ignore no-explicit-any
   S extends State = Record<string, any>,
-> = (ctx: Context<S> | RouterContext<R, P, S>) => boolean;
+  P extends RouteParams<R> = RouteParams<R>,
+> = (ctx: Context<S> | RouterContext<R, S, P>) => boolean;
 
 export type ProxyMapFunction<R extends string, P extends RouteParams<R>> = (
   path: R,
@@ -30,15 +30,15 @@ export type ProxyHeadersFunction<S extends State> = (
 
 export type ProxyRouterHeadersFunction<
   R extends string,
-  P extends RouteParams<R>,
   S extends State,
-> = (ctx: RouterContext<R, P, S>) => HeadersInit | Promise<HeadersInit>;
+  P extends RouteParams<R>,
+> = (ctx: RouterContext<R, S, P>) => HeadersInit | Promise<HeadersInit>;
 
 export interface ProxyOptions<
   R extends string,
+    // deno-lint-ignore no-explicit-any
+    S extends State = Record<string, any>,
   P extends RouteParams<R> = RouteParams<R>,
-  // deno-lint-ignore no-explicit-any
-  S extends State = Record<string, any>,
 > {
   /** A callback hook that is called after the response is received which allows
    * the response content type to be adjusted. This is for situations where the
@@ -57,7 +57,7 @@ export interface ProxyOptions<
   headers?:
     | HeadersInit
     | ProxyHeadersFunction<S>
-    | ProxyRouterHeadersFunction<R, P, S>;
+    | ProxyRouterHeadersFunction<R, S, P>;
   /** Either a record or a proxy map function that will allow proxied requests
    * being handled by the middleware to be remapped to a different remote
    * path. */
@@ -72,7 +72,7 @@ export interface ProxyOptions<
   match?:
     | string
     | RegExp
-    | ProxyMatchFunction<R, P, S>;
+    | ProxyMatchFunction<R, S, P>;
   /** A flag that indicates if traditional proxy headers should be set in the
    * response. This defaults to `true`.
    */
@@ -93,9 +93,9 @@ function createMatcher<
   P extends RouteParams<R>,
   S extends State,
 >(
-  { match }: ProxyOptions<R, P, S>,
+  { match }: ProxyOptions<R, S, P>,
 ) {
-  return function matches(ctx: RouterContext<R, P, S>): boolean {
+  return function matches(ctx: RouterContext<R, S, P>): boolean {
     if (!match) {
       return true;
     }
@@ -115,13 +115,13 @@ async function createRequest<
   S extends State,
 >(
   target: string | URL,
-  ctx: Context<S> | RouterContext<R, P, S>,
+  ctx: Context<S> | RouterContext<R, S, P>,
   { headers: optHeaders, map, proxyHeaders = true, request: reqFn }:
-    ProxyOptions<R, P, S>,
+    ProxyOptions<R, S, P>,
 ): Promise<Request> {
   let path = ctx.request.url.pathname as R;
   let params: P | undefined;
-  if (isRouterContext<R, P, S>(ctx)) {
+  if (isRouterContext<R, S, P>(ctx)) {
     params = ctx.params;
   }
   if (map && typeof map === "function") {
@@ -143,7 +143,7 @@ async function createRequest<
   const headers = new Headers(ctx.request.headers);
   if (optHeaders) {
     if (typeof optHeaders === "function") {
-      optHeaders = await optHeaders(ctx as RouterContext<R, P, S>);
+      optHeaders = await optHeaders(ctx as RouterContext<R, S, P>);
     }
     for (const [key, value] of iterableHeaders(optHeaders)) {
       headers.set(key, value);
@@ -187,7 +187,7 @@ function getBodyInit<
   P extends RouteParams<R>,
   S extends State,
 >(
-  ctx: Context<S> | RouterContext<R, P, S>,
+  ctx: Context<S> | RouterContext<R, S, P>,
 ): BodyInit | null {
   if (!ctx.request.hasBody) {
     return null;
@@ -215,8 +215,8 @@ async function processResponse<
   S extends State,
 >(
   response: Response,
-  ctx: Context<S> | RouterContext<R, P, S>,
-  { contentType: contentTypeFn, response: resFn }: ProxyOptions<R, P, S>,
+  ctx: Context<S> | RouterContext<R, S, P>,
+  { contentType: contentTypeFn, response: resFn }: ProxyOptions<R, S, P>,
 ) {
   if (resFn) {
     response = await resFn(response);
@@ -249,16 +249,16 @@ async function processResponse<
  */
 export function proxy<S extends State>(
   target: string | URL,
-  options?: ProxyOptions<string, RouteParams<string>, S>,
+  options?: ProxyOptions<string, S, RouteParams<string>>,
 ): Middleware<S>;
 export function proxy<
   R extends string,
-  P extends RouteParams<R>,
   S extends State,
+  P extends RouteParams<R>,
 >(
   target: string | URL,
-  options: ProxyOptions<R, P, S> = {},
-): RouterMiddleware<R, P, S> {
+  options: ProxyOptions<R, S, P> = {},
+): RouterMiddleware<R, S, P> {
   const matches = createMatcher(options);
   return async function proxy(ctx, next) {
     if (!matches(ctx)) {

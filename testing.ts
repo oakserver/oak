@@ -76,8 +76,8 @@ export const mockContextState = {
 /** Create a mock of `Context` or `RouterContext`. */
 export function createMockContext<
   R extends string,
-  P extends RouteParams<R> = RouteParams<R>,
   S extends State = Record<string, any>,
+  P extends RouteParams<R> = RouteParams<R>,
 >(
   {
     ip = "127.0.0.1",
@@ -170,7 +170,7 @@ export function createMockContext<
         inspect({}, newOptions)
       }`;
     },
-  } as unknown) as RouterContext<R, P, S>;
+  } as unknown) as RouterContext<R, S, P>;
 }
 
 /** Creates a mock `next()` function which can be used when calling

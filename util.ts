@@ -88,11 +88,11 @@ export function isAsyncIterable(
 
 export function isRouterContext<
   R extends string,
-  P extends RouteParams<R>,
   S extends State,
+  P extends RouteParams<R>,
 >(
   value: Context<S>,
-): value is RouterContext<R, P, S> {
+): value is RouterContext<R, S, P> {
   return "params" in value;
 }
 

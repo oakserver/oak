@@ -702,6 +702,7 @@ test({
   name: "app.state type handling",
   fn() {
     const app = new Application({ state: { id: 1 } });
+    // @ts-ignore
     app.use((ctx: Context<{ session: number }>) => {
       ctx.state.session = 0;
     }).use((ctx) => {
