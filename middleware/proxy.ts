@@ -36,8 +36,8 @@ export type ProxyRouterHeadersFunction<
 
 export interface ProxyOptions<
   R extends string,
-    // deno-lint-ignore no-explicit-any
-    S extends State = Record<string, any>,
+  // deno-lint-ignore no-explicit-any
+  S extends State = Record<string, any>,
   P extends RouteParams<R> = RouteParams<R>,
 > {
   /** A callback hook that is called after the response is received which allows
@@ -90,8 +90,8 @@ const FORWARDED_RE =
 
 function createMatcher<
   R extends string,
-  P extends RouteParams<R>,
   S extends State,
+  P extends RouteParams<R>,
 >(
   { match }: ProxyOptions<R, S, P>,
 ) {
@@ -111,8 +111,8 @@ function createMatcher<
 
 async function createRequest<
   R extends string,
-  P extends RouteParams<R>,
   S extends State,
+  P extends RouteParams<R>,
 >(
   target: string | URL,
   ctx: Context<S> | RouterContext<R, S, P>,
@@ -184,8 +184,8 @@ async function createRequest<
 
 function getBodyInit<
   R extends string,
-  P extends RouteParams<R>,
   S extends State,
+  P extends RouteParams<R>,
 >(
   ctx: Context<S> | RouterContext<R, S, P>,
 ): BodyInit | null {
@@ -211,8 +211,8 @@ function iterableHeaders(
 
 async function processResponse<
   R extends string,
-  P extends RouteParams<R>,
   S extends State,
+  P extends RouteParams<R>,
 >(
   response: Response,
   ctx: Context<S> | RouterContext<R, S, P>,
@@ -249,7 +249,7 @@ async function processResponse<
  */
 export function proxy<S extends State>(
   target: string | URL,
-  options?: ProxyOptions<string, S, RouteParams<string>>,
+  options?: ProxyOptions<string, S>,
 ): Middleware<S>;
 export function proxy<
   R extends string,
