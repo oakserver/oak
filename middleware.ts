@@ -13,12 +13,25 @@ export interface Middleware<
   (context: T, next: () => Promise<unknown>): Promise<unknown> | unknown;
 }
 
+/** Middleware can also be objects to encapsulate more logic and state. */
+export interface MiddlewareObject<
+  S extends State = Record<string, any>,
+  T extends Context = Context<S>,
+> {
+  /** Optional function for delayed initialization. */
+  init()?: Promise<unknown> | unknown;
+  handleRequest(context: T, next: () => Promise<unknown>): Promise<unknown> | unknown;
+}
+
+/** Complete middleware type. */
+export type MiddlewareOrMiddlewareObject = Middleware | MiddlewareObject;
+
 /** Compose multiple middleware functions into a single middleware function. */
 export function compose<
   S extends State = Record<string, any>,
   T extends Context = Context<S>,
 >(
-  middleware: Middleware<S, T>[],
+  middleware: MiddlewareOrMiddlewareObject<S, T>[],
 ): (context: T, next?: () => Promise<unknown>) => Promise<unknown> {
   return function composedMiddleware(
     context: T,
@@ -31,7 +44,13 @@ export function compose<
         throw new Error("next() called multiple times.");
       }
       index = i;
-      let fn: Middleware<S, T> | undefined = middleware[i];
+      let m: MiddlewareOrMiddlewareObject<S, T> | undefined = middleware[i];
+      let fn: Middleware<S, T> | undefined;
+      if (typeof m === "function") {
+        fn = m;
+      } else if (m && typeof m.handleRequest === "function") {
+        fn = (m as MiddlewareObject).handleRequest;
+      }
       if (i === middleware.length) {
         fn = next;
       }
