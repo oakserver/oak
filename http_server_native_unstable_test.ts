@@ -8,9 +8,7 @@ import { HttpServer } from "./http_server_native.ts";
 import { Application } from "./application.ts";
 import { isNode } from "./util.ts";
 
-const { test } = Deno;
-
-test({
+Deno.test({
   name:
     "HttpServer should not handle requests sequentially when dealing with connections over H2",
   ignore: isNode(),

@@ -8,8 +8,8 @@
  * @module
  */
 
-import { build, emptyDir } from "https://deno.land/x/dnt@0.30.0/mod.ts";
-import { copy } from "https://deno.land/std@0.152.0/fs/copy.ts";
+import { build, emptyDir } from "https://deno.land/x/dnt@0.33.1/mod.ts";
+import { copy } from "https://deno.land/std@0.178.0/fs/copy.ts";
 
 async function start() {
   await emptyDir("./npm");

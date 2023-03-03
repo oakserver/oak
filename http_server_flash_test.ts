@@ -5,8 +5,12 @@ import { FlashServer, hasFlash } from "./http_server_flash.ts";
 import { HttpRequest } from "./http_request.ts";
 
 import { Application } from "./application.ts";
-import { assertEquals, assertStrictEquals, unreachable } from "./test_deps.ts";
-import { assertInstanceOf } from "https://deno.land/std@0.152.0/testing/asserts.ts";
+import {
+  assertEquals,
+  assertInstanceOf,
+  assertStrictEquals,
+  unreachable,
+} from "./test_deps.ts";
 
 Deno.test({
   name: "HttpRequest",
