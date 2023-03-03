@@ -24,21 +24,24 @@ Content-Type: application/typescript
 console.log("hello");
 `;
 
-const malformedFixture = `Content-Disposition: form-data; name="foo"; filename="foo.ts"
+const malformedFixture =
+  `Content-Disposition: form-data; name="foo"; filename="foo.ts"
 Content-Type: application/typescript
 foobar
 
 console.log("hello");
 `;
 
-const invalidHeaderKeyFixture = `Content-Disposition: form-data; name="foo"; filename="foo.ts"
+const invalidHeaderKeyFixture =
+  `Content-Disposition: form-data; name="foo"; filename="foo.ts"
 Content-Type: application/typescript
 :bar
 
 console.log("hello");
 `;
 
-const unexpectedEndFixture = `Content-Disposition: form-data; name="foo"; filename="foo.ts"
+const unexpectedEndFixture =
+  `Content-Disposition: form-data; name="foo"; filename="foo.ts"
 Content-Type: application/typescript
 `;
 
