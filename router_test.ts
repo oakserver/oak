@@ -485,7 +485,6 @@ test({
       "DELETE",
       "GET",
       "HEAD",
-      "OPTIONS",
       "PATCH",
       "POST",
       "PUT",
@@ -692,7 +691,7 @@ test({
     assertEquals(context.response.status, Status.OK);
     assertEquals(
       context.response.headers.get("Allow"),
-      "HEAD, DELETE, GET, OPTIONS, PATCH, POST, PUT",
+      "HEAD, DELETE, GET, PATCH, POST, PUT",
     );
   },
 });

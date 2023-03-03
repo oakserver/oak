@@ -655,7 +655,7 @@ export class Router<
       nameOrPath,
       pathOrMiddleware as (string | RouterMiddleware<string>),
       middleware as RouterMiddleware<string>[],
-      this.#methods,
+      this.#methods.filter((method) => method !== "OPTIONS"),
     );
     return this;
   }
