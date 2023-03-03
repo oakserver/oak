@@ -131,7 +131,7 @@ app.use((ctx) => {
 const listener = Deno.listen({ hostname: "localhost", port: 8000 });
 
 for await (const conn of listener) {
-  async () => {
+  (async () => {
     const requests = Deno.serveHttp(conn);
     for await (const { request, respondWith } of requests) {
       const response = await app.handle(request, conn);
@@ -139,7 +139,7 @@ for await (const conn of listener) {
         respondWith(response);
       }
     }
-  };
+  });
 }
 ```
 
@@ -447,7 +447,10 @@ And several methods:
   });
   ```
 
-  You can specify the maximum file size in options of the `read` method of the `FormDataReader` to filter incoming files which are larger than that. It'll return `undefined` if the size exceeds or it'll return the file as `Uint8Array` like this:
+  You can specify the maximum file size in options of the `read` method of the
+  `FormDataReader` to filter incoming files which are larger than that. It'll
+  return `undefined` if the size exceeds or it'll return the file as
+  `Uint8Array` like this:
 
   ```ts
   app.use(async (ctx) => {
@@ -599,7 +602,7 @@ app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
     `Listening on: ${secure ? "https://" : "http://"}${
       hostname ?? "localhost"
-    }:${port}`
+    }:${port}`,
   );
 });
 
@@ -660,7 +663,7 @@ app.use(async (ctx, next) => {
           // handle NotFound
           break;
         default:
-        // handle other statuses
+          // handle other statuses
       }
     } else {
       // rethrow if you can't handle the error
@@ -764,13 +767,14 @@ const posts = new Router()
     ctx.response.body = `Forum: ${ctx.params.forumId}`;
   })
   .get("/:postId", (ctx) => {
-    ctx.response.body = `Forum: ${ctx.params.forumId}, Post: ${ctx.params.postId}`;
+    ctx.response.body =
+      `Forum: ${ctx.params.forumId}, Post: ${ctx.params.postId}`;
   });
 
 const forums = new Router().use(
   "/forums/:forumId/posts",
   posts.routes(),
-  posts.allowedMethods()
+  posts.allowedMethods(),
 );
 
 await new Application().use(forums.routes()).listen({ port: 8000 });
