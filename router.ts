@@ -701,12 +701,12 @@ export class Router<
               : new errors.NotImplemented();
           } else {
             ctx.response.status = Status.NotImplemented;
-            ctx.response.headers.set("Allowed", allowedStr);
+            ctx.response.headers.set("Allow", allowedStr);
           }
         } else if (allowed.size) {
           if (ctx.request.method === "OPTIONS") {
             ctx.response.status = Status.OK;
-            ctx.response.headers.set("Allowed", allowedStr);
+            ctx.response.headers.set("Allow", allowedStr);
           } else if (!allowed.has(ctx.request.method)) {
             if (options.throw) {
               throw options.methodNotAllowed
@@ -714,7 +714,7 @@ export class Router<
                 : new errors.MethodNotAllowed();
             } else {
               ctx.response.status = Status.MethodNotAllowed;
-              ctx.response.headers.set("Allowed", allowedStr);
+              ctx.response.headers.set("Allow", allowedStr);
             }
           }
         }

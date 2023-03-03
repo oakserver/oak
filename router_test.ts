@@ -607,7 +607,7 @@ test({
     await routes(context, next);
     await mw(context, next);
     assertEquals(context.response.status, Status.OK);
-    assertEquals(context.response.headers.get("Allowed"), "PUT, PATCH");
+    assertEquals(context.response.headers.get("Allow"), "PUT, PATCH");
   },
 });
 
@@ -691,7 +691,7 @@ test({
     await mw(context, next);
     assertEquals(context.response.status, Status.OK);
     assertEquals(
-      context.response.headers.get("Allowed"),
+      context.response.headers.get("Allow"),
       "HEAD, DELETE, GET, OPTIONS, PATCH, POST, PUT",
     );
   },
