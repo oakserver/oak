@@ -443,7 +443,7 @@ test({
     assertEquals(
       Deno.inspect(new Response(createMockRequest())),
       isNode()
-        ? `Response {\n  body: undefined,\n  headers: HeadersList {\n    [Symbol(headers map)]: Map(0) {},\n    [Symbol(headers map sorted)]: null\n  },\n  status: 404,\n  type: undefined,\n  writable: true\n}`
+        ? `Response {\n  body: undefined,\n  headers: HeadersList {\n    cookies: null,\n    [Symbol(headers map)]: Map(0) {},\n    [Symbol(headers map sorted)]: null\n  },\n  status: 404,\n  type: undefined,\n  writable: true\n}`
         : `Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true }`,
     );
   },

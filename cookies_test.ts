@@ -121,16 +121,11 @@ test({
     await cookies.set("a", "a");
     await cookies.set("b", "b");
     await cookies.set("c", "c");
-    const expected = isNode()
-      ? [[
-        "set-cookie",
-        "a=a; path=/; httponly, b=b; path=/; httponly, c=c; path=/; httponly",
-      ]]
-      : [
-        ["set-cookie", "a=a; path=/; httponly"],
-        ["set-cookie", "b=b; path=/; httponly"],
-        ["set-cookie", "c=c; path=/; httponly"],
-      ];
+    const expected = [
+      ["set-cookie", "a=a; path=/; httponly"],
+      ["set-cookie", "b=b; path=/; httponly"],
+      ["set-cookie", "c=c; path=/; httponly"],
+    ];
     assertEquals([...response.headers], expected);
   },
 });
@@ -307,9 +302,8 @@ test({
       path: "/baz",
       sameSite: "strict",
     });
-    const expected = isNode()
-      ? "foo=baz; path=/baz; expires=Wed, 01 Jan 2020 00:00:00 GMT; domain=*.example.com; samesite=strict"
-      : "a=b; path=/a; expires=Wed, 01 Jan 2020 00:00:00 GMT; domain=*.example.com; samesite=strict, foo=baz; path=/baz; expires=Wed, 01 Jan 2020 00:00:00 GMT; domain=*.example.com; samesite=strict";
+    const expected =
+      "a=b; path=/a; expires=Wed, 01 Jan 2020 00:00:00 GMT; domain=*.example.com; samesite=strict, foo=baz; path=/baz; expires=Wed, 01 Jan 2020 00:00:00 GMT; domain=*.example.com; samesite=strict";
     assertEquals(response.headers.get("set-cookie"), expected);
   },
 });
