@@ -1,5 +1,29 @@
 # oak Change Log
 
+## Version 12.0.0
+
+- feat: `Router.prototype.all` uses all methods (4ddc851)
+
+  **BREAKING** when using `Router.prototype.all()` to register middleware, it
+  will now use all the methods (except `OPTIONS`) to register the middleware
+  instead of an arbitrary set of common methods.
+
+- fix: use null prototype with cookie match cache (798eca7)
+- fix: `Router.prototype.all` omit `OPTIONS` method (98067a4)
+- fix: use `"Allow"` versus `"Allowed"` header for `OPTIONS` (3bcd4eb)
+- fix: update types for TypeScript 4.9 (31a1c7f)
+- fix: save route name during route matching (#574)
+- fix: zero `content-length` triggering max body size error (#552)
+- fix: remove unused function from flash server (01264e6)
+- chore: fix node tests (5ea9729)
+- chore: update checkout action (811e0ea)
+- chore: lint (b2a7356)
+- chore: fmt (507990e)
+- chore: rework ci (08a6e78)
+- chore: update to std@0.178 and dnt@0.33.1 (0a7d616)
+- tests: improve headers test coverage (#562)
+- docs: update info on handling formdata files (#555)
+
 ## Version 11.1.0
 
 - feat: provide options for JSON replacing and reviving (855ecf0)
