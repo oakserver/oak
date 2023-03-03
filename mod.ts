@@ -68,7 +68,11 @@ export { type NativeRequest } from "./http_server_native_request.ts";
 export { proxy } from "./middleware/proxy.ts";
 export type { ProxyOptions } from "./middleware/proxy.ts";
 export { compose as composeMiddleware } from "./middleware.ts";
-export type { Middleware } from "./middleware.ts";
+export type {
+  Middleware,
+  MiddlewareObject,
+  MiddlewareOrMiddlewareObject,
+} from "./middleware.ts";
 export { FormDataReader } from "./multipart.ts";
 export type {
   FormDataBody,
