@@ -10,8 +10,8 @@ import type {
 
 const maybeUpgradeWebSocket: UpgradeWebSocketFn | undefined =
   "upgradeWebSocket" in Deno
-    ? // deno-lint-ignore no-explicit-any
-      (Deno as any).upgradeWebSocket.bind(Deno)
+    // deno-lint-ignore no-explicit-any
+    ? (Deno as any).upgradeWebSocket.bind(Deno)
     : undefined;
 
 /** An abstraction which wraps a {@linkcode Request} from Deno's flash server.

@@ -25,8 +25,8 @@ interface ReadableStreamDefaultControllerCallback<R> {
 }
 
 const serveHttp: (conn: Deno.Conn) => HttpConn = "serveHttp" in Deno
-  ? // deno-lint-ignore no-explicit-any
-    (Deno as any).serveHttp.bind(Deno)
+  // deno-lint-ignore no-explicit-any
+  ? (Deno as any).serveHttp.bind(Deno)
   : undefined;
 
 /** The oak abstraction of the Deno native HTTP server which is used internally
