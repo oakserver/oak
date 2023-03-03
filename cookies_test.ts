@@ -40,6 +40,18 @@ test({
 });
 
 test({
+  name: "get cookie value key name Object.prototype",
+  async fn() {
+    const request = createMockRequest(["valueOf=bar"]);
+    const response = createMockResponse();
+    const cookies = new Cookies(request, response);
+    assertEquals(await cookies.get("valueOf"), "bar");
+    assertEquals(await cookies.get("foo"), undefined);
+    assertEquals([...response.headers], []);
+  },
+});
+
+test({
   name: "get signed cookie",
   async fn() {
     const request = createMockRequest(

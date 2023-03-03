@@ -33,7 +33,7 @@ export interface CookiesSetDeleteOptions {
 
 type CookieAttributes = CookiesSetDeleteOptions;
 
-const matchCache: Record<string, RegExp> = {};
+const matchCache: Record<string, RegExp> = Object.create(null);
 
 // deno-lint-ignore no-control-regex
 const FIELD_CONTENT_REGEXP = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
