@@ -655,7 +655,7 @@ export class Router<
       nameOrPath,
       pathOrMiddleware as (string | RouterMiddleware<string>),
       middleware as RouterMiddleware<string>[],
-      ["DELETE", "GET", "POST", "PUT"],
+      this.#methods,
     );
     return this;
   }

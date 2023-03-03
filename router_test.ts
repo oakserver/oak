@@ -282,10 +282,6 @@ test({
 
     const callStack: number[] = [];
     const router = new Router();
-    router.all("/", async (_context, next) => {
-      callStack.push(0);
-      await next();
-    });
     router.delete("/", () => {
       callStack.push(1);
     });
@@ -320,10 +316,6 @@ test({
 
     const callStack: number[] = [];
     const router = new Router();
-    router.all("/", async (_context, next) => {
-      callStack.push(0);
-      await next();
-    });
     router.delete("/", () => {
       callStack.push(1);
     });
@@ -488,7 +480,16 @@ test({
     const routes = [...router];
     assertEquals(routes.length, 3);
     assertEquals(routes[0].path, "/route");
-    assertEquals(routes[0].methods, ["HEAD", "DELETE", "GET", "POST", "PUT"]);
+    assertEquals(routes[0].methods, [
+      "HEAD",
+      "DELETE",
+      "GET",
+      "HEAD",
+      "OPTIONS",
+      "PATCH",
+      "POST",
+      "PUT",
+    ]);
     assertEquals(routes[0].middleware.length, 1);
   },
 });
@@ -673,6 +674,26 @@ test({
     await assertRejects(async () => {
       await mw(context, next);
     }, errors.MethodNotAllowed);
+  },
+});
+
+test({
+  name: "router allowedMethods() with all() route uses all methods",
+  async fn() {
+    const { context, next } = setup("/foo", "OPTIONS");
+    const router = new Router();
+    router.all("/foo", (_ctx, next) => {
+      return next();
+    });
+    const routes = router.routes();
+    const mw = router.allowedMethods();
+    await routes(context, next);
+    await mw(context, next);
+    assertEquals(context.response.status, Status.OK);
+    assertEquals(
+      context.response.headers.get("Allowed"),
+      "HEAD, DELETE, GET, OPTIONS, PATCH, POST, PUT",
+    );
   },
 });
 
