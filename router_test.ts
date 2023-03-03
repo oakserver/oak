@@ -713,9 +713,7 @@ test({
         ctx.state.session;
       }).post<{ id: string }>("/:id\\:archive", (ctx) => {
         ctx.params.id;
-        // @ts-expect-error
         ctx.params["id:archive"];
-        // @ts-expect-error
         ctx.params["id\\:archive"];
       }).routes(),
     ).use((ctx) => {
@@ -731,11 +729,15 @@ test({
     router.patch<{ id: string }>(
       "/:id\\:archive",
       (ctx) => {
+        // @ts-ignore
         ctx.params.id;
+        // @ts-ignore
         ctx.state.foo;
       },
       (ctx) => {
+        // @ts-ignore
         ctx.params.id;
+        // @ts-ignore
         ctx.state.foo;
       },
     );

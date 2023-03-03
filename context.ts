@@ -79,8 +79,7 @@ export interface ContextSendOptions extends SendOptions {
  */
 export class Context<
   S extends AS = State,
-  // deno-lint-ignore no-explicit-any
-  AS extends State = Record<string, any>,
+  AS extends State = S,
 > {
   #socket?: WebSocket;
   #sse?: ServerSentEventTarget;

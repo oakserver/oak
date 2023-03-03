@@ -28,7 +28,7 @@ function setup<
   mockContextState.encodingsAccepted = "identity";
   // deno-lint-ignore no-explicit-any
   const app = createMockApp<any>();
-  const context = createMockContext<string, RouteParams<string>, S>({
+  const context = createMockContext<string, S>({
     app,
     path,
     method,
