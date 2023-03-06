@@ -243,6 +243,7 @@
     "https://deno.land/std@0.178.0/http/_negotiation/encoding.ts": "ff747d107277c88cb7a6a62a08eeb8d56dad91564cbcccb30694d5dc126dcc53",
     "https://deno.land/std@0.178.0/http/_negotiation/language.ts": "7bcddd8db3330bdb7ce4fc00a213c5547c1968139864201efd67ef2d0d51887d",
     "https://deno.land/std@0.178.0/http/_negotiation/media_type.ts": "58847517cd549384ad677c0fe89e0a4815be36fe7a303ea63cee5f6a1d7e1692",
+    "https://deno.land/std@0.178.0/http/cookie_map.ts": "8cf428c03ef17c197196a5c382495cd4adecbfb597f6f8f3cd7e1775c3e79ffd",
     "https://deno.land/std@0.178.0/http/http_errors.ts": "57169d9bdf4cda1982a3742693c146ab1bf2cbc88df003b40ac905a30013d4cb",
     "https://deno.land/std@0.178.0/http/http_status.ts": "8a7bcfe3ac025199ad804075385e57f63d055b2aed539d943ccc277616d6f932",
     "https://deno.land/std@0.178.0/http/negotiation.ts": "32761c921afa7847cf767fe81c81785721abccc0db0fc51c7ec2a45868b4ee4a",

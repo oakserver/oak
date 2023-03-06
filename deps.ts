@@ -17,6 +17,12 @@ export { timingSafeEqual } from "https://deno.land/std@0.178.0/crypto/timing_saf
 export { KeyStack } from "https://deno.land/std@0.178.0/crypto/keystack.ts";
 export * as base64 from "https://deno.land/std@0.178.0/encoding/base64.ts";
 export {
+  mergeHeaders,
+  SecureCookieMap,
+  type SecureCookieMapGetOptions,
+  type SecureCookieMapSetDeleteOptions,
+} from "https://deno.land/std@0.178.0/http/cookie_map.ts";
+export {
   createHttpError,
   errors,
   HttpError,

@@ -1,8 +1,7 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
-import { Cookies } from "./cookies.ts";
-import { createHttpError, KeyStack } from "./deps.ts";
+import { createHttpError, KeyStack, SecureCookieMap } from "./deps.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
@@ -97,7 +96,7 @@ export class Context<
 
   /** An object which allows access to cookies, mediating both the request and
    * response. */
-  cookies: Cookies;
+  cookies: SecureCookieMap;
 
   /** Is `true` if the current connection is upgradeable to a web socket.
    * Otherwise the value is `false`.  Use `.upgrade()` to upgrade the connection
@@ -182,8 +181,9 @@ export class Context<
       this.request,
       this.#wrapReviverReplacer(jsonBodyReplacer),
     );
-    this.cookies = new Cookies(this.request, this.response, {
+    this.cookies = new SecureCookieMap(serverRequest, {
       keys: this.app.keys as KeyStack | undefined,
+      response: this.response,
       secure: this.request.secure,
     });
   }

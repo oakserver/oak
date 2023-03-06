@@ -10,8 +10,7 @@ import {
 } from "./test_deps.ts";
 import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
-import { Cookies } from "./cookies.ts";
-import { errors } from "./deps.ts";
+import { errors, SecureCookieMap } from "./deps.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import type {} from "./http_server_native.ts";
 import { Request as OakRequest } from "./request.ts";
@@ -103,7 +102,7 @@ test({
     assert(context instanceof Context);
     assertEquals(context.state, app.state);
     assertStrictEquals(context.app, app);
-    assert(context.cookies instanceof Cookies);
+    assert(context.cookies instanceof SecureCookieMap);
     assert(context.request instanceof OakRequest);
     assert(context.response instanceof OakResponse);
   },
@@ -327,8 +326,8 @@ test({
     assertEquals(
       Deno.inspect(new Context(app, req, {}), { depth: 1 }),
       isNode()
-        ? `Context {\n  app: [MockApplication],\n  cookies: [Cookies],\n  isUpgradable: false,\n  respond: true,\n  request: [Request],\n  response: [Response],\n  socket: undefined,\n  state: {}\n}`
-        : `Context {\n  app: MockApplication {},\n  cookies: Cookies [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/"\n},\n  response: Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true },\n  socket: undefined,\n  state: {}\n}`,
+        ? `Context {\n  app: [MockApplication],\n  cookies: [SecureCookieMap],\n  isUpgradable: false,\n  respond: true,\n  request: [Request],\n  response: [Response],\n  socket: undefined,\n  state: {}\n}`
+        : `Context {\n  app: MockApplication {},\n  cookies: SecureCookieMap [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/"\n},\n  response: Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true },\n  socket: undefined,\n  state: {}\n}`,
     );
   },
 });

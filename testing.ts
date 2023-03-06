@@ -10,10 +10,9 @@
  */
 
 import type { Application, State } from "./application.ts";
-import { accepts, createHttpError } from "./deps.ts";
+import { accepts, createHttpError, SecureCookieMap } from "./deps.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
 import type { ErrorStatus } from "./types.d.ts";
-import { Cookies } from "./cookies.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 
@@ -116,7 +115,7 @@ export function createMockContext<
 
   const request = createMockRequest();
   const response = new Response(request);
-  const cookies = new Cookies(request, response);
+  const cookies = new SecureCookieMap(request, { response });
 
   return ({
     app,

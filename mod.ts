@@ -81,11 +81,6 @@ export type {
 } from "./body.ts";
 export { Context, type ContextSendOptions } from "./context.ts";
 export * as helpers from "./helpers.ts";
-export {
-  Cookies,
-  type CookiesGetOptions,
-  type CookiesSetDeleteOptions,
-} from "./cookies.ts";
 export * as etag from "./etag.ts";
 export { HttpRequest } from "./http_request.ts";
 export { FlashServer, hasFlash } from "./http_server_flash.ts";
@@ -138,6 +133,9 @@ export {
   errors as httpErrors,
   HttpError,
   isHttpError,
+  SecureCookieMap as Cookies,
+  type SecureCookieMapGetOptions as CookiesGetOptions,
+  type SecureCookieMapSetDeleteOptions as CookiesSetDeleteOptions,
   Status,
   STATUS_TEXT,
 } from "./deps.ts";
