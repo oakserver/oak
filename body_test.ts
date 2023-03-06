@@ -545,27 +545,16 @@ test({
 });
 
 test({
-  name: "body - default limit no content type",
+  name: "body - decode JSON with null body",
   async fn() {
     const requestBody = new RequestBody(
       ...toServerRequestBody(
-        new Request("http://localhost/index.html", {
-          body: "hello world",
-          method: "POST",
-          headers: {
-            "content-type": "text/plain",
-          },
-        }),
+        new Request("http://localhost/index.html", { method: "POST" }),
       ),
     );
-    const actual = requestBody.get();
-    await assertRejects(
-      async () => {
-        await actual.value;
-      },
-      RangeError,
-      "Body exceeds a limit of ",
-    );
+    const actual = requestBody.get({ type: "json" });
+    assertEquals(actual.type, "json");
+    assertEquals(await actual.value, null);
   },
 });
 

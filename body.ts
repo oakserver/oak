@@ -199,10 +199,7 @@ export class RequestBody {
     if (!this.#body) {
       return false;
     }
-    const contentLength = this.#headers.get("content-length");
-    if (typeof contentLength !== "string") {
-      return true;
-    }
+    const contentLength = this.#headers.get("content-length") ?? "0";
     const parsed = parseInt(contentLength, 10);
     if (isNaN(parsed)) {
       return true;
@@ -242,11 +239,15 @@ export class RequestBody {
           return () =>
             Promise.reject(new RangeError(`Body exceeds a limit of ${limit}.`));
         }
-        return async () =>
-          JSON.parse(
-            decoder.decode(await this.#valuePromise()),
-            this.#jsonBodyReviver,
-          );
+        return async () => {
+          const value = await this.#valuePromise();
+          return value.length
+            ? JSON.parse(
+              decoder.decode(await this.#valuePromise()),
+              this.#jsonBodyReviver,
+            )
+            : null;
+        };
       case "bytes":
         this.#type = "bytes";
         if (this.#exceedsLimit(limit)) {
