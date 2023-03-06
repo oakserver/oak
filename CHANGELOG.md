@@ -1,5 +1,11 @@
 # oak Change Log
 
+## Version 12.0.1
+
+- fix: decode empty request bodies for JSON as null (fa98626)
+- fix: handle throwing in context construction (ba9b7cc)
+- fix: send() doesn't set content-length header (b62de95)
+
 ## Version 12.0.0
 
 - feat: `Router.prototype.all` uses all methods (4ddc851)
