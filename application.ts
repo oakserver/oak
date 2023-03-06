@@ -425,12 +425,23 @@ export class Application<AS extends State = Record<string, any>>
     secure: boolean,
     state: RequestState,
   ): Promise<void> {
-    const context = new Context(
-      this,
-      request,
-      this.#getContextState(),
-      { secure, ...this.#contextOptions },
-    );
+    let context: Context<AS, AS> | undefined;
+    try {
+      context = new Context(
+        this,
+        request,
+        this.#getContextState(),
+        { secure, ...this.#contextOptions },
+      );
+    } catch (e) {
+      const error = e instanceof Error
+        ? e
+        : new Error(`non-error thrown: ${JSON.stringify(e)}`);
+      const { message } = error;
+      this.dispatchEvent(new ApplicationErrorEvent({ message, error }));
+      return;
+    }
+    assert(context, "Context was not created.");
     let resolve: () => void;
     const handlingPromise = new Promise<void>((res) => resolve = res);
     state.handling.add(handlingPromise);

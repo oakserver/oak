@@ -95,6 +95,67 @@ function setup(
   ];
 }
 
+function setupClosed(
+  ...requests: ([string?, RequestInit?])[]
+): [ServerConstructor<NativeRequest>, Response[]] {
+  const responseStack: Response[] = [];
+
+  function createRequest(
+    url = "http://localhost/index.html",
+    requestInit?: RequestInit,
+  ): NativeRequest {
+    const request = new Request(url, requestInit);
+
+    Object.defineProperty(request, "headers", {
+      get() {
+        throw new TypeError("cannot read headers: request closed");
+      },
+    });
+
+    return new NativeRequest({
+      request,
+      async respondWith(r) {
+        responseStack.push(await r);
+      },
+    });
+  }
+
+  const mockRequests = requests.map((r) => createRequest(...r));
+
+  return [
+    class MockNativeServer<AS extends State = Record<string, any>>
+      implements Server<ServerRequest> {
+      constructor(
+        _app: Application<AS>,
+        private options: Deno.ListenOptions | Deno.ListenTlsOptions,
+      ) {
+        optionsStack.push(options);
+      }
+
+      close(): void {
+        serverClosed = true;
+      }
+
+      listen(): Listener {
+        return {
+          addr: {
+            transport: "tcp",
+            hostname: this.options.hostname ?? "localhost",
+            port: this.options.port,
+          },
+        } as Listener;
+      }
+
+      async *[Symbol.asyncIterator]() {
+        for await (const request of mockRequests) {
+          yield request;
+        }
+      }
+    },
+    responseStack,
+  ];
+}
+
 test({
   name: "construct App()",
   fn() {
@@ -525,13 +586,29 @@ test({
 });
 
 test({
+  name: "closed native request is handled properly",
+  async fn() {
+    const [serverConstructor] = setupClosed([]);
+    const app = new Application({ serverConstructor, logErrors: false });
+    app.use((ctx) => {
+      ctx.throw(500, "oops!");
+    });
+    const errors: string[] = [];
+    app.addEventListener("error", ({ context, message }) => {
+      assert(!context);
+      errors.push(message);
+    });
+    await app.listen({ port: 8000 });
+    teardown();
+    assertEquals(errors, ["cannot read headers: request closed"]);
+  },
+});
+
+test({
   name: "uncaught errors impact response",
   async fn() {
     const [serverConstructor, responseStack] = setup([]);
-    const app = new Application({
-      serverConstructor,
-      logErrors: false,
-    });
+    const app = new Application({ serverConstructor, logErrors: false });
     app.use((ctx) => {
       ctx.throw(404, "File Not Found");
     });
