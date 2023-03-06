@@ -154,10 +154,6 @@ async function sendRange(
   if (ranges.length === 1) {
     const [byteRange] = ranges;
     response.headers.set(
-      "Content-Length",
-      String(byteRange.end - byteRange.start + 1),
-    );
-    response.headers.set(
       "Content-Range",
       `bytes ${byteRange.start}-${byteRange.end}/${size}`,
     );
@@ -185,10 +181,6 @@ async function sendRange(
       ranges,
       size,
       boundary,
-    );
-    response.headers.set(
-      "content-length",
-      String(multipartBody.contentLength()),
     );
     response.body = multipartBody;
   }
@@ -355,7 +347,6 @@ export async function send(
     return path;
   }
 
-  response.headers.set("Content-Length", String(stats.size));
   response.body = body;
 
   if (!response.headers.has("ETag")) {

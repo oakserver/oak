@@ -156,10 +156,6 @@ test({
     const ab = await response.arrayBuffer();
     assertEquals(new Uint8Array(ab), fixture);
     assertEquals(context.response.type, ".html");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     assert(context.response.headers.get("last-modified") != null);
     assertEquals(context.response.headers.get("cache-control"), "max-age=0");
     context.response.destroy();
@@ -180,10 +176,6 @@ test({
     const ab = await response.arrayBuffer();
     assertEquals(new Uint8Array(ab), fixture);
     assertEquals(context.response.type, ".html");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     assert(context.response.headers.get("last-modified") != null);
     assertEquals(context.response.headers.get("cache-control"), "max-age=0");
     context.response.destroy();
