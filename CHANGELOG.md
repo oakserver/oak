@@ -1,5 +1,17 @@
 # oak Change Log
 
+## Version 12.1.0
+
+- refactor: use `KeyStack` from std (d2eff20)
+
+  oak contributed `KeyStack` to the Deno std library, and is now migrating to
+  that.
+
+- refactor: migrate to `SecureCookieMap` from std (b136fdc)
+
+  oak contributed its cookie management to the Deno std library, and is now
+  migrating to that.
+
 ## Version 12.0.1
 
 - fix: decode empty request bodies for JSON as null (fa98626)
