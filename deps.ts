@@ -14,6 +14,7 @@ export {
   equals,
 } from "https://deno.land/std@0.178.0/bytes/mod.ts";
 export { timingSafeEqual } from "https://deno.land/std@0.178.0/crypto/timing_safe_equal.ts";
+export { KeyStack } from "https://deno.land/std@0.178.0/crypto/keystack.ts";
 export * as base64 from "https://deno.land/std@0.178.0/encoding/base64.ts";
 export {
   createHttpError,

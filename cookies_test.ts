@@ -5,10 +5,9 @@
 import { assertEquals, assertRejects } from "./test_deps.ts";
 
 import { Cookies } from "./cookies.ts";
-import { KeyStack } from "./keyStack.ts";
+import { KeyStack } from "./deps.ts";
 import type { Request } from "./request.ts";
 import type { Response } from "./response.ts";
-import { isNode } from "./util.ts";
 
 const { test } = Deno;
 

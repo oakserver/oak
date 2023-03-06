@@ -1,11 +1,10 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import { Context } from "./context.ts";
-import { Status, STATUS_TEXT } from "./deps.ts";
+import { KeyStack, Status, STATUS_TEXT } from "./deps.ts";
 import { FlashServer } from "./http_server_flash.ts";
 import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
-import { KeyStack } from "./keyStack.ts";
 import { compose, Middleware } from "./middleware.ts";
 import { cloneState } from "./structured_clone.ts";
 import {

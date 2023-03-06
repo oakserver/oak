@@ -17,10 +17,9 @@ import type {
   State,
 } from "./application.ts";
 import { Context } from "./context.ts";
-import { errors, Status } from "./deps.ts";
+import { errors, KeyStack, Status } from "./deps.ts";
 import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
-import { KeyStack } from "./keyStack.ts";
 import type {
   Data,
   Listener,

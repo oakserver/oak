@@ -2,8 +2,7 @@
 
 import type { Application, State } from "./application.ts";
 import { Cookies } from "./cookies.ts";
-import { createHttpError } from "./deps.ts";
-import { KeyStack } from "./keyStack.ts";
+import { createHttpError, KeyStack } from "./deps.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";

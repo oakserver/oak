@@ -3,7 +3,7 @@
 // This was heavily influenced by
 // [cookies](https://github.com/pillarjs/cookies/blob/master/index.js)
 
-import type { KeyStack } from "./keyStack.ts";
+import type { KeyStack } from "./deps.ts";
 import type { Request } from "./request.ts";
 import type { Response } from "./response.ts";
 
