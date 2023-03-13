@@ -5,7 +5,7 @@
 import { assert, assertEquals, assertStrictEquals } from "./test_deps.ts";
 import { errors } from "./deps.ts";
 import { createMockContext } from "./testing.ts";
-import { compose, Middleware } from "./middleware.ts";
+import { compose, Middleware, MiddlewareObject, Next } from "./middleware.ts";
 
 const { test } = Deno;
 
@@ -28,6 +28,31 @@ test({
     };
     await compose([mw1, mw2])(mockContext);
     assertEquals(callStack, [1, 2]);
+  },
+});
+
+test({
+  name: "middleware objects are composed correctly",
+  async fn() {
+    const callStack: number[] = [];
+    const mockContext = createMockContext();
+
+    class MockMiddlewareObject implements MiddlewareObject {
+      #counter = 0;
+
+      async handleRequest(_context: any, next: Next) {
+        assertEquals(typeof next, "function");
+        callStack.push(this.#counter++);
+        await next();
+      }
+    }
+
+    const mwo = new MockMiddlewareObject();
+    const fn = compose([mwo]);
+
+    await fn(mockContext);
+    await fn(mockContext);
+    assertEquals(callStack, [0, 1]);
   },
 });
 
