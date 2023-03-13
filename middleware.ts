@@ -28,8 +28,8 @@ export interface MiddlewareObject<
 
 /** Complete middleware type. */
 export type MiddlewareOrMiddlewareObject<
-S extends State = Record<string, any>,
-T extends Context = Context<S>,
+  S extends State = Record<string, any>,
+  T extends Context = Context<S>,
 > = Middleware<S, T> | MiddlewareObject<S, T>;
 
 /** Compose multiple middleware functions into a single middleware function. */

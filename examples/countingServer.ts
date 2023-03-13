@@ -12,8 +12,8 @@ import {
 } from "https://deno.land/std@0.178.0/fmt/colors.ts";
 
 import {
-  composeMiddleware,
   Application,
+  composeMiddleware,
   type Context,
   type MiddlewareObject,
   type Next,
@@ -42,7 +42,10 @@ class LoggerMiddleware implements MiddlewareObject {
   #composedMiddleware: (context: Context, next: Next) => Promise<unknown>;
 
   constructor() {
-    this.#composedMiddleware = composeMiddleware([this.#handleLogger, this.#handleResponseTime]);
+    this.#composedMiddleware = composeMiddleware([
+      this.#handleLogger,
+      this.#handleResponseTime,
+    ]);
   }
 
   async #handleLogger(ctx: Context, next: Next) {
