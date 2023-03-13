@@ -5,22 +5,25 @@
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
 
+/** A function for chaining middleware. */
+export type Next = () => Promise<unknown>;
+
 /** Middleware are functions which are chained together to deal with requests. */
 export interface Middleware<
   S extends State = Record<string, any>,
   T extends Context = Context<S>,
 > {
-  (context: T, next: () => Promise<unknown>): Promise<unknown> | unknown;
+  (context: T, next: Next): Promise<unknown> | unknown;
 }
 
 /** Middleware can also be objects to encapsulate more logic and state. */
 export interface MiddlewareObject<
   S extends State = Record<string, any>,
-  T extends Context = Context<S>,
+  T extends Context<S> = Context<S>,
 > {
   /** Optional function for delayed initialization. */
   init?: () => Promise<unknown> | unknown;
-  handleRequest(context: T, next: () => Promise<unknown>): Promise<unknown> | unknown;
+  handleRequest(context: T, next: Next): Promise<unknown> | unknown;
 }
 
 /** Complete middleware type. */
@@ -35,10 +38,10 @@ export function compose<
   T extends Context = Context<S>,
 >(
   middleware: MiddlewareOrMiddlewareObject<S, T>[],
-): (context: T, next?: () => Promise<unknown>) => Promise<unknown> {
+): (context: T, next?: Next) => Promise<unknown> {
   return function composedMiddleware(
     context: T,
-    next?: () => Promise<unknown>,
+    next?: Next,
   ): Promise<unknown> {
     let index = -1;
 
@@ -52,7 +55,7 @@ export function compose<
       if (typeof m === "function") {
         fn = m;
       } else if (m && typeof m.handleRequest === "function") {
-        fn = (m as MiddlewareObject).handleRequest;
+        fn = (m as MiddlewareObject).handleRequest.bind(m);
       }
       if (i === middleware.length) {
         fn = next;

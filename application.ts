@@ -6,7 +6,6 @@ import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import {
   compose,
-  Middleware,
   MiddlewareObject,
   MiddlewareOrMiddlewareObject,
 } from "./middleware.ts";

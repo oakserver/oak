@@ -72,6 +72,7 @@ export type {
   Middleware,
   MiddlewareObject,
   MiddlewareOrMiddlewareObject,
+  Next,
 } from "./middleware.ts";
 export { FormDataReader } from "./multipart.ts";
 export type {
