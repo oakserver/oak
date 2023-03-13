@@ -19,12 +19,15 @@ export interface MiddlewareObject<
   T extends Context = Context<S>,
 > {
   /** Optional function for delayed initialization. */
-  init()?: Promise<unknown> | unknown;
+  init?: () => Promise<unknown> | unknown;
   handleRequest(context: T, next: () => Promise<unknown>): Promise<unknown> | unknown;
 }
 
 /** Complete middleware type. */
-export type MiddlewareOrMiddlewareObject = Middleware | MiddlewareObject;
+export type MiddlewareOrMiddlewareObject<
+S extends State = Record<string, any>,
+T extends Context = Context<S>,
+> = Middleware<S, T> | MiddlewareObject<S, T>;
 
 /** Compose multiple middleware functions into a single middleware function. */
 export function compose<
