@@ -21,6 +21,7 @@ test({
   fn() {
     const fixture = { a: "a", b: () => {}, c: true };
     const actual = cloneState(fixture);
+    // @ts-ignore we shouldn't have type inference in asserts!
     assertEquals(actual, { a: "a", c: true });
   },
 });

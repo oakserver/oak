@@ -8,9 +8,8 @@ import {
   writeAllSync,
 } from "./test_deps.ts";
 
-import { httpErrors } from "./httpError.ts";
 import { FormDataFile, FormDataReader } from "./multipart.ts";
-import { equals, lookup, parse } from "./deps.ts";
+import { equals, errors, extname, parse, typeByExtension } from "./deps.ts";
 import { isNode, stripEol } from "./util.ts";
 
 const { test } = Deno;
@@ -79,7 +78,7 @@ function createBodyFile(
   contentType?: string,
 ): [Uint8Array, Buffer] {
   const fileData = Deno.readFileSync(filename);
-  const mediaType = contentType ?? lookup(filename);
+  const mediaType = contentType ?? typeByExtension(extname(filename));
   const basename = parse(filename).base;
   const pre = `
 --OAK-SERVER-BOUNDARY
@@ -215,7 +214,7 @@ test({
     const fdr = new FormDataReader(fixtureContentType, body);
     await assertRejects(async () => {
       await fdr.read({ maxFileSize: 100000 });
-    }, httpErrors.RequestEntityTooLarge);
+    }, errors.RequestEntityTooLarge);
   },
 });
 

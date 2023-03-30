@@ -2,7 +2,7 @@
 
 [![oak ci](https://github.com/oakserver/oak/workflows/ci/badge.svg)](https://github.com/oakserver/oak)
 [![codecov](https://codecov.io/gh/oakserver/oak/branch/main/graph/badge.svg?token=KEKZ52NXGP)](https://codecov.io/gh/oakserver/oak)
-[![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/oak/mod.ts)
+[![deno doc](https://doc.deno.land/badge.svg)](https/deno.land/x/oak/mod.ts)
 
 ![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fdep-count%2Fx%2Foak%2Fmod.ts)
 ![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fupdates%2Fx%2Foak%2Fmod.ts)
@@ -145,6 +145,19 @@ for await (const conn of listener) {
 
 An instance of application has some properties as well:
 
+- `contextState` - Determines the method used to create state for a new context.
+  A value of `"clone"` will set the state as a clone of the app state. A value
+  of `"prototype"` means the app's state will be used as the prototype of the
+  context's state. A value of `"alias"` means that the application's state and
+  the context's state will be a reference to the same object. A value of
+  `"empty"` will initialize the context's state with an empty object.
+
+- `.jsonBodyReplacer` - An optional replacer function which will be applied to
+  JSON bodies when forming a response.
+
+- `.jsonBodyReviver` - An optional reviver function which will be applied when
+  reading JSON bodies in a request.
+
 - `.keys`
 
   Keys to be used when signing and verifying cookies. The value can be set to an
@@ -167,6 +180,44 @@ An instance of application has some properties as well:
   A record of application state, which can be strongly typed by specifying a
   generic argument when constructing an `Application()`, or inferred by passing
   a state object (e.g. `Application({ state })`).
+
+### Using Deno's experimental flash server
+
+Deno has an experimental flash server which dramatically increases the
+performance of HTTP/HTTPS under Deno. oak supports this server. There are
+currently a few caveats:
+
+- There currently isn't a way to obtain the remote connection IP address,
+  meaning `ctx.request.ip` and `ctx.request.ips` do not work properly.
+- There appears to be an issue with streaming large files with flash.
+- Some of the exception handling with flash isn't as flexible as the "native"
+  implementation, meaning that certain errors result in a hard coded 500
+  internal server error as well as "invalid" responses result in a server hang.
+
+Because of these current caveats, the flash server is not turned on by default
+when detected in the environment.
+
+To use the flash server, you need to import it and pass it as an option when
+constructing the application:
+
+```ts
+import {
+  Application,
+  FlashServer,
+  hasFlash,
+} from "https://deno.land/x/oak/mod.ts";
+
+const appOptions = hasFlash() ? { serverConstructor: FlashServer } : undefined;
+
+const app = new Application(appOptions);
+
+// ... register middleware ...
+
+app.listen();
+```
+
+Currently to enable the flash server, you need to pass the `--unstable` flag to
+Deno CLI on startup. An example is contained in `examples/flashEchoServer.ts`.
 
 ### Context
 
@@ -396,6 +447,28 @@ And several methods:
   });
   ```
 
+  You can specify the maximum file size in options of the `read` method of the
+  `FormDataReader` to filter incoming files which are larger than that. It'll
+  return `undefined` if the size exceeds or it'll return the file as
+  `Uint8Array` like this:
+
+  ```ts
+  app.use(async (ctx) => {
+    try {
+      const formDataReader = ctx.request.body({ type: "form-data" }).value;
+      const formDataBody = await formDataReader.read({ maxSize: 10000000 }); // Max file size to handle
+      const files = formDataBody.files; //Return array of files
+      if (files) {
+        files.map((file) => {
+          file.content; // "undefined" or "Uint8Array"
+        });
+      }
+    } catch (error) {
+      // Handle error response
+    }
+  });
+  ```
+
   You can use the option `contentTypes` to set additional media types that when
   present as the content type for the request, the body will be parsed
   accordingly. The options takes possibly five keys: `json`, `form`, `formData`,
@@ -528,8 +601,7 @@ const app = new Application();
 app.addEventListener("listen", ({ hostname, port, secure }) => {
   console.log(
     `Listening on: ${secure ? "https://" : "http://"}${
-      hostname ??
-        "localhost"
+      hostname ?? "localhost"
     }:${port}`,
   );
 });
@@ -557,7 +629,7 @@ const { signal } = controller;
 
 const listenPromise = app.listen({ port: 8000, signal });
 
-// In order to close the sever...
+// In order to close the server...
 controller.abort();
 
 // Listen will stop listening for requests and the promise will resolve...
@@ -675,6 +747,12 @@ Check out the
 [documentation for that library](https://github.com/pillarjs/path-to-regexp#parameters)
 if you have advanced use cases.
 
+In most cases, the type of `context.params` is automatically inferred from the
+path template string through typescript magic. In more complex scenarios this
+might not yield the correct result however. In that case you can override the
+type with `router.get<RouteParams>`, where `RouteParams` is the explicit type
+for `context.params`.
+
 ### Nested routers
 
 Nesting routers is supported. The following example responds to
@@ -693,12 +771,13 @@ const posts = new Router()
       `Forum: ${ctx.params.forumId}, Post: ${ctx.params.postId}`;
   });
 
-const forums = new Router()
-  .use("/forums/:forumId/posts", posts.routes(), posts.allowedMethods());
+const forums = new Router().use(
+  "/forums/:forumId/posts",
+  posts.routes(),
+  posts.allowedMethods(),
+);
 
-await new Application()
-  .use(forums.routes())
-  .listen({ port: 8000 });
+await new Application().use(forums.routes()).listen({ port: 8000 });
 ```
 
 ## Static content
@@ -722,7 +801,7 @@ app.use(async (context, next) => {
       index: "index.html",
     });
   } catch {
-    next();
+    await next();
   }
 });
 

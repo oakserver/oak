@@ -10,13 +10,11 @@
  */
 
 import type { Application, State } from "./application.ts";
-import { createHttpError } from "./httpError.ts";
+import { accepts, createHttpError, SecureCookieMap } from "./deps.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
 import type { ErrorStatus } from "./types.d.ts";
-import { Cookies } from "./cookies.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
-import { preferredMediaTypes } from "./negotiation/mediaType.ts";
 
 /** Creates a mock of `Application`. */
 export function createMockApp<
@@ -87,26 +85,25 @@ export function createMockContext<
     path = "/",
     state,
     app = createMockApp(state),
-    headers,
+    headers: requestHeaders,
   }: MockContextOptions<R> = {},
 ) {
   function createMockRequest(): Request {
-    const headerMap = new Headers(headers);
+    const headers = new Headers(requestHeaders);
     return {
       accepts(...types: string[]) {
-        const acceptValue = headerMap.get("Accept");
-        if (!acceptValue) {
+        if (!headers.has("Accept")) {
           return;
         }
         if (types.length) {
-          return preferredMediaTypes(acceptValue, types)[0];
+          return accepts({ headers }, ...types);
         }
-        return preferredMediaTypes(acceptValue);
+        return accepts({ headers });
       },
       acceptsEncodings() {
         return mockContextState.encodingsAccepted;
       },
-      headers: headerMap,
+      headers,
       ip,
       method,
       path,
@@ -118,7 +115,7 @@ export function createMockContext<
 
   const request = createMockRequest();
   const response = new Response(request);
-  const cookies = new Cookies(request, response);
+  const cookies = new SecureCookieMap(request, { response });
 
   return ({
     app,

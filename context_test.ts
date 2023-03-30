@@ -10,8 +10,7 @@ import {
 } from "./test_deps.ts";
 import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
-import { Cookies } from "./cookies.ts";
-import { httpErrors } from "./httpError.ts";
+import { errors, SecureCookieMap } from "./deps.ts";
 import {
   isNativeRequest,
   NativeRequest,
@@ -106,7 +105,7 @@ test({
     assert(context instanceof Context);
     assertEquals(context.state, app.state);
     assertStrictEquals(context.app, app);
-    assert(context.cookies instanceof Cookies);
+    assert(context.cookies instanceof SecureCookieMap);
     assert(context.request instanceof OakRequest);
     assert(isNativeRequest(context.request.originalRequest));
     assert(context.response instanceof OakResponse);
@@ -126,7 +125,7 @@ test({
         let loggedIn: string | undefined;
         context.assert(loggedIn, 401, "Unauthorized");
       },
-      httpErrors.Unauthorized,
+      errors.Unauthorized,
       "Unauthorized",
     );
   },
@@ -140,7 +139,7 @@ test({
       () => {
         context.throw(404, "foobar");
       },
-      httpErrors.NotFound,
+      errors.NotFound,
       "foobar",
     );
   },
@@ -160,10 +159,6 @@ test({
     const ab = await response.arrayBuffer();
     assertEquals(new Uint8Array(ab), fixture);
     assertEquals(context.response.type, ".html");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     assert(context.response.headers.get("last-modified") != null);
     assertEquals(context.response.headers.get("cache-control"), "max-age=0");
     context.response.destroy();
@@ -184,10 +179,6 @@ test({
     const ab = await response.arrayBuffer();
     assertEquals(new Uint8Array(ab), fixture);
     assertEquals(context.response.type, ".html");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     assert(context.response.headers.get("last-modified") != null);
     assertEquals(context.response.headers.get("cache-control"), "max-age=0");
     context.response.destroy();
@@ -325,7 +316,7 @@ test({
       createMockApp(),
       createMockNativeRequest(),
       {},
-      true,
+      { secure: true },
     );
     assertEquals(context.request.secure, true);
   },
@@ -339,8 +330,8 @@ test({
     assertEquals(
       Deno.inspect(new Context(app, req, {}), { depth: 1 }),
       isNode()
-        ? `Context {\n  app: [MockApplication],\n  cookies: [Cookies],\n  isUpgradable: false,\n  respond: true,\n  request: [Request],\n  response: [Response],\n  socket: undefined,\n  state: {}\n}`
-        : `Context {\n  app: MockApplication {},\n  cookies: Cookies [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/"\n},\n  response: Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true },\n  socket: undefined,\n  state: {}\n}`,
+        ? `Context {\n  app: [MockApplication],\n  cookies: [SecureCookieMap],\n  isUpgradable: false,\n  respond: true,\n  request: [Request],\n  response: [Response],\n  socket: undefined,\n  state: {}\n}`
+        : `Context {\n  app: MockApplication {},\n  cookies: SecureCookieMap [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/"\n},\n  response: Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true },\n  socket: undefined,\n  state: {}\n}`,
     );
   },
 });

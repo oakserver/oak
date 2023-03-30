@@ -1,7 +1,6 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
-import { readerFromStreamReader } from "./deps.ts";
-import { httpErrors } from "./httpError.ts";
+import { errors, readerFromStreamReader } from "./deps.ts";
 import { isMediaType } from "./isMediaType.ts";
 import { FormDataReader } from "./multipart.ts";
 import type { ServerRequestBody } from "./types.d.ts";
@@ -187,6 +186,7 @@ export class RequestBody {
   #body: ReadableStream<Uint8Array> | null;
   #formDataReader?: FormDataReader;
   #headers: Headers;
+  #jsonBodyReviver?: (key: string, value: unknown) => unknown;
   #stream?: ReadableStream<Uint8Array>;
   #readAllBody?: Promise<Uint8Array>;
   #readBody: () => Promise<Uint8Array>;
@@ -199,10 +199,7 @@ export class RequestBody {
     if (!this.#body) {
       return false;
     }
-    const contentLength = this.#headers.get("content-length");
-    if (!contentLength) {
-      return true;
-    }
+    const contentLength = this.#headers.get("content-length") ?? "0";
     const parsed = parseInt(contentLength, 10);
     if (isNaN(parsed)) {
       return true;
@@ -242,8 +239,15 @@ export class RequestBody {
           return () =>
             Promise.reject(new RangeError(`Body exceeds a limit of ${limit}.`));
         }
-        return async () =>
-          JSON.parse(decoder.decode(await this.#valuePromise()));
+        return async () => {
+          const value = await this.#valuePromise();
+          return value.length
+            ? JSON.parse(
+              decoder.decode(await this.#valuePromise()),
+              this.#jsonBodyReviver,
+            )
+            : null;
+        };
       case "bytes":
         this.#type = "bytes";
         if (this.#exceedsLimit(limit)) {
@@ -308,9 +312,14 @@ export class RequestBody {
     return this.#readAllBody ?? (this.#readAllBody = this.#readBody());
   }
 
-  constructor({ body, readBody }: ServerRequestBody, headers: Headers) {
+  constructor(
+    { body, readBody }: ServerRequestBody,
+    headers: Headers,
+    jsonBodyReviver?: (key: string, value: unknown) => unknown,
+  ) {
     this.#body = body;
     this.#headers = headers;
+    this.#jsonBodyReviver = jsonBodyReviver;
     this.#readBody = readBody;
   }
 
@@ -351,7 +360,7 @@ export class RequestBody {
       const encoding = this.#headers.get("content-encoding") ??
         "identity";
       if (encoding !== "identity") {
-        throw new httpErrors.UnsupportedMediaType(
+        throw new errors.UnsupportedMediaType(
           `Unsupported content-encoding: ${encoding}`,
         );
       }

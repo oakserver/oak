@@ -3,26 +3,21 @@ name: ci
 on: [push, pull_request]
 
 jobs:
-  build:
-    name: tests (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
-      fail-fast: true
+  oak:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: download deno
-        uses: denoland/setup-deno@main
+      - name: clone repository
+        uses: actions/checkout@v3
+
+      - name: install deno
+        uses: denoland/setup-deno@v1
         with:
-          deno-version: 1.20.2
+          deno-version: 1.x
 
       - name: check format
-        if: matrix.os == 'ubuntu-latest'
         run: deno fmt --check
 
       - name: check linting
-        if: matrix.os == 'ubuntu-latest'
         run: deno lint
 
       - name: generate bundle
@@ -38,15 +33,12 @@ jobs:
         run: deno task test:unstable
 
       - name: test build for Node.js
-        if: matrix.os == 'ubuntu-latest'
         run: deno task build
 
       - name: generate lcov
-        if: matrix.os == 'ubuntu-latest'
         run: deno task coverage > cov.lcov
 
       - name: upload coverage
-        if: matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v2
         with:
           files: cov.lcov

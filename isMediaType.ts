@@ -7,7 +7,7 @@
  * MIT Licensed
  */
 
-import { lookup } from "./deps.ts";
+import { typeByExtension } from "./deps.ts";
 import { format, parse } from "./mediaTyper.ts";
 
 function mimeMatch(expected: string | undefined, actual: string): boolean {
@@ -52,7 +52,7 @@ function normalize(type: string): string | undefined {
   } else if (type[0] === "+") {
     return `*/*${type}`;
   }
-  return type.includes("/") ? type : lookup(type);
+  return type.includes("/") ? type : typeByExtension(type);
 }
 
 function normalizeType(value: string): string | undefined {

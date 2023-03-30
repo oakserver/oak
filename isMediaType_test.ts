@@ -8,7 +8,7 @@ const { test } = Deno;
 test({
   name: "isMediaType should ignore params",
   fn() {
-    const actual = isMediaType("text/html; charset=utf-8", ["text/*"]);
+    const actual = isMediaType("text/html; charset=UTF-8", ["text/*"]);
     assertEquals(actual, "text/html");
   },
 });
@@ -16,7 +16,7 @@ test({
 test({
   name: "isMediaType should ignore params LWS",
   fn() {
-    const actual = isMediaType("text/html ; charset=utf-8", ["text/*"]);
+    const actual = isMediaType("text/html ; charset=UTF-8", ["text/*"]);
     assertEquals(actual, "text/html");
   },
 });

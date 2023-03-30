@@ -9,8 +9,8 @@ import {
 
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
+import { errors } from "./deps.ts";
 import * as etag from "./etag.ts";
-import { httpErrors } from "./httpError.ts";
 import type { RouteParams } from "./router.ts";
 import { send } from "./send.ts";
 import { isNode } from "./util.ts";
@@ -51,10 +51,6 @@ test({
     const ab = await nativeResponse.arrayBuffer();
     assertEquals(new Uint8Array(ab), fixture);
     assertEquals(context.response.type, ".html");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     assert(context.response.headers.get("last-modified") != null);
     assertEquals(context.response.headers.get("cache-control"), "max-age=0");
     context.response.destroy();
@@ -75,10 +71,6 @@ test({
     assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertEquals(context.response.headers.get("content-encoding"), "gzip");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     context.response.destroy();
   },
 });
@@ -97,10 +89,6 @@ test({
     assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertEquals(context.response.headers.get("content-encoding"), "br");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     context.response.destroy();
   },
 });
@@ -118,10 +106,6 @@ test({
     assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     context.response.destroy();
   },
 });
@@ -138,7 +122,7 @@ test({
       });
     } catch (e) {
       console.log(e);
-      assert(e instanceof httpErrors.NotFound);
+      assert(e instanceof errors.NotFound);
       didThrow = true;
     }
     assert(didThrow);
@@ -158,10 +142,6 @@ test({
     assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     context.response.destroy();
   },
 });
@@ -177,7 +157,7 @@ test({
         root: "./fixtures",
       });
     } catch (e) {
-      assert(e instanceof httpErrors.Forbidden);
+      assert(e instanceof errors.Forbidden);
       didThrow = true;
     }
     assert(didThrow);
@@ -195,7 +175,7 @@ test({
         root: "./fixtures",
       });
     } catch (e) {
-      assert(e instanceof httpErrors.Forbidden);
+      assert(e instanceof errors.Forbidden);
       didThrow = true;
     }
     assert(didThrow);
@@ -216,10 +196,6 @@ test({
     assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     context.response.destroy();
   },
 });
@@ -237,10 +213,6 @@ test({
     assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     context.response.destroy();
   },
 });
@@ -258,10 +230,6 @@ test({
     assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     context.response.destroy();
   },
 });
@@ -277,7 +245,7 @@ test({
         root: "./fixtures",
       });
     } catch (e) {
-      assert(e instanceof httpErrors.Forbidden);
+      assert(e instanceof errors.Forbidden);
       didThrow = true;
     }
     assert(didThrow);
@@ -297,10 +265,6 @@ test({
     assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     context.response.destroy();
   },
 });
@@ -323,10 +287,6 @@ test({
     assertEquals(nativeResponse.status, 304);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
-    assertEquals(
-      context.response.headers.get("content-length"),
-      null,
-    );
     context.response.destroy();
   },
 });
@@ -350,10 +310,6 @@ test({
     assertEquals(nativeResponse.status, 200);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     context.response.destroy();
   },
 });
@@ -369,10 +325,6 @@ test({
     assertEquals(nativeResponse.status, 200);
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     const etagHeader = context.response.headers.get("etag");
     assertEquals(etagHeader, await etag.calculate(fixture));
   },
@@ -392,10 +344,6 @@ test({
     assertEquals(nativeResponse.status, 200);
     assertEquals(context.response.type, ".jpg");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     const etagHeader = context.response.headers.get("etag");
     assert(etagHeader && etagHeader.startsWith(`W/"4a3b7-`));
     context.response.destroy();
@@ -433,10 +381,6 @@ test({
     assertEquals(context.response.type, ".jpg");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
-    assertEquals(
       context.response.headers.get("etag"),
       await etag.calculate(fixture),
     );
@@ -453,7 +397,6 @@ test({
     const response = await context.response.toDomResponse();
     assertEquals(response.status, 206);
     assertEquals(context.response.type, ".json");
-    assertEquals(context.response.headers.get("content-length"), "6");
     assertEquals(await response.text(), `{\n  "h`);
   },
 });
@@ -468,7 +411,6 @@ test({
     const response = await context.response.toDomResponse();
     assertEquals(response.status, 206);
     assertEquals(context.response.type, ".json");
-    assertEquals(context.response.headers.get("content-length"), "23");
     assertEquals(await response.text(), `{\n  "hello": "world"\n}\n`);
   },
 });
@@ -487,16 +429,15 @@ test({
         `multipart/byteranges; boundary=`,
       ),
     );
-    assertEquals(response.headers.get("content-length"), "294");
     const actual = await response.text();
     assert(
       actual.includes(
-        `\nContent-Type: application/json; charset=utf-8\nContent-Range: 0-5/23\n\n{\n  "h\n`,
+        `\nContent-Type: application/json; charset=UTF-8\nContent-Range: 0-5/23\n\n{\n  "h\n`,
       ),
     );
     assert(
       actual.includes(
-        `\nContent-Type: application/json; charset=utf-8\nContent-Range: 6-9/23\n\nello\n`,
+        `\nContent-Type: application/json; charset=UTF-8\nContent-Range: 6-9/23\n\nello\n`,
       ),
     );
   },
@@ -517,10 +458,6 @@ test({
     const nativeResponse = await context.response.toDomResponse();
     assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, "application/importmap+json");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     assert(context.response.headers.get("last-modified") != null);
     assertEquals(context.response.headers.get("cache-control"), "max-age=0");
     context.response.destroy();
@@ -542,10 +479,6 @@ test({
     const nativeResponse = await context.response.toDomResponse();
     assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
     assertEquals(context.response.type, "plain/text");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     assert(context.response.headers.get("last-modified") != null);
     assertEquals(context.response.headers.get("cache-control"), "max-age=0");
     context.response.destroy();

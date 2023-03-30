@@ -17,11 +17,9 @@ import type {
   State,
 } from "./application.ts";
 import { Context } from "./context.ts";
-import { Status } from "./deps.ts";
+import { errors, KeyStack, Status } from "./deps.ts";
 import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
-import { httpErrors } from "./httpError.ts";
-import { KeyStack } from "./keyStack.ts";
 import type {
   Data,
   Listener,
@@ -51,6 +49,67 @@ function setup(
     requestInit?: RequestInit,
   ): NativeRequest {
     const request = new Request(url, requestInit);
+
+    return new NativeRequest({
+      request,
+      async respondWith(r) {
+        responseStack.push(await r);
+      },
+    });
+  }
+
+  const mockRequests = requests.map((r) => createRequest(...r));
+
+  return [
+    class MockNativeServer<AS extends State = Record<string, any>>
+      implements Server<ServerRequest> {
+      constructor(
+        _app: Application<AS>,
+        private options: Deno.ListenOptions | Deno.ListenTlsOptions,
+      ) {
+        optionsStack.push(options);
+      }
+
+      close(): void {
+        serverClosed = true;
+      }
+
+      listen(): Listener {
+        return {
+          addr: {
+            transport: "tcp",
+            hostname: this.options.hostname ?? "localhost",
+            port: this.options.port,
+          },
+        } as Listener;
+      }
+
+      async *[Symbol.asyncIterator]() {
+        for await (const request of mockRequests) {
+          yield request;
+        }
+      }
+    },
+    responseStack,
+  ];
+}
+
+function setupClosed(
+  ...requests: ([string?, RequestInit?])[]
+): [ServerConstructor<NativeRequest>, Response[]] {
+  const responseStack: Response[] = [];
+
+  function createRequest(
+    url = "http://localhost/index.html",
+    requestInit?: RequestInit,
+  ): NativeRequest {
+    const request = new Request(url, requestInit);
+
+    Object.defineProperty(request, "headers", {
+      get() {
+        throw new TypeError("cannot read headers: request closed");
+      },
+    });
 
     return new NativeRequest({
       request,
@@ -329,6 +388,7 @@ test({
     });
     let called = false;
     app.use((ctx) => {
+      // @ts-ignore we shouldn't have type inference in asserts!
       assertEquals(ctx.state, { b: "string", c: /c/ });
       assert(ctx.state !== ctx.app.state);
       called = true;
@@ -514,7 +574,7 @@ test({
       logErrors: false,
     });
     app.addEventListener("error", (evt) => {
-      assert(evt.error instanceof httpErrors.InternalServerError);
+      assert(evt.error instanceof errors.InternalServerError);
     });
     app.use((ctx) => {
       ctx.throw(500, "oops!");
@@ -525,13 +585,29 @@ test({
 });
 
 test({
+  name: "closed native request is handled properly",
+  async fn() {
+    const [serverConstructor] = setupClosed([]);
+    const app = new Application({ serverConstructor, logErrors: false });
+    app.use((ctx) => {
+      ctx.throw(500, "oops!");
+    });
+    const errors: string[] = [];
+    app.addEventListener("error", ({ context, message }) => {
+      assert(!context);
+      errors.push(message);
+    });
+    await app.listen({ port: 8000 });
+    teardown();
+    assertEquals(errors, ["cannot read headers: request closed"]);
+  },
+});
+
+test({
   name: "uncaught errors impact response",
   async fn() {
     const [serverConstructor, responseStack] = setup([]);
-    const app = new Application({
-      serverConstructor,
-      logErrors: false,
-    });
+    const app = new Application({ serverConstructor, logErrors: false });
     app.use((ctx) => {
       ctx.throw(404, "File Not Found");
     });
@@ -562,7 +638,7 @@ test({
     const [response] = responseStack;
     assertEquals([...response.headers], [[
       "content-type",
-      "text/plain; charset=utf-8",
+      "text/plain; charset=UTF-8",
     ]]);
     teardown();
   },
@@ -879,6 +955,77 @@ test({
       await app.handle(new Request("http://localhost/index.html"));
     }, TypeError);
     teardown();
+  },
+});
+
+function isBigInitValue(value: unknown): value is { __bigint: string } {
+  return value != null && typeof value === "object" && "__bigint" in value &&
+    typeof (value as any).__bigint === "string";
+}
+
+test({
+  name: "application - json reviver is passed",
+  async fn() {
+    let called = 0;
+    const app = new Application({
+      jsonBodyReviver(_, value, ctx) {
+        assert(ctx);
+        called++;
+        if (isBigInitValue(value)) {
+          return BigInt(value.__bigint);
+        } else {
+          return value;
+        }
+      },
+    });
+    app.use(async (ctx) => {
+      const body = ctx.request.body();
+      assert(body.type === "json");
+      const actual = await body.value;
+      assertEquals(actual, { a: 123456n });
+      ctx.response.body = {};
+      called++;
+    });
+    const body = JSON.stringify({
+      a: {
+        __bigint: "123456",
+      },
+    });
+    const actual = await app.handle(
+      new Request("http://localhost/index.html", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "content-length": String(body.length),
+        },
+        body,
+      }),
+    );
+    assertEquals(called, 4);
+    assertEquals(actual?.status, 200);
+  },
+});
+
+test({
+  name: "application - json replacer is passed",
+  async fn() {
+    let called = 0;
+    const app = new Application({
+      jsonBodyReplacer(_, value, ctx) {
+        assert(ctx);
+        called++;
+        return typeof value === "bigint"
+          ? { __bigint: value.toString(10) }
+          : value;
+      },
+    });
+    app.use(async (ctx) => {
+      ctx.response.body = { a: 123456n };
+    });
+    const actual = await app.handle(new Request("http://localhost/index.html"));
+    assertEquals(called, 3);
+    const body = await actual?.json();
+    assertEquals(body, { a: { __bigint: "123456" } });
   },
 });
 

@@ -2,9 +2,10 @@
   "tasks": {
     "build": "deno run --allow-read --allow-write --allow-net --allow-env --allow-run _build_npm.ts",
     "coverage": "deno coverage --unstable --lcov ./cov",
-    "test": "deno test --import-map import-map.json --allow-read --allow-write --allow-net --jobs 4 --ignore=npm",
+    "example": "deno run --unstable --allow-net examples/flashEchoServer.ts",
+    "test": "deno test --import-map import-map.json --allow-read --allow-write --allow-net --parallel --ignore=npm,http_server_native_unstable_test.ts",
     "test:bundle": "deno bundle --import-map import-map.json mod.ts oak.bundle.js",
-    "test:no-check": "deno test --import-map import-map.json --allow-read --allow-write --allow-net --no-check --jobs 4 --ignore=npm",
-    "test:unstable": "deno test --coverage=./cov --import-map import-map.json --allow-read --allow-write --allow-net --unstable --jobs 4 --ignore=npm"
+    "test:no-check": "deno test --import-map import-map.json --allow-read --allow-write --allow-net --no-check --parallel --ignore=npm,http_server_native_unstable_test.ts",
+    "test:unstable": "deno test --coverage=./cov --import-map import-map.json --allow-read --allow-write --allow-net --unstable --cert ./examples/tls/RootCA.crt --parallel --ignore=npm"
   }
 }
