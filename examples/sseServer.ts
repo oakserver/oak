@@ -55,8 +55,7 @@ router
     const id = setInterval(() => {
       const evt = new ServerSentEvent(
         "message",
-        { hello: "world" },
-        { id: counter++ },
+        { data: { hello: "world" }, id: counter++ },
       );
       target.dispatchEvent(evt);
       console.log("dispatched");
