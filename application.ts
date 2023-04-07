@@ -2,7 +2,6 @@
 
 import { Context } from "./context.ts";
 import { KeyStack, Status, STATUS_TEXT } from "./deps.ts";
-import { FlashServer } from "./http_server_flash.ts";
 import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import { compose, Middleware } from "./middleware.ts";
@@ -95,7 +94,7 @@ interface ApplicationListenEventInit extends EventInit {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "flash" | "custom";
+  serverType: "native" | "custom";
 }
 
 type ApplicationListenEventListenerOrEventListenerObject =
@@ -255,7 +254,7 @@ export class ApplicationListenEvent extends Event {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "flash" | "custom";
+  serverType: "native" | "custom";
 
   constructor(eventInitDict: ApplicationListenEventInit) {
     super("listen", eventInitDict);
@@ -602,11 +601,7 @@ export class Application<AS extends State = Record<string, any>>
       });
     }
     const { secure = false } = options;
-    const serverType = server instanceof HttpServer
-      ? "native"
-      : server instanceof FlashServer
-      ? "flash"
-      : "custom";
+    const serverType = server instanceof HttpServer ? "native" : "custom";
     const listener = await server.listen();
     const { hostname, port } = listener.addr as Deno.NetAddr;
     this.dispatchEvent(

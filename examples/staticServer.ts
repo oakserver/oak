@@ -11,17 +11,9 @@ import {
   yellow,
 } from "https://deno.land/std@0.182.0/fmt/colors.ts";
 
-import {
-  Application,
-  FlashServer,
-  hasFlash,
-  HttpError,
-  Status,
-} from "../mod.ts";
+import { Application, HttpError, Status } from "../mod.ts";
 
-const app = new Application(
-  hasFlash() ? { serverConstructor: FlashServer } : undefined,
-);
+const app = new Application();
 
 // Error handler middleware
 app.use(async (context, next) => {
