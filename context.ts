@@ -1,15 +1,17 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
-import { createHttpError, KeyStack, SecureCookieMap } from "./deps.ts";
+import {
+  createHttpError,
+  KeyStack,
+  SecureCookieMap,
+  ServerSentEventStreamTarget,
+  type ServerSentEventTarget,
+  type ServerSentEventTargetOptions,
+} from "./deps.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
-import {
-  ServerSentEventTargetOptions,
-  SSEStreamTarget,
-} from "./server_sent_event.ts";
-import type { ServerSentEventTarget } from "./server_sent_event.ts";
 import type {
   ErrorStatus,
   ServerRequest,
@@ -245,7 +247,7 @@ export class Context<
    * This will set `.respond` to `false`. */
   sendEvents(options?: ServerSentEventTargetOptions): ServerSentEventTarget {
     if (!this.#sse) {
-      this.#sse = new SSEStreamTarget(this, options);
+      this.#sse = new ServerSentEventStreamTarget(options);
     }
     return this.#sse;
   }

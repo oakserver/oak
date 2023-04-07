@@ -112,11 +112,6 @@ export type {
 } from "./router.ts";
 export { send } from "./send.ts";
 export type { SendOptions } from "./send.ts";
-export { ServerSentEvent } from "./server_sent_event.ts";
-export type {
-  ServerSentEventInit,
-  ServerSentEventTarget,
-} from "./server_sent_event.ts";
 /** Utilities for making testing oak servers easier. */
 export * as testing from "./testing.ts";
 export type {
@@ -136,6 +131,9 @@ export {
   SecureCookieMap as Cookies,
   type SecureCookieMapGetOptions as CookiesGetOptions,
   type SecureCookieMapSetDeleteOptions as CookiesSetDeleteOptions,
+  ServerSentEvent,
+  type ServerSentEventInit,
+  type ServerSentEventTarget,
   Status,
   STATUS_TEXT,
 } from "./deps.ts";

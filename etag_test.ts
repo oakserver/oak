@@ -81,7 +81,7 @@ test({
       mtime: new Date(Date.UTC(96, 1, 2, 3, 4, 5, 6)),
       atime: null,
       birthtime: null,
-      dev: null,
+      dev: 0,
       ino: null,
       mode: null,
       nlink: null,

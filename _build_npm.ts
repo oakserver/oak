@@ -9,7 +9,7 @@
  */
 
 import { build, emptyDir } from "https://deno.land/x/dnt@0.33.1/mod.ts";
-import { copy } from "https://deno.land/std@0.178.0/fs/copy.ts";
+import { copy } from "https://deno.land/std@0.182.0/fs/copy.ts";
 
 async function start() {
   await emptyDir("./npm");
