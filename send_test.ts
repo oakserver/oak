@@ -355,7 +355,9 @@ test({
   async fn() {
     const { context } = setup("/test.jpg");
     const fixture = await Deno.readFile("./fixtures/test.jpg");
-    context.request.headers.set("If-None-Match", await etag.calculate(fixture));
+    const ifNoneMatch = await etag.calculate(fixture);
+    assert(ifNoneMatch);
+    context.request.headers.set("If-None-Match", ifNoneMatch);
     await send(context, context.request.url.pathname, { root: "./fixtures" });
     const nativeResponse = await context.response.toDomResponse();
     assertEquals(nativeResponse.status, 304);

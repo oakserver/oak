@@ -308,8 +308,11 @@ export async function send(
 
   if (request.headers.has("If-None-Match") && mtime) {
     [body, entity] = await getEntity(path, mtime, stats, maxbuffer, response);
-    if (!await ifNoneMatch(request.headers.get("If-None-Match")!, entity)) {
-      response.headers.set("ETag", await calculate(entity));
+    const etag = await calculate(entity);
+    if (
+      etag && (!await ifNoneMatch(request.headers.get("If-None-Match")!, etag))
+    ) {
+      response.headers.set("ETag", etag);
       response.status = 304;
       return path;
     }
@@ -350,7 +353,10 @@ export async function send(
   response.body = body;
 
   if (!response.headers.has("ETag")) {
-    response.headers.set("ETag", await calculate(entity));
+    const etag = await calculate(entity);
+    if (etag) {
+      response.headers.set("ETag", etag);
+    }
   }
 
   if (!response.headers.has("Accept-Ranges")) {
