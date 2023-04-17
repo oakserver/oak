@@ -1,5 +1,27 @@
 # oak Change Log
 
+## Version 12.2.0
+
+- feat: remove experimental support for Deno flash server (d9f8829)
+
+  Version 1.35 of Deno will remove the
+  [experimental flash server](https://github.com/denoland/deno/pull/18568). The
+  abstraction to the HTTP server that will be stabilised provides no benefit to
+  oak, so the support for "flash" is being removed.
+
+- refactor: use SSE from std (9a6ae5d)
+
+  oak contributed `http/server_sent_event` to the Deno std library, and is now
+  migrating to that.
+
+- refactor: use std library for etag (e95bc10)
+
+  oak contributed `http/etag` to the Deno std library, and is now migrating to
+  that.
+
+- fix: update sseServer example (14a5b5c)
+- docs: remove experimental flash content from README (024aa8a)
+
 ## Version 12.1.0
 
 - refactor: use `KeyStack` from std (d2eff20)
