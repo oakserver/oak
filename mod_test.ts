@@ -40,6 +40,6 @@ test({
     assertEquals(typeof mod.send, "function");
     assertEquals(typeof mod.testing, "object");
     assertEquals(Object.keys(mod.testing).length, 4);
-    assertEquals(Object.keys(mod).length, 26);
+    assertEquals(Object.keys(mod).length, 27);
   },
 });

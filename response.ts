@@ -49,6 +49,7 @@ export const REDIRECT_BACK = Symbol("redirect backwards");
 export async function convertBodyToBodyInit(
   body: ResponseBody | ResponseBodyFunction,
   type?: string,
+  jsonBodyReplacer?: (key: string, value: unknown) => unknown,
 ): Promise<[globalThis.BodyInit | undefined, string | undefined]> {
   let result: globalThis.BodyInit | undefined;
   if (BODY_TYPES.includes(typeof body)) {
@@ -70,11 +71,11 @@ export async function convertBodyToBodyInit(
   } else if (isAsyncIterable(body)) {
     result = readableStreamFromAsyncIterable(body);
   } else if (body && typeof body === "object") {
-    result = JSON.stringify(body);
+    result = JSON.stringify(body, jsonBodyReplacer);
     type = type ?? "json";
   } else if (typeof body === "function") {
     const result = body.call(null);
-    return convertBodyToBodyInit(await result, type);
+    return convertBodyToBodyInit(await result, type, jsonBodyReplacer);
   } else if (body) {
     throw new TypeError("Response body was set but could not be converted.");
   }
@@ -105,6 +106,7 @@ export class Response {
   #bodySet = false;
   #domResponse?: globalThis.Response;
   #headers = new Headers();
+  #jsonBodyReplacer?: (key: string, value: unknown) => unknown;
   #request: Request;
   #resources: number[] = [];
   #status?: Status;
@@ -112,7 +114,11 @@ export class Response {
   #writable = true;
 
   async #getBodyInit(): Promise<globalThis.BodyInit | undefined> {
-    const [body, type] = await convertBodyToBodyInit(this.body, this.type);
+    const [body, type] = await convertBodyToBodyInit(
+      this.body,
+      this.type,
+      this.#jsonBodyReplacer,
+    );
     this.type = type;
     return body;
   }
@@ -209,8 +215,12 @@ export class Response {
     return this.#writable;
   }
 
-  constructor(request: Request) {
+  constructor(
+    request: Request,
+    jsonBodyReplacer?: (key: string, value: unknown) => unknown,
+  ) {
     this.#request = request;
+    this.#jsonBodyReplacer = jsonBodyReplacer;
   }
 
   /** Add a resource to the list of resources that will be closed when the
@@ -272,11 +282,11 @@ export class Response {
 
     if (this.#request.accepts("html")) {
       url = encodeURI(url);
-      this.type = "text/html; charset=utf-8";
+      this.type = "text/html; charset=UTF-8";
       this.body = `Redirecting to <a href="${url}">${url}</a>.`;
       return;
     }
-    this.type = "text/plain; charset=utf-8";
+    this.type = "text/plain; charset=UTF-8";
     this.body = `Redirecting to ${url}.`;
   }
 
@@ -309,7 +319,7 @@ export class Response {
     const responseInit: ResponseInit = {
       headers,
       status,
-      statusText: STATUS_TEXT.get(status),
+      statusText: STATUS_TEXT[status],
     };
 
     return this.#domResponse = new DomResponse(bodyInit, responseInit);

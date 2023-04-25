@@ -1,11 +1,14 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import { Context } from "./context.ts";
-import { Status, STATUS_TEXT } from "./deps.ts";
+import { KeyStack, Status, STATUS_TEXT } from "./deps.ts";
 import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
-import { KeyStack } from "./keyStack.ts";
-import { compose, Middleware } from "./middleware.ts";
+import {
+  compose,
+  isMiddlewareObject,
+  type MiddlewareOrMiddlewareObject,
+} from "./middleware.ts";
 import { cloneState } from "./structured_clone.ts";
 import {
   Key,
@@ -62,11 +65,23 @@ export interface HandleMethod {
 
 export type ListenOptions = ListenOptionsTls | ListenOptionsBase;
 
-interface ApplicationErrorEventListener<S extends AS, AS> {
+interface ApplicationCloseEventListener {
+  (evt: ApplicationCloseEvent): void | Promise<void>;
+}
+
+interface ApplicationCloseEventListenerObject {
+  handleEvent(evt: ApplicationCloseEvent): void | Promise<void>;
+}
+
+type ApplicationCloseEventListenerOrEventListenerObject =
+  | ApplicationCloseEventListener
+  | ApplicationCloseEventListenerObject;
+
+interface ApplicationErrorEventListener<S extends AS, AS extends State> {
   (evt: ApplicationErrorEvent<S, AS>): void | Promise<void>;
 }
 
-interface ApplicationErrorEventListenerObject<S extends AS, AS> {
+interface ApplicationErrorEventListenerObject<S extends AS, AS extends State> {
   handleEvent(evt: ApplicationErrorEvent<S, AS>): void | Promise<void>;
 }
 
@@ -75,7 +90,10 @@ interface ApplicationErrorEventInit<S extends AS, AS extends State>
   context?: Context<S, AS>;
 }
 
-type ApplicationErrorEventListenerOrEventListenerObject<S extends AS, AS> =
+type ApplicationErrorEventListenerOrEventListenerObject<
+  S extends AS,
+  AS extends State,
+> =
   | ApplicationErrorEventListener<S, AS>
   | ApplicationErrorEventListenerObject<S, AS>;
 
@@ -101,7 +119,7 @@ type ApplicationListenEventListenerOrEventListenerObject =
 
 /** Available options that are used when creating a new instance of
  * {@linkcode Application}. */
-export interface ApplicationOptions<S, R extends ServerRequest> {
+export interface ApplicationOptions<S extends State, R extends ServerRequest> {
   /** Determine how when creating a new context, the state from the application
    * should be applied. A value of `"clone"` will set the state as a clone of
    * the app state. Any non-cloneable or non-enumerable properties will not be
@@ -115,6 +133,43 @@ export interface ApplicationOptions<S, R extends ServerRequest> {
    * The default value is `"clone"`.
    */
   contextState?: "clone" | "prototype" | "alias" | "empty";
+
+  /** An optional replacer function to be used when serializing a JSON
+   * response. The replacer will be used with `JSON.stringify()` to encode any
+   * response bodies that need to be converted before sending the response.
+   *
+   * This is intended to allow responses to contain bigints and circular
+   * references and encoding other values which JSON does not support directly.
+   *
+   * This can be used in conjunction with `jsonBodyReviver` to handle decoding
+   * of request bodies if the same semantics are used for client requests.
+   *
+   * If more detailed or conditional usage is required, then serialization
+   * should be implemented directly in middleware. */
+  jsonBodyReplacer?: (
+    key: string,
+    value: unknown,
+    context: Context<S>,
+  ) => unknown;
+
+  /** An optional reviver function to be used when parsing a JSON request. The
+   * reviver will be used with `JSON.parse()` to decode any response bodies that
+   * are being converted as JSON.
+   *
+   * This is intended to allow requests to deserialize to bigints, circular
+   * references, or other values which JSON does not support directly.
+   *
+   * This can be used in conjunction with `jsonBodyReplacer` to handle decoding
+   * of response bodies if the same semantics are used for responses.
+   *
+   * If more detailed or conditional usage is required, then deserialization
+   * should be implemented directly in the middleware.
+   */
+  jsonBodyReviver?: (
+    key: string,
+    value: unknown,
+    context: Context<S>,
+  ) => unknown;
 
   /** An initial set of keys (or instance of {@linkcode KeyStack}) to be used for signing
    * cookies produced by the application. */
@@ -165,6 +220,12 @@ export type State = Record<string | number | symbol, any>;
 const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 
 const DEFAULT_SERVER: ServerConstructor<ServerRequest> = HttpServer;
+
+export class ApplicationCloseEvent extends Event {
+  constructor(eventInitDict: EventInit) {
+    super("close", eventInitDict);
+  }
+}
 
 export class ApplicationErrorEvent<S extends AS, AS extends State>
   extends ErrorEvent {
@@ -258,9 +319,13 @@ export class ApplicationListenEvent extends Event {
 export class Application<AS extends State = Record<string, any>>
   extends EventTarget {
   #composedMiddleware?: (context: Context<AS, AS>) => Promise<unknown>;
+  #contextOptions: Pick<
+    ApplicationOptions<AS, ServerRequest>,
+    "jsonBodyReplacer" | "jsonBodyReviver"
+  >;
   #contextState: "clone" | "prototype" | "alias" | "empty";
   #keys?: KeyStack;
-  #middleware: Middleware<State, Context<State, AS>>[] = [];
+  #middleware: MiddlewareOrMiddlewareObject<State, Context<State, AS>>[] = [];
   #serverConstructor: ServerConstructor<ServerRequest>;
 
   /** A set of keys, or an instance of `KeyStack` which will be used to sign
@@ -309,12 +374,14 @@ export class Application<AS extends State = Record<string, any>>
       serverConstructor = DEFAULT_SERVER,
       contextState = "clone",
       logErrors = true,
+      ...contextOptions
     } = options;
 
     this.proxy = proxy ?? false;
     this.keys = keys;
     this.state = state ?? {} as AS;
     this.#serverConstructor = serverConstructor;
+    this.#contextOptions = contextOptions;
     this.#contextState = contextState;
 
     if (logErrors) {
@@ -322,7 +389,7 @@ export class Application<AS extends State = Record<string, any>>
     }
   }
 
-  #getComposed(): ((context: Context<AS, AS>) => Promise<unknown>) {
+  #getComposed(): (context: Context<AS, AS>) => Promise<unknown> {
     if (!this.#composedMiddleware) {
       this.#composedMiddleware = compose(this.#middleware);
     }
@@ -369,9 +436,7 @@ export class Application<AS extends State = Record<string, any>>
         : error.status && typeof error.status === "number"
         ? error.status
         : 500;
-    context.response.body = error.expose
-      ? error.message
-      : STATUS_TEXT.get(status);
+    context.response.body = error.expose ? error.message : STATUS_TEXT[status];
   }
 
   /** Processing registered middleware on each request. */
@@ -380,7 +445,23 @@ export class Application<AS extends State = Record<string, any>>
     secure: boolean,
     state: RequestState,
   ): Promise<void> {
-    const context = new Context(this, request, this.#getContextState(), secure);
+    let context: Context<AS, AS> | undefined;
+    try {
+      context = new Context(
+        this,
+        request,
+        this.#getContextState(),
+        { secure, ...this.#contextOptions },
+      );
+    } catch (e) {
+      const error = e instanceof Error
+        ? e
+        : new Error(`non-error thrown: ${JSON.stringify(e)}`);
+      const { message } = error;
+      this.dispatchEvent(new ApplicationErrorEvent({ message, error }));
+      return;
+    }
+    assert(context, "Context was not created.");
     let resolve: () => void;
     const handlingPromise = new Promise<void>((res) => resolve = res);
     state.handling.add(handlingPromise);
@@ -416,12 +497,22 @@ export class Application<AS extends State = Record<string, any>>
       resolve!();
       state.handling.delete(handlingPromise);
       if (state.closing) {
-        state.server.close();
+        await state.server.close();
+        if (!state.closed) {
+          this.dispatchEvent(new ApplicationCloseEvent({}));
+        }
         state.closed = true;
       }
     }
   }
 
+  /** Add an event listener for a `"close"` event which occurs when the
+   * application is closed and no longer listening or handling requests. */
+  addEventListener<S extends AS>(
+    type: "close",
+    listener: ApplicationCloseEventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
   /** Add an event listener for an `"error"` event which occurs when an
    * un-caught error occurs when processing the middleware or during processing
    * of the response. */
@@ -440,7 +531,7 @@ export class Application<AS extends State = Record<string, any>>
   /** Add an event listener for an event.  Currently valid event types are
    * `"error"` and `"listen"`. */
   addEventListener(
-    type: "error" | "listen",
+    type: "close" | "error" | "listen",
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
   ): void {
@@ -472,7 +563,7 @@ export class Application<AS extends State = Record<string, any>>
       this,
       contextRequest,
       this.#getContextState(),
-      secure,
+      { secure, ...this.#contextOptions },
     );
     try {
       await this.#getComposed()(context);
@@ -512,6 +603,11 @@ export class Application<AS extends State = Record<string, any>>
     if (!this.#middleware.length) {
       throw new TypeError("There is no middleware to process requests.");
     }
+    for (const middleware of this.#middleware) {
+      if (isMiddlewareObject(middleware) && middleware.init) {
+        await middleware.init();
+      }
+    }
     if (typeof options === "string") {
       const match = ADDR_REGEXP.exec(options);
       if (!match) {
@@ -537,13 +633,14 @@ export class Application<AS extends State = Record<string, any>>
         if (!state.handling.size) {
           server.close();
           state.closed = true;
+          this.dispatchEvent(new ApplicationCloseEvent({}));
         }
         state.closing = true;
       });
     }
     const { secure = false } = options;
     const serverType = server instanceof HttpServer ? "native" : "custom";
-    const listener = server.listen();
+    const listener = await server.listen();
     const { hostname, port } = listener.addr as Deno.NetAddr;
     this.dispatchEvent(
       new ApplicationListenEvent({
@@ -592,11 +689,11 @@ export class Application<AS extends State = Record<string, any>>
    * ```
    */
   use<S extends State = AS>(
-    middleware: Middleware<S, Context<S, AS>>,
-    ...middlewares: Middleware<S, Context<S, AS>>[]
+    middleware: MiddlewareOrMiddlewareObject<S, Context<S, AS>>,
+    ...middlewares: MiddlewareOrMiddlewareObject<S, Context<S, AS>>[]
   ): Application<S extends AS ? S : (S & AS)>;
   use<S extends State = AS>(
-    ...middleware: Middleware<S, Context<S, AS>>[]
+    ...middleware: MiddlewareOrMiddlewareObject<S, Context<S, AS>>[]
   ): Application<S extends AS ? S : (S & AS)> {
     this.#middleware.push(...middleware);
     this.#composedMiddleware = undefined;

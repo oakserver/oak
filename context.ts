@@ -1,22 +1,41 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
-import { Cookies } from "./cookies.ts";
-import { createHttpError } from "./httpError.ts";
-import type { KeyStack } from "./keyStack.ts";
+import {
+  createHttpError,
+  KeyStack,
+  SecureCookieMap,
+  ServerSentEventStreamTarget,
+  type ServerSentEventTarget,
+  type ServerSentEventTargetOptions,
+} from "./deps.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
-import {
-  ServerSentEventTargetOptions,
-  SSEStreamTarget,
-} from "./server_sent_event.ts";
-import type { ServerSentEventTarget } from "./server_sent_event.ts";
 import type {
   ErrorStatus,
   ServerRequest,
   UpgradeWebSocketOptions,
 } from "./types.d.ts";
+import { assert } from "./util.ts";
+
+export interface ContextOptions<
+  S extends AS = State,
+  // deno-lint-ignore no-explicit-any
+  AS extends State = Record<string, any>,
+> {
+  jsonBodyReplacer?: (
+    key: string,
+    value: unknown,
+    context: Context<S>,
+  ) => unknown;
+  jsonBodyReviver?: (
+    key: string,
+    value: unknown,
+    context: Context<S>,
+  ) => unknown;
+  secure?: boolean;
+}
 
 export interface ContextSendOptions extends SendOptions {
   /** The filename to send, which will be resolved based on the other options.
@@ -67,12 +86,20 @@ export class Context<
   #socket?: WebSocket;
   #sse?: ServerSentEventTarget;
 
+  #wrapReviverReplacer(
+    reviver?: (key: string, value: unknown, context: this) => unknown,
+  ): undefined | ((key: string, value: unknown) => unknown) {
+    return reviver
+      ? (key: string, value: unknown) => reviver(key, value, this)
+      : undefined;
+  }
+
   /** A reference to the current application. */
   app: Application<AS>;
 
   /** An object which allows access to cookies, mediating both the request and
    * response. */
-  cookies: Cookies;
+  cookies: SecureCookieMap;
 
   /** Is `true` if the current connection is upgradeable to a web socket.
    * Otherwise the value is `false`.  Use `.upgrade()` to upgrade the connection
@@ -135,15 +162,31 @@ export class Context<
     app: Application<AS>,
     serverRequest: ServerRequest,
     state: S,
-    secure = false,
+    {
+      secure = false,
+      jsonBodyReplacer,
+      jsonBodyReviver,
+    }: ContextOptions<S, AS> = {},
   ) {
     this.app = app;
     this.state = state;
-    this.request = new Request(serverRequest, app.proxy, secure);
+    const { proxy } = app;
+    this.request = new Request(
+      serverRequest,
+      {
+        proxy,
+        secure,
+        jsonBodyReviver: this.#wrapReviverReplacer(jsonBodyReviver),
+      },
+    );
     this.respond = true;
-    this.response = new Response(this.request);
-    this.cookies = new Cookies(this.request, this.response, {
+    this.response = new Response(
+      this.request,
+      this.#wrapReviverReplacer(jsonBodyReplacer),
+    );
+    this.cookies = new SecureCookieMap(serverRequest, {
       keys: this.app.keys as KeyStack | undefined,
+      response: this.response,
       secure: this.request.secure,
     });
   }
@@ -202,10 +245,25 @@ export class Context<
    * be sent to the client and be available in the client's `EventSource` that
    * initiated the connection.
    *
-   * This will set `.respond` to `false`. */
+   * **Note** the body needs to be returned to the client to be able to
+   * dispatch events, so dispatching events within the middleware will delay
+   * sending the body back to the client.
+   *
+   * This will set the response body and update response headers to support
+   * sending SSE events. Additional middleware should not modify the body.
+   */
   sendEvents(options?: ServerSentEventTargetOptions): ServerSentEventTarget {
     if (!this.#sse) {
-      this.#sse = new SSEStreamTarget(this, options);
+      assert(this.response.writable, "The response is not writable.");
+      const sse = this.#sse = new ServerSentEventStreamTarget(options);
+      this.app.addEventListener("close", () => sse.close());
+      const [bodyInit, { headers }] = sse.asResponseInit({
+        headers: this.response.headers,
+      });
+      this.response.body = bodyInit;
+      if (headers instanceof Headers) {
+        this.response.headers = headers;
+      }
     }
     return this.#sse;
   }
@@ -240,6 +298,7 @@ export class Context<
       );
     }
     this.#socket = this.request.originalRequest.upgrade(options);
+    this.app.addEventListener("close", () => this.#socket?.close());
     this.respond = false;
     return this.#socket;
   }

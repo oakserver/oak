@@ -10,9 +10,11 @@ import {
 } from "./test_deps.ts";
 import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
-import { Cookies } from "./cookies.ts";
-import { httpErrors } from "./httpError.ts";
-import { NativeRequest } from "./http_server_native_request.ts";
+import { errors, SecureCookieMap } from "./deps.ts";
+import {
+  isNativeRequest,
+  NativeRequest,
+} from "./http_server_native_request.ts";
 import type {} from "./http_server_native.ts";
 import { Request as OakRequest } from "./request.ts";
 import { Response as OakResponse } from "./response.ts";
@@ -20,14 +22,17 @@ import { cloneState } from "./structured_clone.ts";
 import type { UpgradeWebSocketFn, UpgradeWebSocketOptions } from "./types.d.ts";
 import { isNode } from "./util.ts";
 
-const { test } = Deno;
-
 function createMockApp<S extends State = Record<string, any>>(
   state = {} as S,
 ): Application<S> {
+  let listeners: any[] = [];
   return {
     state,
+    listeners,
     dispatchEvent() {},
+    addEventListener(event: string) {
+      listeners.push(event);
+    },
     [Symbol.for("Deno.customInspect")]() {
       return `MockApplication {}`;
     },
@@ -94,7 +99,7 @@ function createMockNativeRequest(
   return new NativeRequest(requestEvent, { upgradeWebSocket });
 }
 
-test({
+Deno.test({
   name: "context",
   fn() {
     const app = createMockApp();
@@ -103,13 +108,14 @@ test({
     assert(context instanceof Context);
     assertEquals(context.state, app.state);
     assertStrictEquals(context.app, app);
-    assert(context.cookies instanceof Cookies);
+    assert(context.cookies instanceof SecureCookieMap);
     assert(context.request instanceof OakRequest);
+    assert(isNativeRequest(context.request.originalRequest));
     assert(context.response instanceof OakResponse);
   },
 });
 
-test({
+Deno.test({
   name: "context.assert()",
   fn() {
     const context: Context = new Context(
@@ -122,13 +128,13 @@ test({
         let loggedIn: string | undefined;
         context.assert(loggedIn, 401, "Unauthorized");
       },
-      httpErrors.Unauthorized,
+      errors.Unauthorized,
       "Unauthorized",
     );
   },
 });
 
-test({
+Deno.test({
   name: "context.throw()",
   fn() {
     const context = new Context(createMockApp(), createMockNativeRequest(), {});
@@ -136,13 +142,13 @@ test({
       () => {
         context.throw(404, "foobar");
       },
-      httpErrors.NotFound,
+      errors.NotFound,
       "foobar",
     );
   },
 });
 
-test({
+Deno.test({
   name: "context.send() default path",
   async fn() {
     const context = new Context(
@@ -156,17 +162,13 @@ test({
     const ab = await response.arrayBuffer();
     assertEquals(new Uint8Array(ab), fixture);
     assertEquals(context.response.type, ".html");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     assert(context.response.headers.get("last-modified") != null);
     assertEquals(context.response.headers.get("cache-control"), "max-age=0");
     context.response.destroy();
   },
 });
 
-test({
+Deno.test({
   name: "context.send() specified path",
   async fn() {
     const context = new Context(createMockApp(), createMockNativeRequest(), {});
@@ -180,17 +182,13 @@ test({
     const ab = await response.arrayBuffer();
     assertEquals(new Uint8Array(ab), fixture);
     assertEquals(context.response.type, ".html");
-    assertEquals(
-      context.response.headers.get("content-length"),
-      String(fixture.length),
-    );
     assert(context.response.headers.get("last-modified") != null);
     assertEquals(context.response.headers.get("cache-control"), "max-age=0");
     context.response.destroy();
   },
 });
 
-test({
+Deno.test({
   name: "context.upgrade()",
   async fn() {
     const context = new Context(
@@ -217,10 +215,11 @@ test({
     assertEquals(respondWithStack.length, 1);
     assertStrictEquals(await respondWithStack[0], mockResponse);
     assertEquals(upgradeWebSocketStack.length, 1);
+    assertEquals((context.app as any).listeners, ["close"]);
   },
 });
 
-test({
+Deno.test({
   name: "context.upgrade() - not supported",
   async fn() {
     const context = new Context(
@@ -251,7 +250,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "context.upgrade() failure does not set socket/respond",
   async fn() {
     const context = new Context(createMockApp(), createMockNativeRequest(), {});
@@ -264,7 +263,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "context.isUpgradable true",
   async fn() {
     const context = new Context(
@@ -285,7 +284,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "context.isUpgradable false",
   async fn() {
     const context = new Context(
@@ -304,30 +303,31 @@ test({
   },
 });
 
-test({
-  name: "context.getSSETarget()",
+Deno.test({
+  name: "context.sendEvents()",
   async fn() {
     const context = new Context(createMockApp(), createMockNativeRequest(), {});
     const sse = context.sendEvents();
+    assertEquals((context.app as any).listeners, ["close"]);
     sse.dispatchComment(`hello world`);
     await sse.close();
   },
 });
 
-test({
+Deno.test({
   name: "context create secure",
   fn() {
     const context = new Context(
       createMockApp(),
       createMockNativeRequest(),
       {},
-      true,
+      { secure: true },
     );
     assertEquals(context.request.secure, true);
   },
 });
 
-test({
+Deno.test({
   name: "Context - inspecting",
   fn() {
     const app = createMockApp();
@@ -335,8 +335,8 @@ test({
     assertEquals(
       Deno.inspect(new Context(app, req, {}), { depth: 1 }),
       isNode()
-        ? `Context {\n  app: [MockApplication],\n  cookies: [Cookies],\n  isUpgradable: false,\n  respond: true,\n  request: [Request],\n  response: [Response],\n  socket: undefined,\n  state: {}\n}`
-        : `Context {\n  app: MockApplication {},\n  cookies: Cookies [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/"\n},\n  response: Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true },\n  socket: undefined,\n  state: {}\n}`,
+        ? `Context {\n  app: [MockApplication],\n  cookies: [SecureCookieMap],\n  isUpgradable: false,\n  respond: true,\n  request: [Request],\n  response: [Response],\n  socket: undefined,\n  state: {}\n}`
+        : `Context {\n  app: MockApplication {},\n  cookies: SecureCookieMap [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/"\n},\n  response: Response { body: undefined, headers: Headers {}, status: 404, type: undefined, writable: true },\n  socket: undefined,\n  state: {}\n}`,
     );
   },
 });

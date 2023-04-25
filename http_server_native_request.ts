@@ -14,9 +14,13 @@ export const DomResponse: typeof Response = (globalThis as any).Response ??
 
 const maybeUpgradeWebSocket: UpgradeWebSocketFn | undefined =
   "upgradeWebSocket" in Deno
-    ? // deno-lint-ignore no-explicit-any
-      (Deno as any).upgradeWebSocket.bind(Deno)
+    // deno-lint-ignore no-explicit-any
+    ? (Deno as any).upgradeWebSocket.bind(Deno)
     : undefined;
+
+export function isNativeRequest(r: ServerRequest): r is NativeRequest {
+  return r instanceof NativeRequest;
+}
 
 export interface NativeRequestOptions {
   conn?: Deno.Conn;

@@ -130,13 +130,62 @@ logged.
 
 Specifically error messages like
 `Http - connection closed before message completed` can occur when responding to
-requests where the connection drops before Deno has fully flushed the body. In
-some network environments this is "normal", but neither Deno nor oak know that,
-so the error gets surfaced. There maybe no way to avoid 100% of these errors,
-and an application might want to respond to that (like clearing some sort of
-state), therefore oak does not just "ignore" them, but provides them.
+requests where the connection drops before Deno has fully flushed the body or
+`UnexpectedEof - early eof` when the server is terminating a request for various
+reasons. In some network environments this is "normal", but neither Deno nor oak
+know that, so the error gets surfaced. There maybe no way to avoid 100% of these
+errors, and an application might want to respond to that (like clearing some
+sort of state), therefore oak does not just "ignore" them, but provides them.
 
 You can disabled automatic logging by setting `logErrors` to `false` in the
 `Application` options. You can also use the
-`.addEventHandler("error", (evt) => {});` to register your own event handler for
-uncaught errors.
+`.addEventListener("error", (evt) => {});` to register your own event handler
+for uncaught errors.
+
+## I'm getting `"The response is not writable."` error unexpectedly.
+
+The most common cause of this is "dropping" the flow control of the middleware.
+Dropping the flow control is typically accomplished by not invoking `next()`
+within the middleware. When the flow control is dropped, the oak application
+assumes that all processing is done, stops calling other middleware in the
+stack, seals the response and sends it. Subsequent changes to the response are
+what then cause that error.
+
+For simple middleware, dropping the flow control usually is not an issue, for
+example if you are responding with static content with the router:
+
+```ts
+import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+
+const router = new Router();
+
+router.get("/", (ctx) => {
+  ctx.response.body = "hello world";
+});
+
+const app = new Application();
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+app.listen();
+```
+
+A much better solution is to always be explicit about the flow control of the
+middleware by ensuring that `next()` is invoked:
+
+```ts
+import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+
+const router = new Router();
+
+router.get("/", (ctx, next) => {
+  ctx.response.body = "hello world";
+  return next();
+});
+
+const app = new Application();
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+app.listen();
+```

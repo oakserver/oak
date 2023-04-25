@@ -1,7 +1,12 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
-import { concat, contentType, copyBytes, Status } from "./deps.ts";
-import { createHttpError } from "./httpError.ts";
+import {
+  concat,
+  contentType,
+  copyBytes,
+  createHttpError,
+  Status,
+} from "./deps.ts";
 import { calculate } from "./etag.ts";
 import type { FileInfo } from "./etag.ts";
 import { assert, DEFAULT_CHUNK_SIZE } from "./util.ts";

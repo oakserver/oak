@@ -9,8 +9,7 @@ import {
 } from "./test_deps.ts";
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
-import { Status } from "./deps.ts";
-import { httpErrors } from "./httpError.ts";
+import { errors, Status } from "./deps.ts";
 import { Router, RouterContext } from "./router.ts";
 
 const { test } = Deno;
@@ -283,10 +282,6 @@ test({
 
     const callStack: number[] = [];
     const router = new Router();
-    router.all("/", async (_context, next) => {
-      callStack.push(0);
-      await next();
-    });
     router.delete("/", () => {
       callStack.push(1);
     });
@@ -321,10 +316,6 @@ test({
 
     const callStack: number[] = [];
     const router = new Router();
-    router.all("/", async (_context, next) => {
-      callStack.push(0);
-      await next();
-    });
     router.delete("/", () => {
       callStack.push(1);
     });
@@ -429,6 +420,39 @@ test({
 });
 
 test({
+  name: "router match using add",
+  async fn() {
+    const { context, next } = setup("/", "PUT");
+
+    const callStack: number[] = [];
+    const router = new Router();
+    router.all("/", (_ctx, next) => {
+      callStack.push(0);
+      return next();
+    });
+    router.add("PUT", "/", (_ctx, next) => {
+      callStack.push(1);
+      return next();
+    });
+    router.add(["PUT", "GET"], "/", (_ctx, next) => {
+      callStack.push(2);
+      return next();
+    });
+    router.add("POST", "/", (_ctx, next) => {
+      callStack.push(3);
+      return next();
+    });
+    router.add(["POST"], "/", (_ctx, next) => {
+      callStack.push(4);
+      return next();
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [0, 1, 2]);
+  },
+});
+
+test({
   name: "router patch prefix",
   async fn() {
     const { context, next } = setup("/route1/action1", "GET");
@@ -489,7 +513,15 @@ test({
     const routes = [...router];
     assertEquals(routes.length, 3);
     assertEquals(routes[0].path, "/route");
-    assertEquals(routes[0].methods, ["HEAD", "DELETE", "GET", "POST", "PUT"]);
+    assertEquals(routes[0].methods, [
+      "HEAD",
+      "DELETE",
+      "GET",
+      "HEAD",
+      "PATCH",
+      "POST",
+      "PUT",
+    ]);
     assertEquals(routes[0].middleware.length, 1);
   },
 });
@@ -607,7 +639,7 @@ test({
     await routes(context, next);
     await mw(context, next);
     assertEquals(context.response.status, Status.OK);
-    assertEquals(context.response.headers.get("Allowed"), "PUT, PATCH");
+    assertEquals(context.response.headers.get("Allow"), "PUT, PATCH");
   },
 });
 
@@ -656,7 +688,7 @@ test({
     await routes(context, next);
     await assertRejects(async () => {
       await mw(context, next);
-    }, httpErrors.NotImplemented);
+    }, errors.NotImplemented);
   },
 });
 
@@ -673,7 +705,27 @@ test({
     await routes(context, next);
     await assertRejects(async () => {
       await mw(context, next);
-    }, httpErrors.MethodNotAllowed);
+    }, errors.MethodNotAllowed);
+  },
+});
+
+test({
+  name: "router allowedMethods() with all() route uses all methods",
+  async fn() {
+    const { context, next } = setup("/foo", "OPTIONS");
+    const router = new Router();
+    router.all("/foo", (_ctx, next) => {
+      return next();
+    });
+    const routes = router.routes();
+    const mw = router.allowedMethods();
+    await routes(context, next);
+    await mw(context, next);
+    assertEquals(context.response.status, Status.OK);
+    assertEquals(
+      context.response.headers.get("Allow"),
+      "HEAD, DELETE, GET, PATCH, POST, PUT",
+    );
   },
 });
 
@@ -712,10 +764,34 @@ test({
         ctx.params.id;
         ctx.params.page;
         ctx.state.session;
+      }).post<{ id: string }>("/:id\\:archive", (ctx) => {
+        ctx.params.id;
+        // @ts-expect-error
+        ctx.params["id:archive"];
+        // @ts-expect-error
+        ctx.params["id\\:archive"];
       }).routes(),
     ).use((ctx) => {
       ctx.state.id;
     });
+  },
+});
+
+test({
+  name: "router state types",
+  fn() {
+    const router = new Router<{ foo: string }>();
+    router.patch<{ id: string }>(
+      "/:id\\:archive",
+      (ctx) => {
+        ctx.params.id;
+        ctx.state.foo;
+      },
+      (ctx) => {
+        ctx.params.id;
+        ctx.state.foo;
+      },
+    );
   },
 });
 

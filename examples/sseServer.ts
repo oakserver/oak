@@ -8,7 +8,7 @@ import {
   cyan,
   green,
   yellow,
-} from "https://deno.land/std@0.131.0/fmt/colors.ts";
+} from "https://deno.land/std@0.183.0/fmt/colors.ts";
 
 import {
   Application,
@@ -55,8 +55,7 @@ router
     const id = setInterval(() => {
       const evt = new ServerSentEvent(
         "message",
-        { hello: "world" },
-        { id: counter++ },
+        { data: { hello: "world" }, id: counter++ },
       );
       target.dispatchEvent(evt);
       console.log("dispatched");

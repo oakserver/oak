@@ -56,21 +56,48 @@ export type RedirectStatus =
   | Status.PermanentRedirect; // 308
 
 export type HTTPMethods =
-  | "HEAD"
-  | "OPTIONS"
+  | "ACL"
+  | "BIND"
+  | "CHECKOUT"
+  | "CONNECT"
+  | "COPY"
+  | "DELETE"
   | "GET"
-  | "PUT"
+  | "HEAD"
+  | "LINK"
+  | "LOCK"
+  | "M-SEARCH"
+  | "MERGE"
+  | "MKACTIVITY"
+  | "MKCALENDAR"
+  | "MKCOL"
+  | "MOVE"
+  | "NOTIFY"
+  | "OPTIONS"
   | "PATCH"
   | "POST"
-  | "DELETE";
+  | "PROPFIND"
+  | "PROPPATCH"
+  | "PURGE"
+  | "PUT"
+  | "REBIND"
+  | "REPORT"
+  | "SEARCH"
+  | "SOURCE"
+  | "SUBSCRIBE"
+  | "TRACE"
+  | "UNBIND"
+  | "UNLINK"
+  | "UNLOCK"
+  | "UNSUBSCRIBE";
 
 export interface Listener {
   addr: { hostname: string; port: number };
 }
 
 export interface Server<T> extends AsyncIterable<T> {
-  close(): void;
-  listen(): Listener;
+  close(): void | Promise<void>;
+  listen(): Listener | Promise<Listener>;
   [Symbol.asyncIterator](): AsyncIterableIterator<T>;
 }
 

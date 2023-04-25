@@ -60,19 +60,20 @@ export type {
   BodyType,
   BodyUndefined,
 } from "./body.ts";
-export { Context } from "./context.ts";
-export type { ContextSendOptions } from "./context.ts";
+export { Context, type ContextSendOptions } from "./context.ts";
 export * as helpers from "./helpers.ts";
-export { Cookies } from "./cookies.ts";
-export type { CookiesGetOptions, CookiesSetDeleteOptions } from "./cookies.ts";
 export * as etag from "./etag.ts";
 export { HttpServer as HttpServerNative } from "./http_server_native.ts";
-export type { NativeRequest } from "./http_server_native_request.ts";
-export { HttpError, httpErrors, isHttpError } from "./httpError.ts";
+export { type NativeRequest } from "./http_server_native_request.ts";
 export { proxy } from "./middleware/proxy.ts";
 export type { ProxyOptions } from "./middleware/proxy.ts";
 export { compose as composeMiddleware } from "./middleware.ts";
-export type { Middleware } from "./middleware.ts";
+export type {
+  Middleware,
+  MiddlewareObject,
+  MiddlewareOrMiddlewareObject,
+  Next,
+} from "./middleware.ts";
 export { FormDataReader } from "./multipart.ts";
 export type {
   FormDataBody,
@@ -95,11 +96,6 @@ export type {
 } from "./router.ts";
 export { send } from "./send.ts";
 export type { SendOptions } from "./send.ts";
-export { ServerSentEvent } from "./server_sent_event.ts";
-export type {
-  ServerSentEventInit,
-  ServerSentEventTarget,
-} from "./server_sent_event.ts";
 /** Utilities for making testing oak servers easier. */
 export * as testing from "./testing.ts";
 export type {
@@ -110,5 +106,18 @@ export type {
 } from "./types.d.ts";
 export { isErrorStatus, isRedirectStatus } from "./util.ts";
 
-// Re-exported from `net`
-export { Status, STATUS_TEXT } from "./deps.ts";
+// Re-exported from `std/http`
+export {
+  createHttpError,
+  errors as httpErrors,
+  HttpError,
+  isHttpError,
+  SecureCookieMap as Cookies,
+  type SecureCookieMapGetOptions as CookiesGetOptions,
+  type SecureCookieMapSetDeleteOptions as CookiesSetDeleteOptions,
+  ServerSentEvent,
+  type ServerSentEventInit,
+  type ServerSentEventTarget,
+  Status,
+  STATUS_TEXT,
+} from "./deps.ts";

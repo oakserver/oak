@@ -1,7 +1,7 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
+import { errors } from "./deps.ts";
 import { assert, assertEquals, assertThrows } from "./test_deps.ts";
-import { httpErrors } from "./httpError.ts";
 import { decodeComponent, getRandomFilename, resolvePath } from "./util.ts";
 
 const { test } = Deno;
@@ -29,7 +29,7 @@ test({
   fn() {
     assertThrows(() => {
       resolvePath("../foo/bar");
-    }, httpErrors.Forbidden);
+    }, errors.Forbidden);
   },
 });
 
@@ -38,7 +38,7 @@ test({
   fn() {
     assertThrows(() => {
       resolvePath("foo/../../bar");
-    }, httpErrors.Forbidden);
+    }, errors.Forbidden);
   },
 });
 
@@ -49,7 +49,7 @@ test({
       () => {
         resolvePath("/dev/null");
       },
-      httpErrors.BadRequest,
+      errors.BadRequest,
       "Malicious Path",
     );
   },
@@ -62,7 +62,7 @@ test({
       () => {
         resolvePath("./foo/bar\0baz");
       },
-      httpErrors.BadRequest,
+      errors.BadRequest,
       "Malicious Path",
     );
   },

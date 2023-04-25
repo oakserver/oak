@@ -2,9 +2,8 @@
 
 import { assert, assertEquals, assertThrows } from "./test_deps.ts";
 
-import { concat, copyBytes } from "./deps.ts";
+import { concat, copyBytes, errors } from "./deps.ts";
 import { calculate } from "./etag.ts";
-import { httpErrors } from "./httpError.ts";
 import { ifRange, MultiPartStream, parseRange } from "./range.ts";
 
 const { test } = Deno;
@@ -78,7 +77,7 @@ test({
   async fn() {
     const content = new TextEncoder().encode("hello deno");
     assert(
-      await ifRange(`"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, 1445412480000, content),
+      await ifRange(`"a-YdfmHmj2RiwOVqJupcf3PLK9PuJ"`, 1445412480000, content),
     );
   },
 });
@@ -98,6 +97,7 @@ test({
       size: 1024,
       mtime: new Date(1445412480000),
     });
+    assert(etag);
     assert(
       await ifRange(etag, 1445412480000, {
         size: 1024,
@@ -127,16 +127,16 @@ test({
   fn() {
     assertThrows(() => {
       parseRange(`special=0-199`, 400);
-    }, httpErrors["RequestedRangeNotSatisfiable"]);
+    }, errors["RequestedRangeNotSatisfiable"]);
     assertThrows(() => {
       parseRange(`special=0-499`, 400);
-    }, httpErrors["RequestedRangeNotSatisfiable"]);
+    }, errors["RequestedRangeNotSatisfiable"]);
     assertThrows(() => {
       parseRange(`special=200-0`, 400);
-    }, httpErrors["RequestedRangeNotSatisfiable"]);
+    }, errors["RequestedRangeNotSatisfiable"]);
     assertThrows(() => {
       parseRange(`special=400-`, 400);
-    }, httpErrors["RequestedRangeNotSatisfiable"]);
+    }, errors["RequestedRangeNotSatisfiable"]);
   },
 });
 
@@ -161,7 +161,7 @@ test({
     const actual = decoder.decode(concat(...parts));
     assertEquals(
       actual,
-      "\n--test_boundary\nContent-Type: text/plain; charset=utf-8\nContent-Range: 0-5/10\n\nhello \n--test_boundary\nContent-Type: text/plain; charset=utf-8\nContent-Range: 6-9/10\n\ndeno\n--test_boundary--\n",
+      "\n--test_boundary\nContent-Type: text/plain; charset=UTF-8\nContent-Range: 0-5/10\n\nhello \n--test_boundary\nContent-Type: text/plain; charset=UTF-8\nContent-Range: 6-9/10\n\ndeno\n--test_boundary--\n",
     );
     assertEquals(actual.length, contentLength);
   },
@@ -188,7 +188,7 @@ test({
     const actual = decoder.decode(concat(...parts));
     assertEquals(
       actual,
-      "\n--test_boundary\nContent-Type: text/plain; charset=utf-8\nContent-Range: 0-5/10\n\nhello \n--test_boundary\nContent-Type: text/plain; charset=utf-8\nContent-Range: 6-9/10\n\ndeno\n--test_boundary--\n",
+      "\n--test_boundary\nContent-Type: text/plain; charset=UTF-8\nContent-Range: 0-5/10\n\nhello \n--test_boundary\nContent-Type: text/plain; charset=UTF-8\nContent-Range: 6-9/10\n\ndeno\n--test_boundary--\n",
     );
     assertEquals(actual.length, contentLength);
     assert(fixture.closed === true);

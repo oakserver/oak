@@ -1,6 +1,11 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, assertStrictEquals, unreachable } from "./test_deps.ts";
+import {
+  assertEquals,
+  assertInstanceOf,
+  assertStrictEquals,
+  unreachable,
+} from "./test_deps.ts";
 
 import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
@@ -28,13 +33,16 @@ test({
       body: `{"a":"b"}`,
     });
     const conn = createMockConn();
-    const nativeRequest = new NativeRequest({
-      request,
-      respondWith(v) {
-        respondWithStack.push(v);
-        return Promise.resolve();
+    const nativeRequest = new NativeRequest(
+      {
+        request,
+        respondWith(v) {
+          respondWithStack.push(v);
+          return Promise.resolve();
+        },
       },
-    }, { conn });
+      { conn },
+    );
     assertEquals(nativeRequest.url, `/`);
     assertEquals(respondWithStack.length, 1);
     const response = new Response("hello deno");
@@ -64,8 +72,38 @@ test({
     try {
       const response = await fetch(`http://localhost:${listenOptions.port}`);
       assertEquals(await response.text(), expectedBody);
-    } catch {
+    } catch (e) {
+      console.error(e);
       unreachable();
+    } finally {
+      server.close();
+    }
+  },
+});
+
+test({
+  name:
+    "HttpServer manages errors from mis-use in the application handler gracefully",
+  ignore: isNode(),
+  async fn() {
+    const app = new Application();
+    const listenOptions = { port: 4506 };
+
+    const server = new HttpServer(app, listenOptions);
+    server.listen();
+
+    (async () => {
+      for await (const nativeRequest of server) {
+        // deno-lint-ignore no-explicit-any
+        nativeRequest.respond(null as any);
+      }
+    })();
+
+    try {
+      await fetch(`http://localhost:${listenOptions.port}`);
+      unreachable();
+    } catch (e) {
+      assertInstanceOf(e, TypeError);
     } finally {
       server.close();
     }

@@ -2,8 +2,15 @@
 
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
-import { base64, isAbsolute, join, normalize, sep, Status } from "./deps.ts";
-import { createHttpError } from "./httpError.ts";
+import {
+  base64,
+  createHttpError,
+  isAbsolute,
+  join,
+  normalize,
+  sep,
+  Status,
+} from "./deps.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
 import type { Data, ErrorStatus, Key, RedirectStatus } from "./types.d.ts";
 
@@ -111,8 +118,9 @@ export function isConn(value: unknown): value is Deno.Conn {
 export function isListenTlsOptions(
   value: unknown,
 ): value is Deno.ListenTlsOptions {
-  return typeof value === "object" && value !== null && "certFile" in value &&
-    "keyFile" in value && "port" in value;
+  return typeof value === "object" && value !== null &&
+    ("cert" in value || "certFile" in value) &&
+    ("key" in value || "keyFile" in value) && "port" in value;
 }
 
 export interface ReadableStreamFromReaderOptions {

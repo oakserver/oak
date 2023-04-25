@@ -5,6 +5,7 @@ export type StructuredClonable =
   | Array<StructuredClonable>
   | ArrayBuffer
   | ArrayBufferView
+  // deno-lint-ignore ban-types
   | BigInt
   | bigint
   | Blob

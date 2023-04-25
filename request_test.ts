@@ -38,6 +38,7 @@ test({
   fn() {
     const request = new Request(
       createMockNativeRequest("http://localhost/foo?bar=baz&qat=qux"),
+      {},
     );
     assertEquals(request.url.pathname, "/foo");
     assertEquals(request.url.search, "?bar=baz&qat=qux");
@@ -55,7 +56,10 @@ test({
     const mockServerRequest = createMockNativeRequest(
       "https://oakserver.github.io:8080/foo/bar/baz?up=down",
     );
-    const request = new Request(mockServerRequest, false, true);
+    const request = new Request(mockServerRequest, {
+      proxy: false,
+      secure: true,
+    });
     assert(request.url instanceof URL);
     assertEquals(request.url.protocol, "https:");
     assertEquals(request.url.hostname, "oakserver.github.io");
@@ -217,8 +221,7 @@ test({
   fn() {
     const request = new Request(
       createMockNativeRequest("https://localhost/index.html"),
-      false,
-      true,
+      { proxy: false, secure: true },
     );
     assertEquals(request.secure, true);
   },
@@ -243,8 +246,7 @@ test({
           },
         } as Deno.Conn,
       }),
-      true,
-      true,
+      { proxy: true, secure: true },
     );
     assertEquals(request.secure, true);
     assertEquals(request.url.hostname, "10.10.10.10");
@@ -276,7 +278,6 @@ test({
         await actual.value;
       },
       SyntaxError,
-      "Unexpected token r in JSON at position 0",
     );
   },
 });
@@ -293,7 +294,7 @@ test({
         ),
       ),
       isNode()
-        ? `Request {\n  hasBody: false,\n  headers: HeadersList(2) [ 'host', 'localhost' ],\n  ip: '',\n  ips: [],\n  method: 'GET',\n  secure: false,\n  url: URL {\n    href: 'http://localhost/foo?bar=baz&qat=qux',\n    origin: 'http://localhost',\n    protocol: 'http:',\n    username: '',\n    password: '',\n    host: 'localhost',\n    hostname: 'localhost',\n    port: '',\n    pathname: '/foo',\n    search: '?bar=baz&qat=qux',\n    searchParams: URLSearchParams { 'bar' => 'baz', 'qat' => 'qux' },\n    hash: ''\n  }\n}`
+        ? `Request {\n  hasBody: false,\n  headers: HeadersList {\n    cookies: null,\n    [Symbol(headers map)]: [Map],\n    [Symbol(headers map sorted)]: null\n  },\n  ip: '',\n  ips: [],\n  method: 'GET',\n  secure: false,\n  url: URL {\n    href: 'http://localhost/foo?bar=baz&qat=qux',\n    origin: 'http://localhost',\n    protocol: 'http:',\n    username: '',\n    password: '',\n    host: 'localhost',\n    hostname: 'localhost',\n    port: '',\n    pathname: '/foo',\n    search: '?bar=baz&qat=qux',\n    searchParams: URLSearchParams { 'bar' => 'baz', 'qat' => 'qux' },\n    hash: ''\n  }\n}`
         : `Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/foo?bar=baz&qat=qux"\n}`,
     );
   },

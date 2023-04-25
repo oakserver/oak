@@ -5,9 +5,9 @@
 
 import type { Context } from "./context.ts";
 import { calculate, FileInfo, ifNoneMatch } from "./etag.ts";
-import { createHttpError } from "./httpError.ts";
 import {
   basename,
+  createHttpError,
   extname,
   LimitedReader,
   parse,
@@ -154,10 +154,6 @@ async function sendRange(
   if (ranges.length === 1) {
     const [byteRange] = ranges;
     response.headers.set(
-      "Content-Length",
-      String(byteRange.end - byteRange.start + 1),
-    );
-    response.headers.set(
       "Content-Range",
       `bytes ${byteRange.start}-${byteRange.end}/${size}`,
     );
@@ -185,10 +181,6 @@ async function sendRange(
       ranges,
       size,
       boundary,
-    );
-    response.headers.set(
-      "content-length",
-      String(multipartBody.contentLength()),
     );
     response.body = multipartBody;
   }
@@ -316,8 +308,11 @@ export async function send(
 
   if (request.headers.has("If-None-Match") && mtime) {
     [body, entity] = await getEntity(path, mtime, stats, maxbuffer, response);
-    if (!await ifNoneMatch(request.headers.get("If-None-Match")!, entity)) {
-      response.headers.set("ETag", await calculate(entity));
+    const etag = await calculate(entity);
+    if (
+      etag && (!await ifNoneMatch(request.headers.get("If-None-Match")!, etag))
+    ) {
+      response.headers.set("ETag", etag);
       response.status = 304;
       return path;
     }
@@ -355,11 +350,13 @@ export async function send(
     return path;
   }
 
-  response.headers.set("Content-Length", String(stats.size));
   response.body = body;
 
   if (!response.headers.has("ETag")) {
-    response.headers.set("ETag", await calculate(entity));
+    const etag = await calculate(entity);
+    if (etag) {
+      response.headers.set("ETag", etag);
+    }
   }
 
   if (!response.headers.has("Accept-Ranges")) {

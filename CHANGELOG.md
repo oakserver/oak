@@ -1,5 +1,163 @@
 # oak Change Log
 
+## Version 12.3.0
+
+- feat: add `MiddlewareObject` (#589)
+
+  Middleware can be registered as a middleware function or a `MiddlewareObject`
+  which is an object which has a `handleRequest()` method and optionally an
+  `init()` which will be called when the application starts listening.
+
+- feat: add `"close"` event to Application (f564e38)
+
+  The `Application` now emits a `"close"` event when it has stopped handling
+  requests.
+
+- feat: add `Router.prototype.add` to allow specifying methods (b8d0e80)
+
+  The `.add()` method can be used on router instances to register middleware
+  with arbitrary sets of HTTP methods. This allows usage of uncommon HTTP
+  methods as well as potentially procedural configuration of the router.
+
+- feat: add type guard (#502)
+
+  The `isNativeRequest()` type guard is added which makes it easier to detect if
+  a request is a Deno native request in order to be able to safely access the
+  original request.
+
+- fix: cleanup SSE and web socket on application close (11e4172)
+
+  Previously, if the application stopped listening (closed), it would not close
+  down SSE or socket connections, therefore making it difficult to shutdown
+  cleanly. Now it should.
+
+- fix: set body and headers when init'ing SSE (8685c7a)
+
+  oak 12.2.0 did not properly convert over to the std libraries SSE target. It
+  now handles this properly.
+
+- docs: add "The response is not writable." to FAQs (be310ee)
+- docs: add "early eof" to FAQs (6d21b7a)
+
+## Version 12.2.0
+
+- feat: remove experimental support for Deno flash server (d9f8829)
+
+  Version 1.35 of Deno will remove the
+  [experimental flash server](https://github.com/denoland/deno/pull/18568). The
+  abstraction to the HTTP server that will be stabilised provides no benefit to
+  oak, so the support for "flash" is being removed.
+
+- refactor: use SSE from std (9a6ae5d)
+
+  oak contributed `http/server_sent_event` to the Deno std library, and is now
+  migrating to that.
+
+- refactor: use std library for etag (e95bc10)
+
+  oak contributed `http/etag` to the Deno std library, and is now migrating to
+  that.
+
+- fix: update sseServer example (14a5b5c)
+- docs: remove experimental flash content from README (024aa8a)
+
+## Version 12.1.0
+
+- refactor: use `KeyStack` from std (d2eff20)
+
+  oak contributed `KeyStack` to the Deno std library, and is now migrating to
+  that.
+
+- refactor: migrate to `SecureCookieMap` from std (b136fdc)
+
+  oak contributed its cookie management to the Deno std library, and is now
+  migrating to that.
+
+## Version 12.0.1
+
+- fix: decode empty request bodies for JSON as null (fa98626)
+- fix: handle throwing in context construction (ba9b7cc)
+- fix: send() doesn't set content-length header (b62de95)
+
+## Version 12.0.0
+
+- feat: `Router.prototype.all` uses all methods (4ddc851)
+
+  **BREAKING** when using `Router.prototype.all()` to register middleware, it
+  will now use all the methods (except `OPTIONS`) to register the middleware
+  instead of an arbitrary set of common methods.
+
+- fix: use null prototype with cookie match cache (798eca7)
+- fix: `Router.prototype.all` omit `OPTIONS` method (98067a4)
+- fix: use `"Allow"` versus `"Allowed"` header for `OPTIONS` (3bcd4eb)
+- fix: update types for TypeScript 4.9 (31a1c7f)
+- fix: save route name during route matching (#574)
+- fix: zero `content-length` triggering max body size error (#552)
+- fix: remove unused function from flash server (01264e6)
+- chore: fix node tests (5ea9729)
+- chore: update checkout action (811e0ea)
+- chore: lint (b2a7356)
+- chore: fmt (507990e)
+- chore: rework ci (08a6e78)
+- chore: update to std@0.178 and dnt@0.33.1 (0a7d616)
+- tests: improve headers test coverage (#562)
+- docs: update info on handling formdata files (#555)
+
+## Version 11.1.0
+
+- feat: provide options for JSON replacing and reviving (855ecf0)
+
+  You can now set `jsonBodyReplacer` and `jsonBodyReviver` to assist when
+  automatic decoding of JSON bodies in requests or responses occur. This allows
+  custom logic to achieve things like handling bigints, circular references, and
+  custom serialization of things like `RegExp`.
+
+- fix: add missing generic parameters for multiple middlewares (#549)
+- fix: refactor flash to align to Deno 1.25 release (f3976fc)
+- fix: add flash support to staticServer example (48130a2)
+- docs: repoint doc URL to just deno.land/x (8237e7a)
+
+## Version 11.0.0
+
+- feat: make overriding router parameter types easier (#513)
+
+  When route type inference breaks down, it was previously difficult to provide
+  a different set of asserted route parameters. This now makes it easier.
+
+- feat: support Deno's experimental flash server (#545)
+
+  As of this release Deno canary includes the experimental flash HTTP server
+  which dramatically increases performance when running in Deno CLI. It is
+  expected to ship as unstable in Deno 1.25. See the README and module doc for
+  information on how to enable the flash server.
+
+  oak's support for flash is also experimental at this point.
+
+- refactor: update deps, migrate more to std/http
+
+  Much of the common parts of oak have been being contributed back to `std/http`
+  and refactoring to support this migration is underway. Because there are
+  likely to be minor and subtle differences in how things operate, this release
+  of oak is a major release. I am not currently aware of any major breaking
+  changes, but wanted to ensure that people were consciously aware.
+
+- docs: don't await body.value in examples (dbabc1c)
+- docs: fix typo in multipart.ts JSDocs (#466)
+- docs: improve maxSize and maxFileSize in multipart.ts (#467)
+- chore: unpin deno version for CI (728ba71)
+
+## Version 10.6.0
+
+- feat: expose createHttpError (#525)
+- fix: don't block subsequent requests on a connection (#529)
+- fix: Deno.ListenTlsOptions detection (#521)
+- docs: add missing await in README static content example. (#506)
+- docs: "sever" to "server" in README (#509)
+- docs: fix FAQ entry for addEventListener (#511)
+- docs: fix typo in `multipart.ts` (#527)
+- chore: update to Deno 1.22.0, std 0.140.0, media_types 3.0.3 (17d9e61)
+- chore: fix ci (00ddfcd)
+
 ## Version 10.5.1
 
 - chore: update to std 0.131.0, media_types 3.0.2, dnt 0.22.0 (c1e0ea9)
