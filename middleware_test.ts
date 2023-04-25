@@ -5,11 +5,16 @@
 import { assert, assertEquals, assertStrictEquals } from "./test_deps.ts";
 import { errors } from "./deps.ts";
 import { createMockContext } from "./testing.ts";
-import { compose, Middleware, MiddlewareObject, Next } from "./middleware.ts";
+import {
+  compose,
+  isMiddlewareObject,
+  type Middleware,
+  type MiddlewareObject,
+  type Next,
+} from "./middleware.ts";
+import { Context } from "./context.ts";
 
-const { test } = Deno;
-
-test({
+Deno.test({
   name: "test compose()",
   async fn() {
     const callStack: number[] = [];
@@ -31,7 +36,25 @@ test({
   },
 });
 
-test({
+Deno.test({
+  name: "isMiddlewareObject()",
+  async fn() {
+    class MockMiddlewareObject implements MiddlewareObject {
+      handleRequest(
+        _context: Context<Record<string, any>, Record<string, any>>,
+        _next: Next,
+      ): unknown {
+        return;
+      }
+    }
+
+    assert(isMiddlewareObject(new MockMiddlewareObject()));
+    assert(isMiddlewareObject({ handleRequest() {} }));
+    assert(!isMiddlewareObject(function () {}));
+  },
+});
+
+Deno.test({
   name: "middleware objects are composed correctly",
   async fn() {
     const callStack: number[] = [];
@@ -56,7 +79,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "next() is catchable",
   async fn() {
     let caught: any;
@@ -76,7 +99,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "composed middleware accepts next middleware",
   async fn() {
     const callStack: number[] = [];

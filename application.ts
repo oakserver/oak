@@ -6,8 +6,8 @@ import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import {
   compose,
-  MiddlewareObject,
-  MiddlewareOrMiddlewareObject,
+  isMiddlewareObject,
+  type MiddlewareOrMiddlewareObject,
 } from "./middleware.ts";
 import { cloneState } from "./structured_clone.ts";
 import {
@@ -576,7 +576,7 @@ export class Application<AS extends State = Record<string, any>>
       throw new TypeError("There is no middleware to process requests.");
     }
     for (const middleware of this.#middleware) {
-      if (typeof middleware.init === "function") {
+      if (isMiddlewareObject(middleware) && middleware.init) {
         await middleware.init();
       }
     }
