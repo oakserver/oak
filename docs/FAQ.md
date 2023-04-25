@@ -141,3 +141,51 @@ You can disabled automatic logging by setting `logErrors` to `false` in the
 `Application` options. You can also use the
 `.addEventListener("error", (evt) => {});` to register your own event handler
 for uncaught errors.
+
+## I'm getting `"The response is not writable."` error unexpectedly.
+
+The most common cause of this is "dropping" the flow control of the middleware.
+Dropping the flow control is typically accomplished by not invoking `next()`
+within the middleware. When the flow control is dropped, the oak application
+assumes that all processing is done, stops calling other middleware in the
+stack, seals the response and sends it. Subsequent changes to the response are
+what then cause that error.
+
+For simple middleware, dropping the flow control usually is not an issue, for
+example if you are responding with static content with the router:
+
+```ts
+import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+
+const router = new Router();
+
+router.get("/", (ctx) => {
+  ctx.response.body = "hello world";
+});
+
+const app = new Application();
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+app.listen();
+```
+
+A much better solution is to always be explicit about the flow control of the
+middleware by ensuring that `next()` is invoked:
+
+```ts
+import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+
+const router = new Router();
+
+router.get("/", (ctx, next) => {
+  ctx.response.body = "hello world";
+  return next();
+});
+
+const app = new Application();
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+app.listen();
+```
