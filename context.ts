@@ -17,6 +17,7 @@ import type {
   ServerRequest,
   UpgradeWebSocketOptions,
 } from "./types.d.ts";
+import { assert } from "./util.ts";
 
 export interface ContextOptions<
   S extends AS = State,
@@ -244,11 +245,25 @@ export class Context<
    * be sent to the client and be available in the client's `EventSource` that
    * initiated the connection.
    *
-   * This will set `.respond` to `false`. */
+   * **Note** the body needs to be returned to the client to be able to
+   * dispatch events, so dispatching events within the middleware will delay
+   * sending the body back to the client.
+   *
+   * This will set the response body and update response headers to support
+   * sending SSE events. Additional middleware should not modify the body.
+   */
   sendEvents(options?: ServerSentEventTargetOptions): ServerSentEventTarget {
     if (!this.#sse) {
-      this.#sse = new ServerSentEventStreamTarget(options);
-      this.app.addEventListener("close", () => this.#sse?.close());
+      assert(this.response.writable, "The response is not writable.");
+      const sse = this.#sse = new ServerSentEventStreamTarget(options);
+      this.app.addEventListener("close", () => sse.close());
+      const [bodyInit, { headers }] = sse.asResponseInit({
+        headers: this.response.headers,
+      });
+      this.response.body = bodyInit;
+      if (headers instanceof Headers) {
+        this.response.headers = headers;
+      }
     }
     return this.#sse;
   }
