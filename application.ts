@@ -4,7 +4,11 @@ import { Context } from "./context.ts";
 import { KeyStack, Status, STATUS_TEXT } from "./deps.ts";
 import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
-import { compose, Middleware } from "./middleware.ts";
+import {
+  compose,
+  isMiddlewareObject,
+  type MiddlewareOrMiddlewareObject,
+} from "./middleware.ts";
 import { cloneState } from "./structured_clone.ts";
 import {
   Key,
@@ -303,7 +307,7 @@ export class Application<AS extends State = Record<string, any>>
   >;
   #contextState: "clone" | "prototype" | "alias" | "empty";
   #keys?: KeyStack;
-  #middleware: Middleware<State, Context<State, AS>>[] = [];
+  #middleware: MiddlewareOrMiddlewareObject<State, Context<State, AS>>[] = [];
   #serverConstructor: ServerConstructor<ServerRequest>;
 
   /** A set of keys, or an instance of `KeyStack` which will be used to sign
@@ -571,6 +575,11 @@ export class Application<AS extends State = Record<string, any>>
     if (!this.#middleware.length) {
       throw new TypeError("There is no middleware to process requests.");
     }
+    for (const middleware of this.#middleware) {
+      if (isMiddlewareObject(middleware) && middleware.init) {
+        await middleware.init();
+      }
+    }
     if (typeof options === "string") {
       const match = ADDR_REGEXP.exec(options);
       if (!match) {
@@ -651,11 +660,11 @@ export class Application<AS extends State = Record<string, any>>
    * ```
    */
   use<S extends State = AS>(
-    middleware: Middleware<S, Context<S, AS>>,
-    ...middlewares: Middleware<S, Context<S, AS>>[]
+    middleware: MiddlewareOrMiddlewareObject<S, Context<S, AS>>,
+    ...middlewares: MiddlewareOrMiddlewareObject<S, Context<S, AS>>[]
   ): Application<S extends AS ? S : (S & AS)>;
   use<S extends State = AS>(
-    ...middleware: Middleware<S, Context<S, AS>>[]
+    ...middleware: MiddlewareOrMiddlewareObject<S, Context<S, AS>>[]
   ): Application<S extends AS ? S : (S & AS)> {
     this.#middleware.push(...middleware);
     this.#composedMiddleware = undefined;
