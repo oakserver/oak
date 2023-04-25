@@ -1,5 +1,44 @@
 # oak Change Log
 
+## Version 12.3.0
+
+- feat: add `MiddlewareObject` (#589)
+
+  Middleware can be registered as a middleware function or a `MiddlewareObject`
+  which is an object which has a `handleRequest()` method and optionally an
+  `init()` which will be called when the application starts listening.
+
+- feat: add `"close"` event to Application (f564e38)
+
+  The `Application` now emits a `"close"` event when it has stopped handling
+  requests.
+
+- feat: add `Router.prototype.add` to allow specifying methods (b8d0e80)
+
+  The `.add()` method can be used on router instances to register middleware
+  with arbitrary sets of HTTP methods. This allows usage of uncommon HTTP
+  methods as well as potentially procedural configuration of the router.
+
+- feat: add type guard (#502)
+
+  The `isNativeRequest()` type guard is added which makes it easier to detect if
+  a request is a Deno native request in order to be able to safely access the
+  original request.
+
+- fix: cleanup SSE and web socket on application close (11e4172)
+
+  Previously, if the application stopped listening (closed), it would not close
+  down SSE or socket connections, therefore making it difficult to shutdown
+  cleanly. Now it should.
+
+- fix: set body and headers when init'ing SSE (8685c7a)
+
+  oak 12.2.0 did not properly convert over to the std libraries SSE target. It
+  now handles this properly.
+
+- docs: add "The response is not writable." to FAQs (be310ee)
+- docs: add "early eof" to FAQs (6d21b7a)
+
 ## Version 12.2.0
 
 - feat: remove experimental support for Deno flash server (d9f8829)
