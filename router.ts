@@ -609,6 +609,60 @@ export class Router<
     ];
   }
 
+  /** Register named middleware for the specified routes when specified methods
+   * are requested. */
+  add<
+    R extends string,
+    P extends RouteParams<R> = RouteParams<R>,
+    S extends State = RS,
+  >(
+    methods: HTTPMethods[] | HTTPMethods,
+    name: string,
+    path: R,
+    middleware: RouterMiddleware<R, P, S>,
+    ...middlewares: RouterMiddleware<R, P, S>[]
+  ): Router<S extends RS ? S : (S & RS)>;
+  /** Register middleware for the specified routes when the specified methods is
+   * requested. */
+  add<
+    R extends string,
+    P extends RouteParams<R> = RouteParams<R>,
+    S extends State = RS,
+  >(
+    methods: HTTPMethods[] | HTTPMethods,
+    path: R,
+    middleware: RouterMiddleware<R, P, S>,
+    ...middlewares: RouterMiddleware<R, P, S>[]
+  ): Router<S extends RS ? S : (S & RS)>;
+  /** Register middleware for the specified routes when the specified methods
+   * are requested with explicit path parameters. */
+  add<
+    P extends RouteParams<string>,
+    S extends State = RS,
+  >(
+    methods: HTTPMethods[] | HTTPMethods,
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
+    ...middleware: RouterMiddleware<string, P, S>[]
+  ): Router<S extends RS ? S : (S & RS)>;
+  add<
+    P extends RouteParams<string> = RouteParams<string>,
+    S extends State = RS,
+  >(
+    methods: HTTPMethods[] | HTTPMethods,
+    nameOrPath: string,
+    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
+    ...middleware: RouterMiddleware<string, P, S>[]
+  ): Router<S extends RS ? S : (S & RS)> {
+    this.#useVerb(
+      nameOrPath,
+      pathOrMiddleware as (string | RouterMiddleware<string>),
+      middleware as RouterMiddleware<string>[],
+      typeof methods === "string" ? [methods] : methods,
+    );
+    return this;
+  }
+
   /** Register named middleware for the specified routes when the `DELETE`,
    * `GET`, `POST`, or `PUT` method is requested. */
   all<
