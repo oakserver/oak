@@ -29,8 +29,6 @@ import type {
 } from "./types.d.ts";
 import { isNode } from "./util.ts";
 
-const { test } = Deno;
-
 let optionsStack: Array<ListenOptions | ListenOptionsTls> = [];
 let serverClosed = false;
 
@@ -155,7 +153,7 @@ function setupClosed(
   ];
 }
 
-test({
+Deno.test({
   name: "construct App()",
   fn() {
     const app = new Application();
@@ -164,7 +162,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "register middleware",
   async fn() {
     const [serverConstructor] = setup([]);
@@ -182,7 +180,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "register middleware - accepts non void",
   fn() {
     const [serverConstructor] = setup();
@@ -192,7 +190,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "middleware execution order 1",
   async fn() {
     const [serverConstructor] = setup([]);
@@ -212,7 +210,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "middleware execution order 2",
   async fn() {
     const [serverConstructor] = setup([]);
@@ -233,7 +231,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "middleware execution order 3",
   async fn() {
     const [serverConstructor] = setup([]);
@@ -257,7 +255,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "middleware execution order 4",
   async fn() {
     const [serverConstructor] = setup([]);
@@ -281,7 +279,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.listen",
   async fn() {
     const [serverConstructor] = setup();
@@ -293,7 +291,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.listen native",
   async fn() {
     const [serverConstructor] = setup();
@@ -305,7 +303,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.listen IPv6 Loopback",
   async fn() {
     const [serverConstructor] = setup();
@@ -317,7 +315,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.listen(options)",
   async fn() {
     const [serverConstructor] = setup();
@@ -329,7 +327,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.listenTLS",
   async fn() {
     const [serverConstructor] = setup();
@@ -353,7 +351,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.state",
   async fn() {
     const [serverConstructor] = setup([]);
@@ -373,7 +371,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app - contextState - clone",
   async fn() {
     const [serverConstructor] = setup([]);
@@ -399,7 +397,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app - contextState - prototype",
   async fn() {
     const state = {
@@ -430,7 +428,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app - contextState - alias",
   async fn() {
     const [serverConstructor] = setup([]);
@@ -454,7 +452,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app - contextState - empty",
   async fn() {
     const [serverConstructor] = setup([]);
@@ -481,7 +479,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.keys undefined",
   fn() {
     const app = new Application();
@@ -490,7 +488,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.keys passed as array",
   fn() {
     const app = new Application({ keys: ["foo"] });
@@ -499,7 +497,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.keys passed as KeyStack-like",
   fn() {
     const keys = {
@@ -519,7 +517,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.keys set as array",
   fn() {
     const app = new Application();
@@ -529,7 +527,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.listen({ signal }) no requests in flight",
   async fn() {
     const [serverConstructor] = setup();
@@ -544,7 +542,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.listen({ signal }) requests in flight",
   async fn() {
     const [serverConstructor] = setup([], [], [], [], []);
@@ -565,7 +563,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.addEventListener()",
   async fn() {
     const [serverConstructor] = setup([]);
@@ -584,7 +582,26 @@ test({
   },
 });
 
-test({
+Deno.test({
+  name: "app emits close event",
+  async fn() {
+    const [serverConstructor] = setup();
+    const app = new Application({ serverConstructor });
+    let closeFired = false;
+    app.addEventListener("close", () => {
+      closeFired = true;
+    });
+    const abortController = new AbortController();
+    app.use(() => {});
+    const p = app.listen({ port: 8000, signal: abortController.signal });
+    abortController.abort();
+    await p;
+    assert(closeFired);
+    teardown();
+  },
+});
+
+Deno.test({
   name: "closed native request is handled properly",
   async fn() {
     const [serverConstructor] = setupClosed([]);
@@ -603,7 +620,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "uncaught errors impact response",
   async fn() {
     const [serverConstructor, responseStack] = setup([]);
@@ -618,7 +635,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "uncaught errors clear headers properly",
   async fn() {
     const [serverConstructor, responseStack] = setup([]);
@@ -644,7 +661,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "uncaught errors log by default",
   async fn() {
     const errorLogStack: any[][] = [];
@@ -672,7 +689,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "caught errors don't dispatch error events",
   async fn() {
     const [serverConstructor, responseStack] = setup([]);
@@ -701,7 +718,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "thrown errors in a catch block",
   async fn() {
     const errors: ApplicationErrorEvent<any, any>[] = [];
@@ -732,7 +749,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "errors when generating native response",
   async fn() {
     const [serverConstructor, responseStack] = setup([]);
@@ -762,7 +779,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.listen() without middleware",
   async fn() {
     const [serverConstructor] = setup([]);
@@ -774,7 +791,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "app.state type handling",
   fn() {
     const app = new Application({ state: { id: 1 } });
@@ -794,7 +811,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "application listen event",
   async fn() {
     const [serverConstructor] = setup();
@@ -815,7 +832,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "application doesn't respond on ctx.respond === false",
   async fn() {
     const [serverConstructor, responseStack] = setup([]);
@@ -829,7 +846,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "application passes proxy",
   async fn() {
     const [serverConstructor, responseStack] = setup([
@@ -859,7 +876,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "application .handle()",
   async fn() {
     const app = new Application();
@@ -879,7 +896,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "application .handle() native request",
   async fn() {
     const app = new Application();
@@ -909,7 +926,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "application .handle() omit connection",
   async fn() {
     const app = new Application();
@@ -934,7 +951,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "application .handle() no response",
   async fn() {
     const app = new Application();
@@ -947,7 +964,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "application .handle() no middleware throws",
   async fn() {
     const app = new Application();
@@ -963,7 +980,7 @@ function isBigInitValue(value: unknown): value is { __bigint: string } {
     typeof (value as any).__bigint === "string";
 }
 
-test({
+Deno.test({
   name: "application - json reviver is passed",
   async fn() {
     let called = 0;
@@ -1006,7 +1023,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "application - json replacer is passed",
   async fn() {
     let called = 0;
@@ -1029,7 +1046,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "application.use() - type checking - at least one middleware is passed",
   fn() {
     const app = new Application();
@@ -1043,7 +1060,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "new Application() - HttpServer",
   fn() {
     new Application({ serverConstructor: HttpServer });
@@ -1051,7 +1068,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "Application - inspecting",
   fn() {
     assertEquals(
@@ -1064,7 +1081,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "Application.listen() - no options",
   ignore: isNode(),
   async fn() {

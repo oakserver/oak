@@ -65,6 +65,18 @@ export interface HandleMethod {
 
 export type ListenOptions = ListenOptionsTls | ListenOptionsBase;
 
+interface ApplicationCloseEventListener {
+  (evt: ApplicationCloseEvent): void | Promise<void>;
+}
+
+interface ApplicationCloseEventListenerObject {
+  handleEvent(evt: ApplicationCloseEvent): void | Promise<void>;
+}
+
+type ApplicationCloseEventListenerOrEventListenerObject =
+  | ApplicationCloseEventListener
+  | ApplicationCloseEventListenerObject;
+
 interface ApplicationErrorEventListener<S extends AS, AS extends State> {
   (evt: ApplicationErrorEvent<S, AS>): void | Promise<void>;
 }
@@ -208,6 +220,12 @@ export type State = Record<string | number | symbol, any>;
 const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 
 const DEFAULT_SERVER: ServerConstructor<ServerRequest> = HttpServer;
+
+export class ApplicationCloseEvent extends Event {
+  constructor(eventInitDict: EventInit) {
+    super("close", eventInitDict);
+  }
+}
 
 export class ApplicationErrorEvent<S extends AS, AS extends State>
   extends ErrorEvent {
@@ -480,11 +498,21 @@ export class Application<AS extends State = Record<string, any>>
       state.handling.delete(handlingPromise);
       if (state.closing) {
         await state.server.close();
+        if (!state.closed) {
+          this.dispatchEvent(new ApplicationCloseEvent({}));
+        }
         state.closed = true;
       }
     }
   }
 
+  /** Add an event listener for a `"close"` event which occurs when the
+   * application is closed and no longer listening or handling requests. */
+  addEventListener<S extends AS>(
+    type: "close",
+    listener: ApplicationCloseEventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
   /** Add an event listener for an `"error"` event which occurs when an
    * un-caught error occurs when processing the middleware or during processing
    * of the response. */
@@ -503,7 +531,7 @@ export class Application<AS extends State = Record<string, any>>
   /** Add an event listener for an event.  Currently valid event types are
    * `"error"` and `"listen"`. */
   addEventListener(
-    type: "error" | "listen",
+    type: "close" | "error" | "listen",
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
   ): void {
@@ -605,6 +633,7 @@ export class Application<AS extends State = Record<string, any>>
         if (!state.handling.size) {
           server.close();
           state.closed = true;
+          this.dispatchEvent(new ApplicationCloseEvent({}));
         }
         state.closing = true;
       });
