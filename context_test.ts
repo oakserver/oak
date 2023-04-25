@@ -19,14 +19,17 @@ import { cloneState } from "./structured_clone.ts";
 import type { UpgradeWebSocketFn, UpgradeWebSocketOptions } from "./types.d.ts";
 import { isNode } from "./util.ts";
 
-const { test } = Deno;
-
 function createMockApp<S extends State = Record<string, any>>(
   state = {} as S,
 ): Application<S> {
+  let listeners: any[] = [];
   return {
     state,
+    listeners,
     dispatchEvent() {},
+    addEventListener(event: string) {
+      listeners.push(event);
+    },
     [Symbol.for("Deno.customInspect")]() {
       return `MockApplication {}`;
     },
@@ -93,7 +96,7 @@ function createMockNativeRequest(
   return new NativeRequest(requestEvent, { upgradeWebSocket });
 }
 
-test({
+Deno.test({
   name: "context",
   fn() {
     const app = createMockApp();
@@ -108,7 +111,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "context.assert()",
   fn() {
     const context: Context = new Context(
@@ -127,7 +130,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "context.throw()",
   fn() {
     const context = new Context(createMockApp(), createMockNativeRequest(), {});
@@ -141,7 +144,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "context.send() default path",
   async fn() {
     const context = new Context(
@@ -161,7 +164,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "context.send() specified path",
   async fn() {
     const context = new Context(createMockApp(), createMockNativeRequest(), {});
@@ -181,7 +184,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "context.upgrade()",
   async fn() {
     const context = new Context(
@@ -208,10 +211,11 @@ test({
     assertEquals(respondWithStack.length, 1);
     assertStrictEquals(await respondWithStack[0], mockResponse);
     assertEquals(upgradeWebSocketStack.length, 1);
+    assertEquals((context.app as any).listeners, ["close"]);
   },
 });
 
-test({
+Deno.test({
   name: "context.upgrade() - not supported",
   async fn() {
     const context = new Context(
@@ -242,7 +246,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "context.upgrade() failure does not set socket/respond",
   async fn() {
     const context = new Context(createMockApp(), createMockNativeRequest(), {});
@@ -255,7 +259,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "context.isUpgradable true",
   async fn() {
     const context = new Context(
@@ -276,7 +280,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "context.isUpgradable false",
   async fn() {
     const context = new Context(
@@ -295,17 +299,18 @@ test({
   },
 });
 
-test({
-  name: "context.getSSETarget()",
+Deno.test({
+  name: "context.sendEvents()",
   async fn() {
     const context = new Context(createMockApp(), createMockNativeRequest(), {});
     const sse = context.sendEvents();
+    assertEquals((context.app as any).listeners, ["close"]);
     sse.dispatchComment(`hello world`);
     await sse.close();
   },
 });
 
-test({
+Deno.test({
   name: "context create secure",
   fn() {
     const context = new Context(
@@ -318,7 +323,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "Context - inspecting",
   fn() {
     const app = createMockApp();

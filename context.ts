@@ -248,6 +248,7 @@ export class Context<
   sendEvents(options?: ServerSentEventTargetOptions): ServerSentEventTarget {
     if (!this.#sse) {
       this.#sse = new ServerSentEventStreamTarget(options);
+      this.app.addEventListener("close", () => this.#sse?.close());
     }
     return this.#sse;
   }
@@ -282,6 +283,7 @@ export class Context<
       );
     }
     this.#socket = this.request.originalRequest.upgrade(options);
+    this.app.addEventListener("close", () => this.#socket?.close());
     this.respond = false;
     return this.#socket;
   }
