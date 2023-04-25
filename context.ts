@@ -1,20 +1,23 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
-import { createHttpError, KeyStack, SecureCookieMap } from "./deps.ts";
+import {
+  createHttpError,
+  KeyStack,
+  SecureCookieMap,
+  ServerSentEventStreamTarget,
+  type ServerSentEventTarget,
+  type ServerSentEventTargetOptions,
+} from "./deps.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
-import {
-  ServerSentEventTargetOptions,
-  SSEStreamTarget,
-} from "./server_sent_event.ts";
-import type { ServerSentEventTarget } from "./server_sent_event.ts";
 import type {
   ErrorStatus,
   ServerRequest,
   UpgradeWebSocketOptions,
 } from "./types.d.ts";
+import { assert } from "./util.ts";
 
 export interface ContextOptions<
   S extends AS = State,
@@ -242,10 +245,25 @@ export class Context<
    * be sent to the client and be available in the client's `EventSource` that
    * initiated the connection.
    *
-   * This will set `.respond` to `false`. */
+   * **Note** the body needs to be returned to the client to be able to
+   * dispatch events, so dispatching events within the middleware will delay
+   * sending the body back to the client.
+   *
+   * This will set the response body and update response headers to support
+   * sending SSE events. Additional middleware should not modify the body.
+   */
   sendEvents(options?: ServerSentEventTargetOptions): ServerSentEventTarget {
     if (!this.#sse) {
-      this.#sse = new SSEStreamTarget(this, options);
+      assert(this.response.writable, "The response is not writable.");
+      const sse = this.#sse = new ServerSentEventStreamTarget(options);
+      this.app.addEventListener("close", () => sse.close());
+      const [bodyInit, { headers }] = sse.asResponseInit({
+        headers: this.response.headers,
+      });
+      this.response.body = bodyInit;
+      if (headers instanceof Headers) {
+        this.response.headers = headers;
+      }
     }
     return this.#sse;
   }
@@ -280,6 +298,7 @@ export class Context<
       );
     }
     this.#socket = this.request.originalRequest.upgrade(options);
+    this.app.addEventListener("close", () => this.#socket?.close());
     this.respond = false;
     return this.#socket;
   }

@@ -11,7 +11,7 @@ import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
 import type { RouteParams } from "./router.ts";
 
-import { calculate, factory, ifMatch, ifNoneMatch } from "./etag.ts";
+import { factory } from "./etag.ts";
 
 const { test } = Deno;
 
@@ -39,64 +39,6 @@ function setup<
 const encoder = new TextEncoder();
 
 test({
-  name: "etag - calculate - string - empty",
-  async fn() {
-    const actual = await calculate("");
-    assertEquals(actual, `"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk="`);
-  },
-});
-
-test({
-  name: "etag - calculate - string",
-  async fn() {
-    const actual = await calculate("hello deno");
-    assertEquals(actual, `"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`);
-  },
-});
-
-test({
-  name: "etag - calculate - Uint8Array - empty",
-  async fn() {
-    const actual = await calculate(new Uint8Array());
-    assertEquals(actual, `"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk="`);
-  },
-});
-
-test({
-  name: "etag - calculate - Uint8Array",
-  async fn() {
-    const actual = await calculate(encoder.encode("hello deno"));
-    assertEquals(actual, `"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`);
-  },
-});
-
-test({
-  name: "etag - calculate - Deno.FileInfo",
-  async fn() {
-    const fixture: Deno.FileInfo = {
-      isFile: true,
-      isDirectory: false,
-      isSymlink: false,
-      size: 1024,
-      mtime: new Date(Date.UTC(96, 1, 2, 3, 4, 5, 6)),
-      atime: null,
-      birthtime: null,
-      dev: null,
-      ino: null,
-      mode: null,
-      nlink: null,
-      uid: null,
-      gid: null,
-      rdev: null,
-      blksize: null,
-      blocks: null,
-    };
-    const actual = await calculate(fixture);
-    assertEquals(actual, `W/"400-bfac58a88e"`);
-  },
-});
-
-test({
   name: "etag - middleware - body string",
   async fn() {
     const { context } = setup();
@@ -109,7 +51,7 @@ test({
     await mw(context, next);
     assertEquals(
       context.response.headers.get("etag"),
-      `"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`,
+      `"a-YdfmHmj2RiwOVqJupcf3PLK9PuJ"`,
     );
   },
 });
@@ -127,7 +69,7 @@ test({
     await mw(context, next);
     assertEquals(
       context.response.headers.get("etag"),
-      `"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`,
+      `"a-YdfmHmj2RiwOVqJupcf3PLK9PuJ"`,
     );
   },
 });
@@ -178,7 +120,7 @@ test({
     await mw(context, next);
     assertEquals(
       context.response.headers.get("etag"),
-      `"14-KZ23xGibHn2QLCgZY4YQIjYHYhI"`,
+      `"14-JvQev/2QpYTuhshiKlzH0ZRXxAP"`,
     );
   },
 });
@@ -225,51 +167,6 @@ test({
     assertEquals(
       context.response.headers.get("etag"),
       null,
-    );
-  },
-});
-
-test({
-  name: "etag - ifMatch",
-  async fn() {
-    assert(!await ifMatch(`"abcdefg"`, "hello deno"));
-    assert(await ifMatch(`"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"));
-    assert(
-      await ifMatch(`"abcdefg", "a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"),
-    );
-    assert(await ifMatch("*", "hello deno"));
-    assert(
-      !await ifMatch("*", {
-        size: 1024,
-        mtime: new Date(Date.UTC(96, 1, 2, 3, 4, 5, 6)),
-      }),
-    );
-  },
-});
-
-test({
-  name: "etag - ifNoneMatch",
-  async fn() {
-    assert(await ifNoneMatch(`"abcdefg"`, "hello deno"));
-    assert(!await ifNoneMatch(`"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, "hello deno"));
-    assert(
-      !await ifNoneMatch(
-        `"abcdefg", "a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`,
-        "hello deno",
-      ),
-    );
-    assert(!await ifNoneMatch("*", "hello deno"));
-    assert(
-      !await ifNoneMatch(`W/"400-bfac58a88e"`, {
-        size: 1024,
-        mtime: new Date(Date.UTC(96, 1, 2, 3, 4, 5, 6)),
-      }),
-    );
-    assert(
-      await ifNoneMatch(`"400-bfac58a88e"`, {
-        size: 1024,
-        mtime: new Date(Date.UTC(96, 1, 2, 3, 4, 5, 6)),
-      }),
     );
   },
 });

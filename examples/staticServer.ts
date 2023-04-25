@@ -9,19 +9,11 @@ import {
   green,
   red,
   yellow,
-} from "https://deno.land/std@0.178.0/fmt/colors.ts";
+} from "https://deno.land/std@0.183.0/fmt/colors.ts";
 
-import {
-  Application,
-  FlashServer,
-  hasFlash,
-  HttpError,
-  Status,
-} from "../mod.ts";
+import { Application, HttpError, Status } from "../mod.ts";
 
-const app = new Application(
-  hasFlash() ? { serverConstructor: FlashServer } : undefined,
-);
+const app = new Application();
 
 // Error handler middleware
 app.use(async (context, next) => {

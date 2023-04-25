@@ -420,6 +420,39 @@ test({
 });
 
 test({
+  name: "router match using add",
+  async fn() {
+    const { context, next } = setup("/", "PUT");
+
+    const callStack: number[] = [];
+    const router = new Router();
+    router.all("/", (_ctx, next) => {
+      callStack.push(0);
+      return next();
+    });
+    router.add("PUT", "/", (_ctx, next) => {
+      callStack.push(1);
+      return next();
+    });
+    router.add(["PUT", "GET"], "/", (_ctx, next) => {
+      callStack.push(2);
+      return next();
+    });
+    router.add("POST", "/", (_ctx, next) => {
+      callStack.push(3);
+      return next();
+    });
+    router.add(["POST"], "/", (_ctx, next) => {
+      callStack.push(4);
+      return next();
+    });
+    const mw = router.routes();
+    await mw(context, next);
+    assertEquals(callStack, [0, 1, 2]);
+  },
+});
+
+test({
   name: "router patch prefix",
   async fn() {
     const { context, next } = setup("/route1/action1", "GET");

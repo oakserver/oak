@@ -77,7 +77,7 @@ test({
   async fn() {
     const content = new TextEncoder().encode("hello deno");
     assert(
-      await ifRange(`"a-l+ghcNTLpmZ9DVs/87qbgBvpV0M"`, 1445412480000, content),
+      await ifRange(`"a-YdfmHmj2RiwOVqJupcf3PLK9PuJ"`, 1445412480000, content),
     );
   },
 });
@@ -97,6 +97,7 @@ test({
       size: 1024,
       mtime: new Date(1445412480000),
     });
+    assert(etag);
     assert(
       await ifRange(etag, 1445412480000, {
         size: 1024,

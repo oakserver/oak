@@ -2,10 +2,13 @@
 
 import { Context } from "./context.ts";
 import { KeyStack, Status, STATUS_TEXT } from "./deps.ts";
-import { FlashServer } from "./http_server_flash.ts";
 import { HttpServer } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
-import { compose, Middleware } from "./middleware.ts";
+import {
+  compose,
+  isMiddlewareObject,
+  type MiddlewareOrMiddlewareObject,
+} from "./middleware.ts";
 import { cloneState } from "./structured_clone.ts";
 import {
   Key,
@@ -62,6 +65,18 @@ export interface HandleMethod {
 
 export type ListenOptions = ListenOptionsTls | ListenOptionsBase;
 
+interface ApplicationCloseEventListener {
+  (evt: ApplicationCloseEvent): void | Promise<void>;
+}
+
+interface ApplicationCloseEventListenerObject {
+  handleEvent(evt: ApplicationCloseEvent): void | Promise<void>;
+}
+
+type ApplicationCloseEventListenerOrEventListenerObject =
+  | ApplicationCloseEventListener
+  | ApplicationCloseEventListenerObject;
+
 interface ApplicationErrorEventListener<S extends AS, AS extends State> {
   (evt: ApplicationErrorEvent<S, AS>): void | Promise<void>;
 }
@@ -95,7 +110,7 @@ interface ApplicationListenEventInit extends EventInit {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "flash" | "custom";
+  serverType: "native" | "custom";
 }
 
 type ApplicationListenEventListenerOrEventListenerObject =
@@ -206,6 +221,12 @@ const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 
 const DEFAULT_SERVER: ServerConstructor<ServerRequest> = HttpServer;
 
+export class ApplicationCloseEvent extends Event {
+  constructor(eventInitDict: EventInit) {
+    super("close", eventInitDict);
+  }
+}
+
 export class ApplicationErrorEvent<S extends AS, AS extends State>
   extends ErrorEvent {
   context?: Context<S, AS>;
@@ -255,7 +276,7 @@ export class ApplicationListenEvent extends Event {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "flash" | "custom";
+  serverType: "native" | "custom";
 
   constructor(eventInitDict: ApplicationListenEventInit) {
     super("listen", eventInitDict);
@@ -304,7 +325,7 @@ export class Application<AS extends State = Record<string, any>>
   >;
   #contextState: "clone" | "prototype" | "alias" | "empty";
   #keys?: KeyStack;
-  #middleware: Middleware<State, Context<State, AS>>[] = [];
+  #middleware: MiddlewareOrMiddlewareObject<State, Context<State, AS>>[] = [];
   #serverConstructor: ServerConstructor<ServerRequest>;
 
   /** A set of keys, or an instance of `KeyStack` which will be used to sign
@@ -477,11 +498,21 @@ export class Application<AS extends State = Record<string, any>>
       state.handling.delete(handlingPromise);
       if (state.closing) {
         await state.server.close();
+        if (!state.closed) {
+          this.dispatchEvent(new ApplicationCloseEvent({}));
+        }
         state.closed = true;
       }
     }
   }
 
+  /** Add an event listener for a `"close"` event which occurs when the
+   * application is closed and no longer listening or handling requests. */
+  addEventListener<S extends AS>(
+    type: "close",
+    listener: ApplicationCloseEventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
   /** Add an event listener for an `"error"` event which occurs when an
    * un-caught error occurs when processing the middleware or during processing
    * of the response. */
@@ -500,7 +531,7 @@ export class Application<AS extends State = Record<string, any>>
   /** Add an event listener for an event.  Currently valid event types are
    * `"error"` and `"listen"`. */
   addEventListener(
-    type: "error" | "listen",
+    type: "close" | "error" | "listen",
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
   ): void {
@@ -572,6 +603,11 @@ export class Application<AS extends State = Record<string, any>>
     if (!this.#middleware.length) {
       throw new TypeError("There is no middleware to process requests.");
     }
+    for (const middleware of this.#middleware) {
+      if (isMiddlewareObject(middleware) && middleware.init) {
+        await middleware.init();
+      }
+    }
     if (typeof options === "string") {
       const match = ADDR_REGEXP.exec(options);
       if (!match) {
@@ -597,16 +633,13 @@ export class Application<AS extends State = Record<string, any>>
         if (!state.handling.size) {
           server.close();
           state.closed = true;
+          this.dispatchEvent(new ApplicationCloseEvent({}));
         }
         state.closing = true;
       });
     }
     const { secure = false } = options;
-    const serverType = server instanceof HttpServer
-      ? "native"
-      : server instanceof FlashServer
-      ? "flash"
-      : "custom";
+    const serverType = server instanceof HttpServer ? "native" : "custom";
     const listener = await server.listen();
     const { hostname, port } = listener.addr as Deno.NetAddr;
     this.dispatchEvent(
@@ -656,11 +689,11 @@ export class Application<AS extends State = Record<string, any>>
    * ```
    */
   use<S extends State = AS>(
-    middleware: Middleware<S, Context<S, AS>>,
-    ...middlewares: Middleware<S, Context<S, AS>>[]
+    middleware: MiddlewareOrMiddlewareObject<S, Context<S, AS>>,
+    ...middlewares: MiddlewareOrMiddlewareObject<S, Context<S, AS>>[]
   ): Application<S extends AS ? S : (S & AS)>;
   use<S extends State = AS>(
-    ...middleware: Middleware<S, Context<S, AS>>[]
+    ...middleware: MiddlewareOrMiddlewareObject<S, Context<S, AS>>[]
   ): Application<S extends AS ? S : (S & AS)> {
     this.#middleware.push(...middleware);
     this.#composedMiddleware = undefined;

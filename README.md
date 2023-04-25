@@ -181,44 +181,6 @@ An instance of application has some properties as well:
   generic argument when constructing an `Application()`, or inferred by passing
   a state object (e.g. `Application({ state })`).
 
-### Using Deno's experimental flash server
-
-Deno has an experimental flash server which dramatically increases the
-performance of HTTP/HTTPS under Deno. oak supports this server. There are
-currently a few caveats:
-
-- There currently isn't a way to obtain the remote connection IP address,
-  meaning `ctx.request.ip` and `ctx.request.ips` do not work properly.
-- There appears to be an issue with streaming large files with flash.
-- Some of the exception handling with flash isn't as flexible as the "native"
-  implementation, meaning that certain errors result in a hard coded 500
-  internal server error as well as "invalid" responses result in a server hang.
-
-Because of these current caveats, the flash server is not turned on by default
-when detected in the environment.
-
-To use the flash server, you need to import it and pass it as an option when
-constructing the application:
-
-```ts
-import {
-  Application,
-  FlashServer,
-  hasFlash,
-} from "https://deno.land/x/oak/mod.ts";
-
-const appOptions = hasFlash() ? { serverConstructor: FlashServer } : undefined;
-
-const app = new Application(appOptions);
-
-// ... register middleware ...
-
-app.listen();
-```
-
-Currently to enable the flash server, you need to pass the `--unstable` flag to
-Deno CLI on startup. An example is contained in `examples/flashEchoServer.ts`.
-
 ### Context
 
 The context passed to middleware has several properties:
