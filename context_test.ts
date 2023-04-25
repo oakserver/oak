@@ -11,7 +11,10 @@ import {
 import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
 import { errors, SecureCookieMap } from "./deps.ts";
-import { NativeRequest } from "./http_server_native_request.ts";
+import {
+  isNativeRequest,
+  NativeRequest,
+} from "./http_server_native_request.ts";
 import type {} from "./http_server_native.ts";
 import { Request as OakRequest } from "./request.ts";
 import { Response as OakResponse } from "./response.ts";
@@ -107,6 +110,7 @@ Deno.test({
     assertStrictEquals(context.app, app);
     assert(context.cookies instanceof SecureCookieMap);
     assert(context.request instanceof OakRequest);
+    assert(isNativeRequest(context.request.originalRequest));
     assert(context.response instanceof OakResponse);
   },
 });
