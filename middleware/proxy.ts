@@ -2,6 +2,7 @@
 
 import type { State } from "../application.ts";
 import type { Context } from "../context.ts";
+import { parse } from "../forwarded.ts";
 import type { Middleware } from "../middleware.ts";
 import type {
   RouteParams,
@@ -85,9 +86,6 @@ export interface ProxyOptions<
   response?(res: Response): Response | Promise<Response>;
 }
 
-const FORWARDED_RE =
-  /^(,[ \\t]*)*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*([ \\t]*,([ \\t]*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*)?)*$/;
-
 function createMatcher<
   R extends string,
   P extends RouteParams<R>,
@@ -155,7 +153,7 @@ async function createRequest<
       ? `"${ctx.request.ip}"`
       : ctx.request.ip;
     const host = headers.get("host");
-    if (maybeForwarded && FORWARDED_RE.test(maybeForwarded)) {
+    if (maybeForwarded && parse(maybeForwarded)) {
       let value = `for=${ip}`;
       if (host) {
         value += `;host=${host}`;

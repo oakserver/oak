@@ -208,9 +208,7 @@ Deno.test({
     }
 
     const mw = proxy("https://oakserver.github.io/", { fetch });
-    const ctx = createMockContext({
-      path: "/oak/FAQ",
-    });
+    const ctx = createMockContext({ path: "/oak/FAQ" });
     ctx.request.headers.append("forwarded", "for=127.0.0.1");
     const next = createMockNext();
     await mw(ctx, next);
@@ -222,5 +220,28 @@ Deno.test({
     ctx2.request.headers.append("forwarded", "for=127.0.0.1");
     const next2 = createMockNext();
     await mw2(ctx2, next2);
+  },
+});
+
+Deno.test({
+  name: "proxy - avoid DDOS of exponential regex",
+  async fn() {
+    function fetch(): Promise<Response> {
+      return Promise.resolve(new Response("hello world"));
+    }
+
+    const mw = proxy("https://oakserver.github.io", { fetch });
+    const ctx = createMockContext({ path: "/oak/FAQ" });
+    ctx.request.headers.append(
+      "forwarded",
+      ',;!="\\\\' + "t\\\\t\\\\".repeat(28) + "t,",
+    );
+    const next = createMockNext();
+    performance.mark("start");
+    await mw(ctx, next);
+    const measure = performance.measure("request", { start: "start" });
+    // this is set to a very safe number, pre-fix this would just churn the
+    // CPU for a super long time
+    assert(measure.duration < 20);
   },
 });
