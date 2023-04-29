@@ -1,5 +1,15 @@
 # oak Change Log
 
+## Version 12.3.1
+
+- **SECURITY** fix: avoid parse middleware DDOS (03c6b74)
+
+  The parse middleware was using an exponentially complex regular expression to
+  validate the `Forwarded` header on requests, making it trivial to create a
+  request that would cause CPU exhaustion. This is now fixed.
+
+- chore: reduce `50MB.zip` size (#487)
+
 ## Version 12.3.0
 
 - feat: add `MiddlewareObject` (#589)
