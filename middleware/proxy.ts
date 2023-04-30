@@ -11,7 +11,10 @@ import type {
 } from "../router.ts";
 import { isRouterContext } from "../util.ts";
 
-export type Fetch = (input: Request) => Promise<Response>;
+export type Fetch = (
+  input: Request,
+  init: { context: Context },
+) => Promise<Response>;
 
 export type ProxyMatchFunction<
   R extends string,
@@ -50,7 +53,12 @@ export interface ProxyOptions<
     contentType?: string,
   ): Promise<string | undefined> | string | undefined;
   /** The fetch function to use to proxy the request. This defaults to the
-   * global `fetch` function. This is designed for test mocking purposes. */
+   * global {@linkcode fetch} function. It will always be called with a
+   * second argument which contains an object of `{ context }` which the
+   * `context` property will be an instance of {@linkcode RouterContext}.
+   *
+   * This is designed for mocking purposes or implementing a `fetch()`
+   * callback that needs access the current context when it is called. */
   fetch?: Fetch;
   /** Additional headers that should be set in the response. The value can
    * be a headers init value or a function that returns or resolves with a
@@ -258,14 +266,14 @@ export function proxy<
   options: ProxyOptions<R, P, S> = {},
 ): RouterMiddleware<R, P, S> {
   const matches = createMatcher(options);
-  return async function proxy(ctx, next) {
-    if (!matches(ctx)) {
+  return async function proxy(context, next) {
+    if (!matches(context)) {
       return next();
     }
-    const request = await createRequest(target, ctx, options);
+    const request = await createRequest(target, context, options);
     const { fetch = globalThis.fetch } = options;
-    const response = await fetch(request);
-    await processResponse(response, ctx, options);
+    const response = await fetch(request, { context });
+    await processResponse(response, context, options);
     return next();
   };
 }

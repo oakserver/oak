@@ -1,6 +1,7 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
 import { Application } from "../application.ts";
+import { type Context } from "../context.ts";
 import { Router } from "../router.ts";
 import { createMockContext, createMockNext } from "../testing.ts";
 import { assert, assertEquals, assertStrictEquals } from "../test_deps.ts";
@@ -243,5 +244,24 @@ Deno.test({
     // this is set to a very safe number, pre-fix this would just churn the
     // CPU for a super long time
     assert(measure.duration < 20);
+  },
+});
+
+Deno.test({
+  name: "proxy - fetch contains context",
+  async fn() {
+    function fetch(
+      _input: Request,
+      { context }: { context: Context },
+    ) {
+      assert(context);
+      assertEquals(context.request.url.toString(), "http://localhost/oak/FAQ");
+      return Promise.resolve(new Response("hello world"));
+    }
+
+    const mw = proxy("https://oakserver.github.io", { fetch });
+    const ctx = createMockContext({ path: "/oak/FAQ" });
+    const next = createMockNext();
+    await mw(ctx, next);
   },
 });
