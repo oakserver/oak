@@ -1,5 +1,19 @@
 # oak Change Log
 
+## Version 12.4.0
+
+- feat: add context to fetch for proxy (b025488)
+
+  When providing a `fetch()` method on proxy middleware init options, the method
+  will be called with an init of `{ context }` which includes the current
+  context. This allows advanced usage cases where the context impacts how the
+  fetch is handled (e.g. like setting upstream request headers, etc.).
+
+- chore: update to std 0.185.0 (07a011a)
+- chore: update to dnt 0.34.0 (5064a71)
+- chore: update to Deno 1.33 (e564135)
+- chore: move CI to deno canary (811f531)
+
 ## Version 12.3.1
 
 - **SECURITY** fix: avoid parse middleware DDOS (03c6b74)
