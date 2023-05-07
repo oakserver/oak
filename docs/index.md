@@ -69,7 +69,7 @@ in a predictable order between when the application receives a request and the
 response is sent.
 
 Middleware functions allow you to break up the logic of your server into
-discreet functions that encapsulate logic, as well as import in other middleware
+discrete functions that encapsulate logic, as well as import in other middleware
 that can add functionality to your application in a very loosely coupled way.
 
 To get an application to use a middleware function, an instance of an
