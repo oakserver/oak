@@ -14,6 +14,7 @@ import type {
 import { RequestBody } from "./body.ts";
 import { accepts, acceptsEncodings, acceptsLanguages } from "./deps.ts";
 import type { HTTPMethods, ServerRequest } from "./types.d.ts";
+import { UserAgent, ISystemAgent} from "./useragent.ts";
 
 export interface OakRequestOptions {
   jsonBodyReviver?: (key: string, value: unknown) => unknown;
@@ -30,6 +31,7 @@ export interface OakRequestOptions {
  * the ability to decode a request body.
  */
 export class Request {
+  #userAgent: UserAgent;
   #body: RequestBody;
   #proxy: boolean;
   #secure: boolean;
@@ -51,7 +53,10 @@ export class Request {
   get hasBody(): boolean {
     return this.#body.has();
   }
-
+  /**  The `userAgent` recognize  operating system */
+  get userAgent(): ISystemAgent{
+   return  this.#userAgent.detectUserAgent();
+  }
   /** The `Headers` supplied in the request. */
   get headers(): Headers {
     return this.#serverRequest.headers;
@@ -145,6 +150,7 @@ export class Request {
       serverRequest.headers,
       jsonBodyReviver,
     );
+    this.#userAgent= new UserAgent(this.headers);
   }
 
   /** Returns an array of media types, accepted by the requestor, in order of

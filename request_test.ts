@@ -299,3 +299,22 @@ test({
     );
   },
 });
+test({
+  name: "request User Agent",
+  async fn() {
+    const request = new Request(
+        createMockNativeRequest("http://localhost/index.html", {
+          method: "GET",
+          headers: {
+            "user-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"
+          },
+        }),
+    );
+    const actual = request.userAgent;
+    assertEquals(actual.type.os,"Linux 64");
+    assertEquals(actual.type.platform,"Linux");
+  },
+});
+
+
+

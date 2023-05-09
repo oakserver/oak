@@ -328,6 +328,10 @@ several properties:
 
 And several methods:
 
+- `.userAgent()`
+
+  The is method provide functionality to detect user agent operating system.
+
 - `.accepts(...types: string[])`
 
   Negotiates the content type supported by the request for the response. If no
