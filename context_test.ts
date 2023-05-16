@@ -10,7 +10,7 @@ import {
 } from "./test_deps.ts";
 import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
-import { errors, SecureCookieMap } from "./deps.ts";
+import { errors, SecureCookieMap, Status } from "./deps.ts";
 import {
   isNativeRequest,
   NativeRequest,
@@ -130,6 +130,72 @@ Deno.test({
       },
       errors.Unauthorized,
       "Unauthorized",
+    );
+  },
+});
+
+Deno.test({
+  name: "context.assert() headers",
+  fn() {
+    const context: Context = new Context(
+      createMockApp(),
+      createMockNativeRequest(),
+      {},
+    );
+    assertThrows(
+      () => {
+        let loggedIn: string | undefined;
+        context.assert(loggedIn, 401, "Unauthorized", {
+          headers: new Headers({
+            "WWW-Authenticate":
+              'Bearer realm="oak-tests",error="invalid_token"',
+          }),
+        });
+      },
+      errors.Unauthorized,
+      "Unauthorized",
+    );
+  },
+});
+
+Deno.test({
+  name: "context.assert() expose",
+  fn() {
+    const context: Context = new Context(
+      createMockApp(),
+      createMockNativeRequest(),
+      {},
+    );
+    assertThrows(
+      () => {
+        let loggedIn: string | undefined;
+        context.assert(loggedIn, 401, "Unauthorized", {
+          expose: true,
+        });
+      },
+      errors.Unauthorized,
+      "Unauthorized",
+    );
+  },
+});
+
+Deno.test({
+  name: "context.assert() no redundant status",
+  fn() {
+    const context: Context = new Context(
+      createMockApp(),
+      createMockNativeRequest(),
+      {},
+    );
+    assertThrows(
+      () => {
+        let loggedIn: string | undefined;
+        context.assert(loggedIn, 401, "Unauthorized", {
+          status: Status.Unauthorized,
+        });
+      },
+      TypeError,
+      "Cannot set property status of Error which has only a getter",
     );
   },
 });
