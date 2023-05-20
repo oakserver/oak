@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
 import type { Listener, Server, ServerRequest } from "./types.d.ts";
 import * as http from "http";
