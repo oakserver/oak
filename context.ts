@@ -4,6 +4,7 @@ import type { Application, State } from "./application.ts";
 import {
   createHttpError,
   type ErrorStatus,
+  type HttpErrorOptions,
   KeyStack,
   SecureCookieMap,
   ServerSentEventStreamTarget,
@@ -213,12 +214,23 @@ export class Context<
     condition: any,
     errorStatus: ErrorStatus = 500,
     message?: string,
-    props?: Record<string, unknown>,
+    props?: Record<string, unknown> & Omit<HttpErrorOptions, "status">,
   ): asserts condition {
     if (condition) {
       return;
     }
-    const err = createHttpError(errorStatus, message);
+    const httpErrorOptions: HttpErrorOptions = {};
+    if (typeof props === "object") {
+      if ("headers" in props) {
+        httpErrorOptions.headers = props.headers;
+        delete props.headers;
+      }
+      if ("expose" in props) {
+        httpErrorOptions.expose = props.expose;
+        delete props.expose;
+      }
+    }
+    const err = createHttpError(errorStatus, message, httpErrorOptions);
     if (props) {
       Object.assign(err, props);
     }
