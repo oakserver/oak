@@ -1,6 +1,11 @@
 // Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
 
-import { errors, readerFromStreamReader } from "./deps.ts";
+import {
+  createHttpError,
+  errors,
+  readerFromStreamReader,
+  Status,
+} from "./deps.ts";
 import { isMediaType } from "./isMediaType.ts";
 import { FormDataReader } from "./multipart.ts";
 import type { ServerRequestBody } from "./types.d.ts";
@@ -180,7 +185,7 @@ function resolveType(
   return "bytes";
 }
 
-const decoder = new TextDecoder();
+const decoder = new TextDecoder(undefined, { fatal: true });
 
 export class RequestBody {
   #body: ReadableStream<Uint8Array> | null;
@@ -213,7 +218,13 @@ export class RequestBody {
         this.#type = "bytes";
         if (this.#exceedsLimit(limit)) {
           return () =>
-            Promise.reject(new RangeError(`Body exceeds a limit of ${limit}.`));
+            Promise.reject(
+              createHttpError(
+                Status.BadRequest,
+                `Body exceeds a limit of ${limit}.`,
+                { expose: false },
+              ),
+            );
         }
         return async () =>
           new URLSearchParams(
@@ -225,45 +236,96 @@ export class RequestBody {
           const contentType = this.#headers.get("content-type");
           assert(contentType);
           const readableStream = this.#body ?? new ReadableStream();
-          return this.#formDataReader ??
-            (this.#formDataReader = new FormDataReader(
-              contentType,
-              readerFromStreamReader(
-                (readableStream as ReadableStream<Uint8Array>).getReader(),
-              ),
-            ));
+          try {
+            return this.#formDataReader ??
+              (this.#formDataReader = new FormDataReader(
+                contentType,
+                readerFromStreamReader(
+                  (readableStream as ReadableStream<Uint8Array>).getReader(),
+                ),
+              ));
+          } catch (err) {
+            const message = err instanceof Error
+              ? err.message
+              : "Malformed request body.";
+            throw createHttpError(
+              Status.BadRequest,
+              message,
+              { expose: false },
+            );
+          }
         };
       case "json":
         this.#type = "bytes";
         if (this.#exceedsLimit(limit)) {
           return () =>
-            Promise.reject(new RangeError(`Body exceeds a limit of ${limit}.`));
+            Promise.reject(createHttpError(
+              Status.BadRequest,
+              `Body exceeds a limit of ${limit}.`,
+              { expose: false },
+            ));
         }
         return async () => {
           const value = await this.#valuePromise();
-          return value.length
-            ? JSON.parse(
-              decoder.decode(await this.#valuePromise()),
-              this.#jsonBodyReviver,
-            )
-            : null;
+          try {
+            return value.length
+              ? JSON.parse(
+                decoder.decode(await this.#valuePromise()),
+                this.#jsonBodyReviver,
+              )
+              : null;
+          } catch (err) {
+            const message = err instanceof Error
+              ? err.message
+              : "Malformed request body.";
+            throw createHttpError(
+              Status.BadRequest,
+              message,
+              { expose: false },
+            );
+          }
         };
       case "bytes":
         this.#type = "bytes";
         if (this.#exceedsLimit(limit)) {
           return () =>
-            Promise.reject(new RangeError(`Body exceeds a limit of ${limit}.`));
+            Promise.reject(createHttpError(
+              Status.BadRequest,
+              `Body exceeds a limit of ${limit}.`,
+              { expose: false },
+            ));
         }
         return () => this.#valuePromise();
       case "text":
         this.#type = "bytes";
         if (this.#exceedsLimit(limit)) {
           return () =>
-            Promise.reject(new RangeError(`Body exceeds a limit of ${limit}.`));
+            Promise.reject(createHttpError(
+              Status.BadRequest,
+              `Body exceeds a limit of ${limit}.`,
+              { expose: false },
+            ));
         }
-        return async () => decoder.decode(await this.#valuePromise());
+        return async () => {
+          try {
+            return decoder.decode(await this.#valuePromise());
+          } catch (err) {
+            const message = err instanceof Error
+              ? err.message
+              : "Malformed request body.";
+            throw createHttpError(
+              Status.BadRequest,
+              message,
+              { expose: false },
+            );
+          }
+        };
       default:
-        throw new TypeError(`Invalid body type: "${type}"`);
+        throw createHttpError(
+          Status.InternalServerError,
+          `Invalid body type: "${type}"`,
+          { expose: true },
+        );
     }
   }
 
@@ -370,10 +432,12 @@ export class RequestBody {
     }
     if (!type) {
       const contentType = this.#headers.get("content-type");
-      assert(
-        contentType,
-        "The Content-Type header is missing from the request",
-      );
+      if (!contentType) {
+        throw createHttpError(
+          Status.BadRequest,
+          "The Content-Type header is missing from the request",
+        );
+      }
       type = resolveType(contentType, contentTypes);
     }
     assert(type);

@@ -2,6 +2,7 @@
 
 // deno-lint-ignore-file
 
+import { isHttpError, Status } from "./deps.ts";
 import {
   assert,
   assertEquals,
@@ -273,12 +274,13 @@ test({
     assert(request.hasBody, "should have body");
     const actual = request.body();
     assert(actual.type === "json", "should be a JSON body");
-    await assertRejects(
+    const err = await assertRejects(
       async () => {
         await actual.value;
       },
-      SyntaxError,
     );
+    assert(isHttpError(err));
+    assertEquals(err.status, Status.BadRequest);
   },
 });
 
