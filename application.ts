@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
 import { Context } from "./context.ts";
 import { KeyStack, Status, STATUS_TEXT } from "./deps.ts";

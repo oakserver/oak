@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
 // deno-lint-ignore-file no-explicit-any
 
@@ -10,9 +10,13 @@
  */
 
 import type { Application, State } from "./application.ts";
-import { accepts, createHttpError, SecureCookieMap } from "./deps.ts";
+import {
+  accepts,
+  createHttpError,
+  type ErrorStatus,
+  SecureCookieMap,
+} from "./deps.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
-import type { ErrorStatus } from "./types.d.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 

@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
@@ -8,11 +8,10 @@ import {
   isAbsolute,
   join,
   normalize,
-  sep,
-  Status,
+  SEP,
 } from "./deps.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
-import type { Data, ErrorStatus, Key, RedirectStatus } from "./types.d.ts";
+import type { Data, Key } from "./types.d.ts";
 
 const ENCODE_CHARS_REGEXP =
   /(?:[^\x21\x25\x26-\x3B\x3D\x3F-\x5B\x5D\x5F\x61-\x7A\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g;
@@ -222,64 +221,6 @@ export function readableStreamFromReader(
   }, strategy);
 }
 
-/** Determines if a HTTP `Status` is an `ErrorStatus` (4XX or 5XX). */
-export function isErrorStatus(value: Status): value is ErrorStatus {
-  return [
-    Status.BadRequest,
-    Status.Unauthorized,
-    Status.PaymentRequired,
-    Status.Forbidden,
-    Status.NotFound,
-    Status.MethodNotAllowed,
-    Status.NotAcceptable,
-    Status.ProxyAuthRequired,
-    Status.RequestTimeout,
-    Status.Conflict,
-    Status.Gone,
-    Status.LengthRequired,
-    Status.PreconditionFailed,
-    Status.RequestEntityTooLarge,
-    Status.RequestURITooLong,
-    Status.UnsupportedMediaType,
-    Status.RequestedRangeNotSatisfiable,
-    Status.ExpectationFailed,
-    Status.Teapot,
-    Status.MisdirectedRequest,
-    Status.UnprocessableEntity,
-    Status.Locked,
-    Status.FailedDependency,
-    Status.UpgradeRequired,
-    Status.PreconditionRequired,
-    Status.TooManyRequests,
-    Status.RequestHeaderFieldsTooLarge,
-    Status.UnavailableForLegalReasons,
-    Status.InternalServerError,
-    Status.NotImplemented,
-    Status.BadGateway,
-    Status.ServiceUnavailable,
-    Status.GatewayTimeout,
-    Status.HTTPVersionNotSupported,
-    Status.VariantAlsoNegotiates,
-    Status.InsufficientStorage,
-    Status.LoopDetected,
-    Status.NotExtended,
-    Status.NetworkAuthenticationRequired,
-  ].includes(value);
-}
-
-/** Determines if a HTTP `Status` is a `RedirectStatus` (3XX). */
-export function isRedirectStatus(value: Status): value is RedirectStatus {
-  return [
-    Status.MultipleChoices,
-    Status.MovedPermanently,
-    Status.Found,
-    Status.SeeOther,
-    Status.UseProxy,
-    Status.TemporaryRedirect,
-    Status.PermanentRedirect,
-  ].includes(value);
-}
-
 /** Determines if a string "looks" like HTML */
 export function isHtml(value: string): boolean {
   return /^\s*<(?:!DOCTYPE|html|body)/i.test(value);
@@ -365,7 +306,7 @@ export function resolvePath(rootPath: string, relativePath?: string): string {
   }
 
   // path outside root
-  if (UP_PATH_REGEXP.test(normalize("." + sep + path))) {
+  if (UP_PATH_REGEXP.test(normalize(`.${SEP}${path}`))) {
     throw createHttpError(403);
   }
 

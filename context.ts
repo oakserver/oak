@@ -1,8 +1,9 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
 import {
   createHttpError,
+  type ErrorStatus,
   type HttpErrorOptions,
   KeyStack,
   SecureCookieMap,
@@ -13,11 +14,7 @@ import {
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
-import type {
-  ErrorStatus,
-  ServerRequest,
-  UpgradeWebSocketOptions,
-} from "./types.d.ts";
+import type { ServerRequest, UpgradeWebSocketOptions } from "./types.d.ts";
 import { assert } from "./util.ts";
 
 export interface ContextOptions<

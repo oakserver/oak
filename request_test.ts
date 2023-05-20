@@ -1,7 +1,8 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
 // deno-lint-ignore-file
 
+import { isHttpError, Status } from "./deps.ts";
 import {
   assert,
   assertEquals,
@@ -273,12 +274,13 @@ test({
     assert(request.hasBody, "should have body");
     const actual = request.body();
     assert(actual.type === "json", "should be a JSON body");
-    await assertRejects(
+    const err = await assertRejects(
       async () => {
         await actual.value;
       },
-      SyntaxError,
     );
+    assert(isHttpError(err));
+    assertEquals(err.status, Status.BadRequest);
   },
 });
 
