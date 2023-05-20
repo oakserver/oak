@@ -98,20 +98,19 @@ export { send } from "./send.ts";
 export type { SendOptions } from "./send.ts";
 /** Utilities for making testing oak servers easier. */
 export * as testing from "./testing.ts";
-export type {
-  ErrorStatus,
-  HTTPMethods,
-  RedirectStatus,
-  ServerConstructor,
-} from "./types.d.ts";
-export { isErrorStatus, isRedirectStatus } from "./util.ts";
+export type { ServerConstructor } from "./types.d.ts";
 
 // Re-exported from `std/http`
 export {
   createHttpError,
   errors as httpErrors,
+  type ErrorStatus,
   HttpError,
+  type HTTPMethods,
+  isErrorStatus,
   isHttpError,
+  isRedirectStatus,
+  type RedirectStatus,
   SecureCookieMap as Cookies,
   type SecureCookieMapGetOptions as CookiesGetOptions,
   type SecureCookieMapSetDeleteOptions as CookiesSetDeleteOptions,

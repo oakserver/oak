@@ -12,8 +12,13 @@ import type {
   BodyText,
 } from "./body.ts";
 import { RequestBody } from "./body.ts";
-import { accepts, acceptsEncodings, acceptsLanguages } from "./deps.ts";
-import type { HTTPMethods, ServerRequest } from "./types.d.ts";
+import {
+  accepts,
+  acceptsEncodings,
+  acceptsLanguages,
+  type HTTPMethods,
+} from "./deps.ts";
+import type { ServerRequest } from "./types.d.ts";
 
 export interface OakRequestOptions {
   jsonBodyReviver?: (key: string, value: unknown) => unknown;

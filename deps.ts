@@ -29,6 +29,10 @@ export {
   isHttpError,
 } from "https://deno.land/std@0.188.0/http/http_errors.ts";
 export {
+  type ErrorStatus,
+  isErrorStatus,
+  isRedirectStatus,
+  type RedirectStatus,
   Status,
   STATUS_TEXT,
 } from "https://deno.land/std@0.188.0/http/http_status.ts";
@@ -39,6 +43,7 @@ export {
   ifMatch,
   ifNoneMatch,
 } from "https://deno.land/std@0.188.0/http/etag.ts";
+export { type HttpMethod as HTTPMethods } from "https://deno.land/std@0.188.0/http/method.ts";
 export {
   accepts,
   acceptsEncodings,
@@ -69,7 +74,7 @@ export {
   join,
   normalize,
   parse,
-  sep,
+  SEP,
 } from "https://deno.land/std@0.188.0/path/mod.ts";
 
 // 3rd party dependencies

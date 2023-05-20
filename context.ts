@@ -3,6 +3,7 @@
 import type { Application, State } from "./application.ts";
 import {
   createHttpError,
+  type ErrorStatus,
   KeyStack,
   SecureCookieMap,
   ServerSentEventStreamTarget,
@@ -12,11 +13,7 @@ import {
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
-import type {
-  ErrorStatus,
-  ServerRequest,
-  UpgradeWebSocketOptions,
-} from "./types.d.ts";
+import type { ServerRequest, UpgradeWebSocketOptions } from "./types.d.ts";
 import { assert } from "./util.ts";
 
 export interface ContextOptions<

@@ -30,15 +30,16 @@ import type { Context } from "./context.ts";
 import {
   compile,
   errors,
+  type HTTPMethods,
   Key,
   ParseOptions,
   pathParse,
   pathToRegexp,
+  type RedirectStatus,
   Status,
   TokensToRegexpOptions,
 } from "./deps.ts";
 import { compose, Middleware } from "./middleware.ts";
-import type { HTTPMethods, RedirectStatus } from "./types.d.ts";
 import { assert, decodeComponent } from "./util.ts";
 
 interface Matches<R extends string> {
