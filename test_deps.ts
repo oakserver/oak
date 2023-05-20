@@ -5,8 +5,8 @@ export {
   BufWriter,
   StringReader,
   StringWriter,
-} from "https://deno.land/std@0.185.0/io/mod.ts";
-export { writeAllSync } from "https://deno.land/std@0.185.0/streams/mod.ts";
+} from "https://deno.land/std@0.188.0/io/mod.ts";
+export { writeAllSync } from "https://deno.land/std@0.188.0/streams/mod.ts";
 export {
   assert,
   assertEquals,
@@ -15,4 +15,4 @@ export {
   assertStrictEquals,
   assertThrows,
   unreachable,
-} from "https://deno.land/std@0.185.0/testing/asserts.ts";
+} from "https://deno.land/std@0.188.0/testing/asserts.ts";
