@@ -1,5 +1,27 @@
 # oak Change Log
 
+## Version 12.5.0
+
+- feat: body parsing throws HTTP errors. (79349d7)
+
+  Now when parsing the body of a request, when an error is encountered, an HTTP
+  error is thrown instead of a SyntaxError or TypeError. This makes it easier to
+  respond to "bad requests" without additional error handling in middleware.
+
+- fix: allow setting headers and expose on `Context.prototype.assert()` (#605)
+
+  After migrating to HTTP errors from Deno std library, there were some
+  regressions in functionality when passing options. This restores this lost
+  functionality.
+
+- chore: update to std 0.188.0 (1534696)
+- chore: update to dnt 0.35.0 (02612c9)
+- chore: revert CI to stable (635af06)
+- chore: revert format change (91bf20f)
+- chore: migrate to std for method, `ErrorStatus`, `RedirectStatus` (4870970)
+- chore: update copyright years (022d50e)
+- docs: remove extra words in FAQ.md (#606)
+
 ## Version 12.4.0
 
 - feat: add context to fetch for proxy (b025488)
