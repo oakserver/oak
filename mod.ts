@@ -3,9 +3,9 @@
 /**
  * A middleware framework for handling HTTP with Deno.
  *
- * oak works well on both Deno CLI and Deno deploy, and is inspired by
- * [koa](https://koajs.com/). It works well with both the Deno CLI and
+ * Inspired by [koa](https://koajs.com/), oak works well on both Deno CLI and 
  * [Deno Deploy](https://deno.com/deploy).
+ * 
  *
  * ### Example server
  *
