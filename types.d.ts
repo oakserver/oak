@@ -56,10 +56,6 @@ interface WebSocketUpgrade {
   socket: WebSocket;
 }
 
-// Since the native bindings are currently unstable in Deno, we will add the
-// interfaces here, so that we can type check oak without requiring the
-// `--unstable` flag to be used.
-
 export interface RequestEvent {
   readonly request: Request;
   respondWith(r: Response | Promise<Response>): Promise<void>;
