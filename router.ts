@@ -30,15 +30,16 @@ import type { Context } from "./context.ts";
 import {
   compile,
   errors,
+  type HTTPMethods,
   Key,
   ParseOptions,
   pathParse,
   pathToRegexp,
+  type RedirectStatus,
   Status,
   TokensToRegexpOptions,
 } from "./deps.ts";
 import { compose, Middleware, type Next } from "./middleware.ts";
-import type { HTTPMethods, RedirectStatus } from "./types.d.ts";
 import { assert, decodeComponent } from "./util.ts";
 
 interface Matches<R extends string> {
@@ -212,14 +213,14 @@ export type RouteParams<Route extends string> = string extends Route
   ? ParamsDictionary
   : Route extends `${string}(${string}` ? ParamsDictionary
   : Route extends `${string}:${infer Rest}` ?
-  & (
-    GetRouteParams<Rest> extends never ? ParamsDictionary
-    : GetRouteParams<Rest> extends `${infer ParamName}?`
-    ? { [P in ParamName]?: string }
-    : { [P in GetRouteParams<Rest>]: string }
-  )
-  & (Rest extends `${GetRouteParams<Rest>}${infer Next}` ? RouteParams<Next>
-    : unknown)
+      & (
+        GetRouteParams<Rest> extends never ? ParamsDictionary
+          : GetRouteParams<Rest> extends `${infer ParamName}?`
+            ? { [P in ParamName]?: string }
+          : { [P in GetRouteParams<Rest>]: string }
+      )
+      & (Rest extends `${GetRouteParams<Rest>}${infer Next}` ? RouteParams<Next>
+        : unknown)
   : Record<string | number, string | undefined>;
 
 type LayerOptions = TokensToRegexpOptions & ParseOptions & {

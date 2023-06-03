@@ -1,7 +1,7 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
 import { RequestBody } from "./body.ts";
-import { readAll } from "./deps.ts";
+import { isHttpError, readAll, Status } from "./deps.ts";
 import {
   assert,
   assertEquals,
@@ -9,8 +9,6 @@ import {
   assertStrictEquals,
 } from "./test_deps.ts";
 import type { ServerRequestBody } from "./types.d.ts";
-
-const { test } = Deno;
 
 const decoder = new TextDecoder();
 
@@ -36,7 +34,7 @@ function toServerRequestBody(request: Request): [ServerRequestBody, Headers] {
   }, request.headers];
 }
 
-test({
+Deno.test({
   name: "body - form",
   async fn() {
     const rBody = `foo=bar&bar=1&baz=qux+%2B+quux`;
@@ -66,7 +64,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - form-data",
   async fn() {
     const requestBody = new RequestBody(...toServerRequestBody(
@@ -89,7 +87,33 @@ test({
   },
 });
 
-test({
+Deno.test({
+  name: "body - form-data - throws http error",
+  async fn() {
+    const requestBody = new RequestBody(...toServerRequestBody(
+      new Request(
+        "http://localhost/index.html",
+        {
+          body: `BAD BODY`,
+          method: "POST",
+          headers: {
+            "content-type": multipartContentType,
+          },
+        },
+      ),
+    ));
+    assert(requestBody.has());
+    const body = requestBody.get({});
+    assert(body.type === "form-data");
+    const err = await assertRejects(async () => {
+      await body.value.read();
+    });
+    assert(isHttpError(err));
+    assertEquals(err.status, Status.BadRequest);
+  },
+});
+
+Deno.test({
   name: "body - json",
   async fn() {
     const rBody = JSON.stringify({ hello: "world" });
@@ -115,7 +139,36 @@ test({
   },
 });
 
-test({
+Deno.test({
+  name: "body - json - does not parse",
+  async fn() {
+    const rBody = "{hello: world}";
+    const requestBody = new RequestBody(
+      ...toServerRequestBody(
+        new Request(
+          "http://localhost/index.html",
+          {
+            body: rBody,
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              "content-length": String(rBody.length),
+            },
+          },
+        ),
+      ),
+    );
+    assert(requestBody.has());
+    const body = requestBody.get({});
+    const err = await assertRejects(async () => {
+      await body.value;
+    }, Error);
+    assert(isHttpError(err));
+    assertEquals(err.status, Status.BadRequest);
+  },
+});
+
+Deno.test({
   name: "body - bytes",
   async fn() {
     const rBody = `console.log("hello world!");\n`;
@@ -142,7 +195,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - text",
   async fn() {
     const rBody = "hello";
@@ -165,7 +218,32 @@ test({
   },
 });
 
-test({
+Deno.test({
+  name: "body - text - does not decode",
+  async fn() {
+    const rBody = new Uint8Array([240, 159, 152, 177, 240, 159, 152]);
+    const requestBody = new RequestBody(
+      ...toServerRequestBody(
+        new Request("http://localhost/index.html", {
+          body: rBody,
+          method: "POST",
+          headers: {
+            "content-type": "text/plain",
+            "content-length": String(rBody.length),
+          },
+        }),
+      ),
+    );
+    assert(requestBody.has());
+    const body = requestBody.get({});
+    assert(body.type === "text");
+    const err = await assertRejects(() => body.value);
+    assert(isHttpError(err));
+    assertEquals(err.status, Status.BadRequest);
+  },
+});
+
+Deno.test({
   name: "body - undefined",
   fn() {
     const requestBody = new RequestBody(
@@ -178,7 +256,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - type: reader",
   async fn() {
     const requestBody = new RequestBody(
@@ -199,7 +277,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - type: stream",
   async fn() {
     const requestBody = new RequestBody(
@@ -220,7 +298,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - type: form",
   async fn() {
     const rBody = `foo=bar&bar=1&baz=qux+%2B+quux`;
@@ -246,7 +324,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - type: form-data",
   async fn() {
     const requestBody = new RequestBody(
@@ -268,7 +346,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - type: bytes",
   async fn() {
     const rBody = `console.log("hello world!");\n`;
@@ -291,7 +369,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - type: json",
   async fn() {
     const rBody = JSON.stringify({ hello: "world" });
@@ -313,7 +391,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - type: text",
   async fn() {
     const rBody = "hello";
@@ -335,7 +413,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - type - body undefined",
   async fn() {
     const requestBody = new RequestBody(
@@ -348,7 +426,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - contentTypes: form",
   async fn() {
     const rBody = `foo=bar&bar=1&baz=qux+%2B+quux`;
@@ -376,7 +454,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - contentTypes: form-data",
   async fn() {
     const requestBody = new RequestBody(
@@ -400,7 +478,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - contentTypes: bytes",
   async fn() {
     const rBody = `console.log("hello world!");\n`;
@@ -423,7 +501,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - contentTypes: json",
   async fn() {
     const rBody = JSON.stringify({ hello: "world" });
@@ -447,7 +525,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - contentTypes: text",
   async fn() {
     const rBody = "hello";
@@ -471,7 +549,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - multiple gets memoized",
   fn() {
     const rBody = `console.log("hello world!");\n`;
@@ -495,7 +573,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - can get different types",
   async fn() {
     const body = JSON.stringify({ hello: "world" });
@@ -520,7 +598,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - multiple streams",
   async fn() {
     const requestBody = new RequestBody(
@@ -544,7 +622,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - decode JSON with null body",
   async fn() {
     const requestBody = new RequestBody(
@@ -558,7 +636,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name:
     "body - default limit, 0 content-length (content-length greater than or equal to zero is a valid value - https://datatracker.ietf.org/doc/html/rfc2616#section-14.13)",
   async fn() {
@@ -579,7 +657,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - limit set to 0",
   async fn() {
     const requestBody = new RequestBody(
@@ -598,7 +676,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - limit set to Infinity",
   async fn() {
     const requestBody = new RequestBody(
@@ -617,7 +695,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - limit set to 1000",
   async fn() {
     const body = "hello world";
@@ -638,7 +716,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "body - exceeds limit",
   async fn() {
     const body = "hello world";
@@ -655,17 +733,18 @@ test({
       ),
     );
     const actual = requestBody.get({ type: "text", limit: 2 });
-    await assertRejects(
+    const err = await assertRejects(
       async () => {
         await actual.value;
       },
-      RangeError,
-      "Body exceeds a limit of ",
     );
+    assert(isHttpError(err));
+    assertEquals(err.status, Status.BadRequest);
+    assertEquals(err.message, `Body exceeds a limit of 2.`);
   },
 });
 
-test({
+Deno.test({
   name: "body - exceeds limit but can retrieve with different limit",
   async fn() {
     const body = "hello world";
@@ -682,13 +761,14 @@ test({
       ),
     );
     let actual = requestBody.get({ type: "text", limit: 2 });
-    await assertRejects(
+    const err = await assertRejects(
       async () => {
         await actual.value;
       },
-      RangeError,
-      "Body exceeds a limit of ",
     );
+    assert(isHttpError(err));
+    assertEquals(err.status, Status.BadRequest);
+    assert(err.message.includes("Body exceeds a limit of "));
     actual = requestBody.get();
     assertEquals(await actual.value, "hello world");
   },

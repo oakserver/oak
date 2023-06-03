@@ -12,7 +12,7 @@ jobs:
       - name: install deno
         uses: denoland/setup-deno@v1
         with:
-          deno-version: canary
+          deno-version: 1.X
 
       - name: check format
         run: deno fmt --check

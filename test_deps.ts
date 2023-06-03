@@ -1,12 +1,12 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
 export {
   Buffer,
   BufWriter,
   StringReader,
   StringWriter,
-} from "https://deno.land/std@0.185.0/io/mod.ts";
-export { writeAllSync } from "https://deno.land/std@0.185.0/streams/mod.ts";
+} from "https://deno.land/std@0.190.0/io/mod.ts";
+export { writeAllSync } from "https://deno.land/std@0.190.0/streams/mod.ts";
 export {
   assert,
   assertEquals,
@@ -15,4 +15,4 @@ export {
   assertStrictEquals,
   assertThrows,
   unreachable,
-} from "https://deno.land/std@0.185.0/testing/asserts.ts";
+} from "https://deno.land/std@0.190.0/testing/asserts.ts";

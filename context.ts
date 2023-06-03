@@ -1,8 +1,10 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
 import {
   createHttpError,
+  type ErrorStatus,
+  type HttpErrorOptions,
   KeyStack,
   SecureCookieMap,
   ServerSentEventStreamTarget,
@@ -12,11 +14,7 @@ import {
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
-import type {
-  ErrorStatus,
-  ServerRequest,
-  UpgradeWebSocketOptions,
-} from "./types.d.ts";
+import type { ServerRequest, UpgradeWebSocketOptions } from "./types.d.ts";
 import { assert } from "./util.ts";
 
 export interface ContextOptions<
@@ -216,12 +214,23 @@ export class Context<
     condition: any,
     errorStatus: ErrorStatus = 500,
     message?: string,
-    props?: Record<string, unknown>,
+    props?: Record<string, unknown> & Omit<HttpErrorOptions, "status">,
   ): asserts condition {
     if (condition) {
       return;
     }
-    const err = createHttpError(errorStatus, message);
+    const httpErrorOptions: HttpErrorOptions = {};
+    if (typeof props === "object") {
+      if ("headers" in props) {
+        httpErrorOptions.headers = props.headers;
+        delete props.headers;
+      }
+      if ("expose" in props) {
+        httpErrorOptions.expose = props.expose;
+        delete props.expose;
+      }
+    }
+    const err = createHttpError(errorStatus, message, httpErrorOptions);
     if (props) {
       Object.assign(err, props);
     }
