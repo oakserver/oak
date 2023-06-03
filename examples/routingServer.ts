@@ -45,7 +45,9 @@ class OrdersObject {
   handleRequest(context: RouterContext<"/orders">) {
     if (context.params["order"]) {
       if (this.#orders.has(context.params["order"])) {
-        context.response.body = `${context.params["order"]} is already ordered.`;
+        context.response.body = `${
+          context.params["order"]
+        } is already ordered.`;
       } else {
         this.#orders.add(context.params["order"]);
         context.response.body = `Ordered ${context.params["order"]}.`;

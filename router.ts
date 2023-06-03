@@ -147,7 +147,10 @@ export interface RouterMiddlewareObject<
   S extends State = Record<string, any>,
 > {
   init?: () => Promise<unknown> | unknown;
-  handleRequest(context: RouterContext<R, P, S>, next: Next): Promise<unknown> | unknown;
+  handleRequest(
+    context: RouterContext<R, P, S>,
+    next: Next,
+  ): Promise<unknown> | unknown;
   param?: keyof P;
   // deno-lint-ignore no-explicit-any
   router?: Router<any>;
@@ -291,7 +294,9 @@ class Layer<
   constructor(
     path: string,
     methods: HTTPMethods[],
-    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S> | RouterMiddlewareOrMiddlewareObject<R, P, S>[],
+    middleware:
+      | RouterMiddlewareOrMiddlewareObject<R, P, S>
+      | RouterMiddlewareOrMiddlewareObject<R, P, S>[],
     { name, ...opts }: LayerOptions = {},
   ) {
     this.#opts = opts;
@@ -404,15 +409,16 @@ class Layer<
   }
 
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
-    return `${this.constructor.name} ${inspect({
-      methods: this.methods,
-      middleware: this.stack,
-      options: this.#opts,
-      paramNames: this.#paramNames.map((key) => key.name),
-      path: this.path,
-      regexp: this.#regexp,
-    })
-      }`;
+    return `${this.constructor.name} ${
+      inspect({
+        methods: this.methods,
+        middleware: this.stack,
+        options: this.#opts,
+        paramNames: this.#paramNames.map((key) => key.name),
+        path: this.path,
+        regexp: this.#regexp,
+      })
+    }`;
   }
 
   [Symbol.for("nodejs.util.inspect.custom")](
@@ -428,18 +434,19 @@ class Layer<
     const newOptions = Object.assign({}, options, {
       depth: options.depth === null ? null : options.depth - 1,
     });
-    return `${options.stylize(this.constructor.name, "special")} ${inspect(
-      {
-        methods: this.methods,
-        middleware: this.stack,
-        options: this.#opts,
-        paramNames: this.#paramNames.map((key) => key.name),
-        path: this.path,
-        regexp: this.#regexp,
-      },
-      newOptions,
-    )
-      }`;
+    return `${options.stylize(this.constructor.name, "special")} ${
+      inspect(
+        {
+          methods: this.methods,
+          middleware: this.stack,
+          options: this.#opts,
+          paramNames: this.#paramNames.map((key) => key.name),
+          path: this.path,
+          regexp: this.#regexp,
+        },
+        newOptions,
+      )
+    }`;
   }
 }
 
@@ -1369,7 +1376,10 @@ export class Router<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
   >(
-    pathOrMiddleware: string | string[] | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    pathOrMiddleware:
+      | string
+      | string[]
+      | RouterMiddlewareOrMiddlewareObject<string, P, S>,
     ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)> {
     let path: string | string[] | undefined;
@@ -1419,8 +1429,9 @@ export class Router<
   }
 
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
-    return `${this.constructor.name} ${inspect({ "#params": this.#params, "#stack": this.#stack })
-      }`;
+    return `${this.constructor.name} ${
+      inspect({ "#params": this.#params, "#stack": this.#stack })
+    }`;
   }
 
   [Symbol.for("nodejs.util.inspect.custom")](
@@ -1436,10 +1447,11 @@ export class Router<
     const newOptions = Object.assign({}, options, {
       depth: options.depth === null ? null : options.depth - 1,
     });
-    return `${options.stylize(this.constructor.name, "special")} ${inspect(
-      { "#params": this.#params, "#stack": this.#stack },
-      newOptions,
-    )
-      }`;
+    return `${options.stylize(this.constructor.name, "special")} ${
+      inspect(
+        { "#params": this.#params, "#stack": this.#stack },
+        newOptions,
+      )
+    }`;
   }
 }
