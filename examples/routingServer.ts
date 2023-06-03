@@ -39,6 +39,30 @@ function notFound(context: Context) {
     `<html><body><h1>404 - Not Found</h1><p>Path <code>${context.request.url}</code> not found.`;
 }
 
+class OrdersObject {
+  #orders = new Set<string>();
+
+  handleRequest(context: RouterContext<"/orders">) {
+    if (context.params["order"]) {
+      if (this.#orders.has(context.params["order"])) {
+        context.response.body = `${context.params["order"]} is already ordered.`;
+      } else {
+        this.#orders.add(context.params["order"]);
+        context.response.body = `Ordered ${context.params["order"]}.`;
+      }
+    } else {
+      const orders = Array.from(this.#orders.values());
+      if (orders.length > 0) {
+        context.response.body = `Orders: ${orders.join(", ")}`;
+      } else {
+        context.response.body = "No orders so far.";
+      }
+    }
+  }
+}
+
+const orders = new OrdersObject();
+
 const router = new Router();
 router
   .get("/", (context) => {
@@ -81,7 +105,9 @@ router
     } else {
       return notFound(context);
     }
-  });
+  })
+  .get("/orders", orders)
+  .get("/orders/:order", orders);
 
 const app = new Application();
 

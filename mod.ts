@@ -91,6 +91,8 @@ export type {
   RouterAllowedMethodsOptions,
   RouterContext,
   RouterMiddleware,
+  RouterMiddlewareObject,
+  RouterMiddlewareOrMiddlewareObject,
   RouterOptions,
   RouterParamMiddleware,
 } from "./router.ts";
