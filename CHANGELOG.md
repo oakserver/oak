@@ -1,5 +1,21 @@
 # oak Change Log
 
+## Version 12.6.0
+
+- feat: add userAgent to request (e292470)
+
+  `ctx.request` now contains an object representing the user agent in a property
+  called `.userAgent`.
+
+  See
+  [std/http/user_agent#UserAgent](https://deno.land/std@0.193.0/http/user_agent.ts?s=UserAgent)
+  for more information. Inspired by #603.
+
+- chore: update to std 0.190.0 (4bf071d)
+- chore: update to dnt 0.36.0 (2f394bf)
+- chore: update dnt 0.37.0, std 0.193.0 (c052b2b)
+- docs: remove outdated comment (f0ad28b)
+
 ## Version 12.5.0
 
 - feat: body parsing throws HTTP errors. (79349d7)
