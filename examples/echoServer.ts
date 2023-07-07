@@ -3,13 +3,6 @@
  * respond back with information about the request.
  */
 
-import {
-  bold,
-  cyan,
-  green,
-  yellow,
-} from "https://deno.land/std@0.193.0/fmt/colors.ts";
-
 import { Application } from "../mod.ts";
 
 const app = new Application();
@@ -19,12 +12,18 @@ app.use(async (ctx, next) => {
   await next();
   const rt = ctx.response.headers.get("X-Response-Time");
   console.log(
-    `${green(ctx.request.method)} ${cyan(ctx.request.url.pathname)} - ${
-      bold(
-        String(rt),
-      )
-    }`,
+    `%c${ctx.request.method} %c${ctx.request.url.pathname}%c - %c${rt}`,
+    "color:green",
+    "color:cyan",
+    "color:none",
+    "font-weight:bold",
   );
+  const ua = ctx.request.userAgent;
+  console.log(
+    `  ${ua.browser.name}@${ua.browser.major} %c(${ua.os.name}@${ua.os.version})`,
+    "color:grey",
+  );
+  console.log(ua.ua);
 });
 
 app.use(async (ctx, next) => {
@@ -86,10 +85,16 @@ app.use(async (ctx) => {
 
 app.addEventListener("listen", ({ hostname, port, serverType }) => {
   console.log(
-    bold("Start listening on ") + yellow(`${hostname}:${port}`),
+    `%cStart listening on %c${hostname}:${port}`,
+    "font-weight:bold",
+    "color:yellow;font-weight:normal",
   );
-  console.log(bold("  using HTTP server: " + yellow(serverType)));
+  console.log(
+    `  %cusing HTTP server: %c${serverType}`,
+    "font-weight:bold",
+    "color:yellow; font-weight:normal",
+  );
 });
 
 await app.listen({ hostname: "127.0.0.1", port: 8000 });
-console.log(bold("Finished."));
+console.log("%cFinished.", "font-weight:bold");

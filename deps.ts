@@ -57,6 +57,7 @@ export {
   type ServerSentEventTarget,
   type ServerSentEventTargetOptions,
 } from "https://deno.land/std@0.193.0/http/server_sent_event.ts";
+export { UserAgent } from "https://deno.land/std@0.193.0/http/user_agent.ts";
 export { LimitedReader } from "https://deno.land/std@0.193.0/io/mod.ts";
 export {
   contentType,

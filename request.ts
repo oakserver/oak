@@ -17,6 +17,7 @@ import {
   acceptsEncodings,
   acceptsLanguages,
   type HTTPMethods,
+  UserAgent,
 } from "./deps.ts";
 import type { ServerRequest } from "./types.d.ts";
 
@@ -40,6 +41,7 @@ export class Request {
   #secure: boolean;
   #serverRequest: ServerRequest;
   #url?: URL;
+  #userAgent: UserAgent;
 
   #getRemoteAddr(): string {
     return this.#serverRequest.remoteAddr ?? "";
@@ -138,6 +140,16 @@ export class Request {
     return this.#url;
   }
 
+  /** An object representing the requesting user agent. If the `User-Agent`
+   * header isn't defined in the request, all the properties will be undefined.
+   *
+   * See [std/http/user_agent#UserAgent](https://deno.land/std@0.193.0/http/user_agent.ts?s=UserAgent)
+   * for more information.
+   */
+  get userAgent(): UserAgent {
+    return this.#userAgent;
+  }
+
   constructor(
     serverRequest: ServerRequest,
     { proxy = false, secure = false, jsonBodyReviver }: OakRequestOptions = {},
@@ -150,6 +162,7 @@ export class Request {
       serverRequest.headers,
       jsonBodyReviver,
     );
+    this.#userAgent = new UserAgent(serverRequest.headers.get("user-agent"));
   }
 
   /** Returns an array of media types, accepted by the requestor, in order of

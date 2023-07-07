@@ -257,6 +257,7 @@
     "https://deno.land/std@0.193.0/http/method.ts": "e66c2a015cb46c21ab0bb3589aa4fca43143a506cb324ffdfd42d2edef7bc0c4",
     "https://deno.land/std@0.193.0/http/negotiation.ts": "46e74a6bad4b857333a58dc5b50fe8e5a4d5267e97292293ea65f980bd918086",
     "https://deno.land/std@0.193.0/http/server_sent_event.ts": "1f3597d175e8935123306a24d7f4423a463667a70953d17b4115af1880459d55",
+    "https://deno.land/std@0.193.0/http/user_agent.ts": "6f4308670f261118cc6a1518bf37431a5b4f21322b4a4edf0963e182264ce404",
     "https://deno.land/std@0.193.0/io/buf_reader.ts": "06fff3337091c49e99ebd2dd790c9a90364c087a2953ea081667400fd6c6cebb",
     "https://deno.land/std@0.193.0/io/buf_writer.ts": "48c33c8f00b61dcbc7958706741cec8e59810bd307bc6a326cbd474fe8346dfd",
     "https://deno.land/std@0.193.0/io/buffer.ts": "17f4410eaaa60a8a85733e8891349a619eadfbbe42e2f319283ce2b8f29723ab",
