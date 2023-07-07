@@ -20,7 +20,6 @@ export type ResponseBody =
   | bigint
   | boolean
   | symbol
-  // deno-lint-ignore ban-types
   | object
   | undefined
   | null;
