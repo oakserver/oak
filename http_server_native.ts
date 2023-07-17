@@ -112,6 +112,7 @@ export class HttpServer<AS extends State = Record<string, any>>
             const requestEvent = await httpConn.nextRequest();
 
             if (requestEvent === null) {
+              server.#untrackHttpConnection(httpConn);
               return;
             }
 
