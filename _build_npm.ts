@@ -42,7 +42,7 @@ async function start() {
     compilerOptions: {
       importHelpers: true,
       target: "ES2021",
-      lib: ["esnext", "dom", "dom.iterable"],
+      lib: ["ESNext", "DOM", "DOM.Iterable"],
     },
     package: {
       name: "@oakserver/oak",
