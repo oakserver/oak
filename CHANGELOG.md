@@ -1,5 +1,12 @@
 # oak Change Log
 
+## Version 12.6.1
+
+- fix: untrack http conns when closed (da6d30d)
+- chore: remove unused lint pragma (614df5e)
+- chore: update to std 0.200.0 and dnt 0.38.1 (eb51995)
+- chore: fix type checking issue in build script (5ca2870)
+
 ## Version 12.6.0
 
 - feat: add userAgent to request (e292470)
