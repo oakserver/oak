@@ -1,5 +1,10 @@
 # oak Change Log
 
+## Version 12.6.2
+
+- chore: update to std 0.211.0, commons 0.4.0, dnt 0.39.0 (494aa7b)
+- chore: remove deno bundle ci task (8db4394)
+
 ## Version 12.6.1
 
 - fix: untrack http conns when closed (da6d30d)
