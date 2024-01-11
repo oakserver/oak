@@ -300,7 +300,7 @@ export class Layer<
 
   params(
     captures: string[],
-    existingParams = {} as RouteParams<R>,
+    existingParams: RouteParams<R> = {} as RouteParams<R>,
   ): RouteParams<R> {
     const params = existingParams;
     for (let i = 0; i < captures.length; i++) {
@@ -320,7 +320,7 @@ export class Layer<
   }
 
   url(
-    params = {} as RouteParams<R>,
+    params: RouteParams<R> = {} as RouteParams<R>,
     options?: UrlOptions,
   ): string {
     const url = this.path.replace(/\(\.\*\)/g, "");
@@ -331,7 +331,7 @@ export class Layer<
     param: string,
     // deno-lint-ignore no-explicit-any
     fn: RouterParamMiddleware<any, any, any>,
-  ) {
+  ): this {
     const stack = this.stack;
     const params = this.#paramNames;
     const middleware: RouterMiddleware<R> = function (
@@ -383,7 +383,9 @@ export class Layer<
     };
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     return `${this.constructor.name} ${
       inspect({
         methods: this.methods,
@@ -401,7 +403,8 @@ export class Layer<
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }
@@ -1400,7 +1403,9 @@ export class Router<
     return toUrl(path, params, options);
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     return `${this.constructor.name} ${
       inspect({ "#params": this.#params, "#stack": this.#stack })
     }`;
@@ -1411,7 +1416,8 @@ export class Router<
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }

@@ -251,7 +251,9 @@ export class Request {
     return this.#serverRequest.upgrade(options);
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     const { body, hasBody, headers, ip, ips, method, secure, url, userAgent } =
       this;
     return `${this.constructor.name} ${
@@ -274,7 +276,8 @@ export class Request {
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }

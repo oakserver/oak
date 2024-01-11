@@ -12,17 +12,6 @@ import type {
 } from "./types.ts";
 import { createPromiseWithResolvers } from "./util.ts";
 
-// this is included so when down-emitting to npm/Node.js, ReadableStream has
-// async iterators
-declare global {
-  // deno-lint-ignore no-explicit-any
-  interface ReadableStream<R = any> {
-    [Symbol.asyncIterator](options?: {
-      preventCancel?: boolean;
-    }): AsyncIterableIterator<R>;
-  }
-}
-
 const serve: (
   options: ServeInit & (ServeOptions | ServeTlsOptions),
 ) => HttpServer = "serve" in Deno

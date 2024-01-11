@@ -163,7 +163,7 @@ export class MultiPartStream extends ReadableStream<Uint8Array> {
   }
 
   /** The content length of the entire streamed body. */
-  contentLength() {
+  contentLength(): number {
     return this.#contentLength;
   }
 }

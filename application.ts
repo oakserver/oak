@@ -547,7 +547,7 @@ export class Application<AS extends State = Record<string, any>>
    * context gets set to not to respond, then the method resolves with
    * `undefined`, otherwise it resolves with a request that is compatible with
    * `std/http/server`. */
-  handle = (async (
+  handle: HandleMethod = (async (
     request: Request,
     secureOrAddr: NetAddr | boolean | undefined,
     secure: boolean | undefined = false,
@@ -582,7 +582,7 @@ export class Application<AS extends State = Record<string, any>>
       this.#handleError(context, err);
       throw err;
     }
-  }) as HandleMethod;
+  });
 
   /** Start listening for requests, processing registered middleware on each
    * request.  If the options `.secure` is undefined or `false`, the listening
@@ -697,7 +697,9 @@ export class Application<AS extends State = Record<string, any>>
     return this as Application<any>;
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     const { keys, proxy, state } = this;
     return `${this.constructor.name} ${
       inspect({ "#middleware": this.#middleware, keys, proxy, state })
@@ -709,7 +711,8 @@ export class Application<AS extends State = Record<string, any>>
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }

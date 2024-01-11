@@ -24,7 +24,7 @@ import { Response } from "./response.ts";
 export function createMockApp<
   S extends Record<string | number | symbol, any> = Record<string, any>,
 >(
-  state = {} as S,
+  state: S = {} as S,
 ): Application<S> {
   const app = {
     state,
@@ -91,7 +91,7 @@ export function createMockContext<
     app = createMockApp(state),
     headers: requestHeaders,
   }: MockContextOptions<R> = {},
-) {
+): RouterContext<R, P, S> {
   function createMockRequest(): Request {
     const headers = new Headers(requestHeaders);
     return {
@@ -178,6 +178,6 @@ export function createMockContext<
 
 /** Creates a mock `next()` function which can be used when calling
  * middleware. */
-export function createMockNext() {
+export function createMockNext(): () => Promise<void> {
   return async function next() {};
 }

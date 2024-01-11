@@ -361,7 +361,9 @@ export class Response {
       : new DomResponse(responseOrBody, init);
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     const { body, headers, status, type, writable } = this;
     return `${this.constructor.name} ${
       inspect({ body, headers, status, type, writable })
@@ -373,7 +375,8 @@ export class Response {
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }
