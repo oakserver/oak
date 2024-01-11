@@ -20,9 +20,6 @@ jobs:
       - name: check linting
         run: deno lint
 
-      - name: generate bundle
-        run: deno task test:bundle
-
       - name: run tests
         run: deno task test
       
