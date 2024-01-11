@@ -1,7 +1,7 @@
 {
   "name": "@oak/oak",
   "version": "12.6.2",
-  "exports": "mod.ts",
+  "exports": "./mod.ts",
   "tasks": {
     "build": "deno run --allow-read --allow-write --allow-net --allow-env --allow-run _build_npm.ts",
     "coverage": "deno coverage --unstable --lcov ./cov",
