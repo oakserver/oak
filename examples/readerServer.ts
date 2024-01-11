@@ -4,8 +4,8 @@
  */
 
 // Importing some console colors
-import { bold, yellow } from "https://deno.land/std@0.200.0/fmt/colors.ts";
-import { StringReader } from "https://deno.land/std@0.200.0/io/string_reader.ts";
+import { bold, yellow } from "https://deno.land/std@0.211.0/fmt/colors.ts";
+import { StringReader } from "https://deno.land/std@0.211.0/io/string_reader.ts";
 
 import { Application } from "../mod.ts";
 

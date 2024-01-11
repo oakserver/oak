@@ -3,8 +3,8 @@
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
 import {
-  base64,
   createHttpError,
+  encodeBase64,
   isAbsolute,
   join,
   normalize,
@@ -378,7 +378,7 @@ const replacements: Record<string, string> = {
 const encoder = new TextEncoder();
 
 export function encodeBase64Safe(data: string | ArrayBuffer): string {
-  return base64.encode(data).replace(/\/|\+|=/g, (c) => replacements[c]);
+  return encodeBase64(data).replace(/\/|\+|=/g, (c) => replacements[c]);
 }
 
 export function isNode(): boolean {

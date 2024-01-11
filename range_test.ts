@@ -158,7 +158,7 @@ test({
       parts.push(part);
     }
     const decoder = new TextDecoder();
-    const actual = decoder.decode(concat(...parts));
+    const actual = decoder.decode(concat(parts));
     assertEquals(
       actual,
       "\n--test_boundary\nContent-Type: text/plain; charset=UTF-8\nContent-Range: 0-5/10\n\nhello \n--test_boundary\nContent-Type: text/plain; charset=UTF-8\nContent-Range: 6-9/10\n\ndeno\n--test_boundary--\n",
@@ -185,7 +185,7 @@ test({
       parts.push(part);
     }
     const decoder = new TextDecoder();
-    const actual = decoder.decode(concat(...parts));
+    const actual = decoder.decode(concat(parts));
     assertEquals(
       actual,
       "\n--test_boundary\nContent-Type: text/plain; charset=UTF-8\nContent-Range: 0-5/10\n\nhello \n--test_boundary\nContent-Type: text/plain; charset=UTF-8\nContent-Range: 6-9/10\n\ndeno\n--test_boundary--\n",

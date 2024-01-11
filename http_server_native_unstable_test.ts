@@ -1,12 +1,18 @@
 // Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
-import { type Deferred, deferred } from "./deps.ts";
 import { assertEquals, unreachable } from "./test_deps.ts";
 
 import { HttpServer } from "./http_server_native.ts";
 
 import { Application } from "./application.ts";
 import { isNode } from "./util.ts";
+
+type Deferred<T> = {
+  promise: Promise<T>;
+  resolve: (value: T | PromiseLike<T>) => void;
+  // deno-lint-ignore no-explicit-any
+  reject: (reason?: any) => void;
+};
 
 Deno.test({
   name:
@@ -28,10 +34,10 @@ Deno.test({
     const requestCount = 1024;
     const requestDeferreds: Array<Deferred<void>> = [
       ...new Array(requestCount),
-    ].map(() => deferred<void>());
+    ].map(() => Promise.withResolvers<void>());
     const responseDeferreds: Array<Deferred<void>> = [
       ...new Array(requestCount),
-    ].map(() => deferred<void>());
+    ].map(() => Promise.withResolvers<void>());
     const requestHandlers: Array<
       (nativeRequest: unknown) => Promise<void>
     > = [];
@@ -51,7 +57,7 @@ Deno.test({
 
         if (i + 1 < requestCount) {
           for (let j = requestCount; j > i; j--) {
-            await responseDeferreds[j];
+            await responseDeferreds[j]?.promise;
           }
         }
 
@@ -76,7 +82,7 @@ Deno.test({
         // Don't make next request until sure server has received it
         // so we can later assert on order of response compared with
         // order of request.
-        await requestDeferreds[i];
+        await requestDeferreds[i]?.promise;
       }
 
       const results = await Promise.all(responsePromises);
