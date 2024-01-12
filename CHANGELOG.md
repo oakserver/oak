@@ -1,5 +1,11 @@
 # oak Change Log
 
+## Version 12.6.3
+
+- chore: add jsr metadata (6c30bdf)
+- chore: rename deno.jsonc to deno.json (681da74)
+- docs: fix typo in index.md (#600)
+
 ## Version 12.6.2
 
 - chore: update to std 0.211.0, commons 0.4.0, dnt 0.39.0 (494aa7b)
