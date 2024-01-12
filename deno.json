@@ -1,7 +1,24 @@
 {
   "name": "@oak/oak",
   "version": "12.6.3",
-  "exports": "./mod.ts",
+  "exports": {
+    ".": "./mod.ts",
+    "./application": "./application.ts",
+    "./body": "./body.ts",
+    "./content": "./content.ts",
+    "./helpers": "./helpers.ts",
+    "./etag": "./etag.ts",
+    "./http_server_native": "./http_server_native.ts",
+    "./proxy": "./proxy.ts",
+    "./middleware": "./middleware.ts",
+    "./multipart": "./multipart.ts",
+    "./range": "./range.ts",
+    "./request": "./request.ts",
+    "./response": "./response.ts",
+    "./router": "./router.ts",
+    "./send": "./send.ts",
+    "./testing": "./testing.ts"
+  },
   "tasks": {
     "build": "deno run --allow-read --allow-write --allow-net --allow-env --allow-run _build_npm.ts",
     "coverage": "deno coverage --unstable --lcov ./cov",
