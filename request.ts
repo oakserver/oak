@@ -1,17 +1,6 @@
 // Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
-import type {
-  Body,
-  BodyBytes,
-  BodyForm,
-  BodyFormData,
-  BodyJson,
-  BodyOptions,
-  BodyReader,
-  BodyStream,
-  BodyText,
-} from "./body.ts";
-import { RequestBody } from "./body.ts";
+import { Body } from "./body.ts";
 import {
   accepts,
   acceptsEncodings,
@@ -36,7 +25,7 @@ export interface OakRequestOptions {
  * the ability to decode a request body.
  */
 export class Request {
-  #body: RequestBody;
+  #body: Body;
   #proxy: boolean;
   #secure: boolean;
   #serverRequest: ServerRequest;
@@ -45,6 +34,13 @@ export class Request {
 
   #getRemoteAddr(): string {
     return this.#serverRequest.remoteAddr ?? "";
+  }
+
+  /** An interface to access the body of the request. This provides an API that
+   * aligned to the **Fetch Request** API, but in a dedicated API.
+   */
+  get body(): Body {
+    return this.#body;
   }
 
   /** Is `true` if the request might have a body, otherwise `false`.
@@ -56,7 +52,7 @@ export class Request {
    * determine if a request has a body or not is to attempt to read the body.
    */
   get hasBody(): boolean {
-    return this.#body.has();
+    return this.#body.has;
   }
 
   /** The `Headers` supplied in the request. */
@@ -157,11 +153,7 @@ export class Request {
     this.#proxy = proxy;
     this.#secure = secure;
     this.#serverRequest = serverRequest;
-    this.#body = new RequestBody(
-      serverRequest.getBody(),
-      serverRequest.headers,
-      jsonBodyReviver,
-    );
+    this.#body = new Body(serverRequest, jsonBodyReviver);
     this.#userAgent = new UserAgent(serverRequest.headers.get("user-agent"));
   }
 
@@ -228,25 +220,12 @@ export class Request {
     return acceptsLanguages(this.#serverRequest);
   }
 
-  body(options: BodyOptions<"bytes">): BodyBytes;
-  body(options: BodyOptions<"form">): BodyForm;
-  body(options: BodyOptions<"form-data">): BodyFormData;
-  body(options: BodyOptions<"json">): BodyJson;
-  body(options: BodyOptions<"reader">): BodyReader;
-  body(options: BodyOptions<"stream">): BodyStream;
-  body(options: BodyOptions<"text">): BodyText;
-  body(options?: BodyOptions): Body;
-  /** Access the body of the request. This is a method, because there are
-   * several options which can be provided which can influence how the body is
-   * handled. */
-  body(options: BodyOptions = {}): Body | BodyReader | BodyStream {
-    return this.#body.get(options);
-  }
-
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
-    const { hasBody, headers, ip, ips, method, secure, url } = this;
+    const { body, hasBody, headers, ip, ips, method, secure, url, userAgent } =
+      this;
     return `${this.constructor.name} ${
       inspect({
+        body,
         hasBody,
         headers,
         ip,
@@ -254,6 +233,7 @@ export class Request {
         method,
         secure,
         url: url.toString(),
+        userAgent,
       })
     }`;
   }
@@ -271,10 +251,11 @@ export class Request {
     const newOptions = Object.assign({}, options, {
       depth: options.depth === null ? null : options.depth - 1,
     });
-    const { hasBody, headers, ip, ips, method, secure, url } = this;
+    const { body, hasBody, headers, ip, ips, method, secure, url, userAgent } =
+      this;
     return `${options.stylize(this.constructor.name, "special")} ${
       inspect(
-        { hasBody, headers, ip, ips, method, secure, url },
+        { body, hasBody, headers, ip, ips, method, secure, url, userAgent },
         newOptions,
       )
     }`;

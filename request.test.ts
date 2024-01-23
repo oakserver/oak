@@ -199,29 +199,9 @@ Deno.test({
       }),
     );
     assert(request.hasBody);
-    const actual = request.body();
-    assertEquals(actual.type, "json");
-    assertEquals(await actual.value, { hello: "world" });
-  },
-});
-
-Deno.test({
-  name: "request.body() passes args",
-  async fn() {
-    const body = JSON.stringify({ hello: "world" });
-    const request = new Request(
-      createMockNativeRequest("https://localhost/index.html", {
-        body,
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-          "content-length": String(body.length),
-        },
-      }),
-    );
-    const actual = request.body({ type: "json" });
-    assertEquals(actual.type, "json");
-    assertEquals(await actual.value, { hello: "world" });
+    assert(request.body.has);
+    const actual = await request.body.json();
+    assertEquals(actual, { hello: "world" });
   },
 });
 
@@ -288,11 +268,9 @@ Deno.test({
       }),
     );
     assert(request.hasBody, "should have body");
-    const actual = request.body();
-    assert(actual.type === "json", "should be a JSON body");
     const err = await assertRejects(
       async () => {
-        await actual.value;
+        await request.body.json();
       },
     );
     assert(isHttpError(err));
@@ -312,8 +290,8 @@ Deno.test({
         ),
       ),
       isNode()
-        ? `Request {\n  hasBody: false,\n  headers: HeadersList {\n    cookies: null,\n    [Symbol(headers map)]: [Map],\n    [Symbol(headers map sorted)]: null\n  },\n  ip: '',\n  ips: [],\n  method: 'GET',\n  secure: false,\n  url: URL {\n    href: 'http://localhost/foo?bar=baz&qat=qux',\n    origin: 'http://localhost',\n    protocol: 'http:',\n    username: '',\n    password: '',\n    host: 'localhost',\n    hostname: 'localhost',\n    port: '',\n    pathname: '/foo',\n    search: '?bar=baz&qat=qux',\n    searchParams: URLSearchParams { 'bar' => 'baz', 'qat' => 'qux' },\n    hash: ''\n  }\n}`
-        : `Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/foo?bar=baz&qat=qux"\n}`,
+        ? `Request {\n  body: Body { has: false, used: false },\n  hasBody: false,\n  headers: HeadersList {\n    cookies: null,\n    [Symbol(headers map)]: [Map],\n    [Symbol(headers map sorted)]: null\n  },\n  ip: '',\n  ips: [],\n  method: 'GET',\n  secure: false,\n  url: URL {\n    href: 'http://localhost/foo?bar=baz&qat=qux',\n    origin: 'http://localhost',\n    protocol: 'http:',\n    username: '',\n    password: '',\n    host: 'localhost',\n    hostname: 'localhost',\n    port: '',\n    pathname: '/foo',\n    search: '?bar=baz&qat=qux',\n    searchParams: URLSearchParams { 'bar' => 'baz', 'qat' => 'qux' },\n    hash: ''\n  },\n  userAgent: UserAgent {\n    browser: [Object],\n    cpu: [Object],\n    device: [Object],\n    engine: [Object],\n    os: [Object],\n    ua: ''\n  }\n}`
+        : `Request {\n  body: Body { has: false, used: false },\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/foo?bar=baz&qat=qux",\n  userAgent: UserAgent {\n  browser: { name: undefined, version: undefined, major: undefined },\n  cpu: { architecture: undefined },\n  device: { model: undefined, type: undefined, vendor: undefined },\n  engine: { name: undefined, version: undefined },\n  os: { name: undefined, version: undefined },\n  ua: ""\n}\n}`,
     );
   },
 });

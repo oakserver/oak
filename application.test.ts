@@ -996,9 +996,9 @@ Deno.test({
       },
     });
     app.use(async (ctx) => {
-      const body = ctx.request.body();
-      assert(body.type === "json");
-      const actual = await body.value;
+      const body = ctx.request.body;
+      assert(body.type() === "json");
+      const actual = await body.json();
       assertEquals(actual, { a: 123456n });
       ctx.response.body = {};
       called++;

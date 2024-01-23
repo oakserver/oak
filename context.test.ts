@@ -402,7 +402,7 @@ Deno.test({
       Deno.inspect(new Context(app, req, {}), { depth: 1 }),
       isNode()
         ? `Context {\n  app: [MockApplication],\n  cookies: [SecureCookieMap],\n  isUpgradable: false,\n  respond: true,\n  request: [Request],\n  response: [Response],\n  socket: undefined,\n  state: {}\n}`
-        : `Context {\n  app: MockApplication {},\n  cookies: SecureCookieMap [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/"\n},\n  response: Response {\n  body: undefined,\n  headers: Headers {},\n  status: 404,\n  type: undefined,\n  writable: true\n},\n  socket: undefined,\n  state: {}\n}`,
+        : `Context {\n  app: MockApplication {},\n  cookies: SecureCookieMap [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  body: Body { has: false, used: false },\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/",\n  userAgent: UserAgent {\n  browser: { name: undefined, version: undefined, major: undefined },\n  cpu: { architecture: undefined },\n  device: { model: undefined, type: undefined, vendor: undefined },\n  engine: { name: undefined, version: undefined },\n  os: { name: undefined, version: undefined },\n  ua: ""\n}\n},\n  response: Response {\n  body: undefined,\n  headers: Headers {},\n  status: 404,\n  type: undefined,\n  writable: true\n},\n  socket: undefined,\n  state: {}\n}`,
     );
   },
 });

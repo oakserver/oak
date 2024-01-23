@@ -120,29 +120,7 @@ export class NodeRequest implements ServerRequest {
         },
       });
     }
-    return {
-      body,
-      async readBody() {
-        if (!body) {
-          return new Uint8Array();
-        }
-        const chunks: Uint8Array[] = [];
-        for await (const chunk of body) {
-          chunks.push(chunk);
-        }
-        const totalLength = chunks.reduce(
-          (acc, value) => acc + value.length,
-          0,
-        );
-        const result = new Uint8Array(totalLength);
-        let length = 0;
-        for (const chunk of chunks) {
-          result.set(chunk, length);
-          length += chunk.length;
-        }
-        return result;
-      },
-    };
+    return body;
   }
 
   async respond(response: Response) {

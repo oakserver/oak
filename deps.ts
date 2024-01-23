@@ -32,16 +32,9 @@ export {
 } from "https://deno.land/std@0.211.0/http/negotiation.ts";
 export { UserAgent } from "https://deno.land/std@0.211.0/http/user_agent.ts";
 export { LimitedReader } from "https://deno.land/std@0.211.0/io/mod.ts";
-export {
-  contentType,
-  extension,
-  typeByExtension,
-} from "https://deno.land/std@0.211.0/media_types/mod.ts";
-export {
-  readAll,
-  readerFromStreamReader,
-  writeAll,
-} from "https://deno.land/std@0.211.0/streams/mod.ts";
+export { contentType } from "https://deno.land/std@0.211.0/media_types/content_type.ts";
+export { typeByExtension } from "https://deno.land/std@0.211.0/media_types/type_by_extension.ts";
+export { readAll } from "https://deno.land/std@0.211.0/streams/mod.ts";
 export {
   basename,
   extname,

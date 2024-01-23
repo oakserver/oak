@@ -3,7 +3,6 @@
 import type {
   RequestEvent,
   ServerRequest,
-  ServerRequestBody,
   UpgradeWebSocketFn,
   UpgradeWebSocketOptions,
 } from "./types.d.ts";
@@ -107,17 +106,8 @@ export class NativeRequest implements ServerRequest {
     this.#resolved = true;
   }
 
-  getBody(): ServerRequestBody {
-    return {
-      // when emitting to Node.js, the body is not compatible, and thought it
-      // doesn't run at runtime, it still gets type checked.
-      // deno-lint-ignore no-explicit-any
-      body: this.#request.body as any,
-      readBody: async () => {
-        const ab = await this.#request.arrayBuffer();
-        return new Uint8Array(ab);
-      },
-    };
+  getBody(): ReadableStream<Uint8Array> | null {
+    return this.#request.body;
   }
 
   respond(response: Response): Promise<void> {

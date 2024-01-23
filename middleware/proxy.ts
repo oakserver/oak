@@ -198,7 +198,7 @@ function getBodyInit<
   if (!ctx.request.hasBody) {
     return null;
   }
-  return ctx.request.body({ type: "stream" }).value;
+  return ctx.request.body.stream;
 }
 
 function iterableHeaders(

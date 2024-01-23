@@ -1,14 +1,5 @@
 // Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
-import type { BufReader } from "./buf_reader.ts";
-import { errors } from "./deps.ts";
-
-const COLON = ":".charCodeAt(0);
-const HTAB = "\t".charCodeAt(0);
-const SPACE = " ".charCodeAt(0);
-
-const decoder = new TextDecoder();
-
 /** With a provided attribute pattern, return a RegExp which will match and
  * capture in the first group the value of the attribute from a header value. */
 export function toParamRegExp(
@@ -25,39 +16,6 @@ export function toParamRegExp(
     `)`,
     flags
   );
-}
-
-/** Asynchronously read the headers out of body request and resolve with them as
- * a `Headers` object. */
-export async function readHeaders(
-  body: BufReader,
-): Promise<Record<string, string>> {
-  const headers: Record<string, string> = {};
-  let readResult = await body.readLine();
-  while (readResult) {
-    const { bytes } = readResult;
-    if (!bytes.length) {
-      return headers;
-    }
-    let i = bytes.indexOf(COLON);
-    if (i === -1) {
-      throw new errors.BadRequest(
-        `Malformed header: ${decoder.decode(bytes)}`,
-      );
-    }
-    const key = decoder.decode(bytes.subarray(0, i)).trim().toLowerCase();
-    if (key === "") {
-      throw new errors.BadRequest("Invalid header key.");
-    }
-    i++;
-    while (i < bytes.byteLength && (bytes[i] === SPACE || bytes[i] === HTAB)) {
-      i++;
-    }
-    const value = decoder.decode(bytes.subarray(i)).trim();
-    headers[key] = value;
-    readResult = await body.readLine();
-  }
-  throw new errors.BadRequest("Unexpected end of body reached.");
 }
 
 /** Unquotes attribute values that might be pass as part of a header. */
