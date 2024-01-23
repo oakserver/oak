@@ -4,11 +4,8 @@
 
 // `std` dependencies
 
-export {
-  concat,
-  copy as copyBytes,
-  equals,
-} from "https://deno.land/std@0.211.0/bytes/mod.ts";
+export { concat } from "https://deno.land/std@0.211.0/bytes/concat.ts";
+export { copy as copyBytes } from "https://deno.land/std@0.211.0/bytes/copy.ts";
 export { timingSafeEqual } from "https://deno.land/std@0.211.0/crypto/timing_safe_equal.ts";
 export { KeyStack } from "https://deno.land/std@0.211.0/crypto/unstable_keystack.ts";
 export { encodeBase64 } from "https://deno.land/std@0.211.0/encoding/base64.ts";
