@@ -10,12 +10,6 @@ export { timingSafeEqual } from "https://deno.land/std@0.211.0/crypto/timing_saf
 export { KeyStack } from "https://deno.land/std@0.211.0/crypto/unstable_keystack.ts";
 export { encodeBase64 } from "https://deno.land/std@0.211.0/encoding/base64.ts";
 export {
-  mergeHeaders,
-  SecureCookieMap,
-  type SecureCookieMapGetOptions,
-  type SecureCookieMapSetDeleteOptions,
-} from "https://deno.land/std@0.211.0/http/unstable_cookie_map.ts";
-export {
   calculate,
   type ETagOptions,
   type FileInfo,
@@ -45,20 +39,26 @@ export {
 // 3rd party dependencies
 
 export {
+  mergeHeaders,
+  SecureCookieMap,
+  type SecureCookieMapGetOptions,
+  type SecureCookieMapSetDeleteOptions,
+} from "https://deno.land/x/oak_commons@0.5.0/cookie_map.ts";
+export {
   createHttpError,
   errors,
   HttpError,
   type HttpErrorOptions,
   isHttpError,
-} from "https://deno.land/x/oak_commons@0.4.0/http_errors.ts";
-export { type HttpMethod as HTTPMethods } from "https://deno.land/x/oak_commons@0.4.0/method.ts";
+} from "https://deno.land/x/oak_commons@0.5.0/http_errors.ts";
+export { type HttpMethod as HTTPMethods } from "https://deno.land/x/oak_commons@0.5.0/method.ts";
 export {
   ServerSentEvent,
   type ServerSentEventInit,
   ServerSentEventStreamTarget,
   type ServerSentEventTarget,
   type ServerSentEventTargetOptions,
-} from "https://deno.land/x/oak_commons@0.4.0/server_sent_event.ts";
+} from "https://deno.land/x/oak_commons@0.5.0/server_sent_event.ts";
 export {
   type ErrorStatus,
   isErrorStatus,
@@ -66,7 +66,7 @@ export {
   type RedirectStatus,
   Status,
   STATUS_TEXT,
-} from "https://deno.land/x/oak_commons@0.4.0/status.ts";
+} from "https://deno.land/x/oak_commons@0.5.0/status.ts";
 
 export {
   compile,
