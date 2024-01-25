@@ -20,7 +20,7 @@ import { Request as OakRequest } from "./request.ts";
 import { Response as OakResponse } from "./response.ts";
 import { cloneState } from "./structured_clone.ts";
 import type { UpgradeWebSocketFn, UpgradeWebSocketOptions } from "./types.d.ts";
-import { isNode } from "./util.ts";
+import { createPromiseWithResolvers, isNode } from "./util.ts";
 
 function createMockApp<S extends State = Record<string, any>>(
   state = {} as S,
@@ -96,7 +96,11 @@ function createMockNativeRequest(
       upgradeWebSocketStack.push([request, options]);
       return { response: mockResponse, socket: mockWebSocket };
     };
-  return new NativeRequest(requestEvent, { upgradeWebSocket });
+  const nativeRequest = new NativeRequest(request, { upgradeWebSocket });
+  const { promise, resolve } = createPromiseWithResolvers<Response>();
+  respondWithStack.push(promise);
+  nativeRequest.response.then((response) => resolve(response));
+  return nativeRequest;
 }
 
 Deno.test({

@@ -11,7 +11,7 @@ import {
   SEP,
 } from "./deps.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
-import type { Data, Key } from "./types.d.ts";
+import type { Data, Key, NetAddr } from "./types.d.ts";
 
 const ENCODE_CHARS_REGEXP =
   /(?:[^\x21\x25\x26-\x3B\x3D\x3F-\x5B\x5D\x5F\x61-\x7A\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g;
@@ -31,6 +31,30 @@ export function assert(cond: unknown, msg = "Assertion failed"): asserts cond {
   if (!cond) {
     throw new Error(msg);
   }
+}
+
+const hasPromiseWithResolvers = "withResolvers" in Promise;
+
+/** Offloads to the native `Promise.withResolvers` when available.
+ *
+ * Currently Node.js does not support it, while Deno does.
+ */
+export function createPromiseWithResolvers<T>(): {
+  promise: Promise<T>;
+  resolve: (value: T | PromiseLike<T>) => void;
+  // deno-lint-ignore no-explicit-any
+  reject: (reason?: any) => void;
+} {
+  if (hasPromiseWithResolvers) {
+    return Promise.withResolvers<T>();
+  }
+  let resolve;
+  let reject;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve: resolve!, reject: reject! };
 }
 
 /** Safely decode a URI component, where if it fails, instead of throwing,
@@ -107,11 +131,10 @@ function isCloser(value: unknown): value is Deno.Closer {
     typeof (value as Record<string, any>)["close"] === "function";
 }
 
-export function isConn(value: unknown): value is Deno.Conn {
-  return typeof value === "object" && value != null && "rid" in value &&
-    // deno-lint-ignore no-explicit-any
-    typeof (value as any).rid === "number" && "localAddr" in value &&
-    "remoteAddr" in value;
+export function isNetAddr(value: unknown): value is NetAddr {
+  console.log(value);
+  return typeof value === "object" && value != null && "transport" in value &&
+    "hostname" in value && "port" in value;
 }
 
 export function isListenTlsOptions(

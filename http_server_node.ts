@@ -1,6 +1,7 @@
 // Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
-import type { Listener, Server, ServerRequest } from "./types.d.ts";
+import type { Listener, OakServer, ServerRequest } from "./types.d.ts";
+import { createPromiseWithResolvers } from "./util.ts";
 import * as http from "http";
 
 // There are quite a few differences between Deno's `std/node/http` and the
@@ -44,17 +45,6 @@ interface ReadableStreamDefaultController<R = any> {
   enqueue(chunk: R): void;
   // deno-lint-ignore no-explicit-any
   error(error?: any): void;
-}
-
-function createDeferred<T>() {
-  let resolve!: (value: T | PromiseLike<T>) => void;
-  // deno-lint-ignore no-explicit-any
-  let reject!: (reason?: any) => void;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
 }
 
 export class NodeRequest implements ServerRequest {
@@ -133,7 +123,7 @@ export class NodeRequest implements ServerRequest {
     this.#response.writeHead(response.status, response.statusText);
     if (response.body) {
       for await (const chunk of response.body) {
-        const { promise, resolve, reject } = createDeferred<void>();
+        const { promise, resolve, reject } = createPromiseWithResolvers<void>();
         // deno-lint-ignore no-explicit-any
         this.#response.write(chunk, (err: any) => {
           if (err) {
@@ -145,14 +135,14 @@ export class NodeRequest implements ServerRequest {
         await promise;
       }
     }
-    const { promise, resolve } = createDeferred<void>();
+    const { promise, resolve } = createPromiseWithResolvers<void>();
     this.#response.end(resolve);
     await promise;
     this.#responded = true;
   }
 }
 
-export class HttpServer implements Server<NodeRequest> {
+export class Server implements OakServer<NodeRequest> {
   #abortController = new AbortController();
   #host: string;
   #port: number;

@@ -50,7 +50,7 @@ export type { BodyType } from "./body.ts";
 export { Context, type ContextSendOptions } from "./context.ts";
 export * as helpers from "./helpers.ts";
 export * as etag from "./etag.ts";
-export { HttpServer as HttpServerNative } from "./http_server_native.ts";
+export { Server as HttpServerNative } from "./http_server_native.ts";
 export { type NativeRequest } from "./http_server_native_request.ts";
 export { proxy } from "./middleware/proxy.ts";
 export type { ProxyOptions } from "./middleware/proxy.ts";

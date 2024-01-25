@@ -5,9 +5,9 @@
 import { assertEquals, unreachable } from "./test_deps.ts";
 
 import {
-  HttpServer,
   type IncomingMessage,
   NodeRequest,
+  Server,
   type ServerResponse,
 } from "./http_server_node.ts";
 
@@ -90,7 +90,7 @@ Deno.test({
     const app = new Application();
     const listenOptions = { port: 4508 };
 
-    const server = new HttpServer(app, listenOptions);
+    const server = new Server(app, listenOptions);
     server.listen();
 
     const expectedBody = "test-body";

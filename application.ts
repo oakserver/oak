@@ -2,7 +2,7 @@
 
 import { Context } from "./context.ts";
 import { KeyStack, Status, STATUS_TEXT } from "./deps.ts";
-import { HttpServer } from "./http_server_native.ts";
+import { Server } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import {
   compose,
@@ -13,11 +13,12 @@ import { cloneState } from "./structured_clone.ts";
 import {
   Key,
   Listener,
-  Server,
+  NetAddr,
+  OakServer,
   ServerConstructor,
   ServerRequest,
 } from "./types.d.ts";
-import { assert, isConn } from "./util.ts";
+import { assert, createPromiseWithResolvers, isNetAddr } from "./util.ts";
 
 export interface ListenOptionsBase {
   /** The port to listen on. If not specified, defaults to `0`, which allows the
@@ -58,7 +59,7 @@ export interface HandleMethod {
    * `undefined`, otherwise it resolves with a DOM `Response` object. */
   (
     request: Request,
-    conn?: Deno.Conn,
+    remoteAddr?: NetAddr,
     secure?: boolean,
   ): Promise<Response | undefined>;
 }
@@ -211,7 +212,7 @@ interface RequestState {
   handling: Set<Promise<void>>;
   closing: boolean;
   closed: boolean;
-  server: Server<ServerRequest>;
+  server: OakServer<ServerRequest>;
 }
 
 // deno-lint-ignore no-explicit-any
@@ -219,7 +220,7 @@ export type State = Record<string | number | symbol, any>;
 
 const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 
-const DEFAULT_SERVER: ServerConstructor<ServerRequest> = HttpServer;
+const DEFAULT_SERVER: ServerConstructor<ServerRequest> = Server;
 
 export class ApplicationCloseEvent extends Event {
   constructor(eventInitDict: EventInit) {
@@ -462,9 +463,8 @@ export class Application<AS extends State = Record<string, any>>
       return;
     }
     assert(context, "Context was not created.");
-    let resolve: () => void;
-    const handlingPromise = new Promise<void>((res) => resolve = res);
-    state.handling.add(handlingPromise);
+    const { promise, resolve } = createPromiseWithResolvers<void>();
+    state.handling.add(promise);
     if (!state.closing && !state.closed) {
       try {
         await this.#getComposed()(context);
@@ -475,7 +475,7 @@ export class Application<AS extends State = Record<string, any>>
     if (context.respond === false) {
       context.response.destroy();
       resolve!();
-      state.handling.delete(handlingPromise);
+      state.handling.delete(promise);
       return;
     }
     let closeResources = true;
@@ -495,7 +495,7 @@ export class Application<AS extends State = Record<string, any>>
     } finally {
       context.response.destroy(closeResources);
       resolve!();
-      state.handling.delete(handlingPromise);
+      state.handling.delete(promise);
       if (state.closing) {
         await state.server.close();
         if (!state.closed) {
@@ -546,19 +546,16 @@ export class Application<AS extends State = Record<string, any>>
    * `std/http/server`. */
   handle = (async (
     request: Request,
-    secureOrConn: Deno.Conn | boolean | undefined,
+    secureOrAddr: NetAddr | boolean | undefined,
     secure: boolean | undefined = false,
   ): Promise<Response | undefined> => {
     if (!this.#middleware.length) {
       throw new TypeError("There is no middleware to process requests.");
     }
-    assert(isConn(secureOrConn) || typeof secureOrConn === "undefined");
-    const contextRequest = new NativeRequest({
-      request,
-      respondWith() {
-        return Promise.resolve(undefined);
-      },
-    }, { conn: secureOrConn });
+    assert(isNetAddr(secureOrAddr) || typeof secureOrAddr === "undefined");
+    const contextRequest = new NativeRequest(request, {
+      remoteAddr: secureOrAddr,
+    });
     const context = new Context(
       this,
       contextRequest,
@@ -617,31 +614,27 @@ export class Application<AS extends State = Record<string, any>>
       options = { hostname, port: parseInt(portStr, 10) };
     }
     options = Object.assign({ port: 0 }, options);
-    const server = new this.#serverConstructor(
-      this,
-      options as Deno.ListenOptions,
-    );
-    const { signal } = options;
+    const server = new this.#serverConstructor(this, options);
     const state = {
       closed: false,
       closing: false,
       handling: new Set<Promise<void>>(),
       server,
     };
+    const { signal } = options;
     if (signal) {
       signal.addEventListener("abort", () => {
         if (!state.handling.size) {
-          server.close();
           state.closed = true;
           this.dispatchEvent(new ApplicationCloseEvent({}));
         }
         state.closing = true;
-      });
+      }, { once: true });
     }
     const { secure = false } = options;
-    const serverType = server instanceof HttpServer ? "native" : "custom";
+    const serverType = server instanceof Server ? "native" : "custom";
     const listener = await server.listen();
-    const { hostname, port } = listener.addr as Deno.NetAddr;
+    const { hostname, port } = listener.addr;
     this.dispatchEvent(
       new ApplicationListenEvent({
         hostname,

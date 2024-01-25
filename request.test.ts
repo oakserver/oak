@@ -10,26 +10,21 @@ import {
   assertStrictEquals,
 } from "./test_deps.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
-import type { NativeRequestOptions } from "./http_server_native_request.ts";
+import type { NativeRequestInfo } from "./http_server_native_request.ts";
 import { Request } from "./request.ts";
 import { isNode } from "./util.ts";
 
 function createMockNativeRequest(
   url = "http://localhost/index.html",
   requestInit: RequestInit = {},
-  options?: NativeRequestOptions,
+  options: NativeRequestInfo = {},
 ) {
   const request: globalThis.Request = new (globalThis as any).Request(
     url,
     requestInit,
   );
 
-  return new NativeRequest({
-    request,
-    async respondWith(r) {
-      await r;
-    },
-  }, options);
+  return new NativeRequest(request, options);
 }
 
 Deno.test({
@@ -235,13 +230,11 @@ Deno.test({
           "x-forwarded-for": "10.10.10.10, 192.168.1.1, 10.255.255.255",
         },
       }, {
-        conn: {
-          remoteAddr: {
-            transport: "tcp",
-            port: 8080,
-            hostname: "10.255.255.255",
-          },
-        } as Deno.Conn,
+        remoteAddr: {
+          transport: "tcp",
+          port: 8080,
+          hostname: "10.255.255.255",
+        },
       }),
       { proxy: true, secure: true },
     );

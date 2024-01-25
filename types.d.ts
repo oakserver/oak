@@ -6,7 +6,7 @@ export interface Listener {
   addr: { hostname: string; port: number };
 }
 
-export interface Server<T> extends AsyncIterable<T> {
+export interface OakServer<T> extends AsyncIterable<T> {
   close(): void | Promise<void>;
   listen(): Listener | Promise<Listener>;
   [Symbol.asyncIterator](): AsyncIterableIterator<T>;
@@ -22,7 +22,7 @@ export interface ServerRequest {
   // deno-lint-ignore no-explicit-any
   error(reason?: any): void;
   getBody(): ReadableStream<Uint8Array> | null;
-  respond(response: Response): Promise<void>;
+  respond(response: Response): void | Promise<void>;
   upgrade?(options?: UpgradeWebSocketOptions): WebSocket;
 }
 
@@ -30,9 +30,9 @@ export interface ServerConstructor<T extends ServerRequest> {
   // deno-lint-ignore no-explicit-any
   new <AS extends State = Record<string, any>>(
     app: Application<AS>,
-    options: Deno.ListenOptions | Deno.ListenTlsOptions,
-  ): Server<T>;
-  prototype: Server<T>;
+    options: Omit<ServeOptions | ServeTlsOptions, "signal">,
+  ): OakServer<T>;
+  prototype: OakServer<T>;
 }
 
 export type Data = string | number[] | ArrayBuffer | Uint8Array;
@@ -52,13 +52,42 @@ interface WebSocketUpgrade {
   socket: WebSocket;
 }
 
-export interface RequestEvent {
-  readonly request: Request;
-  respondWith(r: Response | Promise<Response>): Promise<void>;
+export interface NetAddr {
+  transport: "tcp" | "udp";
+  hostname: string;
+  port: number;
 }
 
-export interface HttpConn extends AsyncIterable<RequestEvent> {
-  readonly rid: number;
-  nextRequest(): Promise<RequestEvent | null>;
-  close(): void;
+export interface ServeHandlerInfo {
+  remoteAddr: Deno.NetAddr;
+}
+
+export type ServeHandler = (
+  request: Request,
+  info: ServeHandlerInfo,
+) => Response | Promise<Response>;
+
+export interface ServeOptions {
+  port?: number;
+  hostname?: string;
+  signal?: AbortSignal;
+  reusePort?: boolean;
+  onError?: (error: unknown) => Response | Promise<Response>;
+  onListen?: (params: { hostname: string; port: number }) => void;
+}
+
+export interface ServeTlsOptions extends ServeOptions {
+  cert: string;
+  key: string;
+}
+
+export interface ServeInit {
+  handler: ServeHandler;
+}
+
+export interface HttpServer extends AsyncDisposable {
+  finished: Promise<void>;
+  ref(): void;
+  unref(): void;
+  shutdown(): Promise<void>;
 }

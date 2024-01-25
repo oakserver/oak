@@ -2,10 +2,10 @@
 
 import { assertEquals, unreachable } from "./test_deps.ts";
 
-import { HttpServer } from "./http_server_native.ts";
+import { Server } from "./http_server_native.ts";
 
 import { Application } from "./application.ts";
-import { isNode } from "./util.ts";
+import { createPromiseWithResolvers, isNode } from "./util.ts";
 
 type Deferred<T> = {
   promise: Promise<T>;
@@ -28,16 +28,16 @@ Deno.test({
       alpnProtocols: ["h2"],
     };
 
-    const server = new HttpServer(app, listenOptions);
+    const server = new Server(app, listenOptions);
     server.listen();
 
     const requestCount = 1024;
     const requestDeferreds: Array<Deferred<void>> = [
       ...new Array(requestCount),
-    ].map(() => Promise.withResolvers<void>());
+    ].map(() => createPromiseWithResolvers<void>());
     const responseDeferreds: Array<Deferred<void>> = [
       ...new Array(requestCount),
-    ].map(() => Promise.withResolvers<void>());
+    ].map(() => createPromiseWithResolvers<void>());
     const requestHandlers: Array<
       (nativeRequest: unknown) => Promise<void>
     > = [];
