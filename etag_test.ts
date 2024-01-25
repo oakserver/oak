@@ -88,20 +88,8 @@ test({
 
     const mw = factory();
     await mw(context, next);
-    // Deno.fstat is currently an unstable API in Deno, but the code is written
-    // to fail gracefully, so we sniff if the API is unavailable and change
-    // the assertions accordingly.
-    if ("fstat" in Deno) {
-      const actual = context.response.headers.get("etag");
-      // mtime will vary from system to system which makes up part of the hash
-      // we we only look at the part that is consistent.
-      assert(actual && actual.startsWith(`W/"4a3b7-`));
-    } else {
-      assertEquals(
-        context.response.headers.get("etag"),
-        null,
-      );
-    }
+    const actual = context.response.headers.get("etag");
+    assert(actual && actual.startsWith(`W/"4a3b7-`));
 
     file!.close();
   },

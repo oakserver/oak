@@ -130,7 +130,7 @@ async function getEntity(
     file.close();
     body = entity = buffer;
   } else {
-    response.addResource(file.rid);
+    response.addResource(file);
     body = file;
     entity = {
       mtime: new Date(mtime!),
