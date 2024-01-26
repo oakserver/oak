@@ -1,6 +1,5 @@
 import { parse } from "./form_data.ts";
 import { assertEquals } from "./test_deps.ts";
-import { assert } from "./util.ts";
 
 const FIXTURE_CONTENT_TYPE =
   `multipart/form-data; boundary=OAK-SERVER-BOUNDARY`;
