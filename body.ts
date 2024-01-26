@@ -199,7 +199,9 @@ export class Body {
     return this.#type = "unknown";
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     const { has, used } = this;
     return `${this.constructor.name} ${inspect({ has, used })}`;
   }
@@ -209,7 +211,8 @@ export class Body {
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }
