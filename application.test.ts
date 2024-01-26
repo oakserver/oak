@@ -692,6 +692,27 @@ Deno.test({
 });
 
 Deno.test({
+  name: "errors call event handler properly",
+  async fn() {
+    const [serverConstructor, responseStack] = setup([]);
+    const app = new Application({ serverConstructor, logErrors: false });
+    app.use((ctx) => {
+      ctx.throw(400, "Bad Request");
+    });
+    const errStatusStack: (Status | undefined)[] = [];
+    app.addEventListener("error", (evt) => {
+      errStatusStack.push(evt.context?.response.status);
+    });
+    await app.listen({ port: 8000 });
+    const [response] = responseStack;
+    assertEquals(response.status, 400);
+    assertEquals(errStatusStack.length, 1);
+    assertEquals(errStatusStack[0], Status.BadRequest);
+    teardown();
+  },
+});
+
+Deno.test({
   name: "caught errors don't dispatch error events",
   async fn() {
     const [serverConstructor, responseStack] = setup([]);

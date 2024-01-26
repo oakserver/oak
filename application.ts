@@ -418,8 +418,10 @@ export class Application<AS extends State = Record<string, any>>
       error = new Error(`non-error thrown: ${JSON.stringify(error)}`);
     }
     const { message } = error;
-    this.dispatchEvent(new ApplicationErrorEvent({ context, message, error }));
     if (!context.response.writable) {
+      this.dispatchEvent(
+        new ApplicationErrorEvent({ context, message, error }),
+      );
       return;
     }
     for (const key of [...context.response.headers.keys()]) {
@@ -438,6 +440,7 @@ export class Application<AS extends State = Record<string, any>>
         ? error.status
         : 500;
     context.response.body = error.expose ? error.message : STATUS_TEXT[status];
+    this.dispatchEvent(new ApplicationErrorEvent({ context, message, error }));
   }
 
   /** Processing registered middleware on each request. */
