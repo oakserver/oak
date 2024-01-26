@@ -24,14 +24,22 @@ Deno.test({
       headers: { "content-type": FIXTURE_CONTENT_TYPE },
     });
     const formData = await parse(req.headers.get("content-type")!, req.body!);
-    assertEquals([...formData].length, 3);
-    assertEquals(formData.get("id"), "555");
-    assertEquals(formData.get("title"), "Hello\nWorld\n");
+    assertEquals([...formData].length, 3, "length should be 3");
+    assertEquals(formData.get("id"), "555", "id should be '555'");
+    assertEquals(
+      formData.get("title"),
+      "Hello\nWorld\n",
+      "title should be 'Hello World'",
+    );
     const fileb = formData.get("fileb");
-    assert(fileb instanceof File);
-    assertEquals(fileb.type, "video/mp2t");
-    assertEquals(fileb.name, "mod2.ts");
-    assertEquals(await fileb.text(), `console.log("Hello world");\n`);
+    assert(fileb instanceof File, "should be instance of File");
+    assertEquals(fileb.type, "video/mp2t", "should be of type 'video/mp2t'");
+    assertEquals(fileb.name, "mod2.ts", "filename should be 'mod2.ts'");
+    assertEquals(
+      await fileb.text(),
+      `console.log("Hello world");\n`,
+      "file contents should match",
+    );
   },
 });
 
