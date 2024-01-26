@@ -4,28 +4,28 @@
 
 // `std` dependencies
 
-export { concat } from "https://deno.land/std@0.211.0/bytes/concat.ts";
-export { copy as copyBytes } from "https://deno.land/std@0.211.0/bytes/copy.ts";
-export { timingSafeEqual } from "https://deno.land/std@0.211.0/crypto/timing_safe_equal.ts";
-export { KeyStack } from "https://deno.land/std@0.211.0/crypto/unstable_keystack.ts";
-export { encodeBase64 } from "https://deno.land/std@0.211.0/encoding/base64.ts";
+export { concat } from "https://deno.land/std@0.212.0/bytes/concat.ts";
+export { copy as copyBytes } from "https://deno.land/std@0.212.0/bytes/copy.ts";
+export { timingSafeEqual } from "https://deno.land/std@0.212.0/crypto/timing_safe_equal.ts";
+export { KeyStack } from "https://deno.land/std@0.212.0/crypto/unstable_keystack.ts";
+export { encodeBase64 } from "https://deno.land/std@0.212.0/encoding/base64.ts";
 export {
   calculate,
   type ETagOptions,
   type FileInfo,
   ifMatch,
   ifNoneMatch,
-} from "https://deno.land/std@0.211.0/http/etag.ts";
+} from "https://deno.land/std@0.212.0/http/etag.ts";
 export {
   accepts,
   acceptsEncodings,
   acceptsLanguages,
-} from "https://deno.land/std@0.211.0/http/negotiation.ts";
-export { UserAgent } from "https://deno.land/std@0.211.0/http/user_agent.ts";
-export { LimitedReader } from "https://deno.land/std@0.211.0/io/mod.ts";
-export { contentType } from "https://deno.land/std@0.211.0/media_types/content_type.ts";
-export { typeByExtension } from "https://deno.land/std@0.211.0/media_types/type_by_extension.ts";
-export { readAll } from "https://deno.land/std@0.211.0/streams/mod.ts";
+} from "https://deno.land/std@0.212.0/http/negotiation.ts";
+export { UserAgent } from "https://deno.land/std@0.212.0/http/user_agent.ts";
+export { LimitedReader } from "https://deno.land/std@0.212.0/io/mod.ts";
+export { contentType } from "https://deno.land/std@0.212.0/media_types/content_type.ts";
+export { typeByExtension } from "https://deno.land/std@0.212.0/media_types/type_by_extension.ts";
+export { readAll } from "https://deno.land/std@0.212.0/streams/mod.ts";
 export {
   basename,
   extname,
@@ -34,7 +34,7 @@ export {
   normalize,
   parse,
   SEP,
-} from "https://deno.land/std@0.211.0/path/mod.ts";
+} from "https://deno.land/std@0.212.0/path/mod.ts";
 
 // 3rd party dependencies
 
