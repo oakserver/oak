@@ -41,7 +41,7 @@ async function start() {
     typeCheck: false,
     compilerOptions: {
       importHelpers: true,
-      target: "ES2021",
+      target: "ES2022",
       lib: ["ESNext", "DOM", "DOM.Iterable"],
     },
     package: {
@@ -50,7 +50,7 @@ async function start() {
       description: "A middleware framework for handling HTTP requests",
       license: "MIT",
       engines: {
-        node: ">=16.5.0 <19",
+        node: ">=16.5.0 <22",
       },
       repository: {
         type: "git",
@@ -60,10 +60,10 @@ async function start() {
         url: "https://github.com/oakserver/oak/issues",
       },
       dependencies: {
-        "tslib": "~2.3.1",
+        "tslib": "~2.6.2",
       },
       devDependencies: {
-        "@types/node": "^17",
+        "@types/node": "^20",
       },
     },
   });

@@ -15,6 +15,15 @@ const FIXTURE_BODY_UTF8_FILENAME =
 const FIXTURE_BODY_NO_NEWLINE =
   `--OAK-SERVER-BOUNDARY\r\nContent-Disposition: form-data; name="noNewline"; filename="noNewline.txt"\r\nContent-Type: text/plain\r\n\r\n555\r\n--OAK-SERVER-BOUNDARY--\r\n`;
 
+function assertIsFile(value: unknown): asserts value is File {
+  if (
+    !(value && typeof value === "object" && "size" in value &&
+      "type" in value && "name" in value)
+  ) {
+    throw new Error("Value is not a File");
+  }
+}
+
 Deno.test({
   name: "form_data - parse() - basic",
   async fn() {
@@ -32,7 +41,7 @@ Deno.test({
       "title should be 'Hello World'",
     );
     const fileb = formData.get("fileb");
-    assert(fileb instanceof File, "should be instance of File");
+    assertIsFile(fileb);
     assertEquals(fileb.type, "video/mp2t", "should be of type 'video/mp2t'");
     assertEquals(fileb.name, "mod2.ts", "filename should be 'mod2.ts'");
     assertEquals(
@@ -67,7 +76,7 @@ Deno.test({
     const formData = await parse(req.headers.get("content-type")!, req.body!);
     assertEquals([...formData].length, 2);
     const filea = formData.get("filea");
-    assert(filea instanceof File);
+    assertIsFile(filea);
     assertEquals(filea.type, "video/mp2t");
     assertEquals(filea.name, "编写软件很难.ts");
   },
@@ -84,7 +93,7 @@ Deno.test({
     const formData = await parse(req.headers.get("content-type")!, req.body!);
     assertEquals([...formData].length, 1);
     const noNewline = formData.get("noNewline");
-    assert(noNewline instanceof File);
+    assertIsFile(noNewline);
     assertEquals(await noNewline.text(), "555");
   },
 });
