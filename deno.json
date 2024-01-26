@@ -1,6 +1,6 @@
 {
   "name": "@oak/oak",
-  "version": "12.6.3",
+  "version": "13.0.0",
   "exports": {
     ".": "./mod.ts",
     "./application": "./application.ts",
