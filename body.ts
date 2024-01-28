@@ -23,15 +23,16 @@ const KNOWN_BODY_TYPES: [bodyType: BodyType, knownMediaTypes: string[]][] = [
 
 async function readBlob(
   body?: ReadableStream<Uint8Array> | null,
+  type?: string | null,
 ): Promise<Blob> {
   if (!body) {
-    return new Blob();
+    return new Blob(undefined, type ? { type } : undefined);
   }
   const chunks: Uint8Array[] = [];
   for await (const chunk of body) {
     chunks.push(chunk);
   }
-  return new Blob(chunks);
+  return new Blob(chunks, type ? { type } : undefined);
 }
 
 export class Body {
@@ -94,7 +95,7 @@ export class Body {
       return this.#request.blob();
     }
     this.#used = true;
-    return readBlob(this.#body);
+    return readBlob(this.#body, this.#headers?.get("content-type"));
   }
 
   /** Reads a body as a URL encoded form, resolving the value as
