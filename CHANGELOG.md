@@ -1,5 +1,12 @@
 # oak Change Log
 
+## Version 13.0.1
+
+- fix: explicit typings for body (43bcd82)
+- fix: add type to body blob (b74b374)
+- chore: update to oak commons 0.5.2 (25d82e1)
+- docs: document body API in README (43de84a)
+
 ## Version 13.0.0
 
 - feat: align request body better to Fetch API (bb996fe)
