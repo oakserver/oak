@@ -21,12 +21,11 @@ export {
   ifNoneMatch,
 } from "./deps.ts";
 
-function fstat(file: Deno.FsFile): Promise<Deno.FileInfo | undefined> {
-  if ("fstat" in Deno) {
-    // deno-lint-ignore no-explicit-any
-    return (Deno as any).fstat(file.rid);
-  }
-  return Promise.resolve(undefined);
+// This is to work around issue introduced in Deno 1.40
+// See: https://github.com/denoland/deno/issues/22115
+function isFsFile(value: unknown): value is Deno.FsFile {
+  return !!(value && typeof value === "object" && "stat" in value &&
+    typeof value.stat === "function");
 }
 
 /** For a given Context, try to determine the response body entity that an ETag
@@ -36,8 +35,8 @@ export function getEntity<S extends State = Record<string, any>>(
   context: Context<S>,
 ): Promise<string | Uint8Array | Deno.FileInfo | undefined> {
   const { body } = context.response;
-  if (body instanceof Deno.FsFile) {
-    return fstat(body);
+  if (isFsFile(body)) {
+    return body.stat();
   }
   if (body instanceof Uint8Array) {
     return Promise.resolve(body);

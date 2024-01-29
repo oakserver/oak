@@ -140,7 +140,7 @@ export class MultiPartStream extends ReadableStream<Uint8Array> {
         const rangeHeader = encoder.encode(
           `Content-Range: ${range.start}-${range.end}/${size}\n\n`,
         );
-        controller.enqueue(concat(this.#preamble, rangeHeader, bytes));
+        controller.enqueue(concat([this.#preamble, rangeHeader, bytes]));
       },
     });
 

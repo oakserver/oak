@@ -20,7 +20,7 @@ import { Request as OakRequest } from "./request.ts";
 import { Response as OakResponse } from "./response.ts";
 import { cloneState } from "./structured_clone.ts";
 import type { UpgradeWebSocketFn, UpgradeWebSocketOptions } from "./types.d.ts";
-import { isNode } from "./util.ts";
+import { createPromiseWithResolvers, isNode } from "./util.ts";
 
 function createMockApp<S extends State = Record<string, any>>(
   state = {} as S,
@@ -96,7 +96,11 @@ function createMockNativeRequest(
       upgradeWebSocketStack.push([request, options]);
       return { response: mockResponse, socket: mockWebSocket };
     };
-  return new NativeRequest(requestEvent, { upgradeWebSocket });
+  const nativeRequest = new NativeRequest(request, { upgradeWebSocket });
+  const { promise, resolve } = createPromiseWithResolvers<Response>();
+  respondWithStack.push(promise);
+  nativeRequest.response.then((response) => resolve(response));
+  return nativeRequest;
 }
 
 Deno.test({
@@ -402,7 +406,7 @@ Deno.test({
       Deno.inspect(new Context(app, req, {}), { depth: 1 }),
       isNode()
         ? `Context {\n  app: [MockApplication],\n  cookies: [SecureCookieMap],\n  isUpgradable: false,\n  respond: true,\n  request: [Request],\n  response: [Response],\n  socket: undefined,\n  state: {}\n}`
-        : `Context {\n  app: MockApplication {},\n  cookies: SecureCookieMap [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/"\n},\n  response: Response {\n  body: undefined,\n  headers: Headers {},\n  status: 404,\n  type: undefined,\n  writable: true\n},\n  socket: undefined,\n  state: {}\n}`,
+        : `Context {\n  app: MockApplication {},\n  cookies: SecureCookieMap [],\n  isUpgradable: false,\n  respond: true,\n  request: Request {\n  body: Body { has: false, used: false },\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/",\n  userAgent: UserAgent {\n  browser: { name: undefined, version: undefined, major: undefined },\n  cpu: { architecture: undefined },\n  device: { model: undefined, type: undefined, vendor: undefined },\n  engine: { name: undefined, version: undefined },\n  os: { name: undefined, version: undefined },\n  ua: ""\n}\n},\n  response: Response {\n  body: undefined,\n  headers: Headers {},\n  status: 404,\n  type: undefined,\n  writable: true\n},\n  socket: undefined,\n  state: {}\n}`,
     );
   },
 });

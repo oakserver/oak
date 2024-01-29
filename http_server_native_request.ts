@@ -1,12 +1,12 @@
 // Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
 import type {
-  RequestEvent,
+  NetAddr,
   ServerRequest,
-  ServerRequestBody,
   UpgradeWebSocketFn,
   UpgradeWebSocketOptions,
 } from "./types.d.ts";
+import { createPromiseWithResolvers } from "./util.ts";
 
 // deno-lint-ignore no-explicit-any
 export const DomResponse: typeof Response = (globalThis as any).Response ??
@@ -22,39 +22,37 @@ export function isNativeRequest(r: ServerRequest): r is NativeRequest {
   return r instanceof NativeRequest;
 }
 
-export interface NativeRequestOptions {
-  conn?: Deno.Conn;
+export interface NativeRequestInfo {
+  remoteAddr?: NetAddr;
   upgradeWebSocket?: UpgradeWebSocketFn;
 }
 
 /** An internal oak abstraction for handling a Deno native request. Most users
  * of oak do not need to worry about this abstraction. */
 export class NativeRequest implements ServerRequest {
-  #conn?: Deno.Conn;
+  #remoteAddr?: NetAddr;
   // deno-lint-ignore no-explicit-any
   #reject!: (reason?: any) => void;
   #request: Request;
-  #requestPromise: Promise<void>;
   #resolve!: (value: Response) => void;
   #resolved = false;
+  #response: Promise<Response>;
   #upgradeWebSocket?: UpgradeWebSocketFn;
 
   constructor(
-    requestEvent: RequestEvent,
-    options: NativeRequestOptions = {},
+    request: Request,
+    info: NativeRequestInfo,
   ) {
-    const { conn } = options;
-    this.#conn = conn;
+    this.#remoteAddr = info.remoteAddr;
     // this allows for the value to be explicitly undefined in the options
-    this.#upgradeWebSocket = "upgradeWebSocket" in options
-      ? options["upgradeWebSocket"]
+    this.#upgradeWebSocket = "upgradeWebSocket" in info
+      ? info.upgradeWebSocket
       : maybeUpgradeWebSocket;
-    this.#request = requestEvent.request;
-    const p = new Promise<Response>((resolve, reject) => {
-      this.#resolve = resolve;
-      this.#reject = reject;
-    });
-    this.#requestPromise = requestEvent.respondWith(p);
+    this.#request = request;
+    const { resolve, reject, promise } = createPromiseWithResolvers<Response>();
+    this.#resolve = resolve;
+    this.#reject = reject;
+    this.#response = promise;
   }
 
   get body(): ReadableStream<Uint8Array> | null {
@@ -62,10 +60,6 @@ export class NativeRequest implements ServerRequest {
     // `ControlledAsyncIterable`
     // deno-lint-ignore no-explicit-any
     return this.#request.body as any;
-  }
-
-  get donePromise(): Promise<void> {
-    return this.#requestPromise;
   }
 
   get headers(): Headers {
@@ -77,11 +71,15 @@ export class NativeRequest implements ServerRequest {
   }
 
   get remoteAddr(): string | undefined {
-    return (this.#conn?.remoteAddr as Deno.NetAddr)?.hostname;
+    return this.#remoteAddr?.hostname;
   }
 
   get request(): Request {
     return this.#request;
+  }
+
+  get response(): Promise<Response> {
+    return this.#response;
   }
 
   get url(): string {
@@ -107,26 +105,16 @@ export class NativeRequest implements ServerRequest {
     this.#resolved = true;
   }
 
-  getBody(): ServerRequestBody {
-    return {
-      // when emitting to Node.js, the body is not compatible, and thought it
-      // doesn't run at runtime, it still gets type checked.
-      // deno-lint-ignore no-explicit-any
-      body: this.#request.body as any,
-      readBody: async () => {
-        const ab = await this.#request.arrayBuffer();
-        return new Uint8Array(ab);
-      },
-    };
+  getBody(): ReadableStream<Uint8Array> | null {
+    return this.#request.body;
   }
 
-  respond(response: Response): Promise<void> {
+  respond(response: Response): void {
     if (this.#resolved) {
       throw new Error("Request already responded to.");
     }
-    this.#resolve(response);
     this.#resolved = true;
-    return this.#requestPromise;
+    this.#resolve(response);
   }
 
   upgrade(options?: UpgradeWebSocketOptions): WebSocket {

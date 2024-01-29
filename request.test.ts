@@ -10,31 +10,24 @@ import {
   assertStrictEquals,
 } from "./test_deps.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
-import type { NativeRequestOptions } from "./http_server_native_request.ts";
+import type { NativeRequestInfo } from "./http_server_native_request.ts";
 import { Request } from "./request.ts";
 import { isNode } from "./util.ts";
-
-const { test } = Deno;
 
 function createMockNativeRequest(
   url = "http://localhost/index.html",
   requestInit: RequestInit = {},
-  options?: NativeRequestOptions,
+  options: NativeRequestInfo = {},
 ) {
   const request: globalThis.Request = new (globalThis as any).Request(
     url,
     requestInit,
   );
 
-  return new NativeRequest({
-    request,
-    async respondWith(r) {
-      await r;
-    },
-  }, options);
+  return new NativeRequest(request, options);
 }
 
-test({
+Deno.test({
   name: "request.searchParams",
   fn() {
     const request = new Request(
@@ -51,7 +44,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "request.url",
   fn() {
     const mockServerRequest = createMockNativeRequest(
@@ -69,7 +62,25 @@ test({
   },
 });
 
-test({
+Deno.test({
+  name: "request.userAgent",
+  fn() {
+    const mockServerRequest = createMockNativeRequest(
+      "https://localhost/index.html",
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+        },
+      },
+    );
+    const request = new Request(mockServerRequest);
+    assertStrictEquals(request.userAgent.browser.name, "Chrome");
+    assertStrictEquals(request.userAgent.device.model, "Macintosh");
+  },
+});
+
+Deno.test({
   name: "request.serverRequest",
   fn() {
     const mockServerRequest = createMockNativeRequest();
@@ -78,7 +89,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "request.acceptsEncodings",
   fn() {
     const request = new Request(
@@ -92,7 +103,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "request.acceptsEncodings - no header",
   fn() {
     const request = new Request(
@@ -102,7 +113,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "request.acceptsEncodings - no header no encodings",
   fn() {
     const request = new Request(
@@ -112,7 +123,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "request.accepts()",
   fn() {
     const request = new Request(
@@ -126,7 +137,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "request.accepts not provided",
   fn() {
     const request = new Request(
@@ -140,7 +151,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "request.accepts no header",
   fn() {
     const request = new Request(createMockNativeRequest("https://localhost/"));
@@ -148,7 +159,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "request.accepts no header, no args",
   fn() {
     const request = new Request(createMockNativeRequest("https://localhost/"));
@@ -156,7 +167,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "request.accepts no match",
   fn() {
     const request = new Request(
@@ -168,7 +179,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "request.body()",
   async fn() {
     const body = JSON.stringify({ hello: "world" });
@@ -183,33 +194,13 @@ test({
       }),
     );
     assert(request.hasBody);
-    const actual = request.body();
-    assertEquals(actual.type, "json");
-    assertEquals(await actual.value, { hello: "world" });
+    assert(request.body.has);
+    const actual = await request.body.json();
+    assertEquals(actual, { hello: "world" });
   },
 });
 
-test({
-  name: "request.body() passes args",
-  async fn() {
-    const body = JSON.stringify({ hello: "world" });
-    const request = new Request(
-      createMockNativeRequest("https://localhost/index.html", {
-        body,
-        method: "POST",
-        headers: {
-          "content-type": "text/plain",
-          "content-length": String(body.length),
-        },
-      }),
-    );
-    const actual = request.body({ type: "json" });
-    assertEquals(actual.type, "json");
-    assertEquals(await actual.value, { hello: "world" });
-  },
-});
-
-test({
+Deno.test({
   name: "request.secure is false",
   fn() {
     const request = new Request(createMockNativeRequest());
@@ -217,7 +208,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "request.secure is true",
   fn() {
     const request = new Request(
@@ -228,7 +219,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "request with proxy true",
   fn() {
     const request = new Request(
@@ -239,13 +230,11 @@ test({
           "x-forwarded-for": "10.10.10.10, 192.168.1.1, 10.255.255.255",
         },
       }, {
-        conn: {
-          remoteAddr: {
-            transport: "tcp",
-            port: 8080,
-            hostname: "10.255.255.255",
-          },
-        } as Deno.Conn,
+        remoteAddr: {
+          transport: "tcp",
+          port: 8080,
+          hostname: "10.255.255.255",
+        },
       }),
       { proxy: true, secure: true },
     );
@@ -257,7 +246,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "request with invalid JSON",
   async fn() {
     const body = "random text, but not JSON";
@@ -272,11 +261,9 @@ test({
       }),
     );
     assert(request.hasBody, "should have body");
-    const actual = request.body();
-    assert(actual.type === "json", "should be a JSON body");
     const err = await assertRejects(
       async () => {
-        await actual.value;
+        await request.body.json();
       },
     );
     assert(isHttpError(err));
@@ -284,7 +271,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "Request - inspecting",
   fn() {
     assertEquals(
@@ -296,8 +283,8 @@ test({
         ),
       ),
       isNode()
-        ? `Request {\n  hasBody: false,\n  headers: HeadersList {\n    cookies: null,\n    [Symbol(headers map)]: [Map],\n    [Symbol(headers map sorted)]: null\n  },\n  ip: '',\n  ips: [],\n  method: 'GET',\n  secure: false,\n  url: URL {\n    href: 'http://localhost/foo?bar=baz&qat=qux',\n    origin: 'http://localhost',\n    protocol: 'http:',\n    username: '',\n    password: '',\n    host: 'localhost',\n    hostname: 'localhost',\n    port: '',\n    pathname: '/foo',\n    search: '?bar=baz&qat=qux',\n    searchParams: URLSearchParams { 'bar' => 'baz', 'qat' => 'qux' },\n    hash: ''\n  }\n}`
-        : `Request {\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/foo?bar=baz&qat=qux"\n}`,
+        ? `Request {\n  body: Body { has: false, used: false },\n  hasBody: false,\n  headers: HeadersList {\n    cookies: null,\n    [Symbol(headers map)]: [Map],\n    [Symbol(headers map sorted)]: null\n  },\n  ip: '',\n  ips: [],\n  method: 'GET',\n  secure: false,\n  url: URL {\n    href: 'http://localhost/foo?bar=baz&qat=qux',\n    origin: 'http://localhost',\n    protocol: 'http:',\n    username: '',\n    password: '',\n    host: 'localhost',\n    hostname: 'localhost',\n    port: '',\n    pathname: '/foo',\n    search: '?bar=baz&qat=qux',\n    searchParams: URLSearchParams { 'bar' => 'baz', 'qat' => 'qux' },\n    hash: ''\n  },\n  userAgent: UserAgent {\n    browser: [Object],\n    cpu: [Object],\n    device: [Object],\n    engine: [Object],\n    os: [Object],\n    ua: ''\n  }\n}`
+        : `Request {\n  body: Body { has: false, used: false },\n  hasBody: false,\n  headers: Headers { host: "localhost" },\n  ip: "",\n  ips: [],\n  method: "GET",\n  secure: false,\n  url: "http://localhost/foo?bar=baz&qat=qux",\n  userAgent: UserAgent {\n  browser: { name: undefined, version: undefined, major: undefined },\n  cpu: { architecture: undefined },\n  device: { model: undefined, type: undefined, vendor: undefined },\n  engine: { name: undefined, version: undefined },\n  os: { name: undefined, version: undefined },\n  ua: ""\n}\n}`,
     );
   },
 });

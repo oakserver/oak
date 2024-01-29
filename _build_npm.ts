@@ -8,8 +8,8 @@
  * @module
  */
 
-import { build, emptyDir } from "https://deno.land/x/dnt@0.36.0/mod.ts";
-import { copy } from "https://deno.land/std@0.190.0/fs/copy.ts";
+import { build, emptyDir } from "https://deno.land/x/dnt@0.39.0/mod.ts";
+import { copy } from "https://deno.land/std@0.212.0/fs/copy.ts";
 
 async function start() {
   await emptyDir("./npm");
@@ -41,8 +41,8 @@ async function start() {
     typeCheck: false,
     compilerOptions: {
       importHelpers: true,
-      target: "ES2021",
-      lib: ["esnext", "dom", "dom.iterable"],
+      target: "ES2022",
+      lib: ["ESNext", "DOM", "DOM.Iterable"],
     },
     package: {
       name: "@oakserver/oak",
@@ -50,7 +50,7 @@ async function start() {
       description: "A middleware framework for handling HTTP requests",
       license: "MIT",
       engines: {
-        node: ">=16.5.0 <19",
+        node: ">=16.5.0 <22",
       },
       repository: {
         type: "git",
@@ -60,10 +60,10 @@ async function start() {
         url: "https://github.com/oakserver/oak/issues",
       },
       dependencies: {
-        "tslib": "~2.3.1",
+        "tslib": "~2.6.2",
       },
       devDependencies: {
-        "@types/node": "^17",
+        "@types/node": "^20",
       },
     },
   });

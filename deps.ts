@@ -4,70 +4,28 @@
 
 // `std` dependencies
 
-export {
-  type Deferred,
-  deferred,
-} from "https://deno.land/std@0.190.0/async/deferred.ts";
-export {
-  concat,
-  copy as copyBytes,
-  equals,
-} from "https://deno.land/std@0.190.0/bytes/mod.ts";
-export { timingSafeEqual } from "https://deno.land/std@0.190.0/crypto/timing_safe_equal.ts";
-export { KeyStack } from "https://deno.land/std@0.190.0/crypto/keystack.ts";
-export * as base64 from "https://deno.land/std@0.190.0/encoding/base64.ts";
-export {
-  mergeHeaders,
-  SecureCookieMap,
-  type SecureCookieMapGetOptions,
-  type SecureCookieMapSetDeleteOptions,
-} from "https://deno.land/std@0.190.0/http/cookie_map.ts";
-export {
-  createHttpError,
-  errors,
-  HttpError,
-  type HttpErrorOptions,
-  isHttpError,
-} from "https://deno.land/std@0.190.0/http/http_errors.ts";
-export {
-  type ErrorStatus,
-  isErrorStatus,
-  isRedirectStatus,
-  type RedirectStatus,
-  Status,
-  STATUS_TEXT,
-} from "https://deno.land/std@0.190.0/http/http_status.ts";
+export { concat } from "https://deno.land/std@0.212.0/bytes/concat.ts";
+export { copy as copyBytes } from "https://deno.land/std@0.212.0/bytes/copy.ts";
+export { timingSafeEqual } from "https://deno.land/std@0.212.0/crypto/timing_safe_equal.ts";
+export { KeyStack } from "https://deno.land/std@0.212.0/crypto/unstable_keystack.ts";
+export { encodeBase64 } from "https://deno.land/std@0.212.0/encoding/base64.ts";
 export {
   calculate,
   type ETagOptions,
   type FileInfo,
   ifMatch,
   ifNoneMatch,
-} from "https://deno.land/std@0.190.0/http/etag.ts";
-export { type HttpMethod as HTTPMethods } from "https://deno.land/std@0.190.0/http/method.ts";
+} from "https://deno.land/std@0.212.0/http/etag.ts";
 export {
   accepts,
   acceptsEncodings,
   acceptsLanguages,
-} from "https://deno.land/std@0.190.0/http/negotiation.ts";
-export {
-  ServerSentEvent,
-  type ServerSentEventInit,
-  ServerSentEventStreamTarget,
-  type ServerSentEventTarget,
-  type ServerSentEventTargetOptions,
-} from "https://deno.land/std@0.190.0/http/server_sent_event.ts";
-export { LimitedReader } from "https://deno.land/std@0.190.0/io/mod.ts";
-export {
-  contentType,
-  extension,
-  typeByExtension,
-} from "https://deno.land/std@0.190.0/media_types/mod.ts";
-export {
-  readAll,
-  readerFromStreamReader,
-  writeAll,
-} from "https://deno.land/std@0.190.0/streams/mod.ts";
+} from "https://deno.land/std@0.212.0/http/negotiation.ts";
+export { UserAgent } from "https://deno.land/std@0.212.0/http/user_agent.ts";
+export { LimitedReader } from "https://deno.land/std@0.212.0/io/mod.ts";
+export { contentType } from "https://deno.land/std@0.212.0/media_types/content_type.ts";
+export { typeByExtension } from "https://deno.land/std@0.212.0/media_types/type_by_extension.ts";
+export { readAll } from "https://deno.land/std@0.212.0/streams/mod.ts";
 export {
   basename,
   extname,
@@ -76,9 +34,39 @@ export {
   normalize,
   parse,
   SEP,
-} from "https://deno.land/std@0.190.0/path/mod.ts";
+} from "https://deno.land/std@0.212.0/path/mod.ts";
 
 // 3rd party dependencies
+
+export {
+  mergeHeaders,
+  SecureCookieMap,
+  type SecureCookieMapGetOptions,
+  type SecureCookieMapSetDeleteOptions,
+} from "https://deno.land/x/oak_commons@0.5.2/cookie_map.ts";
+export {
+  createHttpError,
+  errors,
+  HttpError,
+  type HttpErrorOptions,
+  isHttpError,
+} from "https://deno.land/x/oak_commons@0.5.2/http_errors.ts";
+export { type HttpMethod as HTTPMethods } from "https://deno.land/x/oak_commons@0.5.2/method.ts";
+export {
+  ServerSentEvent,
+  type ServerSentEventInit,
+  ServerSentEventStreamTarget,
+  type ServerSentEventTarget,
+  type ServerSentEventTargetOptions,
+} from "https://deno.land/x/oak_commons@0.5.2/server_sent_event.ts";
+export {
+  type ErrorStatus,
+  isErrorStatus,
+  isRedirectStatus,
+  type RedirectStatus,
+  Status,
+  STATUS_TEXT,
+} from "https://deno.land/x/oak_commons@0.5.2/status.ts";
 
 export {
   compile,

@@ -14,7 +14,6 @@ test({
     assertEquals(typeof mod.etag, "object");
     assertEquals(typeof mod.etag.calculate, "function");
     assertEquals(typeof mod.etag.factory, "function");
-    assertEquals(typeof mod.FormDataReader, "function");
     assertEquals(typeof mod.helpers, "object");
     assertEquals(typeof mod.helpers.getQuery, "function");
     assertEquals(Object.keys(mod.helpers).length, 1);
@@ -40,6 +39,6 @@ test({
     assertEquals(typeof mod.send, "function");
     assertEquals(typeof mod.testing, "object");
     assertEquals(Object.keys(mod.testing).length, 4);
-    assertEquals(Object.keys(mod).length, 27);
+    assertEquals(Object.keys(mod).length, 26);
   },
 });

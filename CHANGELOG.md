@@ -1,5 +1,101 @@
 # oak Change Log
 
+## Version 13.0.1
+
+- fix: explicit typings for body (43bcd82)
+- fix: add type to body blob (b74b374)
+- chore: update to oak commons 0.5.2 (25d82e1)
+- docs: document body API in README (43de84a)
+
+## Version 13.0.0
+
+- feat: align request body better to Fetch API (bb996fe)
+
+  **BREAKING CHANGE** Previous versions of oak had a request body API that was
+  fairly convoluted as oak evolved from the early days of Deno where there
+  wasn't a built in APIs for handling HTTP requests. The Fetch API `Request` and
+  `Response` have become the standard almost everywhere and make it easy to get
+  ahold of a request body in many forms.
+
+  Inspired by this the `ctx.request.body` aligns to this API for the most part,
+  but also still retains some of the advantages that oak provided like providing
+  a `ctx.request.body.type` to help figure out what sort of body you are looking
+  at as well as support for `ctx.request.body.form()`.
+
+  This also leverages native Fetch API where possible which resolved a lot of
+  issues with decoding multi-part forms. This does mean files that are uploaded
+  to oak become web standard `File`s that are entries in `FormData`. This means
+  `multipart.ts` has been removed from oak and the
+
+- refactor: use Deno.serve() instead of Deno.serveHttp() (bbae544)
+
+  **BREAKING CHANGE** As of Deno 1.40.0, `Deno.serveHttp()` is deprecated and
+  will be removed in Deno 2.0. The Deno implementation of oak finally migrates
+  to `Deno.serve()`. While this should be transparent in most cases, it has
+  changed some of the options that can be used when using `app.listen()` to
+  align to the `Deno.serve()` options. Also, unlike unstable `Deno.serverHttp()`
+  `Deno.serve()` doesn't support HTTP/2, therefore it isn't currently possible
+  to support HTTP/2 in oak.
+
+- fix: remove deprecated API, work around Deno bug (71a1d92)
+
+  There were a few other APIs that were deprecated in Deno 1.40.0 that did not
+  impact the oak APIs, as well as a regression that has been fixed in patch
+  releases that was worked around.
+
+- fix: issues in current versions of node (43733a0)
+
+  Current versions of Node.js had some issues that were not present in Node.js
+  16. These were resolved.
+
+- fix: application errors dispatched after default logic (f37796b)
+
+  Resolved #630
+
+- tests: add descriptions to some tests (9fb56b3)
+- chore: rework exports (4bb93fb)
+- chore: fix exports (6e2d9b3)
+- chore: remove unused dep (ebe6801)
+- chore: migrate to oak commons 0.5.0 (d5752e6)
+- chore: remove unstable tests (9dc5ca7)
+- chore: remove unused import (09fd336)
+- chore: update to std 0.212.0 (a854c72)
+- chore: fix exports (d416773)
+
+## Version 12.6.3
+
+- chore: add jsr metadata (6c30bdf)
+- chore: rename deno.jsonc to deno.json (681da74)
+- docs: fix typo in index.md (#600)
+
+## Version 12.6.2
+
+- chore: update to std 0.211.0, commons 0.4.0, dnt 0.39.0 (494aa7b)
+- chore: remove deno bundle ci task (8db4394)
+
+## Version 12.6.1
+
+- fix: untrack http conns when closed (da6d30d)
+- chore: remove unused lint pragma (614df5e)
+- chore: update to std 0.200.0 and dnt 0.38.1 (eb51995)
+- chore: fix type checking issue in build script (5ca2870)
+
+## Version 12.6.0
+
+- feat: add userAgent to request (e292470)
+
+  `ctx.request` now contains an object representing the user agent in a property
+  called `.userAgent`.
+
+  See
+  [std/http/user_agent#UserAgent](https://deno.land/std@0.193.0/http/user_agent.ts?s=UserAgent)
+  for more information. Inspired by #603.
+
+- chore: update to std 0.190.0 (4bf071d)
+- chore: update to dnt 0.36.0 (2f394bf)
+- chore: update dnt 0.37.0, std 0.193.0 (c052b2b)
+- docs: remove outdated comment (f0ad28b)
+
 ## Version 12.5.0
 
 - feat: body parsing throws HTTP errors. (79349d7)

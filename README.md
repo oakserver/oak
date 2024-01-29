@@ -26,13 +26,14 @@ Also, check out our [FAQs](https://oakserver.github.io/oak/FAQ) and the
 [awesome-oak](https://oakserver.github.io/awesome-oak/) site of community
 resources.
 
-> ⚠️ _Warning_ The examples in this README pull from `main` and are designed for
-> Deno CLI or Deno Deploy, which may not make sense to do when you are looking
-> to actually deploy a workload. You would want to "pin" to a particular version
-> which is compatible with the version of Deno you are using and has a fixed set
-> of APIs you would expect. `https://deno.land/x/` supports using git tags in
-> the URL to direct you at a particular version. So to use version 3.0.0 of oak,
-> you would want to import `https://deno.land/x/oak@v3.0.0/mod.ts`.
+> [!NOTE]
+> The examples in this README pull from `main` and are designed for Deno CLI or
+> Deno Deploy, which may not make sense to do when you are looking to actually
+> deploy a workload. You would want to "pin" to a particular version which is
+> compatible with the version of Deno you are using and has a fixed set of APIs
+> you would expect. `https://deno.land/x/` supports using git tags in the URL to
+> direct you at a particular version. So to use version 13.0.0 of oak, you would
+> want to import `https://deno.land/x/oak@v13.0.0/mod.ts`.
 
 ## Application, middleware, and context
 
@@ -309,16 +310,22 @@ way, the cookie APIs work in an asynchronous way. It has several methods:
 The `context.request` contains information about the request. It contains
 several properties:
 
+- `.body`
+
+  An object which provides access to the body of the request. See below for
+  details about the request body API.
+
 - `.hasBody`
 
   Set to `true` if the request might have a body, or `false` if it does not. It
   does not validate if the body is supported by the built in body parser though.
 
-  **WARNING** this is an unreliable API. In HTTP/2 in many situations you cannot
-  determine if a request has a body or not unless you attempt to read the body,
-  due to the streaming nature of HTTP/2. As of Deno 1.16.1, for HTTP/1.1, Deno
-  also reflects that behavior. The only reliable way to determine if a request
-  has a body or not is to attempt to read the body.
+  > [!WARNING]
+  > This is an unreliable API. In HTTP/2 in many situations you cannot determine
+  > if a request has a body or not unless you attempt to read the body, due to
+  > the streaming nature of HTTP/2. As of Deno 1.16.1, for HTTP/1.1, Deno
+  > also reflects that behavior. The only reliable way to determine if a request
+  > has a body or not is to attempt to read the body.
 
   It is best to determine if a body might be meaningful to you with a given
   method, and then attempt to read and process the body if it is meaningful in a
@@ -374,137 +381,101 @@ And several methods:
   negotiated language is returned. If no languages match `undefined` is
   returned.
 
-- `.body(options?: BodyOptions)`
+##### Request Body
 
-  The method returns a representation of the request body. When no options are
-  passed, the request headers are used to determine the type of the body, which
-  will be parsed and returned. The returned object contains two properties.
-  `type` contains the type of `"json"`, `"text"`, `"form"`, `"form-data"`,
-  `"bytes"` or `"undefined"`.
+> [!IMPORTANT]
+> This API changed significantly in oak v13 and later. The previous API had
+> grown organically since oak was created in 2018 and didn't represent any other
+> common API. The API introduced in v13 aligns better to the Fetch API's
+> `Request` way of dealing with the body, and should be more familiar to
+> developers coming to oak for the first time.
 
-  The type of the `value` can be determined by the value of the `type` property:
+The API for the oak request `.body` is inspired by the Fetch API's `Request` but
+with some add functionality. The context's `request.body` is an instance of an
+object which provides several properties:
 
-  | `type`        | `value`                      |
-  | ------------- | ---------------------------- |
-  | `"bytes"`     | `Promise<Uint8Array>`        |
-  | `"form"`      | `Promise<URLSearchParams>`   |
-  | `"form-data"` | `FormDataReader`             |
-  | `"json"`      | `Promise<unknown>`           |
-  | `"reader"`    | `Deno.Reader`                |
-  | `"stream"`    | `ReadableStream<Uint8Array>` |
-  | `"text"`      | `Promise<string>`            |
-  | `"undefined"` | `undefined`                  |
+- `.has`
 
-  If there is no body, the `type` of `"undefined"` is returned. If the content
-  type of the request is not recognised, then the `type` of `"bytes"` is
-  returned.
+  Set to `true` if the request might have a body, or `false` if it does not. It
+  does not validate if the body is supported by the built in body parser though.
 
-  You can use the option `type` to specifically request the body to be returned
-  in a particular format. If you need access to the Deno HTTP server's body,
-  then you can use the `type` of `"reader"` which will return the body object of
-  type `"reader"` with a `value` as a `Deno.Reader`:
+  > [!IMPORTANT]
+  > This is an unreliable API. In HTTP/2 in many situations you cannot determine
+  > if a request has a body or not unless you attempt to read the body, due to
+  > the streaming nature of HTTP/2. As of Deno 1.16.1, for HTTP/1.1, Deno
+  > also reflects that behavior. The only reliable way to determine if a request
+  > has a body or not is to attempt to read the body.
 
-  ```ts
-  import { readAll } from "https://deno.land/x/std/io/util.ts";
+  It is best to determine if a body might be meaningful to you with a given
+  method, and then attempt to read and process the body if it is meaningful in a
+  given context. For example `GET` and `HEAD` should never have a body, but
+  methods like `DELETE` and `OPTIONS` _might_ have a body and should be have
+  their body conditionally processed if it is meaningful to your application.
 
-  app.use(async (ctx) => {
-    const result = ctx.request.body({ type: "reader" });
-    result.type; // "reader"
-    await readAll(result.value); // a "raw" Uint8Array of the body
-  });
-  ```
+- `.stream`
 
-  Another use case for the `type` option is if certain middleware always needs
-  the body in a particular format, but wants other middleware to consume it in a
-  content type resolved way:
+  A `ReadableStream<Uint8Array>` that will allow reading of the body in
+  `Uint8Array` chunks. This is akin the `.body` property in a Fetch API
+  `Request`.
 
-  ```ts
-  app.use(async (ctx) => {
-    const result = ctx.request.body({ type: "text" });
-    const text = await result.value;
-    // do some validation of the body as a string
-  });
+- `.used`
 
-  app.use(async (ctx) => {
-    const result = ctx.request.body(); // content type automatically detected
-    if (result.type === "json") {
-      const value = await result.value; // an object of parsed JSON
-    }
-  });
-  ```
+  Set to `true` if the body has been used, otherwise set to `false`.
 
-  You can specify the maximum file size in options of the `read` method of the
-  `FormDataReader` to filter incoming files which are larger than that. It'll
-  return `undefined` if the size exceeds or it'll return the file as
-  `Uint8Array` like this:
+It also has several methods:
 
-  ```ts
-  app.use(async (ctx) => {
-    try {
-      const formDataReader = ctx.request.body({ type: "form-data" }).value;
-      const formDataBody = await formDataReader.read({ maxSize: 10000000 }); // Max file size to handle
-      const files = formDataBody.files; //Return array of files
-      if (files) {
-        files.map((file) => {
-          file.content; // "undefined" or "Uint8Array"
-        });
-      }
-    } catch (error) {
-      // Handle error response
-    }
-  });
-  ```
+- `arrayBuffer()`
 
-  You can use the option `contentTypes` to set additional media types that when
-  present as the content type for the request, the body will be parsed
-  accordingly. The options takes possibly five keys: `json`, `form`, `formData`,
-  `text`, and `bytes`. For example if you wanted JavaScript sent to the server
-  to be parsed as text, you would do something like this:
+  Resolves with an `ArrayBuffer` that contains the contents of the body, if any.
+  Suitable for reading/handling binary data.
 
-  ```ts
-  app.use(async (ctx) => {
-    const result = ctx.request.body({
-      contentTypes: {
-        text: ["application/javascript"],
-      },
-    });
-    result.type; // "text"
-    await result.value; // a string containing the text
-  });
-  ```
+- `blob()`
 
-  Because of the nature of how the body is parsed, once the body is requested
-  and returned in a particular format, it can't be requested in certain other
-  ones, and `.request.body()` will throw if an incompatible type is requested.
-  The types `"form-data"`, `"reader"` and `"stream"` are incompatible with each
-  other and all other types, while `"json"`, `"form"`, `"bytes"`, `"text"` are
-  all compatible with each other. Although, if there are invalid data for that
-  type, they may throw if coerced into that type.
+  Resolves with a `Blob` that contains the contents of the body. Suitable for
+  reading/handling binary data.
 
-  In particular the `contentTypes.bytes` can be used to override default types
-  that are supported that you would want the middleware to handle itself. For
-  example if you wanted the middleware to parse all text media types itself, you
-  would do something like this:
+- `form()`
 
-  ```ts
-  app.use(async (ctx) => {
-    const result = ctx.request.body({
-      contentTypes: {
-        bytes: ["text"],
-      },
-    });
-    result.type; // "bytes"
-    await result.value; // a Uint8Array of all of the bytes read from the request
-  });
-  ```
+  Resolves with a `URLSearchParams` which has been decoded from the contents of
+  a body. This is appropriate for a body with a content type of
+  `application/x-www-form-urlencoded`.
 
-  The option `limit` can be used when reading non-stream type bodies, like text,
-  JSON, or bytes. By default it is set to 10 Mib, and ensures that malicious
-  requests don't cause unexpected behavior in the server. When there is a body,
-  but it doesn't supply a content length, or the content length exceeds the
-  limit, trying to await the `.value` of the body will throw. To disable the
-  feature and read the body anyways, set the `limit` option to `0` (or
-  `Infinity`).
+- `formData()`
+
+  Resolves with a `FormData` instance which has been decoded from the contents
+  of a body. This is appropriate for a body with a content type of
+  `multipart/form-data`.
+
+- `json()`
+
+  Resolves with the data from the body parsed as JSON. If a `jsonBodyReviver`
+  has been specified in the application, it will be used when parsing the JSON.
+
+- `test()`
+
+  Resolves with a string that represents the contents of the body.
+
+- `type()`
+
+  Attempts to provide guidance of how the body is encoded which can be used to
+  determine what method to use to decode the body. The method returns a string
+  that represents the interpreted body type:
+
+  | Value         | Description                                                                                                                              |
+  | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+  | `"binary"`    | The body has a content type that indicates binary data and the `.arrayBuffer()`, `.blob()` or `.stream` should be used to read the body. |
+  | `"form"`      | The body is encoded as form data and `.form()` should be used to read the body.                                                          |
+  | `"form-data"` | The body is encoded as a multi-part form and `.formData()` should be used to read the body.                                              |
+  | `"json"`      | The body is encoded as JSON data and `.json()` should be used to read the body.                                                          |
+  | `"text"`      | The body is encoded as text and `.text()` should be used to read the body.                                                               |
+  | `"unknown"`   | Either there is no body or it was not possible to determine the body type based on the content type.                                     |
+
+  The `.type()` method also takes an optional argument of custom media types
+  that will be used when attempting to determine the type of the body. These are
+  then incorporated into the default media types. The value is an object where
+  the key is one of `binary`, `form`, `form-data`, `json`, or `text` and the
+  value is the appropriate media type in a format compatible with the
+  [type-is format](https://github.com/jshttp/type-is/?tab=readme-ov-file#typeisrequest-types).
 
 #### Response
 
@@ -970,5 +941,5 @@ There are several modules that are directly adapted from other modules. They
 have preserved their individual licenses and copyrights. All of the modules,
 including those directly adapted are licensed under the MIT License.
 
-All additional work is copyright 2018 - 2023 the oak authors. All rights
+All additional work is copyright 2018 - 2024 the oak authors. All rights
 reserved.

@@ -1,13 +1,8 @@
 // Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
 
-import {
-  assertEquals,
-  assertInstanceOf,
-  assertStrictEquals,
-  unreachable,
-} from "./test_deps.ts";
+import { assertEquals, assertStrictEquals, unreachable } from "./test_deps.ts";
 
-import { HttpServer } from "./http_server_native.ts";
+import { Server } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 
 import { Application } from "./application.ts";
@@ -15,12 +10,8 @@ import { isNode } from "./util.ts";
 
 const { test } = Deno;
 
-function createMockConn() {
-  return {
-    localAddr: { transport: "tcp", hostname: "localhost", port: 8000 },
-    remoteAddr: { transport: "tcp", hostname: "remote", port: 4567 },
-    rid: 1,
-  } as Deno.Conn;
+function createMockNetAddr(): Deno.NetAddr {
+  return { transport: "tcp", hostname: "remote", port: 4567 };
 }
 
 test({
@@ -32,21 +23,12 @@ test({
       method: "POST",
       body: `{"a":"b"}`,
     });
-    const conn = createMockConn();
-    const nativeRequest = new NativeRequest(
-      {
-        request,
-        respondWith(v) {
-          respondWithStack.push(v);
-          return Promise.resolve();
-        },
-      },
-      { conn },
-    );
+    const remoteAddr = createMockNetAddr();
+    const nativeRequest = new NativeRequest(request, { remoteAddr });
     assertEquals(nativeRequest.url, `/`);
-    assertEquals(respondWithStack.length, 1);
     const response = new Response("hello deno");
     nativeRequest.respond(response);
+    respondWithStack.push(await nativeRequest.response);
     assertStrictEquals(await respondWithStack[0], response);
   },
 });
@@ -58,7 +40,7 @@ test({
     const app = new Application();
     const listenOptions = { port: 4505 };
 
-    const server = new HttpServer(app, listenOptions);
+    const server = new Server(app, listenOptions);
     server.listen();
 
     const expectedBody = "test-body";
@@ -76,7 +58,7 @@ test({
       console.error(e);
       unreachable();
     } finally {
-      server.close();
+      await server.close();
     }
   },
 });
@@ -89,7 +71,7 @@ test({
     const app = new Application();
     const listenOptions = { port: 4506 };
 
-    const server = new HttpServer(app, listenOptions);
+    const server = new Server(app, listenOptions);
     server.listen();
 
     (async () => {
@@ -99,13 +81,9 @@ test({
       }
     })();
 
-    try {
-      await fetch(`http://localhost:${listenOptions.port}`);
-      unreachable();
-    } catch (e) {
-      assertInstanceOf(e, TypeError);
-    } finally {
-      server.close();
-    }
+    const res = await fetch(`http://localhost:${listenOptions.port}`);
+    assertEquals(res.status, 500);
+    await res.text();
+    return server.close();
   },
 });

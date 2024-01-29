@@ -20,7 +20,6 @@ export type ResponseBody =
   | bigint
   | boolean
   | symbol
-  // deno-lint-ignore ban-types
   | object
   | undefined
   | null;
@@ -107,7 +106,7 @@ export class Response {
   #headers = new Headers();
   #jsonBodyReplacer?: (key: string, value: unknown) => unknown;
   #request: Request;
-  #resources: number[] = [];
+  #resources: { close(): void }[] = [];
   #status?: Status;
   #type?: string;
   #writable = true;
@@ -224,8 +223,8 @@ export class Response {
 
   /** Add a resource to the list of resources that will be closed when the
    * request is destroyed. */
-  addResource(rid: number): void {
-    this.#resources.push(rid);
+  addResource(resource: { close(): void }): void {
+    this.#resources.push(resource);
   }
 
   /** Release any resources that are being tracked by the response.
@@ -237,9 +236,9 @@ export class Response {
     this.#body = undefined;
     this.#domResponse = undefined;
     if (closeResources) {
-      for (const rid of this.#resources) {
+      for (const resource of this.#resources) {
         try {
-          Deno.close(rid);
+          resource.close();
         } catch {
           // we don't care about errors here
         }
