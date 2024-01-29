@@ -26,13 +26,14 @@ Also, check out our [FAQs](https://oakserver.github.io/oak/FAQ) and the
 [awesome-oak](https://oakserver.github.io/awesome-oak/) site of community
 resources.
 
-> ⚠️ _Warning_ The examples in this README pull from `main` and are designed for
-> Deno CLI or Deno Deploy, which may not make sense to do when you are looking
-> to actually deploy a workload. You would want to "pin" to a particular version
-> which is compatible with the version of Deno you are using and has a fixed set
-> of APIs you would expect. `https://deno.land/x/` supports using git tags in
-> the URL to direct you at a particular version. So to use version 3.0.0 of oak,
-> you would want to import `https://deno.land/x/oak@v13.0.0/mod.ts`.
+> [!NOTE]
+> The examples in this README pull from `main` and are designed for Deno CLI or
+> Deno Deploy, which may not make sense to do when you are looking to actually
+> deploy a workload. You would want to "pin" to a particular version which is
+> compatible with the version of Deno you are using and has a fixed set of APIs
+> you would expect. `https://deno.land/x/` supports using git tags in the URL to
+> direct you at a particular version. So to use version 13.0.0 of oak, you would
+> want to import `https://deno.land/x/oak@v13.0.0/mod.ts`.
 
 ## Application, middleware, and context
 
@@ -295,11 +296,12 @@ several properties:
   Set to `true` if the request might have a body, or `false` if it does not. It
   does not validate if the body is supported by the built in body parser though.
 
-  **WARNING** this is an unreliable API. In HTTP/2 in many situations you cannot
-  determine if a request has a body or not unless you attempt to read the body,
-  due to the streaming nature of HTTP/2. As of Deno 1.16.1, for HTTP/1.1, Deno
-  also reflects that behavior. The only reliable way to determine if a request
-  has a body or not is to attempt to read the body.
+  > [!WARNING]
+  > This is an unreliable API. In HTTP/2 in many situations you cannot determine
+  > if a request has a body or not unless you attempt to read the body, due to
+  > the streaming nature of HTTP/2. As of Deno 1.16.1, for HTTP/1.1, Deno
+  > also reflects that behavior. The only reliable way to determine if a request
+  > has a body or not is to attempt to read the body.
 
   It is best to determine if a body might be meaningful to you with a given
   method, and then attempt to read and process the body if it is meaningful in a
@@ -357,7 +359,7 @@ And several methods:
 
 ##### Request Body
 
-> [!WARNING]
+> [!IMPORTANT]
 > This API changed significantly in oak v13 and later. The previous API had
 > grown organically since oak was created in 2018 and didn't represent any other
 > common API. The API introduced in v13 aligns better to the Fetch API's
@@ -373,11 +375,12 @@ object which provides several properties:
   Set to `true` if the request might have a body, or `false` if it does not. It
   does not validate if the body is supported by the built in body parser though.
 
-  **WARNING** this is an unreliable API. In HTTP/2 in many situations you cannot
-  determine if a request has a body or not unless you attempt to read the body,
-  due to the streaming nature of HTTP/2. As of Deno 1.16.1, for HTTP/1.1, Deno
-  also reflects that behavior. The only reliable way to determine if a request
-  has a body or not is to attempt to read the body.
+  > [!IMPORTANT]
+  > This is an unreliable API. In HTTP/2 in many situations you cannot determine
+  > if a request has a body or not unless you attempt to read the body, due to
+  > the streaming nature of HTTP/2. As of Deno 1.16.1, for HTTP/1.1, Deno
+  > also reflects that behavior. The only reliable way to determine if a request
+  > has a body or not is to attempt to read the body.
 
   It is best to determine if a body might be meaningful to you with a given
   method, and then attempt to read and process the body if it is meaningful in a
@@ -911,5 +914,5 @@ There are several modules that are directly adapted from other modules. They
 have preserved their individual licenses and copyrights. All of the modules,
 including those directly adapted are licensed under the MIT License.
 
-All additional work is copyright 2018 - 2023 the oak authors. All rights
+All additional work is copyright 2018 - 2024 the oak authors. All rights
 reserved.
