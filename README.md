@@ -357,7 +357,7 @@ And several methods:
 
 ##### Request Body
 
-> [!WARN]
+> [!WARNING]
 > This API changed significantly in oak v13 and later. The previous API had
 > grown organically since oak was created in 2018 and didn't represent any other
 > common API. The API introduced in v13 aligns better to the Fetch API's
