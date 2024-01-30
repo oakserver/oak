@@ -43,22 +43,23 @@ export {
   SecureCookieMap,
   type SecureCookieMapGetOptions,
   type SecureCookieMapSetDeleteOptions,
-} from "https://deno.land/x/oak_commons@0.5.2/cookie_map.ts";
+} from "https://deno.land/x/oak_commons@0.6.0/cookie_map.ts";
 export {
   createHttpError,
   errors,
   HttpError,
   type HttpErrorOptions,
   isHttpError,
-} from "https://deno.land/x/oak_commons@0.5.2/http_errors.ts";
-export { type HttpMethod as HTTPMethods } from "https://deno.land/x/oak_commons@0.5.2/method.ts";
+} from "https://deno.land/x/oak_commons@0.6.0/http_errors.ts";
+export { matches } from "https://deno.land/x/oak_commons@0.6.0/media_types.ts";
+export { type HttpMethod as HTTPMethods } from "https://deno.land/x/oak_commons@0.6.0/method.ts";
 export {
   ServerSentEvent,
   type ServerSentEventInit,
   ServerSentEventStreamTarget,
   type ServerSentEventTarget,
   type ServerSentEventTargetOptions,
-} from "https://deno.land/x/oak_commons@0.5.2/server_sent_event.ts";
+} from "https://deno.land/x/oak_commons@0.6.0/server_sent_event.ts";
 export {
   type ErrorStatus,
   isErrorStatus,
@@ -66,7 +67,7 @@ export {
   type RedirectStatus,
   Status,
   STATUS_TEXT,
-} from "https://deno.land/x/oak_commons@0.5.2/status.ts";
+} from "https://deno.land/x/oak_commons@0.6.0/status.ts";
 
 export {
   compile,

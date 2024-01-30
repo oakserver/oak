@@ -1,6 +1,7 @@
-import { createHttpError, Status } from "./deps.ts";
+// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+
+import { createHttpError, matches, Status } from "./deps.ts";
 import { parse } from "./form_data.ts";
-import { isMediaType } from "./isMediaType.ts";
 import type { ServerRequest } from "./types.d.ts";
 
 type JsonReviver = (key: string, value: unknown) => unknown;
@@ -191,7 +192,7 @@ export class Body {
     if (contentType) {
       for (const [bodyType, knownMediaTypes] of KNOWN_BODY_TYPES) {
         const customTypes = customMediaTypes[bodyType] ?? [];
-        if (isMediaType(contentType, [...knownMediaTypes, ...customTypes])) {
+        if (matches(contentType, [...knownMediaTypes, ...customTypes])) {
           this.#type = bodyType;
           return this.#type;
         }
