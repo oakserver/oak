@@ -1,4 +1,4 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import { errors } from "./deps.ts";
 import { assert, assertEquals, assertThrows } from "./test_deps.ts";

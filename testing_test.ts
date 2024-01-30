@@ -1,4 +1,4 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import { assert, assertEquals, assertStrictEquals } from "./test_deps.ts";
 

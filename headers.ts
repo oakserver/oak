@@ -1,4 +1,4 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 /** With a provided attribute pattern, return a RegExp which will match and
  * capture in the first group the value of the attribute from a header value. */
