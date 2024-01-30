@@ -65,7 +65,7 @@ export async function convertBodyToBodyInit(
     result = body.pipeThrough(new Uint8ArrayTransformStream());
   } else if (body instanceof FormData) {
     result = body;
-    type = "multipart/form-data";
+    type = undefined;
   } else if (isAsyncIterable(body)) {
     result = readableStreamFromAsyncIterable(body);
   } else if (body && typeof body === "object") {
