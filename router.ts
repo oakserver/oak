@@ -253,7 +253,7 @@ function toUrl<R extends string>(
   return replaced;
 }
 
-class Layer<
+export class Layer<
   R extends string,
   P extends RouteParams<R> = RouteParams<R>,
   // deno-lint-ignore no-explicit-any

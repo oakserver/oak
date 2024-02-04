@@ -323,6 +323,44 @@ export class Response {
     return this.#domResponse = new DomResponse(bodyInit, responseInit);
   }
 
+  /** Instead of responding based on the values of the response, explicitly set
+   * the response with a Fetch API `Response`.
+   *
+   * If the response is already finalized, this will throw. You can check
+   * the `.writable` property to determine the state if you are unsure.
+   *
+   * > [!NOTE]
+   * > This will ignore/override values set in the response like the body,
+   * > headers and status, meaning things like cookie management and automatic
+   * > body typing will be ignored.
+   */
+  with(response: globalThis.Response): void;
+  /** Instead of responding based on the values of the response, explicitly set
+   * the response by providing the initialization to create a Fetch API
+   * `Response`.
+   *
+   * If the response is already finalized, this will throw. You can check
+   * the `.writable` property to determine the state if you are unsure.
+   *
+   * > [!NOTE]
+   * > This will ignore/override values set in the response like the body,
+   * > headers and status, meaning things like cookie management and automatic
+   * > body typing will be ignored.
+   */
+  with(body?: BodyInit | null, init?: ResponseInit): void;
+  with(
+    responseOrBody?: globalThis.Response | BodyInit | null,
+    init?: ResponseInit,
+  ): void {
+    if (this.#domResponse || !this.#writable) {
+      throw new Error("A response has already been finalized.");
+    }
+    this.#writable = false;
+    this.#domResponse = responseOrBody instanceof DomResponse
+      ? responseOrBody
+      : new DomResponse(responseOrBody, init);
+  }
+
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
     const { body, headers, status, type, writable } = this;
     return `${this.constructor.name} ${

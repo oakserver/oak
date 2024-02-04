@@ -54,6 +54,12 @@ export { Server as HttpServerNative } from "./http_server_native.ts";
 export { type NativeRequest } from "./http_server_native_request.ts";
 export { proxy } from "./middleware/proxy.ts";
 export type { ProxyOptions } from "./middleware/proxy.ts";
+export {
+  route,
+  RouteContext,
+  serve,
+  ServeContext,
+} from "./middleware/serve.ts";
 export { compose as composeMiddleware } from "./middleware.ts";
 export type {
   Middleware,

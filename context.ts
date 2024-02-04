@@ -210,8 +210,7 @@ export class Context<
    * ```
    */
   assert(
-    // deno-lint-ignore no-explicit-any
-    condition: any,
+    condition: unknown,
     errorStatus: ErrorStatus = 500,
     message?: string,
     props?: Record<string, unknown> & Omit<HttpErrorOptions, "status">,
@@ -298,17 +297,11 @@ export class Context<
    * the a web standard `WebSocket` object. This will set `.respond` to
    * `false`.  If the socket cannot be upgraded, this method will throw. */
   upgrade(options?: UpgradeWebSocketOptions): WebSocket {
-    if (this.#socket) {
-      return this.#socket;
+    if (!this.#socket) {
+      this.#socket = this.request.upgrade(options);
+      this.app.addEventListener("close", () => this.#socket?.close());
+      this.respond = false;
     }
-    if (!this.request.originalRequest.upgrade) {
-      throw new TypeError(
-        "Web socket upgrades not currently supported for this type of server.",
-      );
-    }
-    this.#socket = this.request.originalRequest.upgrade(options);
-    this.app.addEventListener("close", () => this.#socket?.close());
-    this.respond = false;
     return this.#socket;
   }
 

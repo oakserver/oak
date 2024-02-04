@@ -32,13 +32,17 @@ test({
     assertEquals(typeof mod.REDIRECT_BACK, "symbol");
     assertEquals(typeof mod.Request, "function");
     assertEquals(typeof mod.Response, "function");
+    assertEquals(typeof mod.route, "function");
+    assertEquals(typeof mod.RouteContext, "function");
     assertEquals(typeof mod.Router, "function");
     assertEquals(typeof mod.ServerSentEvent, "function");
+    assertEquals(typeof mod.serve, "function");
+    assertEquals(typeof mod.ServeContext, "function");
     assertEquals(typeof mod.STATUS_TEXT, "object");
     assertEquals(typeof mod.Status, "object");
     assertEquals(typeof mod.send, "function");
     assertEquals(typeof mod.testing, "object");
     assertEquals(Object.keys(mod.testing).length, 4);
-    assertEquals(Object.keys(mod).length, 26);
+    assertEquals(Object.keys(mod).length, 30);
   },
 });

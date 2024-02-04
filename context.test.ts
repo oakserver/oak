@@ -80,13 +80,6 @@ function createMockNativeRequest(
   respondWithStack = [];
   upgradeWebSocketStack = [];
   const request = new Request(url, requestInit);
-  const requestEvent = {
-    request,
-    respondWith(r: Response | Promise<Response>) {
-      respondWithStack.push(r);
-      return Promise.resolve();
-    },
-  };
   const upgradeWebSocket: UpgradeWebSocketFn | undefined = upgradeUndefined
     ? undefined
     : (request, options) => {
@@ -114,7 +107,7 @@ Deno.test({
     assertStrictEquals(context.app, app);
     assert(context.cookies instanceof SecureCookieMap);
     assert(context.request instanceof OakRequest);
-    assert(isNativeRequest(context.request.originalRequest));
+    assert(context.request.source instanceof Request);
     assert(context.response instanceof OakResponse);
   },
 });

@@ -8,7 +8,7 @@ import {
   type HTTPMethods,
   UserAgent,
 } from "./deps.ts";
-import type { ServerRequest } from "./types.d.ts";
+import type { ServerRequest, UpgradeWebSocketOptions } from "./types.d.ts";
 
 export interface OakRequestOptions {
   jsonBodyReviver?: (key: string, value: unknown) => unknown;
@@ -87,9 +87,22 @@ export class Request {
     return this.#secure;
   }
 
-  /** Set to the value of the _original_ Deno server request. */
+  /** Set to the value of the low level oak server request abstraction.
+   *
+   * @deprecated this will be removed in future versions of oak. Accessing this
+   * abstraction is not useful to end users and is now a bit of a misnomer.
+   */
   get originalRequest(): ServerRequest {
     return this.#serverRequest;
+  }
+
+  /** Returns the original Fetch API `Request` if available.
+   *
+   * This should be set with requests on Deno, but will not be set when running
+   * on Node.js.
+   */
+  get source(): globalThis.Request | undefined {
+    return this.#serverRequest.request;
   }
 
   /** A parsed URL for the request which complies with the browser standards.
@@ -218,6 +231,24 @@ export class Request {
       return acceptsLanguages(this.#serverRequest, ...langs);
     }
     return acceptsLanguages(this.#serverRequest);
+  }
+
+  /** Take the current request and upgrade it to a web socket, returning a web
+   * standard `WebSocket` object.
+   *
+   * If the underlying server abstraction does not support upgrades, this will
+   * throw.
+   *
+   * > ![WARNING]
+   * > This is not intended for direct use, as it will not manage the websocket
+   * > in the overall context or ensure that additional middleware does not
+   * > attempt to respond to the request.
+   */
+  upgrade(options?: UpgradeWebSocketOptions): WebSocket {
+    if (!this.#serverRequest.upgrade) {
+      throw new TypeError("Web sockets upgrade not supported in this runtime.");
+    }
+    return this.#serverRequest.upgrade(options);
   }
 
   [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
