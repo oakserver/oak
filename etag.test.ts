@@ -13,8 +13,6 @@ import type { RouteParams } from "./router.ts";
 
 import { factory } from "./etag.ts";
 
-const { test } = Deno;
-
 function setup<
   // deno-lint-ignore no-explicit-any
   S extends Record<string | number | symbol, any> = Record<string, any>,
@@ -38,7 +36,7 @@ function setup<
 
 const encoder = new TextEncoder();
 
-test({
+Deno.test({
   name: "etag - middleware - body string",
   async fn() {
     const { context } = setup();
@@ -56,7 +54,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "etag - middleware - body Uint8Array",
   async fn() {
     const { context } = setup();
@@ -74,7 +72,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "etag - middleware - body File",
   async fn() {
     const { context } = setup();
@@ -95,7 +93,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "etag - middleware - body JSON-like",
   async fn() {
     const { context } = setup();
@@ -113,7 +111,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "etag - middleware - body function",
   async fn() {
     // if we call the body function in the middleware, we cause problems with
@@ -133,7 +131,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "etag - middleware - body async iterator",
   async fn() {
     // The only async readable we can really support is Deno.FsFile, because we

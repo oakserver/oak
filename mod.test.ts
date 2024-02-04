@@ -3,9 +3,7 @@
 import { assert, assertEquals } from "./test_deps.ts";
 import * as mod from "./mod.ts";
 
-const { test } = Deno;
-
-test({
+Deno.test({
   name: "public API assertions",
   fn() {
     assert(mod != null);

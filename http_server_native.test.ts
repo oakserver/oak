@@ -8,13 +8,11 @@ import { NativeRequest } from "./http_server_native_request.ts";
 import { Application } from "./application.ts";
 import { isNode } from "./util.ts";
 
-const { test } = Deno;
-
 function createMockNetAddr(): Deno.NetAddr {
   return { transport: "tcp", hostname: "remote", port: 4567 };
 }
 
-test({
+Deno.test({
   name: "NativeRequest",
   ignore: isNode(),
   async fn() {
@@ -33,7 +31,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "HttpServer closes gracefully after serving requests",
   ignore: isNode(),
   async fn() {
@@ -63,7 +61,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name:
     "HttpServer manages errors from mis-use in the application handler gracefully",
   ignore: isNode(),

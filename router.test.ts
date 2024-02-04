@@ -12,8 +12,6 @@ import type { Context } from "./context.ts";
 import { errors, Status } from "./deps.ts";
 import { Router, RouterContext } from "./router.ts";
 
-const { test } = Deno;
-
 function createMockApp<
   S extends Record<string | number | symbol, any> = Record<string, any>,
 >(
@@ -75,7 +73,7 @@ function setup<
   return { app, context, next };
 }
 
-test({
+Deno.test({
   name: "router empty routes",
   async fn() {
     const { context, next } = setup();
@@ -86,7 +84,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router accepts non-void middleware",
   fn() {
     const router = new Router();
@@ -94,7 +92,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router get single match",
   async fn() {
     const { app, context, next } = setup("/", "GET");
@@ -112,7 +110,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router match single param",
   async fn() {
     const { context, next } = setup("/foo/bar", "GET");
@@ -135,7 +133,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router match with next",
   async fn() {
     const { context, next } = setup("/foo", "GET");
@@ -161,7 +159,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router match delete",
   async fn() {
     const { context, next } = setup("/", "DELETE");
@@ -199,7 +197,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router match get",
   async fn() {
     const { context, next } = setup("/", "GET");
@@ -237,7 +235,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router match head",
   async fn() {
     const { context, next } = setup("/", "HEAD");
@@ -275,7 +273,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router match options",
   async fn() {
     const { context, next } = setup("/", "OPTIONS");
@@ -309,7 +307,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router match patch",
   async fn() {
     const { context, next } = setup("/", "PATCH");
@@ -343,7 +341,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router match post",
   async fn() {
     const { context, next } = setup("/", "POST");
@@ -381,7 +379,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router match put",
   async fn() {
     const { context, next } = setup("/", "PUT");
@@ -419,7 +417,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router match using add",
   async fn() {
     const { context, next } = setup("/", "PUT");
@@ -452,7 +450,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router patch prefix",
   async fn() {
     const { context, next } = setup("/route1/action1", "GET");
@@ -467,7 +465,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router match strict",
   async fn() {
     const { context, next } = setup("/route", "GET");
@@ -485,7 +483,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router match encoded path",
   async fn() {
     const { context, next } = setup("/user%2f1", "GET");
@@ -503,7 +501,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router as iterator",
   fn() {
     const router = new Router();
@@ -526,7 +524,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "route throws",
   async fn() {
     const { context, next } = setup();
@@ -541,7 +539,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router prefix, default route",
   async fn() {
     const { context, next } = setup("/foo");
@@ -558,7 +556,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router redirect",
   async fn() {
     const { context, next } = setup("/foo");
@@ -571,7 +569,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router redirect, 301 Moved Permanently",
   async fn() {
     const { context, next } = setup("/foo");
@@ -584,7 +582,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router redirect, arbitrary URL",
   async fn() {
     const { context, next } = setup("/foo");
@@ -600,7 +598,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router param middleware",
   async fn() {
     const { context, next } = setup("/book/1234/price");
@@ -623,7 +621,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router allowedMethods() OPTIONS",
   async fn() {
     const { context, next } = setup("/foo", "OPTIONS");
@@ -643,7 +641,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router allowedMethods() Not Implemented",
   async fn() {
     const { context, next } = setup("/foo", "PATCH");
@@ -659,7 +657,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router allowedMethods() Method Not Allowed",
   async fn() {
     const { context, next } = setup("/foo", "PUT");
@@ -675,7 +673,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router allowedMethods() throws Not Implemented",
   async fn() {
     const { context, next } = setup("/foo", "PATCH");
@@ -692,7 +690,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router allowedMethods() throws Method Not Allowed",
   async fn() {
     const { context, next } = setup("/foo", "PUT");
@@ -709,7 +707,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router allowedMethods() with all() route uses all methods",
   async fn() {
     const { context, next } = setup("/foo", "OPTIONS");
@@ -729,7 +727,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router named route - get URL",
   fn() {
     const router = new Router<{ id: string }>();
@@ -742,7 +740,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router types",
   fn() {
     const app = createMockApp<{ id: string }>();
@@ -777,7 +775,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router state types",
   fn() {
     const router = new Router<{ foo: string }>();
@@ -795,7 +793,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "middleware returned from router.routes() passes next",
   async fn() {
     const { context } = setup("/foo", "GET");
@@ -825,7 +823,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router routes decode pathname before matching",
   async fn() {
     const path = encodeURIComponent("chêne");
@@ -848,7 +846,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router handling of bad request urls",
   async fn() {
     const headers = new Headers();
@@ -892,7 +890,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "sub router get single match",
   async fn() {
     const { app, context, next } = setup("/foo/bar", "GET");
@@ -915,7 +913,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "sub router match with next",
   async fn() {
     const { context, next } = setup("/foo/bar/baz", "GET");
@@ -953,7 +951,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "sub router match single param",
   async fn() {
     const { context, next } = setup("/foo/bar/baz/beep", "GET");
@@ -982,7 +980,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "sub router patch prefix with param",
   async fn() {
     const { context, next } = setup("/foo/bar/baz", "GET");
@@ -1000,7 +998,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "sub router match layer prefix",
   async fn() {
     let callStack: number[] = [];
@@ -1043,7 +1041,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "router - type checking - ensure at least one middleware is passed",
   fn() {
     const router = new Router();

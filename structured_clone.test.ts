@@ -4,9 +4,7 @@ import { assert, assertEquals } from "./test_deps.ts";
 
 import { cloneState } from "./structured_clone.ts";
 
-const { test } = Deno;
-
-test({
+Deno.test({
   name: "basic cloning",
   fn() {
     const fixture = { a: "a", b: 2, c: true };
@@ -16,7 +14,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "cloning state with functions",
   fn() {
     const fixture = { a: "a", b: () => {}, c: true };

@@ -15,8 +15,6 @@ import type { RouteParams } from "./router.ts";
 import { send } from "./send.ts";
 import { isNode } from "./util.ts";
 
-const { test } = Deno;
-
 function setup<
   // deno-lint-ignore no-explicit-any
   S extends Record<string | number | symbol, any> = Record<string, any>,
@@ -38,7 +36,7 @@ function setup<
   return { app, context };
 }
 
-test({
+Deno.test({
   name: "send HTML",
   async fn() {
     const { context } = setup("/test.html");
@@ -57,7 +55,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send gzip",
   async fn() {
     const { context } = setup("/test.json");
@@ -75,7 +73,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send brotli",
   async fn() {
     const { context } = setup("/test.json");
@@ -93,7 +91,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send identity",
   async fn() {
     const { context } = setup("/test.json");
@@ -110,7 +108,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send 404",
   async fn() {
     const { context } = setup("/foo.txt");
@@ -129,7 +127,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send file with spaces",
   async fn() {
     const { context } = setup("/test%20file.json");
@@ -146,7 +144,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send hidden file throws 403",
   async fn() {
     const { context } = setup("/.test.json");
@@ -164,7 +162,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send file from hidden dir throws 403",
   async fn() {
     const { context } = setup("/.test/test.json");
@@ -182,7 +180,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send hidden file succeeds when hidden:true",
   async fn() {
     const { context } = setup("/.test.json");
@@ -200,7 +198,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send file from hidden root succeeds",
   async fn() {
     const { context } = setup("/test.json");
@@ -217,7 +215,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send url: /../file sends /file",
   async fn() {
     const { context } = setup("/../test.json");
@@ -234,7 +232,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send path: /../file throws 403",
   async fn() {
     const { context } = setup("/../test.json");
@@ -252,7 +250,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send allows .. in root",
   async fn() {
     const { context } = setup("/test.json");
@@ -269,7 +267,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send If-Modified-Since and it doesn't modified",
   async fn() {
     const { context } = setup("/test.json");
@@ -291,7 +289,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send If-Modified-Since and it does modified",
   async fn() {
     const { context } = setup("/test.json");
@@ -314,7 +312,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send sets etag header - less than maxbuffer",
   async fn() {
     const { context } = setup("/test.json");
@@ -330,7 +328,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send sets etag header - greater than maxbuffer",
   async fn() {
     const { context } = setup("/test.jpg");
@@ -350,7 +348,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "if-none-match header - not modified",
   async fn() {
     const { context } = setup("/test.jpg");
@@ -368,7 +366,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "if-none-match header - modified",
   async fn() {
     const { context } = setup("/test.jpg");
@@ -389,7 +387,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "range header",
   ignore: Deno.build.os === "windows",
   async fn() {
@@ -403,7 +401,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "range header from 0-",
   ignore: Deno.build.os === "windows",
   async fn() {
@@ -417,7 +415,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "range header - multiple ranges",
   ignore: Deno.build.os === "windows",
   async fn() {
@@ -445,7 +443,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send - contentTypes - custom",
   async fn() {
     const { context } = setup("/test.importmap");
@@ -466,7 +464,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "send - contentTypes - override",
   async fn() {
     const { context } = setup("/test.html");

@@ -6,8 +6,6 @@ import { concat, copyBytes, errors } from "./deps.ts";
 import { calculate } from "./etag.ts";
 import { ifRange, MultiPartStream, parseRange } from "./range.ts";
 
-const { test } = Deno;
-
 class MockFile implements Deno.Seeker, Deno.Reader, Deno.Closer {
   #buf: Uint8Array;
   #closed = false;
@@ -48,7 +46,7 @@ class MockFile implements Deno.Seeker, Deno.Reader, Deno.Closer {
   }
 }
 
-test({
+Deno.test({
   name: "ifRange() - timestamp - true",
   async fn() {
     assert(
@@ -60,7 +58,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "ifRange() - timestamp - false",
   async fn() {
     assert(
@@ -72,7 +70,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "ifRange() - etag - true",
   async fn() {
     const content = new TextEncoder().encode("hello deno");
@@ -82,7 +80,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "ifRange() - etag - false",
   async fn() {
     const content = new TextEncoder().encode("hello deno");
@@ -90,7 +88,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "ifRange() - weak etag - true",
   async fn() {
     const etag = await calculate({
@@ -107,7 +105,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "parseRange",
   fn() {
     assertEquals(parseRange(`bytes=0-199`, 400), [{ start: 0, end: 199 }]);
@@ -122,7 +120,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "parseRange - errors",
   fn() {
     assertThrows(() => {
@@ -140,7 +138,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "MultiPartStream - Uint8Array",
   async fn() {
     const encoder = new TextEncoder();
@@ -167,7 +165,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "MultiPartStream - File",
   async fn() {
     const encoder = new TextEncoder();
