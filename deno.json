@@ -16,15 +16,44 @@
     "./response": "./response.ts",
     "./router": "./router.ts",
     "./send": "./send.ts",
+    "./serve": "./middleware/serve.ts",
     "./testing": "./testing.ts"
   },
   "tasks": {
     "build": "deno run --allow-read --allow-write --allow-net --allow-env --allow-run _build_npm.ts",
     "coverage": "deno coverage --unstable --lcov ./cov",
     "example": "deno run --unstable --allow-net examples/echoServer.ts",
-    "test": "deno test --import-map import-map.json --allow-read --allow-write --allow-net --parallel --ignore=npm,http_server_native_unstable_test.ts",
-    "test:no-check": "deno test --import-map import-map.json --allow-read --allow-write --allow-net --no-check --parallel --ignore=npm,http_server_native_unstable_test.ts",
-    "test:unstable": "deno test --coverage=./cov --import-map import-map.json --allow-read --allow-write --allow-net --unstable --cert ./examples/tls/RootCA.crt --parallel --ignore=npm"
+    "test": "deno test --allow-read --allow-write --allow-net --parallel --ignore=npm,http_server_native_unstable_test.ts",
+    "test:no-check": "deno test --allow-read --allow-write --allow-net --no-check --parallel --ignore=npm,http_server_native_unstable_test.ts",
+    "test:unstable": "deno test --coverage=./cov --allow-read --allow-write --allow-net --unstable --cert ./examples/tls/RootCA.crt --parallel --ignore=npm"
+  },
+  "imports": {
+    "buffer": "https://cdn.esm.sh/@types/node@16.11.9/buffer.d.ts",
+    "crypto": "https://deno.land/x/std@0.126.0/node/crypto.ts",
+    "dns": "https://cdn.esm.sh/@types/node@16.11.9/dns.d.ts",
+    "dns/promises": "https://cdn.esm.sh/@types/node@16.11.9/dns/promises.d.ts",
+    "http": "https://deno.land/x/std@0.126.0/node/http.ts",
+    "http2": "https://deno.land/x/std@0.126.0/node/http2.ts",
+    "net": "https://cdn.esm.sh/@types/node@16.11.9/net.d.ts",
+    "node:buffer": "https://cdn.esm.sh/@types/node@16.11.9/buffer.d.ts",
+    "node:crypto": "https://cdn.esm.sh/@types/node@16.11.9/crypto.d.ts",
+    "node:dns": "https://cdn.esm.sh/@types/node@16.11.9/dns.d.ts",
+    "node:dns/promises": "https://cdn.esm.sh/@types/node@16.11.9/dns/promises.d.ts",
+    "node:events": "https://cdn.esm.sh/@types/node@16.11.9/events.d.ts",
+    "node:http": "https://cdn.esm.sh/@types/node@16.11.9/http.d.ts",
+    "node:net": "https://cdn.esm.sh/@types/node@16.11.9/net.d.ts",
+    "node:querystring": "https://cdn.esm.sh/@types/node@16.11.9/querystring.d.ts",
+    "node:stream": "https://cdn.esm.sh/@types/node@16.11.9/stream.d.ts",
+    "node:stream/consumers": "https://cdn.esm.sh/@types/node@16.11.9/stream/consumers.d.ts",
+    "node:stream/promises": "https://cdn.esm.sh/@types/node@16.11.9/stream/promises.d.ts",
+    "node:tls": "https://cdn.esm.sh/@types/node@16.11.9/tls.d.ts",
+    "node:url": "https://cdn.esm.sh/@types/node@16.11.9/url.d.ts",
+    "querystring": "https://cdn.esm.sh/@types/node@16.11.9/querystring.d.ts",
+    "stream/consumers": "https://cdn.esm.sh/@types/node@16.11.9/stream/consumers.d.ts",
+    "stream/promises": "https://cdn.esm.sh/@types/node@16.11.9/stream/promises.d.ts",
+    "stream/web": "https://deno.land/x/std@0.126.0/node/stream/web.ts",
+    "tls": "https://cdn.esm.sh/@types/node@16.11.9/tls.d.ts",
+    "url": "https://cdn.esm.sh/@types/node@16.11.9/url.d.ts"
   },
   "fmt": {
     "exclude": ["README.md"]
