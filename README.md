@@ -922,10 +922,10 @@ const app = new Application;
 
 const router = new Router();
 
-router.get("/books/:id", route((req, ctx)) => {
+router.get("/books/:id", route((req, ctx) => {
   console.log(ctx.params.id);
   return Response.json({ title: "hello world", id: ctx.params.id });
-});
+}));
 
 app.use(router.routes());
 
