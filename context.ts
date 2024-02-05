@@ -14,7 +14,7 @@ import {
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
-import type { ServerRequest, UpgradeWebSocketOptions } from "./types.d.ts";
+import type { ServerRequest, UpgradeWebSocketOptions } from "./types.ts";
 import { assert } from "./util.ts";
 
 export interface ContextOptions<

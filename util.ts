@@ -11,7 +11,7 @@ import {
   SEP,
 } from "./deps.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
-import type { Data, Key, NetAddr } from "./types.d.ts";
+import type { Data, Key, NetAddr } from "./types.ts";
 
 const ENCODE_CHARS_REGEXP =
   /(?:[^\x21\x25\x26-\x3B\x3D\x3F-\x5B\x5D\x5F\x61-\x7A\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g;
@@ -132,7 +132,6 @@ function isCloser(value: unknown): value is Deno.Closer {
 }
 
 export function isNetAddr(value: unknown): value is NetAddr {
-  console.log(value);
   return typeof value === "object" && value != null && "transport" in value &&
     "hostname" in value && "port" in value;
 }

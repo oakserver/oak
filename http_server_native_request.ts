@@ -5,7 +5,7 @@ import type {
   ServerRequest,
   UpgradeWebSocketFn,
   UpgradeWebSocketOptions,
-} from "./types.d.ts";
+} from "./types.ts";
 import { createPromiseWithResolvers } from "./util.ts";
 
 // deno-lint-ignore no-explicit-any

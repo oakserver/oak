@@ -28,7 +28,7 @@ import type {
   ServerConstructor,
   ServerRequest,
   ServeTlsOptions,
-} from "./types.d.ts";
+} from "./types.ts";
 import { isNode } from "./util.ts";
 
 let optionsStack: Array<ListenOptions | ListenOptionsTls> = [];

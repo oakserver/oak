@@ -1,7 +1,7 @@
 import { Body } from "./body.ts";
 import { concat, isHttpError, Status, timingSafeEqual } from "./deps.ts";
 import { assert, assertEquals, assertRejects } from "./test_deps.ts";
-import { type ServerRequest } from "./types.d.ts";
+import { type ServerRequest } from "./types.ts";
 
 const MULTIPART_BODY_FIXTURE =
   `--OAK-SERVER-BOUNDARY\r\nContent-Disposition: form-data; name="hello"\r\n\r\nworld\r\n--OAK-SERVER-BOUNDARY--\r\n`;

@@ -9,7 +9,7 @@ import type {
   ServeInit,
   ServeOptions,
   ServeTlsOptions,
-} from "./types.d.ts";
+} from "./types.ts";
 import { createPromiseWithResolvers } from "./util.ts";
 
 // this is included so when down-emitting to npm/Node.js, ReadableStream has

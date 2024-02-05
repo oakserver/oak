@@ -88,7 +88,7 @@ export {
 export { send, type SendOptions } from "./send.ts";
 /** Utilities for making testing oak servers easier. */
 export * as testing from "./testing.ts";
-export { type ServerConstructor } from "./types.d.ts";
+export { type ServerConstructor } from "./types.ts";
 
 // Re-exported from `std/http`
 export {

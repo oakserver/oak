@@ -17,7 +17,7 @@ import {
   OakServer,
   ServerConstructor,
   ServerRequest,
-} from "./types.d.ts";
+} from "./types.ts";
 import { assert, createPromiseWithResolvers, isNetAddr } from "./util.ts";
 
 export interface ListenOptionsBase {

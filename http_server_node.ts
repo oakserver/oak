@@ -1,8 +1,8 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import type { Listener, OakServer, ServerRequest } from "./types.d.ts";
+import type { Listener, OakServer, ServerRequest } from "./types.ts";
 import { createPromiseWithResolvers } from "./util.ts";
-import * as http from "http";
+import * as http from "node:http";
 
 // There are quite a few differences between Deno's `std/node/http` and the
 // typings for Node.js for `"http"`. Since we develop everything in Deno, but

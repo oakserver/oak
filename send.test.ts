@@ -119,7 +119,6 @@ Deno.test({
         root: "./fixtures",
       });
     } catch (e) {
-      console.log(e);
       assert(e instanceof errors.NotFound);
       didThrow = true;
     }

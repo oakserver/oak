@@ -8,7 +8,7 @@ import {
   type HTTPMethods,
   UserAgent,
 } from "./deps.ts";
-import type { ServerRequest, UpgradeWebSocketOptions } from "./types.d.ts";
+import type { ServerRequest, UpgradeWebSocketOptions } from "./types.ts";
 
 export interface OakRequestOptions {
   jsonBodyReviver?: (key: string, value: unknown) => unknown;

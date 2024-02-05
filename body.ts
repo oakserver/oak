@@ -2,7 +2,7 @@
 
 import { createHttpError, matches, Status } from "./deps.ts";
 import { parse } from "./form_data.ts";
-import type { ServerRequest } from "./types.d.ts";
+import type { ServerRequest } from "./types.ts";
 
 type JsonReviver = (key: string, value: unknown) => unknown;
 
