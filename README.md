@@ -1,12 +1,11 @@
 # oak
 
+[![deno.land/x/oak](https://deno.land/badge/oak/version)](https://deno.land/x/oak)
+[![NPM Version](https://img.shields.io/npm/v/@oakserver/oak)](https://www.npmjs.com/package/@oakserver/oak)
+[![deno doc](https://doc.deno.land/badge.svg)](https:/deno.land/x/oak/?doc)
+
 [![oak ci](https://github.com/oakserver/oak/workflows/ci/badge.svg)](https://github.com/oakserver/oak)
 [![codecov](https://codecov.io/gh/oakserver/oak/branch/main/graph/badge.svg?token=KEKZ52NXGP)](https://codecov.io/gh/oakserver/oak)
-[![deno doc](https://doc.deno.land/badge.svg)](https/deno.land/x/oak/mod.ts)
-
-![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fdep-count%2Fx%2Foak%2Fmod.ts)
-![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fupdates%2Fx%2Foak%2Fmod.ts)
-[![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Flatest-version%2Fx%2Foak%2Fmod.ts)](https://doc.deno.land/https/deno.land/x/oak/mod.ts)
 
 A middleware framework for Deno's native HTTP server,
 [Deno Deploy](https://deno.com/deploy) and Node.js 16.5 and later. It also
