@@ -53,9 +53,7 @@ app.addEventListener("listen", ({ hostname, port, serverType }) => {
 await app.listen({
   port: 8000,
   secure: true,
-  certFile: "./examples/tls/localhost.crt",
-  keyFile: "./examples/tls/localhost.key",
-  // This broadcasts that we can support HTTP/2 and HTTP/1.1 connections.
-  alpnProtocols: ["h2", "http/1.1"],
+  cert: Deno.readTextFileSync("./examples/tls/localhost.crt"),
+  key: Deno.readTextFileSync("./examples/tls/localhost.key")
 });
 console.log(bold("Finished."));
