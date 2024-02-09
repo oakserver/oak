@@ -54,6 +54,6 @@ await app.listen({
   port: 8000,
   secure: true,
   cert: Deno.readTextFileSync("./examples/tls/localhost.crt"),
-  key: Deno.readTextFileSync("./examples/tls/localhost.key")
+  key: Deno.readTextFileSync("./examples/tls/localhost.key"),
 });
 console.log(bold("Finished."));
