@@ -19,9 +19,6 @@ async function start() {
   await build({
     entryPoints: ["./mod.ts"],
     outDir: "./npm",
-    mappings: {
-      "./http_server_native.ts": "./http_server_node.ts",
-    },
     shims: {
       blob: true,
       crypto: true,
