@@ -630,7 +630,7 @@ export class Application<AS extends State = Record<string, any>>
       if (!DefaultServerCtor) {
         const { Server } = await (isNode()
           ? import("./http_server_node.ts")
-          : import("./http_server_node.ts"));
+          : import("./http_server_native.ts"));
         DefaultServerCtor = Server as ServerConstructor<ServerRequest>;
       }
       this.#serverConstructor = DefaultServerCtor;
