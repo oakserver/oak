@@ -1,5 +1,9 @@
 # oak Change Log
 
+## Version 13.2.2
+
+- fix: handle accessing Deno namespace better (4150b36)
+
 ## Version 13.2.1
 
 - fix: don't access Deno namespace unguarded (5b49419)
