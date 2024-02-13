@@ -1,5 +1,9 @@
 # oak Change Log
 
+## Version 13.2.4
+
+- fix: more global namespace fixes for node (f1b7d46)
+
 ## Version 13.2.3
 
 - fix: shim more globals for node (d879951)
