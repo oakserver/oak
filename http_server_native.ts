@@ -12,12 +12,13 @@ import type {
 } from "./types.ts";
 import { createPromiseWithResolvers } from "./util.ts";
 
-const serve: (
-  options: ServeInit & (ServeOptions | ServeTlsOptions),
-) => HttpServer = "serve" in Deno
-  // deno-lint-ignore no-explicit-any
-  ? (Deno as any).serve.bind(Deno)
-  : undefined;
+const serve:
+  | ((
+    options: ServeInit & (ServeOptions | ServeTlsOptions),
+  ) => HttpServer)
+  | undefined = "Deno" in globalThis && "serve" in globalThis.Deno
+    ? globalThis.Deno.serve.bind(globalThis.Deno)
+    : undefined;
 
 /** The oak abstraction of the Deno native HTTP server which is used internally
  * for handling native HTTP requests. Generally users of oak do not need to
@@ -35,7 +36,7 @@ export class Server<AS extends State = Record<string, any>>
     app: Application<AS>,
     options: Omit<ServeOptions | ServeTlsOptions, "signal">,
   ) {
-    if (!("serve" in Deno)) {
+    if (!serve) {
       throw new Error(
         "The native bindings for serving HTTP are not available.",
       );
@@ -75,7 +76,7 @@ export class Server<AS extends State = Record<string, any>>
     const { promise, resolve } = createPromiseWithResolvers<Listener>();
     this.#stream = new ReadableStream<NativeRequest>({
       start: (controller) => {
-        this.#httpServer = serve({
+        this.#httpServer = serve?.({
           handler: (req, info) => {
             const nativeRequest = new NativeRequest(req, info);
             controller.enqueue(nativeRequest);
