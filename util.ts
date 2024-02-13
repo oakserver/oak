@@ -8,7 +8,7 @@ import {
   isAbsolute,
   join,
   normalize,
-  SEP,
+  SEPARATOR,
 } from "./deps.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
 import type { Data, Key, NetAddr } from "./types.ts";
@@ -330,7 +330,7 @@ export function resolvePath(rootPath: string, relativePath?: string): string {
   }
 
   // path outside root
-  if (UP_PATH_REGEXP.test(normalize(`.${SEP}${path}`))) {
+  if (UP_PATH_REGEXP.test(normalize(`.${SEPARATOR}${path}`))) {
     throw createHttpError(403);
   }
 
