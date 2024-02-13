@@ -1,5 +1,19 @@
 # oak Change Log
 
+## Version 13.2.0
+
+- feat: use dynamic imports for node compat (db116d1)
+
+  Instead of depending on dnt to swap out modules for Node compatibility, there
+  is a single codebase which dynamically imports modules based on runtime
+  detection of the environment.
+
+- fix: fast check fixes (c6db0ac)
+- docs: update README badges (aafc571)
+- docs: fix typo in README badge (af7dc72)
+- chore: update https server example (#637)
+- chore: update github actions (44ddcbf)
+
 ## Version 13.1.0
 
 - feat: make interop with Fetch API easier (4d4034b)
