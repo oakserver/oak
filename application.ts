@@ -115,7 +115,7 @@ interface ApplicationListenEventInit extends EventInit {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "custom";
+  serverType: "native" | "node" | "custom";
 }
 
 type ApplicationListenEventListenerOrEventListenerObject =
@@ -282,7 +282,7 @@ export class ApplicationListenEvent extends Event {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "custom";
+  serverType: "native" | "node" | "custom";
 
   constructor(eventInitDict: ApplicationListenEventInit) {
     super("listen", eventInitDict);
@@ -653,9 +653,7 @@ export class Application<AS extends State = Record<string, any>>
       }, { once: true });
     }
     const { secure = false } = options;
-    const serverType = DefaultServerCtor && server instanceof DefaultServerCtor
-      ? "native"
-      : "custom";
+    const serverType = this.#serverConstructor.type ?? "custom";
     const listener = await server.listen();
     const { hostname, port } = listener.addr;
     this.dispatchEvent(

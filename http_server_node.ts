@@ -187,4 +187,6 @@ export class Server implements OakServer<NodeRequest> {
   [Symbol.asyncIterator](): AsyncIterableIterator<NodeRequest> {
     return this.#requestStream[Symbol.asyncIterator]();
   }
+
+  static type: "node" = "node";
 }

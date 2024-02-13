@@ -29,7 +29,7 @@ import type {
   ServerRequest,
   ServeTlsOptions,
 } from "./types.ts";
-import { isNode } from "./util.ts";
+import { createPromiseWithResolvers, isNode } from "./util.ts";
 
 let optionsStack: Array<ListenOptions | ListenOptionsTls> = [];
 let serverClosed = false;
@@ -1120,5 +1120,28 @@ Deno.test({
     controller.abort();
     await p;
     teardown();
+  },
+});
+
+Deno.test({
+  name: "Application load correct default server",
+  ignore: isNode(), // this just hangs on node, because we can't close down
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn() {
+    const app = new Application();
+    const { promise, resolve, reject } = createPromiseWithResolvers<void>();
+    app.addEventListener("listen", ({ serverType }) => {
+      try {
+        assertEquals(serverType, isNode() ? "node" : "native");
+      } catch (e) {
+        reject(e);
+      }
+      resolve();
+    });
+    app.use((_ctx) => {});
+    app.listen();
+    teardown();
+    return promise;
   },
 });

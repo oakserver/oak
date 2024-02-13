@@ -103,4 +103,6 @@ export class Server<AS extends State = Record<string, any>>
     }
     return this.#stream[Symbol.asyncIterator]();
   }
+
+  static type: "native" = "native";
 }
