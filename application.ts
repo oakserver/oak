@@ -439,7 +439,7 @@ export class Application<AS extends State = Record<string, any>>
     }
     context.response.type = "text";
     const status: Status = context.response.status =
-      Deno.errors && error instanceof Deno.errors.NotFound
+      globalThis.Deno && Deno.errors && error instanceof Deno.errors.NotFound
         ? 404
         : error.status && typeof error.status === "number"
         ? error.status
