@@ -1,5 +1,9 @@
 # oak Change Log
 
+## Version 13.2.3
+
+- fix: shim more globals for node (d879951)
+
 ## Version 13.2.2
 
 - fix: handle accessing Deno namespace better (4150b36)
