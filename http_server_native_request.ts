@@ -13,7 +13,7 @@ export const DomResponse: typeof Response = (globalThis as any).Response ??
   class MockResponse {};
 
 const maybeUpgradeWebSocket: UpgradeWebSocketFn | undefined =
-  "upgradeWebSocket" in Deno
+  "Deno" in globalThis && "upgradeWebSocket" in globalThis.Deno
     // deno-lint-ignore no-explicit-any
     ? (Deno as any).upgradeWebSocket.bind(Deno)
     : undefined;
