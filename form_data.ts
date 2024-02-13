@@ -3,6 +3,8 @@ import { toParamRegExp, unquote } from "./headers.ts";
 import { skipLWSPChar, stripEol } from "./util.ts";
 import { getFilename } from "./content_disposition.ts";
 
+import "./util.ts";
+
 type Part = [
   key: string,
   value: string | Blob,

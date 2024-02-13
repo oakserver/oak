@@ -24,15 +24,6 @@ async function start() {
       crypto: true,
       deno: true,
       undici: true,
-      custom: [{
-        package: {
-          name: "stream/web",
-        },
-        globalNames: ["ReadableStream", "TransformStream"],
-      }, {
-        module: "./node_shims.ts",
-        globalNames: ["ErrorEvent"],
-      }],
     },
     test: true,
     typeCheck: false,

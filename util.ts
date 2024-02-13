@@ -13,6 +13,8 @@ import {
 import type { RouteParams, RouterContext } from "./router.ts";
 import type { Data, Key, NetAddr } from "./types.ts";
 
+import "./node_shims.ts";
+
 const ENCODE_CHARS_REGEXP =
   /(?:[^\x21\x25\x26-\x3B\x3D\x3F-\x5B\x5D\x5F\x61-\x7A\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g;
 const HTAB = "\t".charCodeAt(0);
