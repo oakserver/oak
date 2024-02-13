@@ -1,7 +1,7 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import { Context } from "./context.ts";
-import { KeyStack, Status, STATUS_TEXT } from "./deps.ts";
+import { assert, KeyStack, Status, STATUS_TEXT } from "./deps.ts";
 import { type NativeRequest } from "./http_server_native_request.ts";
 import {
   compose,
@@ -17,12 +17,7 @@ import {
   ServerConstructor,
   ServerRequest,
 } from "./types.ts";
-import {
-  assert,
-  createPromiseWithResolvers,
-  isNetAddr,
-  isNode,
-} from "./util.ts";
+import { createPromiseWithResolvers, isNetAddr, isNode } from "./util.ts";
 
 export interface ListenOptionsBase {
   /** The port to listen on. If not specified, defaults to `0`, which allows the

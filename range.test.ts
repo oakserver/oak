@@ -1,8 +1,8 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { assert, assertEquals, assertThrows } from "./test_deps.ts";
+import { assertEquals, assertThrows } from "./test_deps.ts";
 
-import { concat, copyBytes, errors } from "./deps.ts";
+import { assert, concat, copyBytes, errors } from "./deps.ts";
 import { calculate } from "./etag.ts";
 import { ifRange, MultiPartStream, parseRange } from "./range.ts";
 

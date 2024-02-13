@@ -3,7 +3,6 @@
 // deno-lint-ignore-file
 
 import {
-  assert,
   assertEquals,
   assertRejects,
   assertStrictEquals,
@@ -17,7 +16,7 @@ import type {
   State,
 } from "./application.ts";
 import { Context } from "./context.ts";
-import { errors, KeyStack, Status } from "./deps.ts";
+import { assert, errors, KeyStack, Status } from "./deps.ts";
 import { Server } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import type {

@@ -1,7 +1,8 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { assert, assertEquals } from "./test_deps.ts";
+import { assertEquals } from "./test_deps.ts";
 
+import { assert } from "./deps.ts";
 import { cloneState } from "./structured_clone.ts";
 
 Deno.test({

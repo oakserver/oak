@@ -28,6 +28,7 @@
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
 import {
+  assert,
   compile,
   errors,
   type HTTPMethods,
@@ -40,7 +41,7 @@ import {
   TokensToRegexpOptions,
 } from "./deps.ts";
 import { compose, Middleware } from "./middleware.ts";
-import { assert, decodeComponent } from "./util.ts";
+import { decodeComponent } from "./util.ts";
 
 interface Matches<R extends string> {
   path: Layer<R>[];

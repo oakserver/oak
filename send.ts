@@ -6,6 +6,7 @@
 import type { Context } from "./context.ts";
 import { calculate, FileInfo, ifNoneMatch } from "./etag.ts";
 import {
+  assert,
   basename,
   createHttpError,
   extname,
@@ -16,13 +17,7 @@ import {
 } from "./deps.ts";
 import { ifRange, MultiPartStream, parseRange } from "./range.ts";
 import type { Response } from "./response.ts";
-import {
-  assert,
-  decodeComponent,
-  getBoundary,
-  isNode,
-  resolvePath,
-} from "./util.ts";
+import { decodeComponent, getBoundary, isNode, resolvePath } from "./util.ts";
 
 if (isNode()) {
   console.warn("oak send() does not work under Node.js.");

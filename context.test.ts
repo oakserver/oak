@@ -2,19 +2,11 @@
 
 // deno-lint-ignore-file
 
-import {
-  assert,
-  assertEquals,
-  assertStrictEquals,
-  assertThrows,
-} from "./test_deps.ts";
+import { assertEquals, assertStrictEquals, assertThrows } from "./test_deps.ts";
 import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
-import { errors, SecureCookieMap, Status } from "./deps.ts";
-import {
-  isNativeRequest,
-  NativeRequest,
-} from "./http_server_native_request.ts";
+import { assert, errors, SecureCookieMap, Status } from "./deps.ts";
+import { NativeRequest } from "./http_server_native_request.ts";
 import type {} from "./http_server_native.ts";
 import { Request as OakRequest } from "./request.ts";
 import { Response as OakResponse } from "./response.ts";

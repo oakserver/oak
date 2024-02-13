@@ -1,6 +1,6 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { assert, assertEquals, assertStrictEquals } from "./test_deps.ts";
+import { assertEquals, assertStrictEquals } from "./test_deps.ts";
 import {
   createMockApp,
   createMockContext,
@@ -9,7 +9,7 @@ import {
 
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
-import { errors } from "./deps.ts";
+import { assert, errors } from "./deps.ts";
 import * as etag from "./etag.ts";
 import type { RouteParams } from "./router.ts";
 import { send } from "./send.ts";

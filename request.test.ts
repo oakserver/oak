@@ -2,9 +2,8 @@
 
 // deno-lint-ignore-file
 
-import { isHttpError, Status } from "./deps.ts";
+import { assert, isHttpError, Status } from "./deps.ts";
 import {
-  assert,
   assertEquals,
   assertRejects,
   assertStrictEquals,

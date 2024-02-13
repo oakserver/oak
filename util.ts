@@ -29,12 +29,6 @@ export const DEFAULT_CHUNK_SIZE = 16_640; // 17 Kib
 /** Body types which will be coerced into strings before being sent. */
 export const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
 
-export function assert(cond: unknown, msg = "Assertion failed"): asserts cond {
-  if (!cond) {
-    throw new Error(msg);
-  }
-}
-
 const hasPromiseWithResolvers = "withResolvers" in Promise;
 
 /** Offloads to the native `Promise.withResolvers` when available.

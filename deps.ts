@@ -4,6 +4,7 @@
 
 // `std` dependencies
 
+export { assert } from "https://deno.land/std@0.215.0/assert/assert.ts";
 export { concat } from "https://deno.land/std@0.215.0/bytes/concat.ts";
 export { copy as copyBytes } from "https://deno.land/std@0.215.0/bytes/copy.ts";
 export { timingSafeEqual } from "https://deno.land/std@0.215.0/crypto/timing_safe_equal.ts";

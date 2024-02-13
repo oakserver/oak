@@ -1,7 +1,7 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { errors } from "./deps.ts";
-import { assert, assertEquals, assertThrows } from "./test_deps.ts";
+import { assert, errors } from "./deps.ts";
+import { assertEquals, assertThrows } from "./test_deps.ts";
 import { decodeComponent, getRandomFilename, resolvePath } from "./util.ts";
 
 Deno.test({
