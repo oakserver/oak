@@ -1,5 +1,9 @@
 # oak Change Log
 
+## Version 13.2.1
+
+- fix: don't access Deno namespace unguarded (5b49419)
+
 ## Version 13.2.0
 
 - feat: use dynamic imports for node compat (db116d1)
