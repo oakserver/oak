@@ -1,5 +1,13 @@
 # oak Change Log
 
+## Version 13.2.5
+
+- fix: wrong file dynamically imported (#638)
+- fix: tag server constructors (120a024)
+- refactor: move to std assert (f8ab89e)
+- chore: update to std 0.215.0 (5b45806)
+- chore: update oak commons (151c6bd)
+
 ## Version 13.2.4
 
 - fix: more global namespace fixes for node (f1b7d46)
