@@ -1,4 +1,4 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import { contentType, isRedirectStatus, Status, STATUS_TEXT } from "./deps.ts";
 import { DomResponse } from "./http_server_native_request.ts";
@@ -65,7 +65,7 @@ export async function convertBodyToBodyInit(
     result = body.pipeThrough(new Uint8ArrayTransformStream());
   } else if (body instanceof FormData) {
     result = body;
-    type = "multipart/form-data";
+    type = undefined;
   } else if (isAsyncIterable(body)) {
     result = readableStreamFromAsyncIterable(body);
   } else if (body && typeof body === "object") {
@@ -323,7 +323,47 @@ export class Response {
     return this.#domResponse = new DomResponse(bodyInit, responseInit);
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  /** Instead of responding based on the values of the response, explicitly set
+   * the response with a Fetch API `Response`.
+   *
+   * If the response is already finalized, this will throw. You can check
+   * the `.writable` property to determine the state if you are unsure.
+   *
+   * > [!NOTE]
+   * > This will ignore/override values set in the response like the body,
+   * > headers and status, meaning things like cookie management and automatic
+   * > body typing will be ignored.
+   */
+  with(response: globalThis.Response): void;
+  /** Instead of responding based on the values of the response, explicitly set
+   * the response by providing the initialization to create a Fetch API
+   * `Response`.
+   *
+   * If the response is already finalized, this will throw. You can check
+   * the `.writable` property to determine the state if you are unsure.
+   *
+   * > [!NOTE]
+   * > This will ignore/override values set in the response like the body,
+   * > headers and status, meaning things like cookie management and automatic
+   * > body typing will be ignored.
+   */
+  with(body?: BodyInit | null, init?: ResponseInit): void;
+  with(
+    responseOrBody?: globalThis.Response | BodyInit | null,
+    init?: ResponseInit,
+  ): void {
+    if (this.#domResponse || !this.#writable) {
+      throw new Error("A response has already been finalized.");
+    }
+    this.#writable = false;
+    this.#domResponse = responseOrBody instanceof DomResponse
+      ? responseOrBody
+      : new DomResponse(responseOrBody, init);
+  }
+
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     const { body, headers, status, type, writable } = this;
     return `${this.constructor.name} ${
       inspect({ body, headers, status, type, writable })
@@ -335,7 +375,8 @@ export class Response {
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }

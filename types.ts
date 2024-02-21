@@ -1,6 +1,6 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import type { Application, State } from "./application.ts";
+import { type Application, type State } from "./application.ts";
 
 export interface Listener {
   addr: { hostname: string; port: number };
@@ -33,6 +33,7 @@ export interface ServerConstructor<T extends ServerRequest> {
     options: Omit<ServeOptions | ServeTlsOptions, "signal">,
   ): OakServer<T>;
   prototype: OakServer<T>;
+  type?: "native" | "node";
 }
 
 export type Data = string | number[] | ArrayBuffer | Uint8Array;

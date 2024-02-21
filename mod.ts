@@ -1,4 +1,4 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 /**
  * A middleware framework for handling HTTP with Deno.
@@ -54,6 +54,12 @@ export { Server as HttpServerNative } from "./http_server_native.ts";
 export { type NativeRequest } from "./http_server_native_request.ts";
 export { proxy } from "./middleware/proxy.ts";
 export type { ProxyOptions } from "./middleware/proxy.ts";
+export {
+  route,
+  RouteContext,
+  serve,
+  ServeContext,
+} from "./middleware/serve.ts";
 export { compose as composeMiddleware } from "./middleware.ts";
 export type {
   Middleware,
@@ -84,7 +90,7 @@ export type {
 export { send, type SendOptions } from "./send.ts";
 /** Utilities for making testing oak servers easier. */
 export * as testing from "./testing.ts";
-export { type ServerConstructor } from "./types.d.ts";
+export { type ServerConstructor } from "./types.ts";
 
 // Re-exported from `std/http`
 export {

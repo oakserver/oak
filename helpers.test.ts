@@ -1,12 +1,10 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import { getQuery } from "./helpers.ts";
 import { assertEquals } from "./test_deps.ts";
 import { createMockContext } from "./testing.ts";
 
-const { test } = Deno;
-
-test({
+Deno.test({
   name: "getQuery - basic",
   fn() {
     const ctx = createMockContext({ path: "/?foo=bar&bar=baz" });
@@ -14,7 +12,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "getQuery - asMap",
   fn() {
     const ctx = createMockContext({ path: "/?foo=bar&bar=baz" });
@@ -25,7 +23,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "getQuery - merge params",
   fn() {
     const ctx = createMockContext(

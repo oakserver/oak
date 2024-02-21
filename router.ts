@@ -28,6 +28,7 @@
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
 import {
+  assert,
   compile,
   errors,
   type HTTPMethods,
@@ -40,7 +41,7 @@ import {
   TokensToRegexpOptions,
 } from "./deps.ts";
 import { compose, Middleware, type Next } from "./middleware.ts";
-import { assert, decodeComponent } from "./util.ts";
+import { decodeComponent } from "./util.ts";
 
 interface Matches<R extends string> {
   path: Layer<R>[];
@@ -276,7 +277,7 @@ function toUrl<R extends string>(
   return replaced;
 }
 
-class Layer<
+export class Layer<
   R extends string,
   P extends RouteParams<R> = RouteParams<R>,
   // deno-lint-ignore no-explicit-any
@@ -325,7 +326,7 @@ class Layer<
 
   params(
     captures: string[],
-    existingParams = {} as RouteParams<R>,
+    existingParams: RouteParams<R> = {} as RouteParams<R>,
   ): RouteParams<R> {
     const params = existingParams;
     for (let i = 0; i < captures.length; i++) {
@@ -345,7 +346,7 @@ class Layer<
   }
 
   url(
-    params = {} as RouteParams<R>,
+    params: RouteParams<R> = {} as RouteParams<R>,
     options?: UrlOptions,
   ): string {
     const url = this.path.replace(/\(\.\*\)/g, "");
@@ -356,7 +357,7 @@ class Layer<
     param: string,
     // deno-lint-ignore no-explicit-any
     fn: RouterParamMiddleware<any, any, any>,
-  ) {
+  ): this {
     const stack = this.stack;
     const params = this.#paramNames;
     const middleware: RouterMiddleware<R> = function (
@@ -366,7 +367,7 @@ class Layer<
     ): Promise<unknown> | unknown {
       const p = ctx.params[param];
       assert(p);
-      return fn.call(this, p, ctx, next);
+      return fn.call(this, p!, ctx, next);
     };
     middleware.param = param;
 
@@ -408,7 +409,9 @@ class Layer<
     };
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     return `${this.constructor.name} ${
       inspect({
         methods: this.methods,
@@ -426,7 +429,8 @@ class Layer<
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }
@@ -767,7 +771,7 @@ export class Router<
       if (!ctx.response.status || ctx.response.status === Status.NotFound) {
         assert(ctx.matched);
         const allowed = new Set<HTTPMethods>();
-        for (const route of ctx.matched) {
+        for (const route of ctx.matched!) {
           for (const method of route.methods) {
             allowed.add(method);
           }
@@ -1428,7 +1432,9 @@ export class Router<
     return toUrl(path, params, options);
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     return `${this.constructor.name} ${
       inspect({ "#params": this.#params, "#stack": this.#stack })
     }`;
@@ -1439,7 +1445,8 @@ export class Router<
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }

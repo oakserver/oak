@@ -1,5 +1,64 @@
 # oak Change Log
 
+## Version 13.2.5
+
+- fix: wrong file dynamically imported (#638)
+- fix: tag server constructors (120a024)
+- refactor: move to std assert (f8ab89e)
+- chore: update to std 0.215.0 (5b45806)
+- chore: update oak commons (151c6bd)
+
+## Version 13.2.4
+
+- fix: more global namespace fixes for node (f1b7d46)
+
+## Version 13.2.3
+
+- fix: shim more globals for node (d879951)
+
+## Version 13.2.2
+
+- fix: handle accessing Deno namespace better (4150b36)
+
+## Version 13.2.1
+
+- fix: don't access Deno namespace unguarded (5b49419)
+
+## Version 13.2.0
+
+- feat: use dynamic imports for node compat (db116d1)
+
+  Instead of depending on dnt to swap out modules for Node compatibility, there
+  is a single codebase which dynamically imports modules based on runtime
+  detection of the environment.
+
+- fix: fast check fixes (c6db0ac)
+- docs: update README badges (aafc571)
+- docs: fix typo in README badge (af7dc72)
+- chore: update https server example (#637)
+- chore: update github actions (44ddcbf)
+
+## Version 13.1.0
+
+- feat: make interop with Fetch API easier (4d4034b)
+
+  For code designed to work with the Fetch API's `Request` and `Response` (like
+  `Deno.serve()`) there are now several features that make interop easier. There
+  is now the `serve()` and `route()` middleware which will wrap a handler
+  function to operate with oak.
+
+- fix: don't set content-type on body FormData (2e2f5da)
+
+  This was causing the boundary to not be set when responding with a `FormData`
+  body and therefore making the browser unable to decode the body.
+
+- refactor: migrate to oak commons for media type utils (b075f2e)
+- refactor: migrate from .d.ts to .ts for type information (e3fcbcb)
+- tests: bulk refactor (81c81fe)
+- chore: update copyright dates (436577a)
+- chore: integrate import map into deno config (3d328cf)
+- docs: fix typo in README (567245e)
+
 ## Version 13.0.1
 
 - fix: explicit typings for body (43bcd82)

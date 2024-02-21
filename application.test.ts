@@ -1,9 +1,8 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 // deno-lint-ignore-file
 
 import {
-  assert,
   assertEquals,
   assertRejects,
   assertStrictEquals,
@@ -17,7 +16,7 @@ import type {
   State,
 } from "./application.ts";
 import { Context } from "./context.ts";
-import { errors, KeyStack, Status } from "./deps.ts";
+import { assert, errors, KeyStack, Status } from "./deps.ts";
 import { Server } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import type {
@@ -28,8 +27,8 @@ import type {
   ServerConstructor,
   ServerRequest,
   ServeTlsOptions,
-} from "./types.d.ts";
-import { isNode } from "./util.ts";
+} from "./types.ts";
+import { createPromiseWithResolvers, isNode } from "./util.ts";
 
 let optionsStack: Array<ListenOptions | ListenOptionsTls> = [];
 let serverClosed = false;
@@ -1120,5 +1119,28 @@ Deno.test({
     controller.abort();
     await p;
     teardown();
+  },
+});
+
+Deno.test({
+  name: "Application load correct default server",
+  ignore: isNode(), // this just hangs on node, because we can't close down
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn() {
+    const app = new Application();
+    const { promise, resolve, reject } = createPromiseWithResolvers<void>();
+    app.addEventListener("listen", ({ serverType }) => {
+      try {
+        assertEquals(serverType, isNode() ? "node" : "native");
+      } catch (e) {
+        reject(e);
+      }
+      resolve();
+    });
+    app.use((_ctx) => {});
+    app.listen();
+    teardown();
+    return promise;
   },
 });

@@ -1,12 +1,10 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { errors } from "./deps.ts";
-import { assert, assertEquals, assertThrows } from "./test_deps.ts";
+import { assert, errors } from "./deps.ts";
+import { assertEquals, assertThrows } from "./test_deps.ts";
 import { decodeComponent, getRandomFilename, resolvePath } from "./util.ts";
 
-const { test } = Deno;
-
-test({
+Deno.test({
   name: "decodeComponent",
   fn() {
     // with decodeURIComponent, this would throw:
@@ -14,7 +12,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "resolvePath",
   fn() {
     assertEquals(
@@ -24,7 +22,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "resolvePath outside of root",
   fn() {
     assertThrows(() => {
@@ -33,7 +31,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "resolvePath outside of root devious",
   fn() {
     assertThrows(() => {
@@ -42,7 +40,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "resolvePath absolute",
   fn() {
     assertThrows(
@@ -55,7 +53,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "resolvePath contains null",
   fn() {
     assertThrows(
@@ -68,7 +66,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "resolvePath from root",
   fn() {
     assert(
@@ -79,7 +77,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "getRandomFilename()",
   async fn() {
     const actual = await getRandomFilename("foo", "bar");

@@ -1,12 +1,10 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import { assertEquals } from "./test_deps.ts";
 
 import { toParamRegExp, unquote } from "./headers.ts";
 
-const { test } = Deno;
-
-test({
+Deno.test({
   name: "headers - toParamRegExp()",
   fn() {
     assertEquals(`foo=bar`.match(toParamRegExp("foo"))![1], "bar");
@@ -17,7 +15,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "headers - unquote()",
   fn() {
     assertEquals(unquote("bar"), "bar");

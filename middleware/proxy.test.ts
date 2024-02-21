@@ -1,10 +1,11 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import { Application } from "../application.ts";
 import { type Context } from "../context.ts";
+import { assert } from "../deps.ts";
 import { Router } from "../router.ts";
 import { createMockContext, createMockNext } from "../testing.ts";
-import { assert, assertEquals, assertStrictEquals } from "../test_deps.ts";
+import { assertEquals, assertStrictEquals } from "../test_deps.ts";
 
 import { proxy } from "./proxy.ts";
 

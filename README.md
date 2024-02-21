@@ -1,12 +1,11 @@
 # oak
 
+[![deno.land/x/oak](https://deno.land/badge/oak/version)](https://deno.land/x/oak)
+[![NPM Version](https://img.shields.io/npm/v/@oakserver/oak)](https://www.npmjs.com/package/@oakserver/oak)
+[![deno doc](https://doc.deno.land/badge.svg)](https://deno.land/x/oak/?doc)
+
 [![oak ci](https://github.com/oakserver/oak/workflows/ci/badge.svg)](https://github.com/oakserver/oak)
 [![codecov](https://codecov.io/gh/oakserver/oak/branch/main/graph/badge.svg?token=KEKZ52NXGP)](https://codecov.io/gh/oakserver/oak)
-[![deno doc](https://doc.deno.land/badge.svg)](https/deno.land/x/oak/mod.ts)
-
-![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fdep-count%2Fx%2Foak%2Fmod.ts)
-![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fupdates%2Fx%2Foak%2Fmod.ts)
-[![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Flatest-version%2Fx%2Foak%2Fmod.ts)](https://doc.deno.land/https/deno.land/x/oak/mod.ts)
 
 A middleware framework for Deno's native HTTP server,
 [Deno Deploy](https://deno.com/deploy) and Node.js 16.5 and later. It also
@@ -343,6 +342,8 @@ several properties:
 
 - `.originalRequest`
 
+  **DEPRECATED** this will be removed in a future release of oak.
+
   The "raw" `NativeServer` request, which is an abstraction over the DOM
   `Request` object. `.originalRequest.request` is the DOM `Request` instance
   that is being processed. Users should generally avoid using these.
@@ -350,6 +351,11 @@ several properties:
 - `.secure`
 
   A shortcut for `.protocol`, returning `true` if HTTPS otherwise `false`.
+
+- `.source`
+
+  When running under Deno, `.source` will be set to the source web standard
+  `Request`. When running under NodeJS, this will be `undefined`.
 
 - `.url`
 
@@ -502,7 +508,7 @@ sent back to the requestor. It contains several properties:
   A media type or extension to set the `Content-Type` header for the response.
   For example, you can provide `txt` or `text/plain` to describe the body.
 
-And a method:
+And several methods:
 
 - `.redirect(url?: string | URL | REDIRECT_BACK, alt?: string | URL)`
 
@@ -514,6 +520,19 @@ And a method:
   is not set. If neither the `alt` nor the `Referer` are set, the redirect will
   occur to `/`. A basic HTML (if the requestor supports it) or a text body will
   be set explaining they are being redirected.
+
+- `.toDomResponse()`
+
+  This converts the information oak understands about the response to the Fetch
+  API `Response`. This will finalize the response, resulting in any further
+  attempt to modify the response to throw. This is intended to be used
+  internally within oak to be able to respond to requests.
+
+- `.with(response: Response)` and `.with(body?: BodyInit, init?: ResponseInit)`
+
+  This sets the response to a web standard `Response`. Note that this will
+  ignore/override any other information set on the response by other middleware
+  including things like headers or cookies to be set.
 
 ### Automatic response body handling
 
@@ -879,6 +898,64 @@ Would result in the return value being:
   page: "32",
   size: "24"
 }
+```
+
+## Fetch API and `Deno.serve()` migration
+
+If you are migrating from `Deno.serve()` or adapting code that is designed for
+the web standard Fetch API `Request` and `Response`, there are a couple features
+of oak to assist.
+
+### `ctx.request.source`
+
+When running under Deno, this will be set to a Fetch API `Request`, giving
+direct access to the original request.
+
+### `ctx.response.with()`
+
+This method will accept a Fetch API `Response` or create a new response based
+on the provided `BodyInit` and `ResponseInit`. This will also finalize the
+response and ignores anything that may have been set on the oak `.response`.
+
+### `middleware/serve#serve()` and `middelware/serve#route()`
+
+These two middleware generators can be used to adapt code that operates more
+like the `Deno.serve()` in that it provides a Fetch API `Request` and expects
+the handler to resolve with a Fetch API `Response`.
+
+An example of using `serve()` with `Application.prototype.use()`:
+
+```ts
+import { Application, serve } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application();
+
+app.use(serve((req, ctx) => {
+  console.log(req.url);
+  return new Response("Hello world!");
+}));
+
+app.listen();
+```
+
+And a similar solution works with `route()` where the context contains the
+information about the router, like the params:
+
+```ts
+import { Application, route, Router } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application;
+
+const router = new Router();
+
+router.get("/books/:id", route((req, ctx) => {
+  console.log(ctx.params.id);
+  return Response.json({ title: "hello world", id: ctx.params.id });
+}));
+
+app.use(router.routes());
+
+app.listen();
 ```
 
 ## Testing

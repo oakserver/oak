@@ -1,4 +1,4 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
@@ -8,10 +8,12 @@ import {
   isAbsolute,
   join,
   normalize,
-  SEP,
+  SEPARATOR,
 } from "./deps.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
-import type { Data, Key, NetAddr } from "./types.d.ts";
+import type { Data, Key, NetAddr } from "./types.ts";
+
+import "./node_shims.ts";
 
 const ENCODE_CHARS_REGEXP =
   /(?:[^\x21\x25\x26-\x3B\x3D\x3F-\x5B\x5D\x5F\x61-\x7A\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g;
@@ -26,12 +28,6 @@ export const DEFAULT_CHUNK_SIZE = 16_640; // 17 Kib
 
 /** Body types which will be coerced into strings before being sent. */
 export const BODY_TYPES = ["string", "number", "bigint", "boolean", "symbol"];
-
-export function assert(cond: unknown, msg = "Assertion failed"): asserts cond {
-  if (!cond) {
-    throw new Error(msg);
-  }
-}
 
 const hasPromiseWithResolvers = "withResolvers" in Promise;
 
@@ -132,7 +128,6 @@ function isCloser(value: unknown): value is Deno.Closer {
 }
 
 export function isNetAddr(value: unknown): value is NetAddr {
-  console.log(value);
   return typeof value === "object" && value != null && "transport" in value &&
     "hostname" in value && "port" in value;
 }
@@ -329,7 +324,7 @@ export function resolvePath(rootPath: string, relativePath?: string): string {
   }
 
   // path outside root
-  if (UP_PATH_REGEXP.test(normalize(`.${SEP}${path}`))) {
+  if (UP_PATH_REGEXP.test(normalize(`.${SEPARATOR}${path}`))) {
     throw createHttpError(403);
   }
 

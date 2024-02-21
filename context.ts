@@ -1,7 +1,8 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import type { Application, State } from "./application.ts";
 import {
+  assert,
   createHttpError,
   type ErrorStatus,
   type HttpErrorOptions,
@@ -14,8 +15,7 @@ import {
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
-import type { ServerRequest, UpgradeWebSocketOptions } from "./types.d.ts";
-import { assert } from "./util.ts";
+import type { ServerRequest, UpgradeWebSocketOptions } from "./types.ts";
 
 export interface ContextOptions<
   S extends AS = State,
@@ -210,8 +210,7 @@ export class Context<
    * ```
    */
   assert(
-    // deno-lint-ignore no-explicit-any
-    condition: any,
+    condition: unknown,
     errorStatus: ErrorStatus = 500,
     message?: string,
     props?: Record<string, unknown> & Omit<HttpErrorOptions, "status">,
@@ -298,21 +297,17 @@ export class Context<
    * the a web standard `WebSocket` object. This will set `.respond` to
    * `false`.  If the socket cannot be upgraded, this method will throw. */
   upgrade(options?: UpgradeWebSocketOptions): WebSocket {
-    if (this.#socket) {
-      return this.#socket;
+    if (!this.#socket) {
+      this.#socket = this.request.upgrade(options);
+      this.app.addEventListener("close", () => this.#socket?.close());
+      this.respond = false;
     }
-    if (!this.request.originalRequest.upgrade) {
-      throw new TypeError(
-        "Web socket upgrades not currently supported for this type of server.",
-      );
-    }
-    this.#socket = this.request.originalRequest.upgrade(options);
-    this.app.addEventListener("close", () => this.#socket?.close());
-    this.respond = false;
     return this.#socket;
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     const {
       app,
       cookies,
@@ -342,7 +337,8 @@ export class Context<
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }

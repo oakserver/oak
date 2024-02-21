@@ -1,4 +1,4 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import { Body } from "./body.ts";
 import {
@@ -8,7 +8,7 @@ import {
   type HTTPMethods,
   UserAgent,
 } from "./deps.ts";
-import type { ServerRequest } from "./types.d.ts";
+import type { ServerRequest, UpgradeWebSocketOptions } from "./types.ts";
 
 export interface OakRequestOptions {
   jsonBodyReviver?: (key: string, value: unknown) => unknown;
@@ -87,9 +87,22 @@ export class Request {
     return this.#secure;
   }
 
-  /** Set to the value of the _original_ Deno server request. */
+  /** Set to the value of the low level oak server request abstraction.
+   *
+   * @deprecated this will be removed in future versions of oak. Accessing this
+   * abstraction is not useful to end users and is now a bit of a misnomer.
+   */
   get originalRequest(): ServerRequest {
     return this.#serverRequest;
+  }
+
+  /** Returns the original Fetch API `Request` if available.
+   *
+   * This should be set with requests on Deno, but will not be set when running
+   * on Node.js.
+   */
+  get source(): globalThis.Request | undefined {
+    return this.#serverRequest.request;
   }
 
   /** A parsed URL for the request which complies with the browser standards.
@@ -139,7 +152,7 @@ export class Request {
   /** An object representing the requesting user agent. If the `User-Agent`
    * header isn't defined in the request, all the properties will be undefined.
    *
-   * See [std/http/user_agent#UserAgent](https://deno.land/std@0.212.0/http/user_agent.ts?s=UserAgent)
+   * See [std/http/user_agent#UserAgent](https://deno.land/std@0.215.0/http/user_agent.ts?s=UserAgent)
    * for more information.
    */
   get userAgent(): UserAgent {
@@ -220,7 +233,27 @@ export class Request {
     return acceptsLanguages(this.#serverRequest);
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  /** Take the current request and upgrade it to a web socket, returning a web
+   * standard `WebSocket` object.
+   *
+   * If the underlying server abstraction does not support upgrades, this will
+   * throw.
+   *
+   * > ![WARNING]
+   * > This is not intended for direct use, as it will not manage the websocket
+   * > in the overall context or ensure that additional middleware does not
+   * > attempt to respond to the request.
+   */
+  upgrade(options?: UpgradeWebSocketOptions): WebSocket {
+    if (!this.#serverRequest.upgrade) {
+      throw new TypeError("Web sockets upgrade not supported in this runtime.");
+    }
+    return this.#serverRequest.upgrade(options);
+  }
+
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     const { body, hasBody, headers, ip, ips, method, secure, url, userAgent } =
       this;
     return `${this.constructor.name} ${
@@ -243,7 +276,8 @@ export class Request {
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }

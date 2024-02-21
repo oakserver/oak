@@ -1,4 +1,4 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 export type StructuredClonable =
   | { [key: string]: StructuredClonable }
@@ -143,7 +143,7 @@ function cloneValue(value: any): any {
 }
 
 // deno-lint-ignore no-explicit-any
-const core = (Deno as any)?.core as DenoCore | undefined;
+const core = (globalThis?.Deno as any)?.core as DenoCore | undefined;
 const structuredClone: ((value: unknown) => unknown) | undefined =
   // deno-lint-ignore no-explicit-any
   (globalThis as any).structuredClone;

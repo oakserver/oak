@@ -13,7 +13,7 @@
  * @module
  */
 
-import { assert } from "./util.ts";
+import { assert } from "./deps.ts";
 
 /**
  * Unescape a string.

@@ -1,11 +1,11 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import type {
   NetAddr,
   ServerRequest,
   UpgradeWebSocketFn,
   UpgradeWebSocketOptions,
-} from "./types.d.ts";
+} from "./types.ts";
 import { createPromiseWithResolvers } from "./util.ts";
 
 // deno-lint-ignore no-explicit-any
@@ -13,7 +13,7 @@ export const DomResponse: typeof Response = (globalThis as any).Response ??
   class MockResponse {};
 
 const maybeUpgradeWebSocket: UpgradeWebSocketFn | undefined =
-  "upgradeWebSocket" in Deno
+  "Deno" in globalThis && "upgradeWebSocket" in globalThis.Deno
     // deno-lint-ignore no-explicit-any
     ? (Deno as any).upgradeWebSocket.bind(Deno)
     : undefined;

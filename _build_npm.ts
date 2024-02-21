@@ -1,5 +1,5 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write --allow-net --allow-env --allow-run
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 /**
  * This is the build script for building the oak framework into a Node.js
@@ -8,8 +8,8 @@
  * @module
  */
 
-import { build, emptyDir } from "https://deno.land/x/dnt@0.39.0/mod.ts";
-import { copy } from "https://deno.land/std@0.212.0/fs/copy.ts";
+import { build, emptyDir } from "https://deno.land/x/dnt@0.40.0/mod.ts";
+import { copy } from "https://deno.land/std@0.215.0/fs/copy.ts";
 
 async function start() {
   await emptyDir("./npm");
@@ -19,23 +19,11 @@ async function start() {
   await build({
     entryPoints: ["./mod.ts"],
     outDir: "./npm",
-    mappings: {
-      "./http_server_native.ts": "./http_server_node.ts",
-    },
     shims: {
       blob: true,
       crypto: true,
       deno: true,
       undici: true,
-      custom: [{
-        package: {
-          name: "stream/web",
-        },
-        globalNames: ["ReadableStream", "TransformStream"],
-      }, {
-        module: "./node_shims.ts",
-        globalNames: ["ErrorEvent"],
-      }],
     },
     test: true,
     typeCheck: false,

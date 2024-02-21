@@ -1,9 +1,8 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import { Context } from "./context.ts";
-import { KeyStack, Status, STATUS_TEXT } from "./deps.ts";
-import { Server } from "./http_server_native.ts";
-import { NativeRequest } from "./http_server_native_request.ts";
+import { assert, KeyStack, Status, STATUS_TEXT } from "./deps.ts";
+import { type NativeRequest } from "./http_server_native_request.ts";
 import {
   compose,
   isMiddlewareObject,
@@ -17,8 +16,8 @@ import {
   OakServer,
   ServerConstructor,
   ServerRequest,
-} from "./types.d.ts";
-import { assert, createPromiseWithResolvers, isNetAddr } from "./util.ts";
+} from "./types.ts";
+import { createPromiseWithResolvers, isNetAddr, isNode } from "./util.ts";
 
 export interface ListenOptionsBase {
   /** The port to listen on. If not specified, defaults to `0`, which allows the
@@ -111,7 +110,7 @@ interface ApplicationListenEventInit extends EventInit {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "custom";
+  serverType: "native" | "node" | "custom";
 }
 
 type ApplicationListenEventListenerOrEventListenerObject =
@@ -220,7 +219,8 @@ export type State = Record<string | number | symbol, any>;
 
 const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 
-const DEFAULT_SERVER: ServerConstructor<ServerRequest> = Server;
+let DefaultServerCtor: ServerConstructor<ServerRequest> | undefined;
+let NativeRequestCtor: typeof NativeRequest | undefined;
 
 export class ApplicationCloseEvent extends Event {
   constructor(eventInitDict: EventInit) {
@@ -277,7 +277,7 @@ export class ApplicationListenEvent extends Event {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "custom";
+  serverType: "native" | "node" | "custom";
 
   constructor(eventInitDict: ApplicationListenEventInit) {
     super("listen", eventInitDict);
@@ -327,7 +327,7 @@ export class Application<AS extends State = Record<string, any>>
   #contextState: "clone" | "prototype" | "alias" | "empty";
   #keys?: KeyStack;
   #middleware: MiddlewareOrMiddlewareObject<State, Context<State, AS>>[] = [];
-  #serverConstructor: ServerConstructor<ServerRequest>;
+  #serverConstructor: ServerConstructor<ServerRequest> | undefined;
 
   /** A set of keys, or an instance of `KeyStack` which will be used to sign
    * cookies read and set by the application to avoid tampering with the
@@ -372,7 +372,7 @@ export class Application<AS extends State = Record<string, any>>
       state,
       keys,
       proxy,
-      serverConstructor = DEFAULT_SERVER,
+      serverConstructor,
       contextState = "clone",
       logErrors = true,
       ...contextOptions
@@ -434,7 +434,7 @@ export class Application<AS extends State = Record<string, any>>
     }
     context.response.type = "text";
     const status: Status = context.response.status =
-      Deno.errors && error instanceof Deno.errors.NotFound
+      globalThis.Deno && Deno.errors && error instanceof Deno.errors.NotFound
         ? 404
         : error.status && typeof error.status === "number"
         ? error.status
@@ -547,7 +547,7 @@ export class Application<AS extends State = Record<string, any>>
    * context gets set to not to respond, then the method resolves with
    * `undefined`, otherwise it resolves with a request that is compatible with
    * `std/http/server`. */
-  handle = (async (
+  handle: HandleMethod = (async (
     request: Request,
     secureOrAddr: NetAddr | boolean | undefined,
     secure: boolean | undefined = false,
@@ -556,7 +556,11 @@ export class Application<AS extends State = Record<string, any>>
       throw new TypeError("There is no middleware to process requests.");
     }
     assert(isNetAddr(secureOrAddr) || typeof secureOrAddr === "undefined");
-    const contextRequest = new NativeRequest(request, {
+    if (!NativeRequestCtor) {
+      const { NativeRequest } = await import("./http_server_native_request.ts");
+      NativeRequestCtor = NativeRequest;
+    }
+    const contextRequest = new NativeRequestCtor(request, {
       remoteAddr: secureOrAddr,
     });
     const context = new Context(
@@ -582,7 +586,7 @@ export class Application<AS extends State = Record<string, any>>
       this.#handleError(context, err);
       throw err;
     }
-  }) as HandleMethod;
+  });
 
   /** Start listening for requests, processing registered middleware on each
    * request.  If the options `.secure` is undefined or `false`, the listening
@@ -617,6 +621,15 @@ export class Application<AS extends State = Record<string, any>>
       options = { hostname, port: parseInt(portStr, 10) };
     }
     options = Object.assign({ port: 0 }, options);
+    if (!this.#serverConstructor) {
+      if (!DefaultServerCtor) {
+        const { Server } = await (isNode()
+          ? import("./http_server_node.ts")
+          : import("./http_server_native.ts"));
+        DefaultServerCtor = Server as ServerConstructor<ServerRequest>;
+      }
+      this.#serverConstructor = DefaultServerCtor;
+    }
     const server = new this.#serverConstructor(this, options);
     const state = {
       closed: false,
@@ -635,7 +648,7 @@ export class Application<AS extends State = Record<string, any>>
       }, { once: true });
     }
     const { secure = false } = options;
-    const serverType = server instanceof Server ? "native" : "custom";
+    const serverType = this.#serverConstructor.type ?? "custom";
     const listener = await server.listen();
     const { hostname, port } = listener.addr;
     this.dispatchEvent(
@@ -697,7 +710,9 @@ export class Application<AS extends State = Record<string, any>>
     return this as Application<any>;
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     const { keys, proxy, state } = this;
     return `${this.constructor.name} ${
       inspect({ "#middleware": this.#middleware, keys, proxy, state })
@@ -709,7 +724,8 @@ export class Application<AS extends State = Record<string, any>>
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }

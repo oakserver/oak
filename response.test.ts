@@ -1,12 +1,10 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { Status } from "./deps.ts";
-import { assert, assertEquals, assertThrows } from "./test_deps.ts";
+import { assert, Status } from "./deps.ts";
+import { assertEquals, assertThrows } from "./test_deps.ts";
 import type { Request } from "./request.ts";
 import { REDIRECT_BACK, Response } from "./response.ts";
 import { isNode } from "./util.ts";
-
-const { test } = Deno;
 
 function createMockRequest({
   headers,
@@ -21,7 +19,7 @@ function createMockRequest({
   return { accepts, headers: new Headers(headers) } as any;
 }
 
-test({
+Deno.test({
   name: "response empty",
   async fn() {
     const response = new Response(createMockRequest());
@@ -33,7 +31,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.status set",
   async fn() {
     const response = new Response(createMockRequest());
@@ -46,7 +44,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.body as text",
   async fn() {
     const response = new Response(createMockRequest());
@@ -62,7 +60,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.body as HTML",
   async fn() {
     const response = new Response(createMockRequest());
@@ -81,7 +79,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.body as JSON",
   async fn() {
     const response = new Response(createMockRequest());
@@ -97,7 +95,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.body as symbol",
   async fn() {
     const response = new Response(createMockRequest());
@@ -113,7 +111,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.body as Uint8Array",
   async fn() {
     const response = new Response(createMockRequest());
@@ -125,7 +123,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.body as function",
   async fn() {
     const response = new Response(createMockRequest());
@@ -141,7 +139,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.body as readable stream",
   async fn() {
     const response = new Response(createMockRequest());
@@ -158,7 +156,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.body as async iterable",
   async fn() {
     const response = new Response(createMockRequest());
@@ -175,7 +173,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.body as async function",
   async fn() {
     const response = new Response(createMockRequest());
@@ -191,7 +189,28 @@ test({
   },
 });
 
-test({
+Deno.test({
+  name: "response.body as FormData",
+  async fn() {
+    const response = new Response(createMockRequest());
+    const formData = new FormData();
+    formData.append("a", "value");
+    formData.append(
+      "b",
+      new Blob(["some string"], { type: "text/plain" }),
+      "file.txt",
+    );
+    response.body = formData;
+    const nativeResponse = await response.toDomResponse();
+    assert(
+      nativeResponse.headers.get("content-type")?.startsWith(
+        "multipart/form-data; boundary=",
+      ),
+    );
+  },
+});
+
+Deno.test({
   name: "response.type",
   async fn() {
     const response = new Response(createMockRequest());
@@ -211,7 +230,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.type does not overwrite",
   async fn() {
     const response = new Response(createMockRequest());
@@ -229,7 +248,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "empty response sets contentLength to 0",
   async fn() {
     const response = new Response(createMockRequest());
@@ -238,7 +257,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.redirect('./foo')",
   async fn() {
     const response = new Response(createMockRequest());
@@ -257,7 +276,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.redirect(URL)",
   async fn() {
     const response = new Response(createMockRequest());
@@ -276,7 +295,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.redirect(REDIRECT_BACK)",
   async fn() {
     const response = new Response(
@@ -296,7 +315,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.redirect(REDIRECT_BACK) no referrer, but alt",
   async fn() {
     const response = new Response(createMockRequest());
@@ -314,7 +333,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.redirect(REDIRECT_BACK) no referrer, no alt",
   async fn() {
     const response = new Response(createMockRequest());
@@ -329,7 +348,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.redirect() no html",
   async fn() {
     const response = new Response(createMockRequest({
@@ -355,7 +374,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.redirect() with url on query string",
   async fn() {
     const response = new Response(createMockRequest());
@@ -371,7 +390,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.status reflects body state",
   fn() {
     const response = new Response(createMockRequest());
@@ -385,7 +404,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.toDomResponse() is a memo",
   async fn() {
     const response = new Response(createMockRequest());
@@ -395,7 +414,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.body cannot be set after server response",
   async fn() {
     const response = new Response(createMockRequest());
@@ -406,7 +425,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.status cannot be set after server response",
   async fn() {
     const response = new Response(createMockRequest());
@@ -417,7 +436,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.body handles null",
   async fn() {
     const response = new Response(createMockRequest());
@@ -427,7 +446,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "response.body handles falsy values",
   async fn() {
     const response = new Response(createMockRequest());
@@ -437,7 +456,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "Response - inspecting",
   fn() {
     assertEquals(

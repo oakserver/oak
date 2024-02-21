@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: clone repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: install deno
         uses: denoland/setup-deno@v1
@@ -36,6 +36,6 @@ jobs:
         run: deno task coverage > cov.lcov
 
       - name: upload coverage
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v4
         with:
           files: cov.lcov

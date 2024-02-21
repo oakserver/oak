@@ -1,25 +1,17 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 // deno-lint-ignore-file
 
-import {
-  assert,
-  assertEquals,
-  assertStrictEquals,
-  assertThrows,
-} from "./test_deps.ts";
+import { assertEquals, assertStrictEquals, assertThrows } from "./test_deps.ts";
 import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
-import { errors, SecureCookieMap, Status } from "./deps.ts";
-import {
-  isNativeRequest,
-  NativeRequest,
-} from "./http_server_native_request.ts";
+import { assert, errors, SecureCookieMap, Status } from "./deps.ts";
+import { NativeRequest } from "./http_server_native_request.ts";
 import type {} from "./http_server_native.ts";
 import { Request as OakRequest } from "./request.ts";
 import { Response as OakResponse } from "./response.ts";
 import { cloneState } from "./structured_clone.ts";
-import type { UpgradeWebSocketFn, UpgradeWebSocketOptions } from "./types.d.ts";
+import type { UpgradeWebSocketFn, UpgradeWebSocketOptions } from "./types.ts";
 import { createPromiseWithResolvers, isNode } from "./util.ts";
 
 function createMockApp<S extends State = Record<string, any>>(
@@ -80,13 +72,6 @@ function createMockNativeRequest(
   respondWithStack = [];
   upgradeWebSocketStack = [];
   const request = new Request(url, requestInit);
-  const requestEvent = {
-    request,
-    respondWith(r: Response | Promise<Response>) {
-      respondWithStack.push(r);
-      return Promise.resolve();
-    },
-  };
   const upgradeWebSocket: UpgradeWebSocketFn | undefined = upgradeUndefined
     ? undefined
     : (request, options) => {
@@ -114,7 +99,7 @@ Deno.test({
     assertStrictEquals(context.app, app);
     assert(context.cookies instanceof SecureCookieMap);
     assert(context.request instanceof OakRequest);
-    assert(isNativeRequest(context.request.originalRequest));
+    assert(context.request.source instanceof Request);
     assert(context.response instanceof OakResponse);
   },
 });

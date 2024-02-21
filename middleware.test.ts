@@ -1,9 +1,9 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 // deno-lint-ignore-file
 
-import { assert, assertEquals, assertStrictEquals } from "./test_deps.ts";
-import { errors } from "./deps.ts";
+import { assertEquals, assertStrictEquals } from "./test_deps.ts";
+import { assert, errors } from "./deps.ts";
 import { createMockContext } from "./testing.ts";
 import {
   compose,

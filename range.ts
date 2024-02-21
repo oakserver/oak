@@ -1,6 +1,7 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import {
+  assert,
   concat,
   contentType,
   copyBytes,
@@ -9,7 +10,7 @@ import {
 } from "./deps.ts";
 import { calculate } from "./etag.ts";
 import type { FileInfo } from "./etag.ts";
-import { assert, DEFAULT_CHUNK_SIZE } from "./util.ts";
+import { DEFAULT_CHUNK_SIZE } from "./util.ts";
 
 const ETAG_RE = /(?:W\/)?"[ !#-\x7E\x80-\xFF]+"/;
 
@@ -163,7 +164,7 @@ export class MultiPartStream extends ReadableStream<Uint8Array> {
   }
 
   /** The content length of the entire streamed body. */
-  contentLength() {
+  contentLength(): number {
     return this.#contentLength;
   }
 }

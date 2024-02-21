@@ -1,6 +1,7 @@
-// Copyright 2018-2023 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { assert, assertEquals } from "./test_deps.ts";
+import { assert } from "./deps.ts";
+import { assertEquals } from "./test_deps.ts";
 import {
   createMockApp,
   createMockContext,
@@ -12,8 +13,6 @@ import type { Context } from "./context.ts";
 import type { RouteParams } from "./router.ts";
 
 import { factory } from "./etag.ts";
-
-const { test } = Deno;
 
 function setup<
   // deno-lint-ignore no-explicit-any
@@ -38,7 +37,7 @@ function setup<
 
 const encoder = new TextEncoder();
 
-test({
+Deno.test({
   name: "etag - middleware - body string",
   async fn() {
     const { context } = setup();
@@ -56,7 +55,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "etag - middleware - body Uint8Array",
   async fn() {
     const { context } = setup();
@@ -74,7 +73,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "etag - middleware - body File",
   async fn() {
     const { context } = setup();
@@ -95,7 +94,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "etag - middleware - body JSON-like",
   async fn() {
     const { context } = setup();
@@ -113,7 +112,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "etag - middleware - body function",
   async fn() {
     // if we call the body function in the middleware, we cause problems with
@@ -133,7 +132,7 @@ test({
   },
 });
 
-test({
+Deno.test({
   name: "etag - middleware - body async iterator",
   async fn() {
     // The only async readable we can really support is Deno.FsFile, because we
