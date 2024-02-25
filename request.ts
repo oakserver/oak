@@ -1,11 +1,14 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import { Body } from "./body.ts";
+import { ServerSentEventStreamTarget } from "./deps.ts";
 import {
   accepts,
   acceptsEncodings,
   acceptsLanguages,
   type HTTPMethods,
+  ServerSentEventTarget,
+  type ServerSentEventTargetOptions,
   UserAgent,
 } from "./deps.ts";
 import type { ServerRequest, UpgradeWebSocketOptions } from "./types.ts";
@@ -231,6 +234,22 @@ export class Request {
       return acceptsLanguages(this.#serverRequest, ...langs);
     }
     return acceptsLanguages(this.#serverRequest);
+  }
+
+  /** Take the current request and initiate server sent event connection.
+   *
+   * > ![WARNING]
+   * > This is not intended for direct use, as it will not manage the target in
+   * > the overall context or ensure that additional middleware does not attempt
+   * > to respond to the request.
+   */
+  async sendEvents(
+    options?: ServerSentEventTargetOptions,
+    init?: RequestInit,
+  ): Promise<ServerSentEventTarget> {
+    const sse = new ServerSentEventStreamTarget(options);
+    await this.#serverRequest.respond(sse.asResponse(init));
+    return sse;
   }
 
   /** Take the current request and upgrade it to a web socket, returning a web
