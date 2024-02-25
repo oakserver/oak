@@ -1,5 +1,24 @@
 # oak Change Log
 
+## Version 14.0.0
+
+- feat: send events immediately sends response to client (a3f0076)
+
+  **BREAKING CHANGE** Previous versions of oak would return a
+  `ServerSentEventTarget` when calling `.sendEvents()` on the context, but would
+  not send the response to the client until all the middleware completed
+  processing. Now, the response is sent back to the client immediately (like the
+  websocket `.upgrade()` method) which results in the `ServerSentEventTarget`
+  being returned in a promise and also preventing any further changes to
+  response by other middleware.
+
+  This has the benefit of meaning any events dispatched from within the main
+  flow of the current middleware are sent to the client straight away instead of
+  appearing to be buffered.
+
+- fix: http_server_native when closing with signal abort event (#639)
+- chore: update to std 0.217.0 (bc88315)
+
 ## Version 13.2.5
 
 - fix: wrong file dynamically imported (#638)
