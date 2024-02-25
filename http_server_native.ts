@@ -92,7 +92,7 @@ export class Server<AS extends State = Record<string, any>>
         });
       },
     });
-    
+
     signal?.addEventListener("abort", () => this.close(), { once: true });
     return promise;
   }
