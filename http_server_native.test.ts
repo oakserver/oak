@@ -35,8 +35,9 @@ Deno.test({
   name: "HttpServer closes gracefully after serving requests",
   ignore: isNode(),
   async fn() {
+    const abortController = new AbortController();
     const app = new Application();
-    const listenOptions = { port: 4505 };
+    const listenOptions = { port: 4505, signal: abortController.signal};
 
     const server = new Server(app, listenOptions);
     server.listen();
@@ -56,7 +57,7 @@ Deno.test({
       console.error(e);
       unreachable();
     } finally {
-      await server.close();
+      abortController.abort();
     }
   },
 });

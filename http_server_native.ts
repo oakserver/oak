@@ -71,7 +71,6 @@ export class Server<AS extends State = Record<string, any>>
       throw new Error("Server already listening.");
     }
     const { signal } = this.#options;
-    signal?.addEventListener("abort", () => this.close(), { once: true });
     const { onListen, ...options } = this.#options;
     const { promise, resolve } = createPromiseWithResolvers<Listener>();
     this.#stream = new ReadableStream<NativeRequest>({
@@ -93,7 +92,8 @@ export class Server<AS extends State = Record<string, any>>
         });
       },
     });
-
+    
+    signal?.addEventListener("abort", () => this.close(), { once: true });
     return promise;
   }
 
