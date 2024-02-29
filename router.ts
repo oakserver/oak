@@ -25,6 +25,32 @@
  * THE SOFTWARE.
  */
 
+/**
+ * Contains the router of oak. Typical usage is the creation of an application
+ * instance, the creation of a router instance, registration of route
+ * middleware, registration of router with the application, and then starting to
+ * listen for requests.
+ *
+ * # Example
+ *
+ * ```ts
+ * import { Application } from "jsr:@oak/oak@14/application";
+ * import { Router } from "jsr:@oak/oak@14/router";
+ *
+ * const app = new Application();
+ * const router = new Router();
+ * router.get("/", (ctx) => {
+ *   ctx.response.body = "hello world!";
+ * });
+ * app.use(router.routes());
+ * app.use(router.allowedMethods());
+ *
+ * app.listen();
+ * ```
+ *
+ * @module
+ */
+
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
 import {
@@ -50,6 +76,8 @@ interface Matches<R extends string> {
   name?: string;
 }
 
+/** Options which can be specified when calling the `.allowedMethods()` method
+ * on a {@linkcode Router} instance. */
 export interface RouterAllowedMethodsOptions {
   /** Use the value returned from this function instead of an HTTP error
    * `MethodNotAllowed`. */
@@ -66,6 +94,7 @@ export interface RouterAllowedMethodsOptions {
   throw?: boolean;
 }
 
+/** The internal abstraction of a route used by the oak {@linkcode Router}. */
 export interface Route<
   R extends string,
   P extends RouteParams<R> = RouteParams<R>,
@@ -125,6 +154,7 @@ export interface RouterContext<
   routerPath?: string;
 }
 
+/** The interface that {@linkcode Router} middleware should adhere to. */
 export interface RouterMiddleware<
   R extends string,
   P extends RouteParams<R> = RouteParams<R>,
@@ -141,6 +171,8 @@ export interface RouterMiddleware<
   router?: Router<any>;
 }
 
+/** Options which can be specified when creating a new instance of a
+ * {@linkcode Router}. */
 export interface RouterOptions {
   /** Override the default set of methods supported by the router. */
   methods?: HTTPMethods[];
@@ -190,6 +222,8 @@ type GetRouteParams<S extends string> = RemoveTail<
   `.${string}`
 >;
 
+/** A dynamic type which attempts to determine the route params based on
+ * matching the route string. */
 export type RouteParams<Route extends string> = string extends Route
   ? ParamsDictionary
   : Route extends `${string}(${string}` ? ParamsDictionary
@@ -254,6 +288,8 @@ function toUrl<R extends string>(
   return replaced;
 }
 
+/** An internal class used to group together middleware when using multiple
+ * middlewares with a router. */
 export class Layer<
   R extends string,
   P extends RouteParams<R> = RouteParams<R>,

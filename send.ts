@@ -3,6 +3,14 @@
  * with the MIT license.
  */
 
+/** Contains the send function which can be used to send static assets while
+ * supporting a range of HTTP capabilities.
+ *
+ * This is integrated into the oak context via the `.send()` method.
+ *
+ * @module
+ */
+
 import type { Context } from "./context.ts";
 import { calculate, FileInfo, ifNoneMatch } from "./etag.ts";
 import {
@@ -29,6 +37,8 @@ const MAXBUFFER_DEFAULT = 1_048_576; // 1MiB;
 // avoid top level await
 let boundary: string | undefined;
 
+/** Options which can be specified when using the {@linkcode send}
+ * middleware. */
 export interface SendOptions {
   /** Try to serve the brotli version of a file automatically when brotli is
    * supported by a client and if the requested file with `.br` extension

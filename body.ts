@@ -36,6 +36,7 @@ async function readBlob(
   return new Blob(chunks, type ? { type } : undefined);
 }
 
+/** An object which encapsulates information around a request body. */
 export class Body {
   #body?: ReadableStream<Uint8Array> | null;
   #headers?: Headers;

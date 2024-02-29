@@ -1,5 +1,10 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
+/** Functions for dealing with `Range` headers in requests.
+ *
+ * @module
+ */
+
 import {
   assert,
   concat,
@@ -14,6 +19,7 @@ import { DEFAULT_CHUNK_SIZE } from "./util.ts";
 
 const ETAG_RE = /(?:W\/)?"[ !#-\x7E\x80-\xFF]+"/;
 
+/** A representation of range of bytes. */
 export interface ByteRange {
   start: number;
   end: number;
@@ -41,6 +47,8 @@ export async function ifRange(
   return false;
 }
 
+/** Given a range header value and a current byte size of an asset, determine
+ * what ranges of bytes are being requested. */
 export function parseRange(value: string, size: number): ByteRange[] {
   const ranges: ByteRange[] = [];
   const [unit, rangesStr] = value.split("=");

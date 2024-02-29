@@ -13,7 +13,7 @@ import {
 } from "./deps.ts";
 import type { ServerRequest, UpgradeWebSocketOptions } from "./types.ts";
 
-export interface OakRequestOptions {
+interface OakRequestOptions {
   jsonBodyReviver?: (key: string, value: unknown) => unknown;
   proxy?: boolean;
   secure?: boolean;

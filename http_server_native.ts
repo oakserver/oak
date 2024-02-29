@@ -1,5 +1,11 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
+/** The abstraction that oak uses when dealing with requests and responses
+ * within the Deno runtime.
+ *
+ * @module
+ */
+
 import type { Application, State } from "./application.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import type {

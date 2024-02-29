@@ -24,6 +24,7 @@ interface GetQueryOptionsAsMap extends GetQueryOptionsBase {
   asMap: true;
 }
 
+/** Options which can be specified when using {@linkcode getQuery}. */
 export type GetParamsOptions = GetQueryOptionsBase | GetQueryOptionsAsMap;
 
 /** Given a context, return the `.request.url.searchParams` as a `Map` of keys

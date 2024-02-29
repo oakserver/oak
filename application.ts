@@ -1,5 +1,26 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
+/**
+ * Contains the core concept of oak, the middleware application. Typical usage
+ * is the creation of an application instance, registration of middleware, and
+ * then starting to listen for requests.
+ *
+ * # Example
+ *
+ * ```ts
+ * import { Application } from "jsr:@oak/oak@14/application";
+ *
+ * const app = new Application();
+ * app.use((ctx) => {
+ *   ctx.response.body = "hello world!";
+ * });
+ *
+ * app.listen({ port: 8080 });
+ * ```
+ *
+ * @module
+ */
+
 import { Context } from "./context.ts";
 import { assert, KeyStack, Status, STATUS_TEXT } from "./deps.ts";
 import { type NativeRequest } from "./http_server_native_request.ts";
@@ -19,6 +40,7 @@ import {
 } from "./types.ts";
 import { createPromiseWithResolvers, isNetAddr, isNode } from "./util.ts";
 
+/** Base interface for application listening options. */
 export interface ListenOptionsBase {
   /** The port to listen on. If not specified, defaults to `0`, which allows the
    * operating system to determine the value. */
@@ -36,6 +58,7 @@ export interface ListenOptionsBase {
   signal?: AbortSignal;
 }
 
+/** Interface options when listening on TLS. */
 export interface ListenOptionsTls extends Deno.ListenTlsOptions {
   /** Application-Layer Protocol Negotiation (ALPN) protocols to announce to
    * the client. If not specified, no ALPN extension will be included in the
@@ -50,7 +73,7 @@ export interface ListenOptionsTls extends Deno.ListenTlsOptions {
   signal?: AbortSignal;
 }
 
-export interface HandleMethod {
+interface HandleMethod {
   /** Handle an individual server request, returning the server response.  This
    * is similar to `.listen()`, but opening the connection and retrieving
    * requests are not the responsibility of the application.  If the generated
@@ -63,6 +86,7 @@ export interface HandleMethod {
   ): Promise<Response | undefined>;
 }
 
+/** Options which can be specified when listening. */
 export type ListenOptions = ListenOptionsTls | ListenOptionsBase;
 
 interface ApplicationCloseEventListener {
@@ -214,6 +238,8 @@ interface RequestState {
   server: OakServer<ServerRequest>;
 }
 
+/** The base type of state which is associated with an application or
+ * context. */
 // deno-lint-ignore no-explicit-any
 export type State = Record<string | number | symbol, any>;
 
@@ -222,12 +248,18 @@ const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 let DefaultServerCtor: ServerConstructor<ServerRequest> | undefined;
 let NativeRequestCtor: typeof NativeRequest | undefined;
 
+/** An event that occurs when the application closes. */
 export class ApplicationCloseEvent extends Event {
   constructor(eventInitDict: EventInit) {
     super("close", eventInitDict);
   }
 }
 
+/** An event that occurs when an application error occurs.
+ *
+ * When the error occurs related to the handling of a request, the `.context`
+ * property will be populated.
+ */
 export class ApplicationErrorEvent<S extends AS, AS extends State>
   extends ErrorEvent {
   context?: Context<S, AS>;
@@ -272,6 +304,9 @@ function logErrorListener<S extends AS, AS extends State>(
   }
 }
 
+/**
+ * An event that occurs when the application starts listening for requests.
+ */
 export class ApplicationListenEvent extends Event {
   hostname: string;
   listener: Listener;

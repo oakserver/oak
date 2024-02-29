@@ -15,6 +15,7 @@ import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
 import type { ServerRequest, UpgradeWebSocketOptions } from "./types.ts";
 
+/** Options that can be supplied when creating a {@linkcode Context} */
 export interface ContextOptions<
   S extends AS = State,
   // deno-lint-ignore no-explicit-any
@@ -33,6 +34,7 @@ export interface ContextOptions<
   secure?: boolean;
 }
 
+/** Options that can be supplied when using the `.send()` method. */
 export interface ContextSendOptions extends SendOptions {
   /** The filename to send, which will be resolved based on the other options.
    * If this property is omitted, the current context's `.request.url.pathname`

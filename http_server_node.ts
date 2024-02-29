@@ -1,5 +1,11 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
+/** The abstraction that oak uses when dealing with requests and responses
+ * within the Node.js runtime.
+ *
+ * @module
+ */
+
 import type { Listener, OakServer, ServerRequest } from "./types.ts";
 import { createPromiseWithResolvers } from "./util.ts";
 import * as http from "node:http";
