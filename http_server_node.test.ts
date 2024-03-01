@@ -12,7 +12,6 @@ import {
 } from "./http_server_node.ts";
 
 import { Application } from "./application.ts";
-// import { isNode } from "./util.ts";
 
 const destroyCalls: any[][] = [];
 const setHeaderCalls: any[][] = [];

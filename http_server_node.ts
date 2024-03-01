@@ -97,7 +97,7 @@ export class NodeRequest implements ServerRequest {
     this.#responded = true;
   }
 
-  getBody() {
+  getBody(): ReadableStream<Uint8Array> | null {
     let body: ReadableStream<Uint8Array> | null;
     if (this.method === "GET" || this.method === "HEAD") {
       body = null;

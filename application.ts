@@ -38,7 +38,12 @@ import {
   ServerConstructor,
   ServerRequest,
 } from "./types.ts";
-import { createPromiseWithResolvers, isNetAddr, isNode } from "./util.ts";
+import {
+  createPromiseWithResolvers,
+  isBun,
+  isNetAddr,
+  isNode,
+} from "./util.ts";
 
 /** Base interface for application listening options. */
 export interface ListenOptionsBase {
@@ -134,7 +139,7 @@ interface ApplicationListenEventInit extends EventInit {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "node" | "custom";
+  serverType: "native" | "node" | "bun" | "custom";
 }
 
 type ApplicationListenEventListenerOrEventListenerObject =
@@ -312,7 +317,7 @@ export class ApplicationListenEvent extends Event {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "node" | "custom";
+  serverType: "native" | "node" | "bun" | "custom";
 
   constructor(eventInitDict: ApplicationListenEventInit) {
     super("listen", eventInitDict);
@@ -658,7 +663,9 @@ export class Application<AS extends State = Record<string, any>>
     options = Object.assign({ port: 0 }, options);
     if (!this.#serverConstructor) {
       if (!DefaultServerCtor) {
-        const { Server } = await (isNode()
+        const { Server } = await (isBun()
+          ? import("./http_server_bun.ts")
+          : isNode()
           ? import("./http_server_node.ts")
           : import("./http_server_native.ts"));
         DefaultServerCtor = Server as ServerConstructor<ServerRequest>;

@@ -35,7 +35,7 @@ export interface ServerConstructor<T extends ServerRequest> {
     options: Omit<ServeOptions | ServeTlsOptions, "signal">,
   ): OakServer<T>;
   prototype: OakServer<T>;
-  type?: "native" | "node";
+  type?: "native" | "node" | "bun";
 }
 
 export type Data = string | number[] | ArrayBuffer | Uint8Array;

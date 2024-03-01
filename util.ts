@@ -399,8 +399,13 @@ export function encodeBase64Safe(data: string | ArrayBuffer): string {
   return encodeBase64(data).replace(/\/|\+|=/g, (c) => replacements[c]);
 }
 
+export function isBun(): boolean {
+  return "Bun" in globalThis;
+}
+
 export function isNode(): boolean {
-  return "process" in globalThis && "global" in globalThis;
+  return "process" in globalThis && "global" in globalThis &&
+    !("Bun" in globalThis);
 }
 
 export function importKey(key: Key): Promise<CryptoKey> {

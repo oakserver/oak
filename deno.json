@@ -1,12 +1,13 @@
 {
   "name": "@oak/oak",
-  "version": "14.0.0",
+  "version": "14.1.0-alpha.2",
   "exports": {
     ".": "./mod.ts",
     "./application": "./application.ts",
     "./helpers": "./helpers.ts",
     "./etag": "./etag.ts",
     "./form_data": "./form_data.ts",
+    "./http_server_bun": "./http_server_bun.ts",
     "./http_server_native": "./http_server_native.ts",
     "./http_server_node": "./http_server_node.ts",
     "./proxy": "./middleware/proxy.ts",
