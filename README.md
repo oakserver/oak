@@ -8,7 +8,8 @@
 [![codecov](https://codecov.io/gh/oakserver/oak/branch/main/graph/badge.svg?token=KEKZ52NXGP)](https://codecov.io/gh/oakserver/oak)
 
 A middleware framework for Deno's native HTTP server,
-[Deno Deploy](https://deno.com/deploy), Node.js 16.5 and later, and
+[Deno Deploy](https://deno.com/deploy), Node.js 16.5 and later,
+[Cloudeflare Workers](https://workers.cloudflare.com/) and
 [Bun](https://bun.sh/). It also includes a middleware router.
 
 This middleware framework is inspired by [Koa](https://github.com/koajs/koa/)
