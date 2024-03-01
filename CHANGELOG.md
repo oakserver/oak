@@ -1,5 +1,20 @@
 # oak Change Log
 
+## Version 14.1.0
+
+- feat: add support for Bun (c7d6ae3)
+
+  oak natively supports the built in Bun HTTP server.
+
+- feat: initial Cloudflare Worker support (a7f87e5)
+
+  The oak application provides a Fetch Handler for Cloudflare Workers.
+
+- tests: ignore specific bun test (f3dc3d5)
+- chore: cleanup on http_server_native_request (27cf442)
+- docs: improve inline documentation (928d9f0)
+- docs: update readme (b46ee42)
+
 ## Version 14.0.0
 
 - feat: send events immediately sends response to client (a3f0076)
