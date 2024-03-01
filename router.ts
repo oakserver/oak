@@ -1,4 +1,30 @@
 /**
+ * Contains the router of oak. Typical usage is the creation of an application
+ * instance, the creation of a router instance, registration of route
+ * middleware, registration of router with the application, and then starting to
+ * listen for requests.
+ *
+ * # Example
+ *
+ * ```ts
+ * import { Application } from "jsr:@oak/oak@14/application";
+ * import { Router } from "jsr:@oak/oak@14/router";
+ *
+ * const app = new Application();
+ * const router = new Router();
+ * router.get("/", (ctx) => {
+ *   ctx.response.body = "hello world!";
+ * });
+ * app.use(router.routes());
+ * app.use(router.allowedMethods());
+ *
+ * app.listen();
+ * ```
+ *
+ * @module
+ */
+
+/**
  * Adapted directly from @koa/router at
  * https://github.com/koajs/router/ which is licensed as:
  *
@@ -23,32 +49,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- */
-
-/**
- * Contains the router of oak. Typical usage is the creation of an application
- * instance, the creation of a router instance, registration of route
- * middleware, registration of router with the application, and then starting to
- * listen for requests.
- *
- * # Example
- *
- * ```ts
- * import { Application } from "jsr:@oak/oak@14/application";
- * import { Router } from "jsr:@oak/oak@14/router";
- *
- * const app = new Application();
- * const router = new Router();
- * router.get("/", (ctx) => {
- *   ctx.response.body = "hello world!";
- * });
- * app.use(router.routes());
- * app.use(router.allowedMethods());
- *
- * app.listen();
- * ```
- *
- * @module
  */
 
 import type { State } from "./application.ts";
