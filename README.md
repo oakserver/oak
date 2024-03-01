@@ -36,9 +36,10 @@ resources.
 
 ## Usage
 
-### Deno
+### Deno CLI and Deno Deploy
 
-oak is available on both [deno.land/x](https://deno.land/x/oak/) and [JSR](https://jsr.io/@oak/oak). To use from `deno.land/x`, import into a module:
+oak is available on both [deno.land/x](https://deno.land/x/oak/) and
+[JSR](https://jsr.io/@oak/oak). To use from `deno.land/x`, import into a module:
 
 ```ts
 import { Application } from "https://deno.land/x/oak/mod.ts";
@@ -75,12 +76,49 @@ npx jsr i @oak/oak@14
 And then import into a module:
 
 ```js
-import { Application } from "@oak/oak";
+import { Application } from "@oak/oak/application";
 ```
 
 > [!NOTE]
 > Send, websocket upgrades and serving over TLS/HTTPS are not currently
 > supported.
+>
+> In addition the Cloudflare Worker environment and execution context are not
+> currently exposed to middleware.
+
+### Cloudflare Workers
+
+oak is available for [Cloudflare Workers](https://workers.cloudflare.com/) on
+[JSR](https://jsr.io/@oak/oak). To use add the package to your Cloudflare Worker
+project:
+
+```
+npx jsr add @oak/oak@14
+```
+
+And then import into a module:
+
+```ts
+import { Application } from "@oak/oak/application";
+```
+
+Unlike other runtimes, the oak application doesn't listen for incoming requests,
+instead it handles worker fetch requests. A minimal example server would be:
+
+```ts
+import { Application } from "@oak/oak/application";
+
+const app = new Application();
+
+app.use((ctx) => {
+  ctx.response.body = "Hello CFW!";
+});
+
+export default { fetch: app.fetch };
+```
+
+> [!NOTE]
+> Send and websocket upgrades are not currently supported.
 
 ### Bun
 
@@ -94,7 +132,7 @@ bunx jsr i @oak/oak@14
 And then import into a module:
 
 ```ts
-import { Application } from "@oak/oak";
+import { Application } from "@oak/oak/application";
 ```
 
 > [!NOTE]

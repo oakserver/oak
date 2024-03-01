@@ -405,7 +405,7 @@ export function isBun(): boolean {
 
 export function isNode(): boolean {
   return "process" in globalThis && "global" in globalThis &&
-    !("Bun" in globalThis);
+    !("Bun" in globalThis) && !("WebSocketPair" in globalThis);
 }
 
 export function importKey(key: Key): Promise<CryptoKey> {

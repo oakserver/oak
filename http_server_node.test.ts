@@ -90,7 +90,7 @@ Deno.test({
     const listenOptions = { port: 4508 };
 
     const server = new Server(app, listenOptions);
-    server.listen();
+    await server.listen();
 
     const expectedBody = "test-body";
 

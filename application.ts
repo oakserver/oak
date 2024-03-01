@@ -91,6 +91,38 @@ interface HandleMethod {
   ): Promise<Response | undefined>;
 }
 
+interface CloudflareExecutionContext {
+  waitUntil(promise: Promise<unknown>): void;
+  passThroughOnException(): void;
+}
+
+interface CloudflareFetchHandler<
+  Env extends Record<string, string> = Record<string, string>,
+> {
+  /** A method that is compatible with the Cloudflare Worker
+   * [Fetch Handler](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/)
+   * and can be exported to handle Cloudflare Worker fetch requests.
+   *
+   * # Example
+   *
+   * ```ts
+   * import { Application } from "@oak/oak";
+   *
+   * const app = new Application();
+   * app.use((ctx) => {
+   *   ctx.response.body = "hello world!";
+   * });
+   *
+   * export default { fetch: app.fetch };
+   * ```
+   */
+  (
+    request: Request,
+    env: Env,
+    ctx: CloudflareExecutionContext,
+  ): Promise<Response>;
+}
+
 /** Options which can be specified when listening. */
 export type ListenOptions = ListenOptionsTls | ListenOptionsBase;
 
@@ -580,6 +612,60 @@ export class Application<AS extends State = Record<string, any>>
   ): void {
     super.addEventListener(type, listener, options);
   }
+
+  /** A method that is compatible with the Cloudflare Worker
+   * [Fetch Handler](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/)
+   * and can be exported to handle Cloudflare Worker fetch requests.
+   *
+   * # Example
+   *
+   * ```ts
+   * import { Application } from "@oak/oak";
+   *
+   * const app = new Application();
+   * app.use((ctx) => {
+   *   ctx.response.body = "hello world!";
+   * });
+   *
+   * export default { fetch: app.fetch };
+   * ```
+   */
+  fetch: CloudflareFetchHandler = async <
+    Env extends Record<string, string> = Record<string, string>,
+  >(
+    request: Request,
+    _env: Env,
+    _ctx: CloudflareExecutionContext,
+  ): Promise<Response> => {
+    if (!this.#middleware.length) {
+      throw new TypeError("There is no middleware to process requests.");
+    }
+    if (!NativeRequestCtor) {
+      const { NativeRequest } = await import("./http_server_native_request.ts");
+      NativeRequestCtor = NativeRequest;
+    }
+    let remoteAddr: NetAddr | undefined;
+    const hostname = request.headers.get("CF-Connecting-IP") ?? undefined;
+    if (hostname) {
+      remoteAddr = { hostname, port: 0, transport: "tcp" };
+    }
+    const contextRequest = new NativeRequestCtor(request, { remoteAddr });
+    const context = new Context(
+      this,
+      contextRequest,
+      this.#getContextState(),
+      this.#contextOptions,
+    );
+    try {
+      await this.#getComposed()(context);
+      const response = await context.response.toDomResponse();
+      context.response.destroy(false);
+      return response;
+    } catch (err) {
+      this.#handleError(context, err);
+      throw err;
+    }
+  };
 
   /** Handle an individual server request, returning the server response.  This
    * is similar to `.listen()`, but opening the connection and retrieving
