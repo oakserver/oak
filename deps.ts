@@ -4,29 +4,29 @@
 
 // `std` dependencies
 
-export { assert } from "https://deno.land/std@0.217.0/assert/assert.ts";
-export { concat } from "https://deno.land/std@0.217.0/bytes/concat.ts";
-export { copy as copyBytes } from "https://deno.land/std@0.217.0/bytes/copy.ts";
-export { timingSafeEqual } from "https://deno.land/std@0.217.0/crypto/timing_safe_equal.ts";
-export { KeyStack } from "https://deno.land/std@0.217.0/crypto/unstable_keystack.ts";
-export { encodeBase64 } from "https://deno.land/std@0.217.0/encoding/base64.ts";
+export { assert } from "https://deno.land/std@0.218.2/assert/assert.ts";
+export { concat } from "https://deno.land/std@0.218.2/bytes/concat.ts";
+export { copy as copyBytes } from "https://deno.land/std@0.218.2/bytes/copy.ts";
+export { timingSafeEqual } from "https://deno.land/std@0.218.2/crypto/timing_safe_equal.ts";
+export { KeyStack } from "https://deno.land/std@0.218.2/crypto/unstable_keystack.ts";
+export { encodeBase64 } from "https://deno.land/std@0.218.2/encoding/base64.ts";
 export {
   calculate,
   type ETagOptions,
   type FileInfo,
   ifMatch,
   ifNoneMatch,
-} from "https://deno.land/std@0.217.0/http/etag.ts";
+} from "https://deno.land/std@0.218.2/http/etag.ts";
 export {
   accepts,
   acceptsEncodings,
   acceptsLanguages,
-} from "https://deno.land/std@0.217.0/http/negotiation.ts";
-export { UserAgent } from "https://deno.land/std@0.217.0/http/user_agent.ts";
-export { LimitedReader } from "https://deno.land/std@0.217.0/io/limited_reader.ts";
-export { readAll } from "https://deno.land/std@0.217.0/io/read_all.ts";
-export { contentType } from "https://deno.land/std@0.217.0/media_types/content_type.ts";
-export { typeByExtension } from "https://deno.land/std@0.217.0/media_types/type_by_extension.ts";
+} from "https://deno.land/std@0.218.2/http/negotiation.ts";
+export { UserAgent } from "https://deno.land/std@0.218.2/http/user_agent.ts";
+export { LimitedReader } from "https://deno.land/std@0.218.2/io/limited_reader.ts";
+export { readAll } from "https://deno.land/std@0.218.2/io/read_all.ts";
+export { contentType } from "https://deno.land/std@0.218.2/media_types/content_type.ts";
+export { typeByExtension } from "https://deno.land/std@0.218.2/media_types/type_by_extension.ts";
 export {
   basename,
   extname,
@@ -35,7 +35,7 @@ export {
   normalize,
   parse,
   SEPARATOR,
-} from "https://deno.land/std@0.217.0/path/mod.ts";
+} from "https://deno.land/std@0.218.2/path/mod.ts";
 
 // 3rd party dependencies
 
