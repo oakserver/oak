@@ -1,5 +1,10 @@
 # oak Change Log
 
+## Version 14.1.1
+
+- chore: update to std 0.218.2 (298bc6f)
+- docs: update router module doc (6a41fff)
+
 ## Version 14.1.0
 
 - feat: add support for Bun (c7d6ae3)
