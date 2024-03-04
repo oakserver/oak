@@ -1,7 +1,6 @@
 comment: false
 codecov:
   require_ci_to_pass: true
-  token: 4e9ec7d7-a307-4c89-914f-9f590e6fbb55
 coverage:
   status:
     project:
