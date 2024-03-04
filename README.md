@@ -1,8 +1,9 @@
 # oak
 
+[![jsr.io/@oak/oak](https://jsr.io/badges/@oak/oak)](https://jsr.io/@oak/oak)
+[![jsr.io/@oak/oak score](https://jsr.io/badges/@oak/oak/score)](https://jsr.io/@oak/oak)
 [![deno.land/x/oak](https://deno.land/badge/oak/version)](https://deno.land/x/oak)
-[![NPM Version](https://img.shields.io/npm/v/@oakserver/oak)](https://www.npmjs.com/package/@oakserver/oak)
-[![deno doc](https://doc.deno.land/badge.svg)](https://deno.land/x/oak/?doc)
+[![npm Version](https://img.shields.io/npm/v/@oakserver/oak)](https://www.npmjs.com/package/@oakserver/oak)
 
 [![oak ci](https://github.com/oakserver/oak/workflows/ci/badge.svg)](https://github.com/oakserver/oak)
 [![codecov](https://codecov.io/gh/oakserver/oak/branch/main/graph/badge.svg?token=KEKZ52NXGP)](https://codecov.io/gh/oakserver/oak)
