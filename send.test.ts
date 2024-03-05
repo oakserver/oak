@@ -126,22 +126,24 @@ Deno.test({
   },
 });
 
-Deno.test({
-  name: "send file with spaces",
-  async fn() {
-    const { context } = setup("/test%20file.json");
-    const fixture = await Deno.readFile("./fixtures/test file.json");
-    await send(context, context.request.url.pathname, {
-      root: "./fixtures",
-      maxbuffer: 0,
-    });
-    const nativeResponse = await context.response.toDomResponse();
-    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
-    assertEquals(context.response.type, ".json");
-    assertStrictEquals(context.response.headers.get("content-encoding"), null);
-    context.response.destroy();
-  },
-});
+// JSR does not support uploading files with spaces in their filename and
+// currently doesn't support excluding certain files.
+// Deno.test({
+//   name: "send file with spaces",
+//   async fn() {
+//     const { context } = setup("/test%20file.json");
+//     const fixture = await Deno.readFile("./fixtures/test file.json");
+//     await send(context, context.request.url.pathname, {
+//       root: "./fixtures",
+//       maxbuffer: 0,
+//     });
+//     const nativeResponse = await context.response.toDomResponse();
+//     assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
+//     assertEquals(context.response.type, ".json");
+//     assertStrictEquals(context.response.headers.get("content-encoding"), null);
+//     context.response.destroy();
+//   },
+// });
 
 Deno.test({
   name: "send hidden file throws 403",
