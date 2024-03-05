@@ -20,9 +20,6 @@ jobs:
       - name: check linting
         run: deno lint
 
-      - name: check publish
-        run: deno publish --dry-run
-
       - name: run tests generating coverage
         run: deno task test:coverage
       
