@@ -1,5 +1,18 @@
 # oak Change Log
 
+## Version 14.2.0
+
+- chore: update codecov config (fcc7c96)
+- chore: update codecov config (af33378)
+- chore: update CI config (7a000b1)
+- chore: more CI changes (b6bfa86)
+- chore: merge in jsr changes (5e80e65)
+- chore: migrate to @oak/commmons 0.7.0 (8293071)
+- chore: remove npm build (1345298)
+- chore: move examples to use jsr, update inline docs (a746485)
+- docs: update README badges (b057920)
+- docs: update main export inline docs (98f4261)
+
 ## Version 14.1.1
 
 - chore: update to std 0.218.2 (298bc6f)
