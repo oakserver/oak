@@ -25,6 +25,12 @@ jobs:
 
       - name: run tests generating coverage
         run: deno task test:coverage
+      
+      - name: run tests no check
+        run: deno task test:no-check
+
+      - name: test build for Node.js
+        run: deno task build
 
       - name: generate lcov
         run: deno task coverage > cov.lcov

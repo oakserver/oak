@@ -17,9 +17,11 @@
     "./testing": "./testing.ts"
   },
   "tasks": {
+    "build": "deno run --allow-read --allow-write --allow-net --allow-env --allow-run _build_npm.ts",
     "coverage": "deno coverage --lcov ./cov",
     "example": "deno run --allow-net examples/echoServer.ts",
     "test": "deno test --allow-read --allow-write --allow-net --parallel --ignore=npm",
+    "test:no-check": "deno test --allow-read --allow-write --allow-net --no-check --parallel --ignore=npm,http_server_native_unstable_test.ts",
     "test:coverage": "deno test --coverage=./cov --allow-read --allow-write --allow-net --cert ./examples/tls/RootCA.crt --parallel --ignore=npm"
   },
   "fmt": {
