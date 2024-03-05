@@ -1,6 +1,4 @@
 !.vscode
 .tool-versions
-oak.bundle.js
 cov.lcov
 cov/
-npm/
