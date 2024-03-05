@@ -52,7 +52,7 @@ export interface ContextSendOptions extends SendOptions {
  * ### Example
  *
  * ```ts
- * import { Application, Context } from "https://deno.land/x/oak/mod.ts";
+ * import { Application, Context } from "jsr:@oak/oak/";
  *
  * const app = new Application();
  *
@@ -200,7 +200,7 @@ export class Context<
    * ### Example
    *
    * ```ts
-   * import { Context, Status } from "https://deno.land/x/oak/mod.ts";
+   * import { Context, Status } from "jsr:@oak/oak/";
    *
    * export function mw(ctx: Context) {
    *   const body = ctx.request.body();

@@ -372,7 +372,7 @@ export class ApplicationListenEvent extends Event {
  * ### Basic example
  *
  * ```ts
- * import { Application } from "https://deno.land/x/oak/mod.ts";
+ * import { Application } from "jsr:@oak/oak/application";
  *
  * const app = new Application();
  *
@@ -812,7 +812,7 @@ export class Application<AS extends State = Record<string, any>>
    * Basic usage:
    *
    * ```ts
-   * const import { Application } from "https://deno.land/x/oak/mod.ts";
+   * const import { Application } from "jsr:@oak/oak/application";
    *
    * const app = new Application();
    *

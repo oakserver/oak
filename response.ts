@@ -34,7 +34,7 @@ export type ResponseBodyFunction = () => ResponseBody | Promise<ResponseBody>;
  * back to the request referrer.  For example:
  *
  * ```ts
- * import { Application, REDIRECT_BACK } from "https://deno.land/x/oak/mod.ts";
+ * import { Application, REDIRECT_BACK } from "jsr:@oak/oak/";
  *
  * const app = new Application();
  *
@@ -93,7 +93,7 @@ async function convertBodyToBodyInit(
  * ### Example
  *
  * ```ts
- * import { Application, Status } from "https://deno.land/x/oak/mod.ts";
+ * import { Application, Status } from "jsr:@oak/oak/";
  *
  * const app = new Application();
  *

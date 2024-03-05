@@ -472,7 +472,7 @@ export class Layer<
  * ### Basic example
  *
  * ```ts
- * import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+ * import { Application, Router } from "jsr:@oak/oak/";
  *
  * const router = new Router();
  * router.get("/", (ctx, next) => {
@@ -1272,7 +1272,7 @@ export class Router<
    * has been configured to handle.  Typical usage would be something like this:
    *
    * ```ts
-   * import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+   * import { Application, Router } from "jsr:@oak/oak/";
    *
    * const app = new Application();
    * const router = new Router();
