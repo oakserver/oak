@@ -44,23 +44,23 @@ export {
   SecureCookieMap,
   type SecureCookieMapGetOptions,
   type SecureCookieMapSetDeleteOptions,
-} from "jsr:@oak/commons@0.6/cookie_map";
+} from "jsr:@oak/commons@0.7/cookie_map";
 export {
   createHttpError,
   errors,
   HttpError,
   type HttpErrorOptions,
   isHttpError,
-} from "jsr:@oak/commons@0.6/http_errors";
-export { matches } from "jsr:@oak/commons@0.6/media_types";
-export { type HttpMethod as HTTPMethods } from "jsr:@oak/commons@0.6/method";
+} from "jsr:@oak/commons@0.7/http_errors";
+export { matches } from "jsr:@oak/commons@0.7/media_types";
+export { type HttpMethod as HTTPMethods } from "jsr:@oak/commons@0.7/method";
 export {
   ServerSentEvent,
   type ServerSentEventInit,
   ServerSentEventStreamTarget,
   type ServerSentEventTarget,
   type ServerSentEventTargetOptions,
-} from "jsr:@oak/commons@0.6/server_sent_event";
+} from "jsr:@oak/commons@0.7/server_sent_event";
 export {
   type ErrorStatus,
   isErrorStatus,
@@ -68,7 +68,7 @@ export {
   type RedirectStatus,
   Status,
   STATUS_TEXT,
-} from "jsr:@oak/commons@0.6/status";
+} from "jsr:@oak/commons@0.7/status";
 
 export {
   compile,
