@@ -539,7 +539,7 @@ It also has several methods:
   Resolves with the data from the body parsed as JSON. If a `jsonBodyReviver`
   has been specified in the application, it will be used when parsing the JSON.
 
-- `test()`
+- `text()`
 
   Resolves with a string that represents the contents of the body.
 
