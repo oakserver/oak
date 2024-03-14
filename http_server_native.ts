@@ -1,5 +1,11 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
+/** The abstraction that oak uses when dealing with requests and responses
+ * within the Deno runtime.
+ *
+ * @module
+ */
+
 import type { Application, State } from "./application.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import type {
@@ -71,7 +77,6 @@ export class Server<AS extends State = Record<string, any>>
       throw new Error("Server already listening.");
     }
     const { signal } = this.#options;
-    signal?.addEventListener("abort", () => this.close(), { once: true });
     const { onListen, ...options } = this.#options;
     const { promise, resolve } = createPromiseWithResolvers<Listener>();
     this.#stream = new ReadableStream<NativeRequest>({
@@ -94,6 +99,7 @@ export class Server<AS extends State = Record<string, any>>
       },
     });
 
+    signal?.addEventListener("abort", () => this.close(), { once: true });
     return promise;
   }
 

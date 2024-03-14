@@ -26,6 +26,8 @@ export interface ServerRequest {
   upgrade?(options?: UpgradeWebSocketOptions): WebSocket;
 }
 
+/** The abstract constructor interface that custom servers need to adhere to
+ * when using with an {@linkcode Application}. */
 export interface ServerConstructor<T extends ServerRequest> {
   // deno-lint-ignore no-explicit-any
   new <AS extends State = Record<string, any>>(
@@ -33,7 +35,7 @@ export interface ServerConstructor<T extends ServerRequest> {
     options: Omit<ServeOptions | ServeTlsOptions, "signal">,
   ): OakServer<T>;
   prototype: OakServer<T>;
-  type?: "native" | "node";
+  type?: "native" | "node" | "bun";
 }
 
 export type Data = string | number[] | ArrayBuffer | Uint8Array;

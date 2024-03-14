@@ -3,12 +3,7 @@
  */
 
 // Importing some console colors
-import {
-  bold,
-  cyan,
-  green,
-  yellow,
-} from "https://deno.land/std@0.215.0/fmt/colors.ts";
+import { bold, cyan, green, yellow } from "jsr:@std/fmt@0.218/colors";
 
 import {
   Application,

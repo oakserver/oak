@@ -1,6 +1,6 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-/** Middleware the converts the oak specific context to a Fetch API standard
+/** Middleware that converts the oak specific context to a Fetch API standard
  * {@linkcode Request} and {@linkcode Response} along with a modified context
  * providing some of the oak functionality. This is intended to make it easier
  * to adapt code to work with oak.
@@ -20,6 +20,8 @@
  * > Therefore there is no `next()`.
  * >
  * > For these advanced use cases, create middleware without the wrapper.
+ *
+ * @module
  */
 
 import { type Application, type State } from "../application.ts";
@@ -34,6 +36,8 @@ import {
   type RouterMiddleware,
 } from "../router.ts";
 
+/** The context associated when dealing with serve middleware requests on an
+ * application. */
 export class ServeContext<S extends State = State> {
   #context: Context<S>;
 
@@ -142,6 +146,7 @@ export class ServeContext<S extends State = State> {
   }
 }
 
+/** The context associated with serve middleware requests on a router. */
 export class RouteContext<
   R extends string,
   P extends RouteParams<R> = RouteParams<R>,

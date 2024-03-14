@@ -1,3 +1,11 @@
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
+
+/** The ability to parse a request body into {@linkcode FormData} when not
+ * supported natively by the runtime.
+ *
+ * @module
+ */
+
 import { concat, createHttpError, Status, timingSafeEqual } from "./deps.ts";
 import { toParamRegExp, unquote } from "./headers.ts";
 import { skipLWSPChar, stripEol } from "./util.ts";
@@ -259,6 +267,11 @@ class MultipartStream extends TransformStream<Uint8Array, Part> {
   }
 }
 
+/** Take a content type and the body of a request and parse it as
+ * {@linkcode FormData}.
+ *
+ * This is used in run-times where there isn't native support for this
+ * feature. */
 export async function parse(
   contentType: string,
   body: ReadableStream<Uint8Array>,

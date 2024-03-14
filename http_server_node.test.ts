@@ -12,7 +12,6 @@ import {
 } from "./http_server_node.ts";
 
 import { Application } from "./application.ts";
-// import { isNode } from "./util.ts";
 
 const destroyCalls: any[][] = [];
 const setHeaderCalls: any[][] = [];
@@ -91,7 +90,7 @@ Deno.test({
     const listenOptions = { port: 4508 };
 
     const server = new Server(app, listenOptions);
-    server.listen();
+    await server.listen();
 
     const expectedBody = "test-body";
 

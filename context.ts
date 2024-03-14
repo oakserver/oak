@@ -2,13 +2,11 @@
 
 import type { Application, State } from "./application.ts";
 import {
-  assert,
   createHttpError,
   type ErrorStatus,
   type HttpErrorOptions,
   KeyStack,
   SecureCookieMap,
-  ServerSentEventStreamTarget,
   type ServerSentEventTarget,
   type ServerSentEventTargetOptions,
 } from "./deps.ts";
@@ -17,6 +15,7 @@ import { Response } from "./response.ts";
 import { send, SendOptions } from "./send.ts";
 import type { ServerRequest, UpgradeWebSocketOptions } from "./types.ts";
 
+/** Options that can be supplied when creating a {@linkcode Context} */
 export interface ContextOptions<
   S extends AS = State,
   // deno-lint-ignore no-explicit-any
@@ -35,6 +34,7 @@ export interface ContextOptions<
   secure?: boolean;
 }
 
+/** Options that can be supplied when using the `.send()` method. */
 export interface ContextSendOptions extends SendOptions {
   /** The filename to send, which will be resolved based on the other options.
    * If this property is omitted, the current context's `.request.url.pathname`
@@ -52,7 +52,7 @@ export interface ContextSendOptions extends SendOptions {
  * ### Example
  *
  * ```ts
- * import { Application, Context } from "https://deno.land/x/oak/mod.ts";
+ * import { Application, Context } from "jsr:@oak/oak/";
  *
  * const app = new Application();
  *
@@ -200,7 +200,7 @@ export class Context<
    * ### Example
    *
    * ```ts
-   * import { Context, Status } from "https://deno.land/x/oak/mod.ts";
+   * import { Context, Status } from "jsr:@oak/oak/";
    *
    * export function mw(ctx: Context) {
    *   const body = ctx.request.body();
@@ -248,30 +248,24 @@ export class Context<
     return send(this, path, sendOptions);
   }
 
-  /** Convert the connection to stream events, returning an event target for
-   * sending server sent events.  Events dispatched on the returned target will
-   * be sent to the client and be available in the client's `EventSource` that
-   * initiated the connection.
+  /** Convert the connection to stream events, resolving with an event target
+   * for sending server sent events.  Events dispatched on the returned target
+   * will be sent to the client and be available in the client's `EventSource`
+   * that initiated the connection.
    *
-   * **Note** the body needs to be returned to the client to be able to
-   * dispatch events, so dispatching events within the middleware will delay
-   * sending the body back to the client.
-   *
-   * This will set the response body and update response headers to support
-   * sending SSE events. Additional middleware should not modify the body.
+   * Invoking this will cause the a response to be sent to the client
+   * immediately to initialize the stream of events, and therefore any further
+   * changes to the response, like headers will not reach the client.
    */
-  sendEvents(options?: ServerSentEventTargetOptions): ServerSentEventTarget {
+  async sendEvents(
+    options?: ServerSentEventTargetOptions,
+  ): Promise<ServerSentEventTarget> {
     if (!this.#sse) {
-      assert(this.response.writable, "The response is not writable.");
-      const sse = this.#sse = new ServerSentEventStreamTarget(options);
-      this.app.addEventListener("close", () => sse.close());
-      const [bodyInit, { headers }] = sse.asResponseInit({
+      const sse = this.#sse = await this.request.sendEvents(options, {
         headers: this.response.headers,
       });
-      this.response.body = bodyInit;
-      if (headers instanceof Headers) {
-        this.response.headers = headers;
-      }
+      this.app.addEventListener("close", () => sse.close());
+      this.respond = false;
     }
     return this.#sse;
   }
@@ -298,8 +292,8 @@ export class Context<
    * `false`.  If the socket cannot be upgraded, this method will throw. */
   upgrade(options?: UpgradeWebSocketOptions): WebSocket {
     if (!this.#socket) {
-      this.#socket = this.request.upgrade(options);
-      this.app.addEventListener("close", () => this.#socket?.close());
+      const socket = this.#socket = this.request.upgrade(options);
+      this.app.addEventListener("close", () => socket.close());
       this.respond = false;
     }
     return this.#socket;

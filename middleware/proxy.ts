@@ -1,5 +1,11 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
+/** Middleware for oak that allows back-to-back proxies of requests to be
+ * used.
+ *
+ * @module
+ */
+
 import type { State } from "../application.ts";
 import type { Context } from "../context.ts";
 import { parse } from "../forwarded.ts";
@@ -11,33 +17,34 @@ import type {
 } from "../router.ts";
 import { isRouterContext } from "../util.ts";
 
-export type Fetch = (
+type Fetch = (
   input: Request,
   init: { context: Context },
 ) => Promise<Response>;
 
-export type ProxyMatchFunction<
+type ProxyMatchFunction<
   R extends string,
   P extends RouteParams<R> = RouteParams<R>,
   // deno-lint-ignore no-explicit-any
   S extends State = Record<string, any>,
 > = (ctx: Context<S> | RouterContext<R, P, S>) => boolean;
 
-export type ProxyMapFunction<R extends string, P extends RouteParams<R>> = (
+type ProxyMapFunction<R extends string, P extends RouteParams<R>> = (
   path: R,
   params?: P,
 ) => R;
 
-export type ProxyHeadersFunction<S extends State> = (
+type ProxyHeadersFunction<S extends State> = (
   ctx: Context<S>,
 ) => HeadersInit | Promise<HeadersInit>;
 
-export type ProxyRouterHeadersFunction<
+type ProxyRouterHeadersFunction<
   R extends string,
   P extends RouteParams<R>,
   S extends State,
 > = (ctx: RouterContext<R, P, S>) => HeadersInit | Promise<HeadersInit>;
 
+/** Options which can be specified on the {@linkcode proxy} middleware. */
 export interface ProxyOptions<
   R extends string,
   P extends RouteParams<R> = RouteParams<R>,

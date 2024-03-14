@@ -14,6 +14,8 @@ import {
   Uint8ArrayTransformStream,
 } from "./util.ts";
 
+/** The various types of bodies supported when setting the value of `.body`
+ * on a {@linkcode Response} */
 export type ResponseBody =
   | string
   | number
@@ -23,13 +25,16 @@ export type ResponseBody =
   | object
   | undefined
   | null;
+
+/** A function that when invoked returns or resolves to a
+ * {@linkcode ResponseBody}. */
 export type ResponseBodyFunction = () => ResponseBody | Promise<ResponseBody>;
 
 /** A symbol that indicates to `response.redirect()` to attempt to redirect
  * back to the request referrer.  For example:
  *
  * ```ts
- * import { Application, REDIRECT_BACK } from "https://deno.land/x/oak/mod.ts";
+ * import { Application, REDIRECT_BACK } from "jsr:@oak/oak/";
  *
  * const app = new Application();
  *
@@ -44,7 +49,7 @@ export type ResponseBodyFunction = () => ResponseBody | Promise<ResponseBody>;
  */
 export const REDIRECT_BACK = Symbol("redirect backwards");
 
-export async function convertBodyToBodyInit(
+async function convertBodyToBodyInit(
   body: ResponseBody | ResponseBodyFunction,
   type?: string,
   jsonBodyReplacer?: (key: string, value: unknown) => unknown,
@@ -88,7 +93,7 @@ export async function convertBodyToBodyInit(
  * ### Example
  *
  * ```ts
- * import { Application, Status } from "https://deno.land/x/oak/mod.ts";
+ * import { Application, Status } from "jsr:@oak/oak/";
  *
  * const app = new Application();
  *

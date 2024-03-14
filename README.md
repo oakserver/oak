@@ -1,15 +1,17 @@
 # oak
 
+[![jsr.io/@oak/oak](https://jsr.io/badges/@oak/oak)](https://jsr.io/@oak/oak)
+[![jsr.io/@oak/oak score](https://jsr.io/badges/@oak/oak/score)](https://jsr.io/@oak/oak)
 [![deno.land/x/oak](https://deno.land/badge/oak/version)](https://deno.land/x/oak)
-[![NPM Version](https://img.shields.io/npm/v/@oakserver/oak)](https://www.npmjs.com/package/@oakserver/oak)
-[![deno doc](https://doc.deno.land/badge.svg)](https://deno.land/x/oak/?doc)
+[![npm Version](https://img.shields.io/npm/v/@oakserver/oak)](https://www.npmjs.com/package/@oakserver/oak)
 
 [![oak ci](https://github.com/oakserver/oak/workflows/ci/badge.svg)](https://github.com/oakserver/oak)
 [![codecov](https://codecov.io/gh/oakserver/oak/branch/main/graph/badge.svg?token=KEKZ52NXGP)](https://codecov.io/gh/oakserver/oak)
 
 A middleware framework for Deno's native HTTP server,
-[Deno Deploy](https://deno.com/deploy) and Node.js 16.5 and later. It also
-includes a middleware router.
+[Deno Deploy](https://deno.com/deploy), Node.js 16.5 and later,
+[Cloudflare Workers](https://workers.cloudflare.com/) and
+[Bun](https://bun.sh/). It also includes a middleware router.
 
 This middleware framework is inspired by [Koa](https://github.com/koajs/koa/)
 and middleware router inspired by
@@ -33,6 +35,110 @@ resources.
 > you would expect. `https://deno.land/x/` supports using git tags in the URL to
 > direct you at a particular version. So to use version 13.0.0 of oak, you would
 > want to import `https://deno.land/x/oak@v13.0.0/mod.ts`.
+
+## Usage
+
+### Deno CLI and Deno Deploy
+
+oak is available on both [deno.land/x](https://deno.land/x/oak/) and
+[JSR](https://jsr.io/@oak/oak). To use from `deno.land/x`, import into a module:
+
+```ts
+import { Application } from "https://deno.land/x/oak/mod.ts";
+```
+
+To use from JSR, import into a module:
+
+```ts
+import { Application } from "jsr:@oak/oak@14";
+```
+
+### Node.js
+
+oak is available for Node.js on both
+[npm](https://www.npmjs.com/package/@oakserver/oak) and
+[JSR](https://jsr.io/@oak/oak). To use from npm, install the package:
+
+```
+npm i @oakserver/oak@14
+```
+
+And then import into a module:
+
+```js
+import { Application } from "@oakserver/oak";
+```
+
+To use from JSR, install the package:
+
+```
+npx jsr i @oak/oak@14
+```
+
+And then import into a module:
+
+```js
+import { Application } from "@oak/oak/application";
+```
+
+> [!NOTE]
+> Send, websocket upgrades and serving over TLS/HTTPS are not currently
+> supported.
+>
+> In addition the Cloudflare Worker environment and execution context are not
+> currently exposed to middleware.
+
+### Cloudflare Workers
+
+oak is available for [Cloudflare Workers](https://workers.cloudflare.com/) on
+[JSR](https://jsr.io/@oak/oak). To use add the package to your Cloudflare Worker
+project:
+
+```
+npx jsr add @oak/oak@14
+```
+
+And then import into a module:
+
+```ts
+import { Application } from "@oak/oak/application";
+```
+
+Unlike other runtimes, the oak application doesn't listen for incoming requests,
+instead it handles worker fetch requests. A minimal example server would be:
+
+```ts
+import { Application } from "@oak/oak/application";
+
+const app = new Application();
+
+app.use((ctx) => {
+  ctx.response.body = "Hello CFW!";
+});
+
+export default { fetch: app.fetch };
+```
+
+> [!NOTE]
+> Send and websocket upgrades are not currently supported.
+
+### Bun
+
+oak is available for Bun on [JSR](https://jsr.io/@oak/oak). To use install the
+package:
+
+```
+bunx jsr i @oak/oak@14
+```
+
+And then import into a module:
+
+```ts
+import { Application } from "@oak/oak/application";
+```
+
+> [!NOTE]
+> Send and websocket upgrades are not currently supported.
 
 ## Application, middleware, and context
 
@@ -457,7 +563,7 @@ It also has several methods:
   Resolves with the data from the body parsed as JSON. If a `jsonBodyReviver`
   has been specified in the application, it will be used when parsing the JSON.
 
-- `test()`
+- `text()`
 
   Resolves with a string that represents the contents of the body.
 

@@ -1,5 +1,57 @@
 # oak Change Log
 
+## Version 14.2.0
+
+- chore: update codecov config (fcc7c96)
+- chore: update codecov config (af33378)
+- chore: update CI config (7a000b1)
+- chore: more CI changes (b6bfa86)
+- chore: merge in jsr changes (5e80e65)
+- chore: migrate to @oak/commmons 0.7.0 (8293071)
+- chore: remove npm build (1345298)
+- chore: move examples to use jsr, update inline docs (a746485)
+- docs: update README badges (b057920)
+- docs: update main export inline docs (98f4261)
+
+## Version 14.1.1
+
+- chore: update to std 0.218.2 (298bc6f)
+- docs: update router module doc (6a41fff)
+
+## Version 14.1.0
+
+- feat: add support for Bun (c7d6ae3)
+
+  oak natively supports the built in Bun HTTP server.
+
+- feat: initial Cloudflare Worker support (a7f87e5)
+
+  The oak application provides a Fetch Handler for Cloudflare Workers.
+
+- tests: ignore specific bun test (f3dc3d5)
+- chore: cleanup on http_server_native_request (27cf442)
+- docs: improve inline documentation (928d9f0)
+- docs: update readme (b46ee42)
+
+## Version 14.0.0
+
+- feat: send events immediately sends response to client (a3f0076)
+
+  **BREAKING CHANGE** Previous versions of oak would return a
+  `ServerSentEventTarget` when calling `.sendEvents()` on the context, but would
+  not send the response to the client until all the middleware completed
+  processing. Now, the response is sent back to the client immediately (like the
+  websocket `.upgrade()` method) which results in the `ServerSentEventTarget`
+  being returned in a promise and also preventing any further changes to
+  response by other middleware.
+
+  This has the benefit of meaning any events dispatched from within the main
+  flow of the current middleware are sent to the client straight away instead of
+  appearing to be buffered.
+
+- fix: http_server_native when closing with signal abort event (#639)
+- chore: update to std 0.217.0 (bc88315)
+
 ## Version 13.2.5
 
 - fix: wrong file dynamically imported (#638)

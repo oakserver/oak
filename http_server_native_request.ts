@@ -32,9 +32,9 @@ export interface NativeRequestInfo {
 export class NativeRequest implements ServerRequest {
   #remoteAddr?: NetAddr;
   // deno-lint-ignore no-explicit-any
-  #reject!: (reason?: any) => void;
+  #reject: (reason?: any) => void;
   #request: Request;
-  #resolve!: (value: Response) => void;
+  #resolve: (value: Response) => void;
   #resolved = false;
   #response: Promise<Response>;
   #upgradeWebSocket?: UpgradeWebSocketFn;

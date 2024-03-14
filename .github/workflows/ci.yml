@@ -20,17 +20,8 @@ jobs:
       - name: check linting
         run: deno lint
 
-      - name: run tests
-        run: deno task test
-      
-      - name: run tests no check
-        run: deno task test:no-check
-
-      - name: run tests unstable
-        run: deno task test:unstable
-
-      - name: test build for Node.js
-        run: deno task build
+      - name: run tests generating coverage
+        run: deno task test:coverage
 
       - name: generate lcov
         run: deno task coverage > cov.lcov
@@ -38,4 +29,5 @@ jobs:
       - name: upload coverage
         uses: codecov/codecov-action@v4
         with:
-          files: cov.lcov
+          files: ./cov.lcov
+          token: ${{ secrets.CODECOV_TOKEN }}

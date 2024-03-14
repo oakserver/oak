@@ -1,20 +1,22 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 /**
- * A middleware framework for handling HTTP with Deno.
+ * A middleware framework for handling HTTP with [Deno CLI](https://deno.land),
+ * [Deno Deploy](https://deno.com/deploy),
+ * [Cloudflare Workers](https://workers.cloudflare.com/),
+ * [Node.js](https://nodejs.org/), and [Bun](https://bun.sh/).
  *
- * oak works well on both Deno CLI and Deno deploy, and is inspired by
- * [koa](https://koajs.com/). It works well with both the Deno CLI and
- * [Deno Deploy](https://deno.com/deploy).
+ * oak is inspired by [koa](https://koajs.com/).
  *
- * ### Example server
+ * ## Example server
  *
- * A minimal router server which responds with content on `/`. With Deno CLI
- * this will listen on port 8080 and on Deploy, this will simply serve requests
- * received on the application.
+ * A minimal router server which responds with content on `/`.
+ *
+ * ### Deno CLI and Deno Deploy
  *
  * ```ts
- * import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+ * import { Application } from "jsr:@oak/oak/application";
+ * import { Router } from "jsr:@oak/oak/router";
  *
  * const router = new Router();
  * router.get("/", (ctx) => {
@@ -33,6 +35,60 @@
  * app.use(router.allowedMethods());
  *
  * app.listen({ port: 8080 });
+ * ```
+ *
+ * ### Node.js and Bun
+ *
+ * You will have to install the package and then:
+ *
+ * ```ts
+ * import { Application } from "@oak/oak/application";
+ * import { Router } from "@oak/oak/router";
+ *
+ * const router = new Router();
+ * router.get("/", (ctx) => {
+ *   ctx.response.body = `<!DOCTYPE html>
+ *     <html>
+ *       <head><title>Hello oak!</title><head>
+ *       <body>
+ *         <h1>Hello oak!</h1>
+ *       </body>
+ *     </html>
+ *   `;
+ * });
+ *
+ * const app = new Application();
+ * app.use(router.routes());
+ * app.use(router.allowedMethods());
+ *
+ * app.listen({ port: 8080 });
+ * ```
+ *
+ * ### Cloudflare Workers
+ *
+ * You will have to install the package and then:
+ *
+ * ```ts
+ * import { Application } from "@oak/oak/application";
+ * import { Router } from "@oak/oak/router";
+ *
+ * const router = new Router();
+ * router.get("/", (ctx) => {
+ *   ctx.response.body = `<!DOCTYPE html>
+ *     <html>
+ *       <head><title>Hello oak!</title><head>
+ *       <body>
+ *         <h1>Hello oak!</h1>
+ *       </body>
+ *     </html>
+ *   `;
+ * });
+ *
+ * const app = new Application();
+ * app.use(router.routes());
+ * app.use(router.allowedMethods());
+ *
+ * export default { fetch: app.fetch };
  * ```
  *
  * @module

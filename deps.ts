@@ -2,31 +2,31 @@
 
 // This file contains the external dependencies that oak depends upon
 
-// `std` dependencies
+// jsr dependencies
 
-export { assert } from "https://deno.land/std@0.215.0/assert/assert.ts";
-export { concat } from "https://deno.land/std@0.215.0/bytes/concat.ts";
-export { copy as copyBytes } from "https://deno.land/std@0.215.0/bytes/copy.ts";
-export { timingSafeEqual } from "https://deno.land/std@0.215.0/crypto/timing_safe_equal.ts";
-export { KeyStack } from "https://deno.land/std@0.215.0/crypto/unstable_keystack.ts";
-export { encodeBase64 } from "https://deno.land/std@0.215.0/encoding/base64.ts";
+export { assert } from "jsr:@std/assert@0.218/assert";
+export { concat } from "jsr:@std/bytes@0.218/concat";
+export { copy as copyBytes } from "jsr:@std/bytes@0.218/copy";
+export { timingSafeEqual } from "jsr:@std/crypto@0.218/timing_safe_equal";
+export { KeyStack } from "jsr:@std/crypto@0.218/unstable_keystack";
+export { encodeBase64 } from "jsr:@std/encoding@0.218/base64";
 export {
   calculate,
   type ETagOptions,
   type FileInfo,
   ifMatch,
   ifNoneMatch,
-} from "https://deno.land/std@0.215.0/http/etag.ts";
+} from "jsr:@std/http@0.218/etag";
 export {
   accepts,
   acceptsEncodings,
   acceptsLanguages,
-} from "https://deno.land/std@0.215.0/http/negotiation.ts";
-export { UserAgent } from "https://deno.land/std@0.215.0/http/user_agent.ts";
-export { LimitedReader } from "https://deno.land/std@0.215.0/io/limited_reader.ts";
-export { readAll } from "https://deno.land/std@0.215.0/io/read_all.ts";
-export { contentType } from "https://deno.land/std@0.215.0/media_types/content_type.ts";
-export { typeByExtension } from "https://deno.land/std@0.215.0/media_types/type_by_extension.ts";
+} from "jsr:@std/http@0.218/negotiation";
+export { UserAgent } from "jsr:@std/http@0.218/user_agent";
+export { LimitedReader } from "jsr:@std/io@0.218/limited_reader";
+export { readAll } from "jsr:@std/io@0.218/read_all";
+export { contentType } from "jsr:@std/media-types@0.218/content_type";
+export { typeByExtension } from "jsr:@std/media-types@0.218/type_by_extension";
 export {
   basename,
   extname,
@@ -35,7 +35,7 @@ export {
   normalize,
   parse,
   SEPARATOR,
-} from "https://deno.land/std@0.215.0/path/mod.ts";
+} from "jsr:@std/path@0.218/";
 
 // 3rd party dependencies
 
@@ -44,23 +44,23 @@ export {
   SecureCookieMap,
   type SecureCookieMapGetOptions,
   type SecureCookieMapSetDeleteOptions,
-} from "https://deno.land/x/oak_commons@0.6.1/cookie_map.ts";
+} from "jsr:@oak/commons@0.7/cookie_map";
 export {
   createHttpError,
   errors,
   HttpError,
   type HttpErrorOptions,
   isHttpError,
-} from "https://deno.land/x/oak_commons@0.6.1/http_errors.ts";
-export { matches } from "https://deno.land/x/oak_commons@0.6.1/media_types.ts";
-export { type HttpMethod as HTTPMethods } from "https://deno.land/x/oak_commons@0.6.1/method.ts";
+} from "jsr:@oak/commons@0.7/http_errors";
+export { matches } from "jsr:@oak/commons@0.7/media_types";
+export { type HttpMethod as HTTPMethods } from "jsr:@oak/commons@0.7/method";
 export {
   ServerSentEvent,
   type ServerSentEventInit,
   ServerSentEventStreamTarget,
   type ServerSentEventTarget,
   type ServerSentEventTargetOptions,
-} from "https://deno.land/x/oak_commons@0.6.1/server_sent_event.ts";
+} from "jsr:@oak/commons@0.7/server_sent_event";
 export {
   type ErrorStatus,
   isErrorStatus,
@@ -68,7 +68,7 @@ export {
   type RedirectStatus,
   Status,
   STATUS_TEXT,
-} from "https://deno.land/x/oak_commons@0.6.1/status.ts";
+} from "jsr:@oak/commons@0.7/status";
 
 export {
   compile,
@@ -78,4 +78,4 @@ export {
   type ParseOptions,
   pathToRegexp,
   type TokensToRegexpOptions,
-} from "https://deno.land/x/path_to_regexp@v6.2.1/index.ts";
+} from "npm:path-to-regexp@6.2.1";

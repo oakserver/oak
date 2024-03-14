@@ -3,13 +3,7 @@
  * $CWD/examples/static path.
  */
 
-import {
-  bold,
-  cyan,
-  green,
-  red,
-  yellow,
-} from "https://deno.land/std@0.215.0/fmt/colors.ts";
+import { bold, cyan, green, red, yellow } from "jsr:@std/fmt@0.218/colors";
 
 import { Application, HttpError, Status } from "../mod.ts";
 

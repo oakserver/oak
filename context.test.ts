@@ -362,7 +362,7 @@ Deno.test({
   name: "context.sendEvents()",
   async fn() {
     const context = new Context(createMockApp(), createMockNativeRequest(), {});
-    const sse = context.sendEvents();
+    const sse = await context.sendEvents();
     assertEquals((context.app as any).listeners, ["close"]);
     sse.dispatchComment(`hello world`);
     await sse.close();

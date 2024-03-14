@@ -1,5 +1,26 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
+/**
+ * Contains the core concept of oak, the middleware application. Typical usage
+ * is the creation of an application instance, registration of middleware, and
+ * then starting to listen for requests.
+ *
+ * # Example
+ *
+ * ```ts
+ * import { Application } from "jsr:@oak/oak@14/application";
+ *
+ * const app = new Application();
+ * app.use((ctx) => {
+ *   ctx.response.body = "hello world!";
+ * });
+ *
+ * app.listen({ port: 8080 });
+ * ```
+ *
+ * @module
+ */
+
 import { Context } from "./context.ts";
 import { assert, KeyStack, Status, STATUS_TEXT } from "./deps.ts";
 import { type NativeRequest } from "./http_server_native_request.ts";
@@ -17,8 +38,14 @@ import {
   ServerConstructor,
   ServerRequest,
 } from "./types.ts";
-import { createPromiseWithResolvers, isNetAddr, isNode } from "./util.ts";
+import {
+  createPromiseWithResolvers,
+  isBun,
+  isNetAddr,
+  isNode,
+} from "./util.ts";
 
+/** Base interface for application listening options. */
 export interface ListenOptionsBase {
   /** The port to listen on. If not specified, defaults to `0`, which allows the
    * operating system to determine the value. */
@@ -36,6 +63,7 @@ export interface ListenOptionsBase {
   signal?: AbortSignal;
 }
 
+/** Interface options when listening on TLS. */
 export interface ListenOptionsTls extends Deno.ListenTlsOptions {
   /** Application-Layer Protocol Negotiation (ALPN) protocols to announce to
    * the client. If not specified, no ALPN extension will be included in the
@@ -50,7 +78,7 @@ export interface ListenOptionsTls extends Deno.ListenTlsOptions {
   signal?: AbortSignal;
 }
 
-export interface HandleMethod {
+interface HandleMethod {
   /** Handle an individual server request, returning the server response.  This
    * is similar to `.listen()`, but opening the connection and retrieving
    * requests are not the responsibility of the application.  If the generated
@@ -63,6 +91,39 @@ export interface HandleMethod {
   ): Promise<Response | undefined>;
 }
 
+interface CloudflareExecutionContext {
+  waitUntil(promise: Promise<unknown>): void;
+  passThroughOnException(): void;
+}
+
+interface CloudflareFetchHandler<
+  Env extends Record<string, string> = Record<string, string>,
+> {
+  /** A method that is compatible with the Cloudflare Worker
+   * [Fetch Handler](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/)
+   * and can be exported to handle Cloudflare Worker fetch requests.
+   *
+   * # Example
+   *
+   * ```ts
+   * import { Application } from "@oak/oak";
+   *
+   * const app = new Application();
+   * app.use((ctx) => {
+   *   ctx.response.body = "hello world!";
+   * });
+   *
+   * export default { fetch: app.fetch };
+   * ```
+   */
+  (
+    request: Request,
+    env: Env,
+    ctx: CloudflareExecutionContext,
+  ): Promise<Response>;
+}
+
+/** Options which can be specified when listening. */
 export type ListenOptions = ListenOptionsTls | ListenOptionsBase;
 
 interface ApplicationCloseEventListener {
@@ -110,7 +171,7 @@ interface ApplicationListenEventInit extends EventInit {
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "node" | "custom";
+  serverType: "native" | "node" | "bun" | "custom";
 }
 
 type ApplicationListenEventListenerOrEventListenerObject =
@@ -214,6 +275,8 @@ interface RequestState {
   server: OakServer<ServerRequest>;
 }
 
+/** The base type of state which is associated with an application or
+ * context. */
 // deno-lint-ignore no-explicit-any
 export type State = Record<string | number | symbol, any>;
 
@@ -222,12 +285,18 @@ const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 let DefaultServerCtor: ServerConstructor<ServerRequest> | undefined;
 let NativeRequestCtor: typeof NativeRequest | undefined;
 
+/** An event that occurs when the application closes. */
 export class ApplicationCloseEvent extends Event {
   constructor(eventInitDict: EventInit) {
     super("close", eventInitDict);
   }
 }
 
+/** An event that occurs when an application error occurs.
+ *
+ * When the error occurs related to the handling of a request, the `.context`
+ * property will be populated.
+ */
 export class ApplicationErrorEvent<S extends AS, AS extends State>
   extends ErrorEvent {
   context?: Context<S, AS>;
@@ -272,12 +341,15 @@ function logErrorListener<S extends AS, AS extends State>(
   }
 }
 
+/**
+ * An event that occurs when the application starts listening for requests.
+ */
 export class ApplicationListenEvent extends Event {
   hostname: string;
   listener: Listener;
   port: number;
   secure: boolean;
-  serverType: "native" | "node" | "custom";
+  serverType: "native" | "node" | "bun" | "custom";
 
   constructor(eventInitDict: ApplicationListenEventInit) {
     super("listen", eventInitDict);
@@ -300,7 +372,7 @@ export class ApplicationListenEvent extends Event {
  * ### Basic example
  *
  * ```ts
- * import { Application } from "https://deno.land/x/oak/mod.ts";
+ * import { Application } from "jsr:@oak/oak/application";
  *
  * const app = new Application();
  *
@@ -541,6 +613,60 @@ export class Application<AS extends State = Record<string, any>>
     super.addEventListener(type, listener, options);
   }
 
+  /** A method that is compatible with the Cloudflare Worker
+   * [Fetch Handler](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/)
+   * and can be exported to handle Cloudflare Worker fetch requests.
+   *
+   * # Example
+   *
+   * ```ts
+   * import { Application } from "@oak/oak";
+   *
+   * const app = new Application();
+   * app.use((ctx) => {
+   *   ctx.response.body = "hello world!";
+   * });
+   *
+   * export default { fetch: app.fetch };
+   * ```
+   */
+  fetch: CloudflareFetchHandler = async <
+    Env extends Record<string, string> = Record<string, string>,
+  >(
+    request: Request,
+    _env: Env,
+    _ctx: CloudflareExecutionContext,
+  ): Promise<Response> => {
+    if (!this.#middleware.length) {
+      throw new TypeError("There is no middleware to process requests.");
+    }
+    if (!NativeRequestCtor) {
+      const { NativeRequest } = await import("./http_server_native_request.ts");
+      NativeRequestCtor = NativeRequest;
+    }
+    let remoteAddr: NetAddr | undefined;
+    const hostname = request.headers.get("CF-Connecting-IP") ?? undefined;
+    if (hostname) {
+      remoteAddr = { hostname, port: 0, transport: "tcp" };
+    }
+    const contextRequest = new NativeRequestCtor(request, { remoteAddr });
+    const context = new Context(
+      this,
+      contextRequest,
+      this.#getContextState(),
+      this.#contextOptions,
+    );
+    try {
+      await this.#getComposed()(context);
+      const response = await context.response.toDomResponse();
+      context.response.destroy(false);
+      return response;
+    } catch (err) {
+      this.#handleError(context, err);
+      throw err;
+    }
+  };
+
   /** Handle an individual server request, returning the server response.  This
    * is similar to `.listen()`, but opening the connection and retrieving
    * requests are not the responsibility of the application.  If the generated
@@ -623,7 +749,9 @@ export class Application<AS extends State = Record<string, any>>
     options = Object.assign({ port: 0 }, options);
     if (!this.#serverConstructor) {
       if (!DefaultServerCtor) {
-        const { Server } = await (isNode()
+        const { Server } = await (isBun()
+          ? import("./http_server_bun.ts")
+          : isNode()
           ? import("./http_server_node.ts")
           : import("./http_server_native.ts"));
         DefaultServerCtor = Server as ServerConstructor<ServerRequest>;
@@ -684,7 +812,7 @@ export class Application<AS extends State = Record<string, any>>
    * Basic usage:
    *
    * ```ts
-   * const import { Application } from "https://deno.land/x/oak/mod.ts";
+   * const import { Application } from "jsr:@oak/oak/application";
    *
    * const app = new Application();
    *

@@ -1,8 +1,13 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
+/** The abstraction that oak uses when dealing with requests and responses
+ * within the Node.js runtime.
+ *
+ * @module
+ */
+
 import type { Listener, OakServer, ServerRequest } from "./types.ts";
 import { createPromiseWithResolvers } from "./util.ts";
-import * as http from "node:http";
 
 // There are quite a few differences between Deno's `std/node/http` and the
 // typings for Node.js for `"http"`. Since we develop everything in Deno, but
@@ -91,7 +96,7 @@ export class NodeRequest implements ServerRequest {
     this.#responded = true;
   }
 
-  getBody() {
+  getBody(): ReadableStream<Uint8Array> | null {
     let body: ReadableStream<Uint8Array> | null;
     if (this.method === "GET" || this.method === "HEAD") {
       body = null;
@@ -146,8 +151,7 @@ export class Server implements OakServer<NodeRequest> {
   #abortController = new AbortController();
   #host: string;
   #port: number;
-  #requestStream: ReadableStream<NodeRequest>;
-  #server!: NodeHttpServer;
+  #requestStream: ReadableStream<NodeRequest> | undefined;
 
   constructor(
     _app: unknown,
@@ -155,23 +159,24 @@ export class Server implements OakServer<NodeRequest> {
   ) {
     this.#host = options.hostname ?? "127.0.0.1";
     this.#port = options.port;
-    const start: ReadableStreamDefaultControllerCallback<NodeRequest> = (
-      controller,
-    ) => {
-      const handler = (req: IncomingMessage, res: ServerResponse) =>
-        controller.enqueue(new NodeRequest(req, res));
-      // deno-lint-ignore no-explicit-any
-      this.#server = http.createServer(handler as any);
-    };
-    this.#requestStream = new ReadableStream({ start });
   }
 
   close(): void {
     this.#abortController.abort();
   }
 
-  listen(): Listener {
-    this.#server.listen({
+  async listen(): Promise<Listener> {
+    const { createServer } = await import("node:http");
+    let server: NodeHttpServer;
+    this.#requestStream = new ReadableStream({
+      start(controller) {
+        server = createServer((req, res) => {
+          // deno-lint-ignore no-explicit-any
+          controller.enqueue(new NodeRequest(req as any, res as any));
+        });
+      },
+    });
+    server!.listen({
       port: this.#port,
       host: this.#host,
       signal: this.#abortController.signal,
@@ -185,6 +190,9 @@ export class Server implements OakServer<NodeRequest> {
   }
 
   [Symbol.asyncIterator](): AsyncIterableIterator<NodeRequest> {
+    if (!this.#requestStream) {
+      throw new TypeError("stream not properly initialized");
+    }
     return this.#requestStream[Symbol.asyncIterator]();
   }
 
