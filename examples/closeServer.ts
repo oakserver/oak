@@ -5,7 +5,7 @@
 // Importing some console colors
 import { bold, cyan, green, yellow } from "jsr:@std/fmt@0.222/colors";
 
-import { Application, Context, Router, Status } from "../mod.ts";
+import { Application, type Context, Router, Status } from "../mod.ts";
 
 function notFound(context: Context) {
   context.response.status = Status.NotFound;

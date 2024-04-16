@@ -7,10 +7,10 @@ import { bold, cyan, green, yellow } from "jsr:@std/fmt@0.222/colors";
 
 import {
   Application,
-  Context,
+  type Context,
   isHttpError,
   Router,
-  RouterContext,
+  type RouterContext,
   Status,
 } from "../mod.ts";
 
