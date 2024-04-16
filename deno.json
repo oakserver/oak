@@ -16,6 +16,18 @@
     "./serve": "./middleware/serve.ts",
     "./testing": "./testing.ts"
   },
+  "publish": {
+    "exclude": [
+      ".devcontainer",
+      ".github",
+      ".vscode",
+      "examples",
+      "fixtures",
+      "docs",
+      "**/*.test.ts",
+      "test_deps.ts"
+    ]
+  },
   "tasks": {
     "coverage": "deno coverage --lcov ./cov",
     "example": "deno run --allow-net examples/echoServer.ts",
