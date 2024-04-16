@@ -8,7 +8,7 @@
  */
 
 // Importing some console colors
-import { bold, cyan, green, yellow } from "jsr:@std/fmt@0.218/colors";
+import { bold, cyan, green, yellow } from "jsr:@std/fmt@0.222/colors";
 
 import { Application } from "../mod.ts";
 

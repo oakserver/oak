@@ -2,7 +2,7 @@
  * `MiddlewareObject` can be ideal for when a middleware needs to encapsulate
  * large amounts of logic or its own state. */
 
-import { bold, cyan, green, yellow } from "jsr:@std/fmt@0.218/colors";
+import { bold, cyan, green, yellow } from "jsr:@std/fmt@0.222/colors";
 
 import {
   Application,
