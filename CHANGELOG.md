@@ -1,5 +1,22 @@
 # oak Change Log
 
+## Version 15.0.0
+
+- feat: migrate to @oak/commons/range (de1026f)
+
+  **BREAKING CHANGE** The migration to @oak/commons/range was a total rewrite of
+  the range logic that was implemented in oak, and the previous exported APIs
+  were no longer compatible, and therefore are no longer available in the
+  `mod.ts`. If you are looking for lower level range support, see
+  [@oak/commons/range](https://jsr.io/@oak/commons/doc/range/~)
+
+- chore: add publish workflow (c8e535f)
+- chore: update to std 0.222 and commons 0.8 (1265cde)
+- chore: fix linting in examples (c8ac46a)
+- chore: remove unused config file (f2df0ee)
+- chore: add publish exclusions (d2057e)
+- docs: fix typo in README (dd9cbda)
+
 ## Version 14.2.0
 
 - chore: update codecov config (fcc7c96)
