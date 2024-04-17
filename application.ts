@@ -22,15 +22,15 @@
  */
 
 import { Context } from "./context.ts";
-import { assert, KeyStack, Status, STATUS_TEXT } from "./deps.ts";
-import { type NativeRequest } from "./http_server_native_request.ts";
+import { assert, KeyStack, type Status, STATUS_TEXT } from "./deps.ts";
+import type { NativeRequest } from "./http_server_native_request.ts";
 import {
   compose,
   isMiddlewareObject,
   type MiddlewareOrMiddlewareObject,
 } from "./middleware.ts";
 import { cloneState } from "./structured_clone.ts";
-import {
+import type {
   Key,
   Listener,
   NetAddr,

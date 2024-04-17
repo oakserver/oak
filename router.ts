@@ -58,15 +58,15 @@ import {
   compile,
   errors,
   type HTTPMethods,
-  Key,
-  ParseOptions,
+  type Key,
+  type ParseOptions,
   pathParse,
   pathToRegexp,
   type RedirectStatus,
   Status,
-  TokensToRegexpOptions,
+  type TokensToRegexpOptions,
 } from "./deps.ts";
-import { compose, Middleware } from "./middleware.ts";
+import { compose, type Middleware } from "./middleware.ts";
 import { decodeComponent } from "./util.ts";
 
 interface Matches<R extends string> {

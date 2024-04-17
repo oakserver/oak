@@ -6,7 +6,7 @@
  * @module
  */
 
-import { type Application } from "./application.ts";
+import type { Application } from "./application.ts";
 import type {
   Listener,
   OakServer,

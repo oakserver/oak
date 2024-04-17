@@ -7,7 +7,7 @@ import {
   acceptsEncodings,
   acceptsLanguages,
   type HTTPMethods,
-  ServerSentEventTarget,
+  type ServerSentEventTarget,
   type ServerSentEventTargetOptions,
   UserAgent,
 } from "./deps.ts";

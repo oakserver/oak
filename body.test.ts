@@ -7,7 +7,7 @@ import {
   timingSafeEqual,
 } from "./deps.ts";
 import { assertEquals, assertRejects } from "./test_deps.ts";
-import { type ServerRequest } from "./types.ts";
+import type { ServerRequest } from "./types.ts";
 
 const MULTIPART_BODY_FIXTURE =
   `--OAK-SERVER-BOUNDARY\r\nContent-Disposition: form-data; name="hello"\r\n\r\nworld\r\n--OAK-SERVER-BOUNDARY--\r\n`;
