@@ -17,7 +17,7 @@ import {
   SecureCookieMap,
 } from "./deps.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
-import { Request } from "./request.ts";
+import type { Request } from "./request.ts";
 import { Response } from "./response.ts";
 
 /** Creates a mock of `Application`. */
@@ -95,6 +95,12 @@ export function createMockContext<
   function createMockRequest(): Request {
     const headers = new Headers(requestHeaders);
     return {
+      get source(): globalThis.Request | undefined {
+        return new globalThis.Request(new URL(path, "http://localhost/"), {
+          method,
+          headers,
+        });
+      },
       accepts(...types: string[]) {
         if (!headers.has("Accept")) {
           return;

@@ -24,9 +24,6 @@ Deno.test({
     assertEquals(typeof mod.isRedirectStatus, "function");
     assertEquals(typeof mod.composeMiddleware, "function");
     assertEquals(typeof mod.Cookies, "function");
-    assertEquals(typeof mod.ifRange, "function");
-    assertEquals(typeof mod.MultiPartStream, "function");
-    assertEquals(typeof mod.parseRange, "function");
     assertEquals(typeof mod.proxy, "function");
     assertEquals(typeof mod.REDIRECT_BACK, "symbol");
     assertEquals(typeof mod.Request, "function");
@@ -42,6 +39,6 @@ Deno.test({
     assertEquals(typeof mod.send, "function");
     assertEquals(typeof mod.testing, "object");
     assertEquals(Object.keys(mod.testing).length, 4);
-    assertEquals(Object.keys(mod).length, 30);
+    assertEquals(Object.keys(mod).length, 27);
   },
 });

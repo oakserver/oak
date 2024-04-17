@@ -126,24 +126,22 @@ Deno.test({
   },
 });
 
-// JSR does not support uploading files with spaces in their filename and
-// currently doesn't support excluding certain files.
-// Deno.test({
-//   name: "send file with spaces",
-//   async fn() {
-//     const { context } = setup("/test%20file.json");
-//     const fixture = await Deno.readFile("./fixtures/test file.json");
-//     await send(context, context.request.url.pathname, {
-//       root: "./fixtures",
-//       maxbuffer: 0,
-//     });
-//     const nativeResponse = await context.response.toDomResponse();
-//     assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
-//     assertEquals(context.response.type, ".json");
-//     assertStrictEquals(context.response.headers.get("content-encoding"), null);
-//     context.response.destroy();
-//   },
-// });
+Deno.test({
+  name: "send file with spaces",
+  async fn() {
+    const { context } = setup("/test%20file.json");
+    const fixture = await Deno.readFile("./fixtures/test file.json");
+    await send(context, context.request.url.pathname, {
+      root: "./fixtures",
+      maxbuffer: 0,
+    });
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
+    assertEquals(context.response.type, ".json");
+    assertStrictEquals(context.response.headers.get("content-encoding"), null);
+    context.response.destroy();
+  },
+});
 
 Deno.test({
   name: "send hidden file throws 403",
@@ -433,12 +431,12 @@ Deno.test({
     const actual = await response.text();
     assert(
       actual.includes(
-        `\nContent-Type: application/json; charset=UTF-8\nContent-Range: 0-5/23\n\n{\n  "h\n`,
+        `\r\nContent-Type: application/json; charset=UTF-8\r\nContent-Range: 0-5/23\r\n\r\n{\n  "h\r\n`,
       ),
     );
     assert(
       actual.includes(
-        `\nContent-Type: application/json; charset=UTF-8\nContent-Range: 6-9/23\n\nello\n`,
+        `\r\nContent-Type: application/json; charset=UTF-8\r\nContent-Range: 6-9/23\r\n\r\nello\r\n`,
       ),
     );
   },

@@ -123,12 +123,6 @@ export type {
   MiddlewareOrMiddlewareObject,
   Next,
 } from "./middleware.ts";
-export {
-  type ByteRange,
-  ifRange,
-  MultiPartStream,
-  parseRange,
-} from "./range.ts";
 export { Request } from "./request.ts";
 export { REDIRECT_BACK, Response } from "./response.ts";
 export {
