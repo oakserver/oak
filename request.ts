@@ -1,5 +1,13 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
+/**
+ * Contains the {@linkcode Request} abstraction used by oak.
+ *
+ * Most end users would not need to directly access this module.
+ *
+ * @module
+ */
+
 import { Body } from "./body.ts";
 import { ServerSentEventStreamTarget } from "./deps.ts";
 import {

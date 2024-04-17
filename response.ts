@@ -1,5 +1,13 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
+/**
+ * Contains the {@linkcode Response} abstraction used by oak.
+ *
+ * Most end users would not need to directly access this module.
+ *
+ * @module
+ */
+
 import { contentType, isRedirectStatus, Status, STATUS_TEXT } from "./deps.ts";
 import { DomResponse } from "./http_server_native_request.ts";
 import type { Request } from "./request.ts";

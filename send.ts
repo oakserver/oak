@@ -3,7 +3,8 @@
  * with the MIT license.
  */
 
-/** Contains the send function which can be used to send static assets while
+/**
+ * Contains the send function which can be used to send static assets while
  * supporting a range of HTTP capabilities.
  *
  * This is integrated into the oak context via the `.send()` method.

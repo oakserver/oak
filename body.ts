@@ -1,5 +1,13 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
+/**
+ * Contains the oak abstraction to represent a request {@linkcode Body}.
+ *
+ * This is not normally used directly by end users.
+ *
+ * @module
+ */
+
 import { createHttpError, matches, Status } from "./deps.ts";
 import { parse } from "./form_data.ts";
 import type { ServerRequest } from "./types.ts";
