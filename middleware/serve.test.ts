@@ -6,7 +6,7 @@ import type { Next } from "../middleware.ts";
 import { type RouteParams, Router, type RouterContext } from "../router.ts";
 import { assertEquals, assertStrictEquals } from "../test_deps.ts";
 import { createMockApp, createMockNext } from "../testing.ts";
-import { isNode } from "../util.ts";
+import { isNode } from "../utils/type_guards.ts";
 
 import { route, serve } from "./serve.ts";
 

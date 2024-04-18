@@ -12,7 +12,8 @@ import { Request as OakRequest } from "./request.ts";
 import { Response as OakResponse } from "./response.ts";
 import { cloneState } from "./structured_clone.ts";
 import type { UpgradeWebSocketFn, UpgradeWebSocketOptions } from "./types.ts";
-import { createPromiseWithResolvers, isNode } from "./util.ts";
+import { isNode } from "./utils/type_guards.ts";
+import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 
 function createMockApp<S extends State = Record<string, any>>(
   state = {} as S,

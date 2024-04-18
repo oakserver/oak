@@ -27,7 +27,9 @@ import {
   Status,
 } from "./deps.ts";
 import type { Response } from "./response.ts";
-import { decodeComponent, isNode, resolvePath } from "./util.ts";
+import { isNode } from "./utils/type_guards.ts";
+import { decodeComponent } from "./utils/decode_component.ts";
+import { resolvePath } from "./utils/resolve_path.ts";
 
 if (isNode()) {
   console.warn("oak send() does not work under Node.js.");

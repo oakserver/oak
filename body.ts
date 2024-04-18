@@ -8,8 +8,7 @@
  * @module
  */
 
-import { createHttpError, matches, Status } from "./deps.ts";
-import { parse } from "./form_data.ts";
+import { createHttpError, matches, parseFormData, Status } from "./deps.ts";
 import type { ServerRequest } from "./types.ts";
 
 type JsonReviver = (key: string, value: unknown) => unknown;
@@ -125,7 +124,7 @@ export class Body {
     if (this.#body && this.#headers) {
       const contentType = this.#headers.get("content-type");
       if (contentType) {
-        return parse(contentType, this.#body);
+        return parseFormData(contentType, this.#body);
       }
     }
     throw createHttpError(Status.BadRequest, "Missing content type.");

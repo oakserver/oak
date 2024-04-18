@@ -10,7 +10,8 @@ import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
 import { calculate, type ETagOptions } from "./deps.ts";
 import type { Middleware } from "./middleware.ts";
-import { BODY_TYPES, isAsyncIterable, isReader } from "./util.ts";
+import { BODY_TYPES } from "./utils/consts.ts";
+import { isAsyncIterable, isReader } from "./utils/type_guards.ts";
 
 // re-exports to maintain backwards compatibility
 export {

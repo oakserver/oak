@@ -14,7 +14,7 @@ import type {
   ServerRequest,
   ServeTlsOptions,
 } from "./types.ts";
-import { createPromiseWithResolvers } from "./util.ts";
+import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 
 type TypedArray =
   | Uint8Array

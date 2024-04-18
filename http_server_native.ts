@@ -16,7 +16,7 @@ import type {
   ServeOptions,
   ServeTlsOptions,
 } from "./types.ts";
-import { createPromiseWithResolvers } from "./util.ts";
+import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 
 const serve:
   | ((

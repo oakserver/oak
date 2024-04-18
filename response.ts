@@ -11,16 +11,14 @@
 import { contentType, isRedirectStatus, Status, STATUS_TEXT } from "./deps.ts";
 import { DomResponse } from "./http_server_native_request.ts";
 import type { Request } from "./request.ts";
+import { isAsyncIterable, isHtml, isReader } from "./utils/type_guards.ts";
+import { BODY_TYPES } from "./utils/consts.ts";
+import { encodeUrl } from "./utils/encode_url.ts";
 import {
-  BODY_TYPES,
-  encodeUrl,
-  isAsyncIterable,
-  isHtml,
-  isReader,
   readableStreamFromAsyncIterable,
   readableStreamFromReader,
   Uint8ArrayTransformStream,
-} from "./util.ts";
+} from "./utils/streams.ts";
 
 /** The various types of bodies supported when setting the value of `.body`
  * on a {@linkcode Response} */

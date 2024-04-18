@@ -8,7 +8,7 @@
 
 import type { Context } from "./context.ts";
 import type { RouterContext } from "./router.ts";
-import { isRouterContext } from "./util.ts";
+import { isRouterContext } from "./utils/type_guards.ts";
 
 interface GetQueryOptionsBase {
   /** The return value should be a `Map` instead of a record object. */

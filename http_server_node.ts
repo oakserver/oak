@@ -7,7 +7,7 @@
  */
 
 import type { Listener, OakServer, ServerRequest } from "./types.ts";
-import { createPromiseWithResolvers } from "./util.ts";
+import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 
 // There are quite a few differences between Deno's `std/node/http` and the
 // typings for Node.js for `"http"`. Since we develop everything in Deno, but

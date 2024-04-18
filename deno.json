@@ -7,7 +7,6 @@
     "./body": "./body.ts",
     "./context": "./context.ts",
     "./etag": "./etag.ts",
-    "./form_data": "./form_data.ts",
     "./helpers": "./helpers.ts",
     "./http_server_bun": "./http_server_bun.ts",
     "./http_server_native": "./http_server_native.ts",

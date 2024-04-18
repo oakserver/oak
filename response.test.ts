@@ -4,7 +4,7 @@ import { assert, Status } from "./deps.ts";
 import { assertEquals, assertThrows } from "./test_deps.ts";
 import type { Request } from "./request.ts";
 import { REDIRECT_BACK, Response } from "./response.ts";
-import { isNode } from "./util.ts";
+import { isNode } from "./utils/type_guards.ts";
 
 function createMockRequest({
   headers,

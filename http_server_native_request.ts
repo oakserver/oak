@@ -6,7 +6,7 @@ import type {
   UpgradeWebSocketFn,
   UpgradeWebSocketOptions,
 } from "./types.ts";
-import { createPromiseWithResolvers } from "./util.ts";
+import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 
 // deno-lint-ignore no-explicit-any
 export const DomResponse: typeof Response = (globalThis as any).Response ??

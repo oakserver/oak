@@ -9,7 +9,6 @@ export { concat } from "jsr:@std/bytes@0.222/concat";
 export { copy as copyBytes } from "jsr:@std/bytes@0.222/copy";
 export { timingSafeEqual } from "jsr:@std/crypto@0.222/timing-safe-equal";
 export { KeyStack } from "jsr:@std/crypto@0.222/unstable-keystack";
-export { encodeBase64 } from "jsr:@std/encoding@0.222/base64";
 export {
   calculate,
   type ETagOptions,
@@ -44,28 +43,29 @@ export {
   SecureCookieMap,
   type SecureCookieMapGetOptions,
   type SecureCookieMapSetDeleteOptions,
-} from "jsr:@oak/commons@0.9/cookie_map";
+} from "jsr:@oak/commons@0.10/cookie_map";
+export { parse as parseFormData } from "jsr:@oak/commons@0.10/form_data";
 export {
   createHttpError,
   errors,
   HttpError,
   type HttpErrorOptions,
   isHttpError,
-} from "jsr:@oak/commons@0.9/http_errors";
-export { matches } from "jsr:@oak/commons@0.9/media_types";
-export { type HttpMethod as HTTPMethods } from "jsr:@oak/commons@0.9/method";
+} from "jsr:@oak/commons@0.10/http_errors";
+export { matches } from "jsr:@oak/commons@0.10/media_types";
+export { type HttpMethod as HTTPMethods } from "jsr:@oak/commons@0.10/method";
 export {
   type ByteRange,
   range,
   responseRange,
-} from "jsr:@oak/commons@0.9/range";
+} from "jsr:@oak/commons@0.10/range";
 export {
   ServerSentEvent,
   type ServerSentEventInit,
   ServerSentEventStreamTarget,
   type ServerSentEventTarget,
   type ServerSentEventTargetOptions,
-} from "jsr:@oak/commons@0.9/server_sent_event";
+} from "jsr:@oak/commons@0.10/server_sent_event";
 export {
   type ErrorStatus,
   isErrorStatus,
@@ -73,7 +73,7 @@ export {
   type RedirectStatus,
   Status,
   STATUS_TEXT,
-} from "jsr:@oak/commons@0.9/status";
+} from "jsr:@oak/commons@0.10/status";
 
 export {
   compile,

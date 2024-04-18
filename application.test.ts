@@ -28,7 +28,8 @@ import type {
   ServerRequest,
   ServeTlsOptions,
 } from "./types.ts";
-import { createPromiseWithResolvers, isNode } from "./util.ts";
+import { isNode } from "./utils/type_guards.ts";
+import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 
 let optionsStack: Array<ListenOptions | ListenOptionsTls> = [];
 let serverClosed = false;

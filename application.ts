@@ -38,12 +38,8 @@ import type {
   ServerConstructor,
   ServerRequest,
 } from "./types.ts";
-import {
-  createPromiseWithResolvers,
-  isBun,
-  isNetAddr,
-  isNode,
-} from "./util.ts";
+import { isBun, isNetAddr, isNode } from "./utils/type_guards.ts";
+import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 
 /** Base interface for application listening options. */
 export interface ListenOptionsBase {

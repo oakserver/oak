@@ -67,7 +67,7 @@ import {
   type TokensToRegexpOptions,
 } from "./deps.ts";
 import { compose, type Middleware } from "./middleware.ts";
-import { decodeComponent } from "./util.ts";
+import { decodeComponent } from "./utils/decode_component.ts";
 
 interface Matches<R extends string> {
   path: Layer<R>[];

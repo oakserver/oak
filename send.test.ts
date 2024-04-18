@@ -13,7 +13,7 @@ import { assert, errors } from "./deps.ts";
 import * as etag from "./etag.ts";
 import type { RouteParams } from "./router.ts";
 import { send } from "./send.ts";
-import { isNode } from "./util.ts";
+import { isNode } from "./utils/type_guards.ts";
 
 function setup<
   // deno-lint-ignore no-explicit-any
