@@ -9,8 +9,7 @@ import {
 
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
-import { assert, errors } from "./deps.ts";
-import * as etag from "./etag.ts";
+import { assert, calculate, errors } from "./deps.ts";
 import type { RouteParams } from "./router.ts";
 import { send } from "./send.ts";
 import { isNode } from "./utils/type_guards.ts";
@@ -323,7 +322,7 @@ Deno.test({
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     const etagHeader = context.response.headers.get("etag");
-    assertEquals(etagHeader, await etag.calculate(fixture));
+    assertEquals(etagHeader, await calculate(fixture));
   },
 });
 
@@ -352,7 +351,7 @@ Deno.test({
   async fn() {
     const { context } = setup("/test.jpg");
     const fixture = await Deno.readFile("./fixtures/test.jpg");
-    const ifNoneMatch = await etag.calculate(fixture);
+    const ifNoneMatch = await calculate(fixture);
     assert(ifNoneMatch);
     context.request.headers.set("If-None-Match", ifNoneMatch);
     await send(context, context.request.url.pathname, { root: "./fixtures" });
@@ -360,7 +359,7 @@ Deno.test({
     assertEquals(nativeResponse.status, 304);
     assertEquals(
       context.response.headers.get("etag"),
-      await etag.calculate(fixture),
+      await calculate(fixture),
     );
   },
 });
@@ -381,7 +380,7 @@ Deno.test({
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
       context.response.headers.get("etag"),
-      await etag.calculate(fixture),
+      await calculate(fixture),
     );
   },
 });

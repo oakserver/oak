@@ -13,13 +13,15 @@
  */
 
 import type { Context } from "./context.ts";
-import { calculate, type FileInfo, ifNoneMatch } from "./etag.ts";
 import {
   basename,
   type ByteRange,
+  calculate,
   contentType,
   createHttpError,
   extname,
+  type FileInfo,
+  ifNoneMatch,
   parse,
   range,
   readAll,

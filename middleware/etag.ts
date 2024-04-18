@@ -6,21 +6,12 @@
  * @module
  */
 
-import type { State } from "./application.ts";
-import type { Context } from "./context.ts";
-import { calculate, type ETagOptions } from "./deps.ts";
-import type { Middleware } from "./middleware.ts";
-import { BODY_TYPES } from "./utils/consts.ts";
-import { isAsyncIterable, isReader } from "./utils/type_guards.ts";
-
-// re-exports to maintain backwards compatibility
-export {
-  calculate,
-  type ETagOptions,
-  type FileInfo,
-  ifMatch,
-  ifNoneMatch,
-} from "./deps.ts";
+import type { State } from "../application.ts";
+import type { Context } from "../context.ts";
+import { calculate, type ETagOptions } from "../deps.ts";
+import type { Middleware } from "../middleware.ts";
+import { BODY_TYPES } from "../utils/consts.ts";
+import { isAsyncIterable, isReader } from "../utils/type_guards.ts";
 
 // This is to work around issue introduced in Deno 1.40
 // See: https://github.com/denoland/deno/issues/22115
