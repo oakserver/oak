@@ -2,7 +2,7 @@
  * This is an example proxy server.
  */
 
-import { bold, cyan, green, red, yellow } from "jsr:@std/fmt@0.222/colors";
+import { bold, cyan, green, red, yellow } from "jsr:@std/fmt@0.223/colors";
 
 import { Application, HttpError, proxy, Status } from "../mod.ts";
 

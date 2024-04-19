@@ -11,7 +11,7 @@ Deno.test({
     assertEquals(typeof mod.Application, "function");
     assertEquals(typeof mod.Context, "function");
     assertEquals(typeof mod.etag, "object");
-    assertEquals(typeof mod.etag.calculate, "function");
+    assertEquals(typeof mod.etag.getEntity, "function");
     assertEquals(typeof mod.etag.factory, "function");
     assertEquals(typeof mod.helpers, "object");
     assertEquals(typeof mod.helpers.getQuery, "function");

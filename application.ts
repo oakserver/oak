@@ -59,20 +59,84 @@ export interface ListenOptionsBase {
   signal?: AbortSignal;
 }
 
+interface TlsCertifiedKeyPem {
+  /** The format of this key material, which must be PEM. */
+  keyFormat?: "pem";
+  /** Private key in `PEM` format. RSA, EC, and PKCS8-format keys are supported. */
+  key: string;
+  /** Certificate chain in `PEM` format. */
+  cert: string;
+}
+
+interface TlsCertifiedKeyFromFile {
+  /** Path to a file containing a PEM formatted CA certificate. Requires
+   * `--allow-read`.
+   *
+   * @tags allow-read
+   * @deprecated This will be removed in Deno 2.0. See the
+   * {@link https://docs.deno.com/runtime/manual/advanced/migrate_deprecations | Deno 1.x to 2.x Migration Guide}
+   * for migration instructions.
+   */
+  certFile: string;
+  /** Path to a file containing a private key file. Requires `--allow-read`.
+   *
+   * @tags allow-read
+   * @deprecated This will be removed in Deno 2.0. See the
+   * {@link https://docs.deno.com/runtime/manual/advanced/migrate_deprecations | Deno 1.x to 2.x Migration Guide}
+   * for migration instructions.
+   */
+  keyFile: string;
+}
+
+interface TlsCertifiedKeyConnectTls {
+  /**
+   * Certificate chain in `PEM` format.
+   *
+   * @deprecated This will be removed in Deno 2.0. See the
+   * {@link https://docs.deno.com/runtime/manual/advanced/migrate_deprecations | Deno 1.x to 2.x Migration Guide}
+   * for migration instructions.
+   */
+  certChain: string;
+  /**
+   * Private key in `PEM` format. RSA, EC, and PKCS8-format keys are supported.
+   *
+   * @deprecated This will be removed in Deno 2.0. See the
+   * {@link https://docs.deno.com/runtime/manual/advanced/migrate_deprecations | Deno 1.x to 2.x Migration Guide}
+   * for migration instructions.
+   */
+  privateKey: string;
+}
+
+type TlsCertifiedKeyOptions =
+  | TlsCertifiedKeyPem
+  | TlsCertifiedKeyFromFile
+  | TlsCertifiedKeyConnectTls;
+
 /** Interface options when listening on TLS. */
-export interface ListenOptionsTls extends Deno.ListenTlsOptions {
+export type ListenOptionsTls = {
+  /** The port to listen on. */
+  port: number;
+  /** A literal IP address or host name that can be resolved to an IP address.
+   *
+   * __Note about `0.0.0.0`__ While listening `0.0.0.0` works on all platforms,
+   * the browsers on Windows don't work with the address `0.0.0.0`.
+   * You should show the message like `server running on localhost:8080` instead of
+   * `server running on 0.0.0.0:8080` if your program supports Windows.
+   *
+   * @default {"0.0.0.0"} */
+  hostname?: string;
+
+  transport?: "tcp";
+
   /** Application-Layer Protocol Negotiation (ALPN) protocols to announce to
    * the client. If not specified, no ALPN extension will be included in the
    * TLS handshake.
-   *
-   * **NOTE** this is part of the native HTTP server in Deno 1.9 or later,
-   * which requires the `--unstable` flag to be available.
    */
   alpnProtocols?: string[];
   secure: true;
   /** An optional abort signal which can be used to close the listener. */
   signal?: AbortSignal;
-}
+} & TlsCertifiedKeyOptions;
 
 interface HandleMethod {
   /** Handle an individual server request, returning the server response.  This

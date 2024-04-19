@@ -163,7 +163,7 @@ export class Request {
   /** An object representing the requesting user agent. If the `User-Agent`
    * header isn't defined in the request, all the properties will be undefined.
    *
-   * See [std/http/user_agent#UserAgent](https://deno.land/std@0.222.2/http/user_agent.ts?s=UserAgent)
+   * See [std/http/user_agent#UserAgent](https://deno.land/std@0.223/http/user_agent.ts?s=UserAgent)
    * for more information.
    */
   get userAgent(): UserAgent {
