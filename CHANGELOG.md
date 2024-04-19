@@ -1,5 +1,34 @@
 # oak Change Log
 
+## Version 16.0.0
+
+- feat: remove helpers module (3cd8bf5)
+
+  **BREAKING CHANGE** the helpers module was removed, it only provided a single
+  function which was of little value.
+
+- fix: bun and node server respect abort signal (662d1fe)
+- refactor: break apart util, move form_data to commons (ba0ecaf)
+- refactor: move etag to middleware/etag and remove re-exports from std
+  (70e4cbf)
+
+  **BREAKING CHANGE** The following APIs were being re-exported from etag, but
+  have been present in Deno @std/http/etag for an extended period of time and
+  the re-exports have been removed:
+
+  - `calculate`
+  - `type ETagOptions`
+  - `type FileInfo`
+  - `ifMatch`
+  - `ifNoneMatch`
+
+- chore: fix linting issues (785867e)
+- chore: publish more modules for documentation purposes (90db374)
+- chore: update to std 0.223 (7a766dc)
+- chore: add copyright header (9f6263e)
+- chore: additional infrastructure cleanup (3e875c9)
+- chore: more cleanup of unused fixtures (bbd2111)
+
 ## Version 15.0.0
 
 - feat: migrate to @oak/commons/range (de1026f)
