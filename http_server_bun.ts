@@ -166,13 +166,13 @@ class BunRequest implements ServerRequest {
 /** An implementation of the oak server abstraction for handling requests on
  * Bun using the built in Bun http server. */
 export class Server implements OakServer<BunRequest> {
-  #options: Omit<ServeOptions | ServeTlsOptions, "signal">;
+  #options: ServeOptions | ServeTlsOptions;
   #server?: BunServer;
   #stream?: ReadableStream<BunRequest>;
 
   constructor(
     _app: Application,
-    options: Omit<ServeOptions | ServeTlsOptions, "signal">,
+    options: ServeOptions | ServeTlsOptions,
   ) {
     this.#options = options;
   }
@@ -187,7 +187,7 @@ export class Server implements OakServer<BunRequest> {
     if (this.#server) {
       throw new Error("Server already listening.");
     }
-    const { onListen, hostname, port } = this.#options;
+    const { onListen, hostname, port, signal } = this.#options;
     const tls = isServeTlsOptions(this.#options)
       ? { key: this.#options.key, cert: this.#options.cert }
       : undefined;
@@ -204,6 +204,10 @@ export class Server implements OakServer<BunRequest> {
           port,
           tls,
         });
+        signal?.addEventListener("abort", () => {
+          controller.close();
+          this.close();
+        }, { once: true });
         {
           const { hostname, port } = this.#server;
           if (onListen) {

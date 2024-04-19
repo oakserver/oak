@@ -6,7 +6,13 @@
  * @module
  */
 
-import type { Listener, OakServer, ServerRequest } from "./types.ts";
+import type {
+  Listener,
+  OakServer,
+  ServeOptions,
+  ServerRequest,
+  ServeTlsOptions,
+} from "./types.ts";
 import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 
 // There are quite a few differences between Deno's `std/node/http` and the
@@ -155,10 +161,13 @@ export class Server implements OakServer<NodeRequest> {
 
   constructor(
     _app: unknown,
-    options: Deno.ListenOptions | Deno.ListenTlsOptions,
+    options: ServeOptions | ServeTlsOptions,
   ) {
     this.#host = options.hostname ?? "127.0.0.1";
-    this.#port = options.port;
+    this.#port = options.port ?? 80;
+    options.signal?.addEventListener("abort", () => {
+      this.close();
+    }, { once: true });
   }
 
   close(): void {
@@ -169,11 +178,16 @@ export class Server implements OakServer<NodeRequest> {
     const { createServer } = await import("node:http");
     let server: NodeHttpServer;
     this.#requestStream = new ReadableStream({
-      start(controller) {
+      start: (controller) => {
         server = createServer((req, res) => {
           // deno-lint-ignore no-explicit-any
           controller.enqueue(new NodeRequest(req as any, res as any));
         });
+        this.#abortController.signal.addEventListener(
+          "abort",
+          () => controller.close(),
+          { once: true },
+        );
       },
     });
     server!.listen({
