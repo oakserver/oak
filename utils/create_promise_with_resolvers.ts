@@ -1,3 +1,5 @@
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
+
 /** Memoisation of the feature detection of `Promise.withResolvers` */
 const hasPromiseWithResolvers = "withResolvers" in Promise;
 
