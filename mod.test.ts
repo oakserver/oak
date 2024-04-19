@@ -13,9 +13,6 @@ Deno.test({
     assertEquals(typeof mod.etag, "object");
     assertEquals(typeof mod.etag.getEntity, "function");
     assertEquals(typeof mod.etag.factory, "function");
-    assertEquals(typeof mod.helpers, "object");
-    assertEquals(typeof mod.helpers.getQuery, "function");
-    assertEquals(Object.keys(mod.helpers).length, 1);
     assertEquals(typeof mod.HttpError, "function");
     assertEquals(typeof mod.httpErrors, "object");
     assertEquals(typeof mod.HttpServerNative, "function");
@@ -39,6 +36,6 @@ Deno.test({
     assertEquals(typeof mod.send, "function");
     assertEquals(typeof mod.testing, "object");
     assertEquals(Object.keys(mod.testing).length, 4);
-    assertEquals(Object.keys(mod).length, 27);
+    assertEquals(Object.keys(mod).length, 26);
   },
 });
