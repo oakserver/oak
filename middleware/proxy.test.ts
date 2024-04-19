@@ -5,7 +5,7 @@ import type { Context } from "../context.ts";
 import { assert } from "../deps.ts";
 import { Router } from "../router.ts";
 import { createMockContext, createMockNext } from "../testing.ts";
-import { assertEquals, assertStrictEquals } from "../test_deps.ts";
+import { assertEquals, assertStrictEquals } from "../deps_test.ts";
 
 import { proxy } from "./proxy.ts";
 

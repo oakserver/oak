@@ -1,6 +1,6 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, assertStrictEquals, unreachable } from "./test_deps.ts";
+import { assertEquals, assertStrictEquals, unreachable } from "./deps_test.ts";
 
 import { Server } from "./http_server_native.ts";
 import { NativeRequest } from "./http_server_native_request.ts";

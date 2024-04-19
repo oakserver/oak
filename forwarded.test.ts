@@ -1,6 +1,6 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals } from "./test_deps.ts";
+import { assertEquals } from "./deps_test.ts";
 
 import { parse } from "./forwarded.ts";
 

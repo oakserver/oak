@@ -7,7 +7,7 @@ import {
   assertEquals,
   assertRejects,
   assertStrictEquals,
-} from "./test_deps.ts";
+} from "./deps_test.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import type { NativeRequestInfo } from "./http_server_native_request.ts";
 import { Request } from "./request.ts";

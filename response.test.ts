@@ -1,7 +1,7 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 import { assert, Status } from "./deps.ts";
-import { assertEquals, assertThrows } from "./test_deps.ts";
+import { assertEquals, assertThrows } from "./deps_test.ts";
 import type { Request } from "./request.ts";
 import { REDIRECT_BACK, Response } from "./response.ts";
 import { isNode } from "./utils/type_guards.ts";

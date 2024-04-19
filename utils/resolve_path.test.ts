@@ -3,7 +3,7 @@
 import { resolvePath } from "./resolve_path.ts";
 
 import { assert, errors } from "../deps.ts";
-import { assertEquals, assertThrows } from "../test_deps.ts";
+import { assertEquals, assertThrows } from "../deps_test.ts";
 
 Deno.test({
   name: "resolvePath",

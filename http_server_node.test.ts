@@ -2,7 +2,7 @@
 
 // deno-lint-ignore-file no-explicit-any
 
-import { assertEquals, unreachable } from "./test_deps.ts";
+import { assertEquals, unreachable } from "./deps_test.ts";
 
 import {
   type IncomingMessage,

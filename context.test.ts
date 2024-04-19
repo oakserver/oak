@@ -2,7 +2,7 @@
 
 // deno-lint-ignore-file
 
-import { assertEquals, assertStrictEquals, assertThrows } from "./test_deps.ts";
+import { assertEquals, assertStrictEquals, assertThrows } from "./deps_test.ts";
 import type { Application, State } from "./application.ts";
 import { Context } from "./context.ts";
 import { assert, errors, SecureCookieMap, Status } from "./deps.ts";
@@ -10,8 +10,8 @@ import { NativeRequest } from "./http_server_native_request.ts";
 import type {} from "./http_server_native.ts";
 import { Request as OakRequest } from "./request.ts";
 import { Response as OakResponse } from "./response.ts";
-import { cloneState } from "./structured_clone.ts";
 import type { UpgradeWebSocketFn, UpgradeWebSocketOptions } from "./types.ts";
+import { cloneState } from "./utils/clone_state.ts";
 import { isNode } from "./utils/type_guards.ts";
 import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 

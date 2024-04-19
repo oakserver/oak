@@ -3,7 +3,7 @@
 // deno-lint-ignore-file no-explicit-any
 
 import { assert } from "./deps.ts";
-import { assertEquals } from "./test_deps.ts";
+import { assertEquals } from "./deps_test.ts";
 import { createMockApp } from "./testing.ts";
 
 import { Server } from "./http_server_bun.ts";

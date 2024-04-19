@@ -29,7 +29,8 @@ import {
   isMiddlewareObject,
   type MiddlewareOrMiddlewareObject,
 } from "./middleware.ts";
-import { cloneState } from "./structured_clone.ts";
+import { cloneState } from "./utils/clone_state.ts";
+import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 import type {
   Key,
   Listener,
@@ -39,7 +40,6 @@ import type {
   ServerRequest,
 } from "./types.ts";
 import { isBun, isNetAddr, isNode } from "./utils/type_guards.ts";
-import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 
 /** Base interface for application listening options. */
 export interface ListenOptionsBase {

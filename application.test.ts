@@ -6,7 +6,7 @@ import {
   assertEquals,
   assertRejects,
   assertStrictEquals,
-} from "./test_deps.ts";
+} from "./deps_test.ts";
 
 import { Application } from "./application.ts";
 import type {

@@ -6,7 +6,7 @@ import {
   Status,
   timingSafeEqual,
 } from "./deps.ts";
-import { assertEquals, assertRejects } from "./test_deps.ts";
+import { assertEquals, assertRejects } from "./deps_test.ts";
 import type { ServerRequest } from "./types.ts";
 
 const MULTIPART_BODY_FIXTURE =
