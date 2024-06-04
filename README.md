@@ -151,7 +151,7 @@ processing requests with the registered middleware.
 A basic usage, responding to every request with _Hello World!_:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
 
 const app = new Application();
 
@@ -183,7 +183,7 @@ encapsulation or delayed initialization.
 A more complex example:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
 
 const app = new Application();
 
@@ -250,7 +250,7 @@ or `undefined` if the `ctx.respond === true`.
 An example:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
 
 const app = new Application();
 
@@ -676,7 +676,7 @@ will fire a `"listen"` event, which can be listened for via the
 `.addEventListener()` method. For example:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
 
 const app = new Application();
 
@@ -700,7 +700,7 @@ If you want to close the application, the application supports the option of an
 Here is an example of using the signal:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
 
 const app = new Application();
 
@@ -727,11 +727,9 @@ handling middleware that provides a well managed response to errors would work
 like this:
 
 ```ts
-import {
-  Application,
-  isHttpError,
-  Status,
-} from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
+import { isHttpError } from "jsr:@oak/commons/http_errors";
+import { Status } from "jsr:@oak/commons/status";
 
 const app = new Application();
 
@@ -762,7 +760,7 @@ application. To listen for these errors, you would add an event handler to the
 application instance:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
 
 const app = new Application();
 
@@ -794,7 +792,8 @@ The following example serves up a _RESTful_ service of a map of books, where
 `http://localhost:8000/book/1` would return the book with ID `"1"`:
 
 ```ts
-import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
+import { Router } from "jsr:@oak/oak/router";
 
 const books = new Map<string, any>();
 books.set("1", {
@@ -845,7 +844,8 @@ Nesting routers is supported. The following example responds to
 `http://localhost:8000/forums/oak/posts/nested-routers`.
 
 ```typescript
-import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
+import { Router } from "jsr:@oak/oak/router";
 
 const posts = new Router()
   .get("/", (ctx) => {
@@ -875,7 +875,7 @@ system relative to the root from the requested path.
 A basic usage would look something like this:
 
 ```ts
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
 
 const app = new Application();
 
@@ -904,106 +904,42 @@ assets instead of re-downloading them.
 The `send()` method automatically supports generating an `ETag` header for
 static assets. The header allows the client to determine if it needs to
 re-download an asset or not, but it can be useful to calculate `ETag`s for other
-scenarios, and oak supplies the `etag` object to provide these functions.
+scenarios.
 
-There are two main use cases, first, a middleware function that assesses the
-`context.reponse.body` and determines if it can create an `ETag` header for that
-body type, and if so sets the `ETag` header on the response. Basic usage would
-look something like this:
+There is a middleware function that assesses the `context.reponse.body` and
+determines if it can create an `ETag` header for that body type, and if so sets
+the `ETag` header on the response. Basic usage would look something like this:
 
 ```ts
-import { Application, etag } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
+import { factory } from "jsr:@oak/oak/etag";
 
 const app = new Application();
 
-app.use(etag.factory());
+app.use(factory());
 
 // ... other middleware for the application
 ```
 
-The second use case is lower-level, where you have an entity which you want to
-calculate an `ETag` value for, like implementing custom response logic based on
-other header information. The `etag.calculate()` method is provided for this,
-and it supports calculating `ETag`s for `string`s, `Uint8Array`s, and
-`Deno.FileInfo` structures. Basic usage would look something like this:
+There is also a function which retrieves an entity for a given context based on
+what it logical to read into memory which can be passed to the etag calculate
+that is part of the Deno std library:
 
 ```ts
-import { etag } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
+import { getEntity } from "jsr:@oak/oak/etag";
+import { calculate } from "jsr:@std/http/etag";
 
-export async function mw(context, next) {
-  await next();
-  const value = await etag.calculate("hello deno");
-  context.response.headers.set("ETag", value);
-}
-```
+const app = new Application();
 
-By default, `etag` will calculate weak tags for `Deno.FileInfo` (or
-`Deno.FsFile` bodies in the middleware) and strong tags for `string`s and
-`Uint8Array`s. This can be changed by passing a `weak` property in the `options`
-parameter to either the `factory` or `calculate` methods.
+// The context.response.body has already been set...
 
-There are also two helper functions which can be used in conjunction with
-requests. There is `ifNoneMatch()` and `ifMatch()`. Both take the value of a
-header and an entity to compare to.
-
-`ifNoneMatch()` validates if the entities `ETag` doesn't match the supplied
-tags, while `ifMatch()` does the opposite. Check out MDN's
-[`If-None-Match`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match)
-and
-[`If-Match`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Match)
-header articles for more information how these headers are used with `ETag`s.
-
-## Helpers
-
-The `mod.ts` also exports a variable named `helpers` which contains functions
-that help with managing contexts.
-
-### getQuery(ctx, options?)
-
-The `helpers.getQuery()` function is designed to make it easier to determine
-what a request might be querying in the middleware. It takes the supplied
-context's `.request.url.searchParams` and converts it to a record object of the
-keys and values. For example, it would convert the following request:
-
-```
-https://localhost/resource/?foo=bar&baz=qat
-```
-
-Into an object like this:
-
-```js
-{
-  foo: "bar",
-  baz: "qat"
-}
-```
-
-The function can take a couple of options. The `asMap` will result in a `Map`
-being returned instead of an object. The `mergeParams` will merge in parameters
-that were parsed out of the route. This only works with router contexts, and any
-params will be overwritten by the request's search params. If the following URL
-was requested:
-
-```
-https://localhost/book/1234/page/23?page=32&size=24
-```
-
-And the following was the router middleware:
-
-```ts
-router.get("/book/:id/page/:page", (ctx) => {
-  getQuery(ctx, { mergeParams: true });
+app.use(async (ctx) => {
+  const entity = await getEntity(ctx);
+  if (entity) {
+    const etag = await calculate(entity);
+  }
 });
-```
-
-Would result in the return value being:
-
-```js
-{
-  id: "1234",
-  page: "32",
-  size: "24"
-}
 ```
 
 ## Fetch API and `Deno.serve()` migration
@@ -1032,7 +968,8 @@ the handler to resolve with a Fetch API `Response`.
 An example of using `serve()` with `Application.prototype.use()`:
 
 ```ts
-import { Application, serve } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
+import { serve } from "jsr:@oak/oak/serve";
 
 const app = new Application();
 
@@ -1048,7 +985,9 @@ And a similar solution works with `route()` where the context contains the
 information about the router, like the params:
 
 ```ts
-import { Application, route, Router } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "jsr:@oak/oak/application";
+import { Router } from "jsr:@oak/oak/router";
+import { route } from "jsr:@oak/oak/serve";
 
 const app = new Application;
 
@@ -1070,53 +1009,6 @@ The `mod.ts` exports an object named `testing` which contains some utilities for
 testing oak middleware you might create. See the
 [Testing with oak](https://oakserver.github.io/oak/testing) for more
 information.
-
-## Node.js
-
-As of oak v10.3, oak is experimentally supported on Node.js 16.5 and later. The
-package is available on npm as `@oakserver/oak`. The package exports are the
-same as the exports of the `mod.ts` when using under Deno and the package
-auto-detects it is running under Node.js.
-
-A basic example using ESM:
-
-**index.mjs**
-
-```js
-import { Application } from "@oakserver/oak";
-
-const app = new Application();
-
-app.use((ctx) => {
-  ctx.response.body = "Hello from oak under Node.js";
-});
-
-app.listen({ port: 8000 });
-```
-
-A basic example using CommonJS:
-
-**index.js**
-
-```js
-const { Application } = require("@oakserver/oak");
-
-const app = new Application();
-
-app.use((ctx) => {
-  ctx.response.body = "Hello from oak under Node.js";
-});
-
-app.listen({ port: 8000 });
-```
-
-There are a few notes about the support:
-
-- Currently `FormData` bodies do not properly write binary files to disk. This
-  will be fixed in future versions.
-- Currently only HTTP/1.1 support is available. There are plans to add HTTP/2.
-- Web Socket upgrades are not currently supported. This is planned for the
-  future. Trying to upgrade to a web socket will cause an error to be thrown.
 
 ---
 

@@ -1,12 +1,12 @@
-import { type State } from "../application.ts";
+import type { State } from "../application.ts";
 import { Context } from "../context.ts";
 import { assert } from "../deps.ts";
 import { NativeRequest } from "../http_server_native_request.ts";
-import { type Next } from "../middleware.ts";
+import type { Next } from "../middleware.ts";
 import { type RouteParams, Router, type RouterContext } from "../router.ts";
-import { assertEquals, assertStrictEquals } from "../test_deps.ts";
+import { assertEquals, assertStrictEquals } from "../deps_test.ts";
 import { createMockApp, createMockNext } from "../testing.ts";
-import { isNode } from "../util.ts";
+import { isNode } from "../utils/type_guards.ts";
 
 import { route, serve } from "./serve.ts";
 

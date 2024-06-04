@@ -15,7 +15,7 @@ import type {
   RouterContext,
   RouterMiddleware,
 } from "../router.ts";
-import { isRouterContext } from "../util.ts";
+import { isRouterContext } from "../utils/type_guards.ts";
 
 type Fetch = (
   input: Request,

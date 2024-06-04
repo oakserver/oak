@@ -1,16 +1,9 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { assert, errors } from "./deps.ts";
-import { assertEquals, assertThrows } from "./test_deps.ts";
-import { decodeComponent, getRandomFilename, resolvePath } from "./util.ts";
+import { resolvePath } from "./resolve_path.ts";
 
-Deno.test({
-  name: "decodeComponent",
-  fn() {
-    // with decodeURIComponent, this would throw:
-    assertEquals(decodeComponent("%"), "%");
-  },
-});
+import { assert, errors } from "../deps.ts";
+import { assertEquals, assertThrows } from "../deps_test.ts";
 
 Deno.test({
   name: "resolvePath",
@@ -74,15 +67,5 @@ Deno.test({
         "/public/foo/bar",
       ),
     );
-  },
-});
-
-Deno.test({
-  name: "getRandomFilename()",
-  async fn() {
-    const actual = await getRandomFilename("foo", "bar");
-    assert(actual.startsWith("foo"));
-    assert(actual.endsWith(".bar"));
-    assert(actual.length > 7);
   },
 });

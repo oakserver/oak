@@ -7,11 +7,11 @@ import {
   assertEquals,
   assertRejects,
   assertStrictEquals,
-} from "./test_deps.ts";
+} from "./deps_test.ts";
 import { NativeRequest } from "./http_server_native_request.ts";
 import type { NativeRequestInfo } from "./http_server_native_request.ts";
 import { Request } from "./request.ts";
-import { isNode } from "./util.ts";
+import { isNode } from "./utils/type_guards.ts";
 
 function createMockNativeRequest(
   url = "http://localhost/index.html",

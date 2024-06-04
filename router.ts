@@ -58,16 +58,16 @@ import {
   compile,
   errors,
   type HTTPMethods,
-  Key,
-  ParseOptions,
+  type Key,
+  type ParseOptions,
   pathParse,
   pathToRegexp,
   type RedirectStatus,
   Status,
-  TokensToRegexpOptions,
+  type TokensToRegexpOptions,
 } from "./deps.ts";
-import { compose, Middleware, type Next } from "./middleware.ts";
-import { decodeComponent } from "./util.ts";
+import { compose, type Middleware, type Next } from "./middleware.ts";
+import { decodeComponent } from "./utils/decode_component.ts";
 
 interface Matches<R extends string> {
   path: Layer<R>[];

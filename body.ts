@@ -1,7 +1,14 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { createHttpError, matches, Status } from "./deps.ts";
-import { parse } from "./form_data.ts";
+/**
+ * Contains the oak abstraction to represent a request {@linkcode Body}.
+ *
+ * This is not normally used directly by end users.
+ *
+ * @module
+ */
+
+import { createHttpError, matches, parseFormData, Status } from "./deps.ts";
 import type { ServerRequest } from "./types.ts";
 
 type JsonReviver = (key: string, value: unknown) => unknown;
@@ -117,7 +124,7 @@ export class Body {
     if (this.#body && this.#headers) {
       const contentType = this.#headers.get("content-type");
       if (contentType) {
-        return parse(contentType, this.#body);
+        return parseFormData(contentType, this.#body);
       }
     }
     throw createHttpError(Status.BadRequest, "Missing content type.");

@@ -1,5 +1,51 @@
 # oak Change Log
 
+## Version 16.0.0
+
+- feat: remove helpers module (3cd8bf5)
+
+  **BREAKING CHANGE** the helpers module was removed, it only provided a single
+  function which was of little value.
+
+- fix: bun and node server respect abort signal (662d1fe)
+- refactor: break apart util, move form_data to commons (ba0ecaf)
+- refactor: move etag to middleware/etag and remove re-exports from std
+  (70e4cbf)
+
+  **BREAKING CHANGE** The following APIs were being re-exported from etag, but
+  have been present in Deno @std/http/etag for an extended period of time and
+  the re-exports have been removed:
+
+  - `calculate`
+  - `type ETagOptions`
+  - `type FileInfo`
+  - `ifMatch`
+  - `ifNoneMatch`
+
+- chore: fix linting issues (785867e)
+- chore: publish more modules for documentation purposes (90db374)
+- chore: update to std 0.223 (7a766dc)
+- chore: add copyright header (9f6263e)
+- chore: additional infrastructure cleanup (3e875c9)
+- chore: more cleanup of unused fixtures (bbd2111)
+
+## Version 15.0.0
+
+- feat: migrate to @oak/commons/range (de1026f)
+
+  **BREAKING CHANGE** The migration to @oak/commons/range was a total rewrite of
+  the range logic that was implemented in oak, and the previous exported APIs
+  were no longer compatible, and therefore are no longer available in the
+  `mod.ts`. If you are looking for lower level range support, see
+  [@oak/commons/range](https://jsr.io/@oak/commons/doc/range/~)
+
+- chore: add publish workflow (c8e535f)
+- chore: update to std 0.222 and commons 0.8 (1265cde)
+- chore: fix linting in examples (c8ac46a)
+- chore: remove unused config file (f2df0ee)
+- chore: add publish exclusions (d2057e)
+- docs: fix typo in README (dd9cbda)
+
 ## Version 14.2.0
 
 - chore: update codecov config (fcc7c96)

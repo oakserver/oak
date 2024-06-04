@@ -1,20 +1,35 @@
 {
   "name": "@oak/oak",
-  "version": "14.2.0",
+  "version": "16.0.0",
   "exports": {
     ".": "./mod.ts",
     "./application": "./application.ts",
-    "./helpers": "./helpers.ts",
-    "./etag": "./etag.ts",
-    "./form_data": "./form_data.ts",
+    "./body": "./body.ts",
+    "./context": "./context.ts",
+    "./etag": "./middleware/etag.ts",
     "./http_server_bun": "./http_server_bun.ts",
     "./http_server_native": "./http_server_native.ts",
     "./http_server_node": "./http_server_node.ts",
+    "./middleware": "./middleware.ts",
     "./proxy": "./middleware/proxy.ts",
+    "./request": "./request.ts",
+    "./response": "./response.ts",
     "./router": "./router.ts",
     "./send": "./send.ts",
     "./serve": "./middleware/serve.ts",
     "./testing": "./testing.ts"
+  },
+  "publish": {
+    "exclude": [
+      ".devcontainer",
+      ".github",
+      ".vscode",
+      "examples",
+      "fixtures",
+      "docs",
+      "**/*.test.ts",
+      "test_deps.ts"
+    ]
   },
   "tasks": {
     "coverage": "deno coverage --lcov ./cov",

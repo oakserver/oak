@@ -24,16 +24,16 @@
  * @module
  */
 
-import { type Application, type State } from "../application.ts";
-import { Context } from "../context.ts";
-import { type ErrorStatus, type HttpErrorOptions } from "../deps.ts";
-import { type Middleware } from "../middleware.ts";
-import {
-  type Layer,
-  type RouteParams,
-  type Router,
-  type RouterContext,
-  type RouterMiddleware,
+import type { Application, State } from "../application.ts";
+import type { Context } from "../context.ts";
+import type { ErrorStatus, HttpErrorOptions } from "../deps.ts";
+import type { Middleware } from "../middleware.ts";
+import type {
+  Layer,
+  RouteParams,
+  Router,
+  RouterContext,
+  RouterMiddleware,
 } from "../router.ts";
 
 /** The context associated when dealing with serve middleware requests on an

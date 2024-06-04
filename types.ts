@@ -1,6 +1,6 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { type Application, type State } from "./application.ts";
+import type { Application, State } from "./application.ts";
 
 export interface Listener {
   addr: { hostname: string; port: number };

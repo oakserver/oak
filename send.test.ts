@@ -1,6 +1,6 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, assertStrictEquals } from "./test_deps.ts";
+import { assertEquals, assertStrictEquals } from "./deps_test.ts";
 import {
   createMockApp,
   createMockContext,
@@ -9,11 +9,10 @@ import {
 
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
-import { assert, errors } from "./deps.ts";
-import * as etag from "./etag.ts";
+import { assert, calculate, errors } from "./deps.ts";
 import type { RouteParams } from "./router.ts";
 import { send } from "./send.ts";
-import { isNode } from "./util.ts";
+import { isNode } from "./utils/type_guards.ts";
 
 function setup<
   // deno-lint-ignore no-explicit-any
@@ -126,24 +125,22 @@ Deno.test({
   },
 });
 
-// JSR does not support uploading files with spaces in their filename and
-// currently doesn't support excluding certain files.
-// Deno.test({
-//   name: "send file with spaces",
-//   async fn() {
-//     const { context } = setup("/test%20file.json");
-//     const fixture = await Deno.readFile("./fixtures/test file.json");
-//     await send(context, context.request.url.pathname, {
-//       root: "./fixtures",
-//       maxbuffer: 0,
-//     });
-//     const nativeResponse = await context.response.toDomResponse();
-//     assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
-//     assertEquals(context.response.type, ".json");
-//     assertStrictEquals(context.response.headers.get("content-encoding"), null);
-//     context.response.destroy();
-//   },
-// });
+Deno.test({
+  name: "send file with spaces",
+  async fn() {
+    const { context } = setup("/test%20file.json");
+    const fixture = await Deno.readFile("./fixtures/test file.json");
+    await send(context, context.request.url.pathname, {
+      root: "./fixtures",
+      maxbuffer: 0,
+    });
+    const nativeResponse = await context.response.toDomResponse();
+    assertEquals(new Uint8Array(await nativeResponse.arrayBuffer()), fixture);
+    assertEquals(context.response.type, ".json");
+    assertStrictEquals(context.response.headers.get("content-encoding"), null);
+    context.response.destroy();
+  },
+});
 
 Deno.test({
   name: "send hidden file throws 403",
@@ -325,7 +322,7 @@ Deno.test({
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     const etagHeader = context.response.headers.get("etag");
-    assertEquals(etagHeader, await etag.calculate(fixture));
+    assertEquals(etagHeader, await calculate(fixture));
   },
 });
 
@@ -354,7 +351,7 @@ Deno.test({
   async fn() {
     const { context } = setup("/test.jpg");
     const fixture = await Deno.readFile("./fixtures/test.jpg");
-    const ifNoneMatch = await etag.calculate(fixture);
+    const ifNoneMatch = await calculate(fixture);
     assert(ifNoneMatch);
     context.request.headers.set("If-None-Match", ifNoneMatch);
     await send(context, context.request.url.pathname, { root: "./fixtures" });
@@ -362,7 +359,7 @@ Deno.test({
     assertEquals(nativeResponse.status, 304);
     assertEquals(
       context.response.headers.get("etag"),
-      await etag.calculate(fixture),
+      await calculate(fixture),
     );
   },
 });
@@ -383,7 +380,7 @@ Deno.test({
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
       context.response.headers.get("etag"),
-      await etag.calculate(fixture),
+      await calculate(fixture),
     );
   },
 });
@@ -433,12 +430,12 @@ Deno.test({
     const actual = await response.text();
     assert(
       actual.includes(
-        `\nContent-Type: application/json; charset=UTF-8\nContent-Range: 0-5/23\n\n{\n  "h\n`,
+        `\r\nContent-Type: application/json; charset=UTF-8\r\nContent-Range: 0-5/23\r\n\r\n{\n  "h\r\n`,
       ),
     );
     assert(
       actual.includes(
-        `\nContent-Type: application/json; charset=UTF-8\nContent-Range: 6-9/23\n\nello\n`,
+        `\r\nContent-Type: application/json; charset=UTF-8\r\nContent-Range: 6-9/23\r\n\r\nello\r\n`,
       ),
     );
   },

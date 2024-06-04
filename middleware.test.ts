@@ -2,7 +2,7 @@
 
 // deno-lint-ignore-file
 
-import { assertEquals, assertStrictEquals } from "./test_deps.ts";
+import { assertEquals, assertStrictEquals } from "./deps_test.ts";
 import { assert, errors } from "./deps.ts";
 import { createMockContext } from "./testing.ts";
 import {

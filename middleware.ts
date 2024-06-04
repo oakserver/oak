@@ -1,5 +1,15 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
+/**
+ * The internal middleware interfaces and abstractions used by oak.
+ *
+ * Outside of the {@linkcode Middleware} interface, items are not generally
+ * used by end users, but {@linkcode compose} can be used for advanced use
+ * cases.
+ *
+ * @module
+ */
+
 // deno-lint-ignore-file
 
 import type { State } from "./application.ts";

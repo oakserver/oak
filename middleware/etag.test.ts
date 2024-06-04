@@ -1,16 +1,16 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { assert } from "./deps.ts";
-import { assertEquals } from "./test_deps.ts";
+import { assert } from "../deps.ts";
+import { assertEquals } from "../deps_test.ts";
 import {
   createMockApp,
   createMockContext,
   mockContextState,
-} from "./testing.ts";
+} from "../testing.ts";
 
-import type { Application } from "./application.ts";
-import type { Context } from "./context.ts";
-import type { RouteParams } from "./router.ts";
+import type { Application } from "../application.ts";
+import type { Context } from "../context.ts";
+import type { RouteParams } from "../router.ts";
 
 import { factory } from "./etag.ts";
 

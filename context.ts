@@ -1,18 +1,28 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
+/**
+ * Contains the {@linkcode Context} class which is the context that is provided
+ * to middleware.
+ *
+ * Typically this is not used directly by end users except when creating
+ * re-usable middleware.
+ *
+ * @module
+ */
+
 import type { Application, State } from "./application.ts";
 import {
   createHttpError,
   type ErrorStatus,
   type HttpErrorOptions,
-  KeyStack,
+  type KeyStack,
   SecureCookieMap,
   type ServerSentEventTarget,
   type ServerSentEventTargetOptions,
 } from "./deps.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
-import { send, SendOptions } from "./send.ts";
+import { send, type SendOptions } from "./send.ts";
 import type { ServerRequest, UpgradeWebSocketOptions } from "./types.ts";
 
 /** Options that can be supplied when creating a {@linkcode Context} */

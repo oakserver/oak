@@ -3,7 +3,8 @@
  * with the MIT license.
  */
 
-/** Contains the send function which can be used to send static assets while
+/**
+ * Contains the send function which can be used to send static assets while
  * supporting a range of HTTP capabilities.
  *
  * This is integrated into the oak context via the `.send()` method.
@@ -12,30 +13,31 @@
  */
 
 import type { Context } from "./context.ts";
-import { calculate, FileInfo, ifNoneMatch } from "./etag.ts";
 import {
-  assert,
   basename,
+  type ByteRange,
+  calculate,
+  contentType,
   createHttpError,
   extname,
-  LimitedReader,
+  type FileInfo,
+  ifNoneMatch,
   parse,
+  range,
   readAll,
+  responseRange,
   Status,
 } from "./deps.ts";
-import { ifRange, MultiPartStream, parseRange } from "./range.ts";
 import type { Response } from "./response.ts";
-import { decodeComponent, getBoundary, isNode, resolvePath } from "./util.ts";
+import { isNode } from "./utils/type_guards.ts";
+import { decodeComponent } from "./utils/decode_component.ts";
+import { resolvePath } from "./utils/resolve_path.ts";
 
 if (isNode()) {
   console.warn("oak send() does not work under Node.js.");
 }
 
 const MAXBUFFER_DEFAULT = 1_048_576; // 1MiB;
-
-// this will be lazily set as it needs to be done asynchronously and we want to
-// avoid top level await
-let boundary: string | undefined;
 
 /** Options which can be specified when using the {@linkcode send}
  * middleware. */
@@ -136,9 +138,10 @@ async function getEntity(
   stats: Deno.FileInfo,
   maxbuffer: number,
   response: Response,
-): Promise<[Uint8Array | Deno.FsFile, Uint8Array | FileInfo]> {
+): Promise<[Uint8Array | Deno.FsFile, Uint8Array | FileInfo, FileInfo]> {
   let body: Uint8Array | Deno.FsFile;
   let entity: Uint8Array | FileInfo;
+  const fileInfo = { mtime: new Date(mtime), size: stats.size };
   const file = await Deno.open(path, { read: true });
   if (stats.size < maxbuffer) {
     const buffer = await readAll(file);
@@ -147,58 +150,9 @@ async function getEntity(
   } else {
     response.addResource(file);
     body = file;
-    entity = {
-      mtime: new Date(mtime!),
-      size: stats.size,
-    };
+    entity = fileInfo;
   }
-  return [body, entity];
-}
-
-async function sendRange(
-  response: Response,
-  body: Uint8Array | Deno.FsFile,
-  range: string,
-  size: number,
-) {
-  const ranges = parseRange(range, size);
-  if (ranges.length === 0) {
-    throw createHttpError(Status.RequestedRangeNotSatisfiable);
-  }
-  response.status = Status.PartialContent;
-  if (ranges.length === 1) {
-    const [byteRange] = ranges;
-    response.headers.set(
-      "Content-Range",
-      `bytes ${byteRange.start}-${byteRange.end}/${size}`,
-    );
-    if (body instanceof Uint8Array) {
-      response.body = body.slice(byteRange.start, byteRange.end + 1);
-    } else {
-      await body.seek(byteRange.start, Deno.SeekMode.Start);
-      response.body = new LimitedReader(
-        body,
-        byteRange.end - byteRange.start + 1,
-      );
-    }
-  } else {
-    assert(response.type);
-    if (!boundary) {
-      boundary = await getBoundary();
-    }
-    response.headers.set(
-      "content-type",
-      `multipart/byteranges; boundary=${boundary}`,
-    );
-    const multipartBody = new MultiPartStream(
-      body,
-      response.type,
-      ranges,
-      size,
-      boundary,
-    );
-    response.body = multipartBody;
-  }
+  return [body, entity, fileInfo];
 }
 
 /** Asynchronously fulfill a response with a file from the local file
@@ -320,12 +274,19 @@ export async function send(
 
   let entity: Uint8Array | FileInfo | null = null;
   let body: Uint8Array | Deno.FsFile | null = null;
+  let fileInfo: FileInfo | null = null;
 
   if (request.headers.has("If-None-Match") && mtime) {
-    [body, entity] = await getEntity(path, mtime, stats, maxbuffer, response);
+    [body, entity, fileInfo] = await getEntity(
+      path,
+      mtime,
+      stats,
+      maxbuffer,
+      response,
+    );
     const etag = await calculate(entity);
     if (
-      etag && (!await ifNoneMatch(request.headers.get("If-None-Match")!, etag))
+      etag && (!ifNoneMatch(request.headers.get("If-None-Match")!, etag))
     ) {
       response.headers.set("ETag", etag);
       response.status = 304;
@@ -341,8 +302,8 @@ export async function send(
     }
   }
 
-  if (!body || !entity) {
-    [body, entity] = await getEntity(
+  if (!body || !entity || !fileInfo) {
+    [body, entity, fileInfo] = await getEntity(
       path,
       mtime ?? 0,
       stats,
@@ -351,21 +312,20 @@ export async function send(
     );
   }
 
-  if (
-    request.headers.has("If-Range") && mtime &&
-    await ifRange(request.headers.get("If-Range")!, mtime, entity) &&
-    request.headers.has("Range")
-  ) {
-    await sendRange(response, body, request.headers.get("Range")!, stats.size);
-    return path;
-  }
+  let returnRanges: ByteRange[] | undefined = undefined;
+  let size: number | undefined = undefined;
 
-  if (request.headers.has("Range")) {
-    await sendRange(response, body, request.headers.get("Range")!, stats.size);
-    return path;
+  if (request.source && body && entity) {
+    const { ok, ranges } = ArrayBuffer.isView(body)
+      ? await range(request.source, body, fileInfo)
+      : await range(request.source, fileInfo);
+    if (ok && ranges) {
+      size = ArrayBuffer.isView(entity) ? entity.byteLength : entity.size;
+      returnRanges = ranges;
+    } else if (!ok) {
+      response.status = Status.RequestedRangeNotSatisfiable;
+    }
   }
-
-  response.body = body;
 
   if (!response.headers.has("ETag")) {
     const etag = await calculate(entity);
@@ -374,8 +334,14 @@ export async function send(
     }
   }
 
-  if (!response.headers.has("Accept-Ranges")) {
-    response.headers.set("Accept-Ranges", "bytes");
+  if (returnRanges && size) {
+    response.with(
+      responseRange(body, size, returnRanges, { headers: response.headers }, {
+        type: contentType(response.type),
+      }),
+    );
+  } else {
+    response.body = body;
   }
 
   return path;

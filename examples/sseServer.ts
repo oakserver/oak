@@ -3,11 +3,11 @@
  */
 
 // Importing some console colors
-import { bold, cyan, green, yellow } from "jsr:@std/fmt@0.218/colors";
+import { bold, cyan, green, yellow } from "jsr:@std/fmt@0.223/colors";
 
 import {
   Application,
-  Context,
+  type Context,
   isHttpError,
   Router,
   ServerSentEvent,

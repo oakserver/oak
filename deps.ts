@@ -4,29 +4,28 @@
 
 // jsr dependencies
 
-export { assert } from "jsr:@std/assert@0.218/assert";
-export { concat } from "jsr:@std/bytes@0.218/concat";
-export { copy as copyBytes } from "jsr:@std/bytes@0.218/copy";
-export { timingSafeEqual } from "jsr:@std/crypto@0.218/timing_safe_equal";
-export { KeyStack } from "jsr:@std/crypto@0.218/unstable_keystack";
-export { encodeBase64 } from "jsr:@std/encoding@0.218/base64";
+export { assert } from "jsr:@std/assert@0.223/assert";
+export { concat } from "jsr:@std/bytes@0.223/concat";
+export { copy as copyBytes } from "jsr:@std/bytes@0.223/copy";
+export { timingSafeEqual } from "jsr:@std/crypto@0.223/timing-safe-equal";
+export { KeyStack } from "jsr:@std/crypto@0.223/unstable-keystack";
 export {
   calculate,
   type ETagOptions,
   type FileInfo,
   ifMatch,
   ifNoneMatch,
-} from "jsr:@std/http@0.218/etag";
+} from "jsr:@std/http@0.223/etag";
 export {
   accepts,
   acceptsEncodings,
   acceptsLanguages,
-} from "jsr:@std/http@0.218/negotiation";
-export { UserAgent } from "jsr:@std/http@0.218/user_agent";
-export { LimitedReader } from "jsr:@std/io@0.218/limited_reader";
-export { readAll } from "jsr:@std/io@0.218/read_all";
-export { contentType } from "jsr:@std/media-types@0.218/content_type";
-export { typeByExtension } from "jsr:@std/media-types@0.218/type_by_extension";
+} from "jsr:@std/http@0.223/negotiation";
+export { UserAgent } from "jsr:@std/http@0.223/user-agent";
+export { LimitedReader } from "jsr:@std/io@0.223/limited-reader";
+export { readAll } from "jsr:@std/io@0.223/read-all";
+export { contentType } from "jsr:@std/media-types@0.223/content-type";
+export { typeByExtension } from "jsr:@std/media-types@0.223/type-by-extension";
 export {
   basename,
   extname,
@@ -35,7 +34,7 @@ export {
   normalize,
   parse,
   SEPARATOR,
-} from "jsr:@std/path@0.218/";
+} from "jsr:@std/path@0.223/";
 
 // 3rd party dependencies
 
@@ -44,23 +43,29 @@ export {
   SecureCookieMap,
   type SecureCookieMapGetOptions,
   type SecureCookieMapSetDeleteOptions,
-} from "jsr:@oak/commons@0.7/cookie_map";
+} from "jsr:@oak/commons@0.10/cookie_map";
+export { parse as parseFormData } from "jsr:@oak/commons@0.10/form_data";
 export {
   createHttpError,
   errors,
   HttpError,
   type HttpErrorOptions,
   isHttpError,
-} from "jsr:@oak/commons@0.7/http_errors";
-export { matches } from "jsr:@oak/commons@0.7/media_types";
-export { type HttpMethod as HTTPMethods } from "jsr:@oak/commons@0.7/method";
+} from "jsr:@oak/commons@0.10/http_errors";
+export { matches } from "jsr:@oak/commons@0.10/media_types";
+export { type HttpMethod as HTTPMethods } from "jsr:@oak/commons@0.10/method";
+export {
+  type ByteRange,
+  range,
+  responseRange,
+} from "jsr:@oak/commons@0.10/range";
 export {
   ServerSentEvent,
   type ServerSentEventInit,
   ServerSentEventStreamTarget,
   type ServerSentEventTarget,
   type ServerSentEventTargetOptions,
-} from "jsr:@oak/commons@0.7/server_sent_event";
+} from "jsr:@oak/commons@0.10/server_sent_event";
 export {
   type ErrorStatus,
   isErrorStatus,
@@ -68,7 +73,7 @@ export {
   type RedirectStatus,
   Status,
   STATUS_TEXT,
-} from "jsr:@oak/commons@0.7/status";
+} from "jsr:@oak/commons@0.10/status";
 
 export {
   compile,
