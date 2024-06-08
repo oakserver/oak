@@ -8,7 +8,7 @@
 
 import type { State } from "../application.ts";
 import type { Context } from "../context.ts";
-import { parse } from "../forwarded.ts";
+import { parseForwarded } from "../deps.ts";
 import type { Middleware } from "../middleware.ts";
 import type {
   RouteParams,
@@ -168,7 +168,7 @@ async function createRequest<
       ? `"${ctx.request.ip}"`
       : ctx.request.ip;
     const host = headers.get("host");
-    if (maybeForwarded && parse(maybeForwarded)) {
+    if (maybeForwarded && parseForwarded(maybeForwarded)) {
       let value = `for=${ip}`;
       if (host) {
         value += `;host=${host}`;
