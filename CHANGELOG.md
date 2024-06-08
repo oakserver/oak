@@ -1,5 +1,12 @@
 # oak Change Log
 
+## Version 16.1.0
+
+- feat: support authority pseudo header for request (0c8b8da)
+- chore: create jekyll-gh-pages.yml (e1bceb9)
+- chore: redirect root github pages (4e4f5cd)
+- chore: migrate to commons 0.11 (cbf6ac1)
+
 ## Version 16.0.0
 
 - feat: remove helpers module (3cd8bf5)
