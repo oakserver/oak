@@ -123,38 +123,40 @@ export class Request {
   get url(): URL {
     if (!this.#url) {
       const serverRequest = this.#serverRequest;
-      if (!this.#proxy) {
-        // between 1.9.0 and 1.9.1 the request.url of the native HTTP started
-        // returning the full URL, where previously it only returned the path
-        // so we will try to use that URL here, but default back to old logic
-        // if the URL isn't valid.
-        try {
-          if (serverRequest.rawUrl) {
-            this.#url = new URL(serverRequest.rawUrl);
-            return this.#url;
-          }
-        } catch {
-          // we don't care about errors here
-        }
-      }
-      let proto: string;
-      let host: string;
-      if (this.#proxy) {
-        proto = serverRequest
-          .headers.get("x-forwarded-proto")?.split(/\s*,\s*/, 1)[0] ??
-          "http";
-        host = serverRequest.headers.get("x-forwarded-host") ??
-          serverRequest.headers.get("host") ?? "";
-      } else {
-        proto = this.#secure ? "https" : "http";
-        host = serverRequest.headers.get("host") ?? "";
-      }
+      // between Deno 1.9.0 and 1.9.1 the request.url of the native HTTP started
+      // returning the full URL, where previously it only returned the path
+      // so we will try to use that URL here, but default back to old logic
+      // if the URL isn't valid.
       try {
-        this.#url = new URL(`${proto}://${host}${serverRequest.url}`);
+        if (serverRequest.rawUrl) {
+          this.#url = new URL(serverRequest.rawUrl);
+        }
       } catch {
-        throw new TypeError(
-          `The server request URL of "${proto}://${host}${serverRequest.url}" is invalid.`,
-        );
+        // we don't care about errors here
+      }
+      if (this.#proxy || !this.#url) {
+        let proto: string;
+        let host: string;
+        if (this.#proxy) {
+          proto = serverRequest
+            .headers.get("x-forwarded-proto")?.split(/\s*,\s*/, 1)[0] ??
+            "http";
+          host = serverRequest.headers.get("x-forwarded-host") ??
+            this.#url?.hostname ??
+            serverRequest.headers.get("host") ??
+            serverRequest.headers.get(":authority") ?? "";
+        } else {
+          proto = this.#secure ? "https" : "http";
+          host = serverRequest.headers.get("host") ??
+            serverRequest.headers.get(":authority") ?? "";
+        }
+        try {
+          this.#url = new URL(`${proto}://${host}${serverRequest.url}`);
+        } catch {
+          throw new TypeError(
+            `The server request URL of "${proto}://${host}${serverRequest.url}" is invalid.`,
+          );
+        }
       }
     }
     return this.#url;
