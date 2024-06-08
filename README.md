@@ -175,6 +175,11 @@ The middleware is processed as a stack, where each middleware function can
 control the flow of the response. When the middleware is called, it is passed a
 context and reference to the "next" method in the stack.
 
+Middleware can also be an object as long as it has a `handleRequest` method.
+Middleware objects can optionally have an `init` function which will be called
+when the application starts listening. This makes middleware objects ideal for
+encapsulation or delayed initialization.
+
 A more complex example:
 
 ```ts
@@ -196,6 +201,25 @@ app.use(async (ctx, next) => {
   const ms = Date.now() - start;
   ctx.response.headers.set("X-Response-Time", `${ms}ms`);
 });
+
+// Counter
+class CountingMiddleware implements MiddlewareObject {
+  #id = 0;
+  #counter = 0;
+
+  init() {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    this.#id = array[0];
+  }
+
+  handleRequest(ctx: Context, next: Next) {
+    ctx.response.headers.set("X-Response-Count", String(this.#counter++));
+    ctx.response.headers.set("X-Response-Counter-ID", String(this.#id));
+    return next();
+  }
+}
+app.use(new CountingMiddleware());
 
 // Hello World!
 app.use((ctx) => {
@@ -757,6 +781,9 @@ await app.listen({ port: 80 });
 
 The `Router` class produces middleware which can be used with an `Application`
 to enable routing based on the pathname of the request.
+
+Like regular `Middleware`, router middleware can be an object as long as the
+`handleRequest` method is implemented.
 
 ### Basic usage
 
