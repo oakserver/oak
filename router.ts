@@ -66,7 +66,7 @@ import {
   Status,
   type TokensToRegexpOptions,
 } from "./deps.ts";
-import { compose, type Middleware } from "./middleware.ts";
+import { compose, type Middleware, type Next } from "./middleware.ts";
 import { decodeComponent } from "./utils/decode_component.ts";
 
 interface Matches<R extends string> {
@@ -105,7 +105,7 @@ export interface Route<
   methods: HTTPMethods[];
 
   /** The middleware that will be applied to this route. */
-  middleware: RouterMiddleware<R, P, S>[];
+  middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>[];
 
   /** An optional name for the route. */
   name?: string;
@@ -161,7 +161,7 @@ export interface RouterMiddleware<
   // deno-lint-ignore no-explicit-any
   S extends State = Record<string, any>,
 > {
-  (context: RouterContext<R, P, S>, next: () => Promise<unknown>):
+  (context: RouterContext<R, P, S>, next: Next):
     | Promise<unknown>
     | unknown;
   /** For route parameter middleware, the `param` key for this parameter will
@@ -170,6 +170,29 @@ export interface RouterMiddleware<
   // deno-lint-ignore no-explicit-any
   router?: Router<any>;
 }
+
+export interface RouterMiddlewareObject<
+  R extends string,
+  P extends RouteParams<R> = RouteParams<R>,
+  // deno-lint-ignore no-explicit-any
+  S extends State = Record<string, any>,
+> {
+  init?: () => Promise<unknown> | unknown;
+  handleRequest(
+    context: RouterContext<R, P, S>,
+    next: Next,
+  ): Promise<unknown> | unknown;
+  param?: keyof P;
+  // deno-lint-ignore no-explicit-any
+  router?: Router<any>;
+}
+
+export type RouterMiddlewareOrMiddlewareObject<
+  R extends string,
+  P extends RouteParams<R> = RouteParams<R>,
+  // deno-lint-ignore no-explicit-any
+  S extends State = Record<string, any>,
+> = RouterMiddleware<R, P, S> | RouterMiddlewareObject<R, P, S>;
 
 /** Options which can be specified when creating a new instance of a
  * {@linkcode Router}. */
@@ -303,12 +326,14 @@ export class Layer<
   methods: HTTPMethods[];
   name?: string;
   path: string;
-  stack: RouterMiddleware<R, P, S>[];
+  stack: RouterMiddlewareOrMiddlewareObject<R, P, S>[];
 
   constructor(
     path: string,
     methods: HTTPMethods[],
-    middleware: RouterMiddleware<R, P, S> | RouterMiddleware<R, P, S>[],
+    middleware:
+      | RouterMiddlewareOrMiddlewareObject<R, P, S>
+      | RouterMiddlewareOrMiddlewareObject<R, P, S>[],
     { name, ...opts }: LayerOptions = {},
   ) {
     this.#opts = opts;
@@ -378,7 +403,7 @@ export class Layer<
     ): Promise<unknown> | unknown {
       const p = ctx.params[param];
       assert(p);
-      return fn.call(this, p, ctx, next);
+      return fn.call(this, p!, ctx, next);
     };
     middleware.param = param;
 
@@ -525,7 +550,7 @@ export class Router<
 
   #register(
     path: string | string[],
-    middlewares: RouterMiddleware<string>[],
+    middlewares: RouterMiddlewareOrMiddlewareObject<string>[],
     methods: HTTPMethods[],
     options: RegisterOptions = {},
   ): void {
@@ -536,7 +561,7 @@ export class Router<
       return;
     }
 
-    let layerMiddlewares: RouterMiddleware<string>[] = [];
+    let layerMiddlewares: RouterMiddlewareOrMiddlewareObject<string>[] = [];
     for (const middleware of middlewares) {
       if (!middleware.router) {
         layerMiddlewares.push(middleware);
@@ -572,7 +597,7 @@ export class Router<
 
   #addLayer(
     path: string,
-    middlewares: RouterMiddleware<string>[],
+    middlewares: RouterMiddlewareOrMiddlewareObject<string>[],
     methods: HTTPMethods[],
     options: LayerOptions = {},
   ) {
@@ -612,8 +637,8 @@ export class Router<
 
   #useVerb(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string>,
-    middleware: RouterMiddleware<string>[],
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string>,
+    middleware: RouterMiddlewareOrMiddlewareObject<string>[],
     methods: HTTPMethods[],
   ): void {
     let name: string | undefined = undefined;
@@ -660,8 +685,8 @@ export class Router<
     methods: HTTPMethods[] | HTTPMethods,
     name: string,
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the specified methods is
    * requested. */
@@ -672,8 +697,8 @@ export class Router<
   >(
     methods: HTTPMethods[] | HTTPMethods,
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the specified methods
    * are requested with explicit path parameters. */
@@ -683,8 +708,8 @@ export class Router<
   >(
     methods: HTTPMethods[] | HTTPMethods,
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   add<
     P extends RouteParams<string> = RouteParams<string>,
@@ -692,13 +717,13 @@ export class Router<
   >(
     methods: HTTPMethods[] | HTTPMethods,
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)> {
     this.#useVerb(
       nameOrPath,
-      pathOrMiddleware as (string | RouterMiddleware<string>),
-      middleware as RouterMiddleware<string>[],
+      pathOrMiddleware as (string | RouterMiddlewareOrMiddlewareObject<string>),
+      middleware as RouterMiddlewareOrMiddlewareObject<string>[],
       typeof methods === "string" ? [methods] : methods,
     );
     return this;
@@ -713,8 +738,8 @@ export class Router<
   >(
     name: string,
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `DELETE`,
    * `GET`, `POST`, or `PUT` method is requested. */
@@ -724,8 +749,8 @@ export class Router<
     S extends State = RS,
   >(
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `DELETE`,
    * `GET`, `POST`, or `PUT` method is requested with explicit path parameters.
@@ -735,21 +760,21 @@ export class Router<
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   all<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)> {
     this.#useVerb(
       nameOrPath,
-      pathOrMiddleware as (string | RouterMiddleware<string>),
-      middleware as RouterMiddleware<string>[],
+      pathOrMiddleware as (string | RouterMiddlewareOrMiddlewareObject<string>),
+      middleware as RouterMiddlewareOrMiddlewareObject<string>[],
       this.#methods.filter((method) => method !== "OPTIONS"),
     );
     return this;
@@ -782,7 +807,7 @@ export class Router<
       if (!ctx.response.status || ctx.response.status === Status.NotFound) {
         assert(ctx.matched);
         const allowed = new Set<HTTPMethods>();
-        for (const route of ctx.matched) {
+        for (const route of ctx.matched!) {
           for (const method of route.methods) {
             allowed.add(method);
           }
@@ -828,8 +853,8 @@ export class Router<
   >(
     name: string,
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `DELETE`,
    * method is requested. */
@@ -839,8 +864,8 @@ export class Router<
     S extends State = RS,
   >(
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `DELETE`,
    * method is requested with explicit path parameters. */
@@ -849,21 +874,21 @@ export class Router<
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   delete<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)> {
     this.#useVerb(
       nameOrPath,
-      pathOrMiddleware as (string | RouterMiddleware<string>),
-      middleware as RouterMiddleware<string>[],
+      pathOrMiddleware as (string | RouterMiddlewareOrMiddlewareObject<string>),
+      middleware as RouterMiddlewareOrMiddlewareObject<string>[],
       ["DELETE"],
     );
     return this;
@@ -905,8 +930,8 @@ export class Router<
   >(
     name: string,
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `GET`,
    * method is requested. */
@@ -916,8 +941,8 @@ export class Router<
     S extends State = RS,
   >(
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `GET`,
    * method is requested with explicit path parameters. */
@@ -926,21 +951,21 @@ export class Router<
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   get<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)> {
     this.#useVerb(
       nameOrPath,
-      pathOrMiddleware as (string | RouterMiddleware<string>),
-      middleware as RouterMiddleware<string>[],
+      pathOrMiddleware as (string | RouterMiddlewareOrMiddlewareObject<string>),
+      middleware as RouterMiddlewareOrMiddlewareObject<string>[],
       ["GET"],
     );
     return this;
@@ -955,8 +980,8 @@ export class Router<
   >(
     name: string,
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `HEAD`,
    * method is requested. */
@@ -966,8 +991,8 @@ export class Router<
     S extends State = RS,
   >(
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `HEAD`,
    * method is requested with explicit path parameters. */
@@ -976,21 +1001,21 @@ export class Router<
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   head<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)> {
     this.#useVerb(
       nameOrPath,
-      pathOrMiddleware as (string | RouterMiddleware<string>),
-      middleware as RouterMiddleware<string>[],
+      pathOrMiddleware as (string | RouterMiddlewareOrMiddlewareObject<string>),
+      middleware as RouterMiddlewareOrMiddlewareObject<string>[],
       ["HEAD"],
     );
     return this;
@@ -1013,8 +1038,8 @@ export class Router<
   >(
     name: string,
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `OPTIONS`,
    * method is requested. */
@@ -1024,8 +1049,8 @@ export class Router<
     S extends State = RS,
   >(
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `OPTIONS`,
    * method is requested with explicit path parameters. */
@@ -1034,21 +1059,21 @@ export class Router<
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   options<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)> {
     this.#useVerb(
       nameOrPath,
-      pathOrMiddleware as (string | RouterMiddleware<string>),
-      middleware as RouterMiddleware<string>[],
+      pathOrMiddleware as (string | RouterMiddlewareOrMiddlewareObject<string>),
+      middleware as RouterMiddlewareOrMiddlewareObject<string>[],
       ["OPTIONS"],
     );
     return this;
@@ -1076,8 +1101,8 @@ export class Router<
   >(
     name: string,
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `PATCH`,
    * method is requested. */
@@ -1087,8 +1112,8 @@ export class Router<
     S extends State = RS,
   >(
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `PATCH`,
    * method is requested with explicit path parameters. */
@@ -1097,21 +1122,21 @@ export class Router<
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   patch<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)> {
     this.#useVerb(
       nameOrPath,
-      pathOrMiddleware as (string | RouterMiddleware<string>),
-      middleware as RouterMiddleware<string>[],
+      pathOrMiddleware as (string | RouterMiddlewareOrMiddlewareObject<string>),
+      middleware as RouterMiddlewareOrMiddlewareObject<string>[],
       ["PATCH"],
     );
     return this;
@@ -1126,8 +1151,8 @@ export class Router<
   >(
     name: string,
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `POST`,
    * method is requested. */
@@ -1137,8 +1162,8 @@ export class Router<
     S extends State = RS,
   >(
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `POST`,
    * method is requested with explicit path parameters. */
@@ -1147,21 +1172,21 @@ export class Router<
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   post<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)> {
     this.#useVerb(
       nameOrPath,
-      pathOrMiddleware as (string | RouterMiddleware<string>),
-      middleware as RouterMiddleware<string>[],
+      pathOrMiddleware as (string | RouterMiddlewareOrMiddlewareObject<string>),
+      middleware as RouterMiddlewareOrMiddlewareObject<string>[],
       ["POST"],
     );
     return this;
@@ -1186,8 +1211,8 @@ export class Router<
   >(
     name: string,
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `PUT`
    * method is requested. */
@@ -1197,8 +1222,8 @@ export class Router<
     S extends State = RS,
   >(
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware for the specified routes when the `PUT`
    * method is requested with explicit path parameters. */
@@ -1207,21 +1232,21 @@ export class Router<
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   put<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
   >(
     nameOrPath: string,
-    pathOrMiddleware: string | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware: string | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)> {
     this.#useVerb(
       nameOrPath,
-      pathOrMiddleware as (string | RouterMiddleware<string>),
-      middleware as RouterMiddleware<string>[],
+      pathOrMiddleware as (string | RouterMiddlewareOrMiddlewareObject<string>),
+      middleware as RouterMiddlewareOrMiddlewareObject<string>[],
       ["PUT"],
     );
     return this;
@@ -1328,7 +1353,7 @@ export class Router<
           },
           ...route.stack,
         ],
-        [] as RouterMiddleware<string>[],
+        [] as RouterMiddlewareOrMiddlewareObject<string>[],
       );
       return compose(chain)(ctx, next);
     };
@@ -1355,8 +1380,8 @@ export class Router<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
   >(
-    middleware: RouterMiddleware<string, P, S>,
-    ...middlewares: RouterMiddleware<string, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware to be used on every route that matches the supplied
    * `path`. */
@@ -1366,8 +1391,8 @@ export class Router<
     S extends State = RS,
   >(
     path: R,
-    middleware: RouterMiddleware<R, P, S>,
-    ...middlewares: RouterMiddleware<R, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<R, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<R, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   /** Register middleware to be used on every route that matches the supplied
    * `path` with explicit path parameters. */
@@ -1376,23 +1401,26 @@ export class Router<
     S extends State = RS,
   >(
     path: string,
-    middleware: RouterMiddleware<string, P, S>,
-    ...middlewares: RouterMiddleware<string, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   use<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
   >(
     path: string[],
-    middleware: RouterMiddleware<string, P, S>,
-    ...middlewares: RouterMiddleware<string, P, S>[]
+    middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middlewares: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)>;
   use<
     P extends RouteParams<string> = RouteParams<string>,
     S extends State = RS,
   >(
-    pathOrMiddleware: string | string[] | RouterMiddleware<string, P, S>,
-    ...middleware: RouterMiddleware<string, P, S>[]
+    pathOrMiddleware:
+      | string
+      | string[]
+      | RouterMiddlewareOrMiddlewareObject<string, P, S>,
+    ...middleware: RouterMiddlewareOrMiddlewareObject<string, P, S>[]
   ): Router<S extends RS ? S : (S & RS)> {
     let path: string | string[] | undefined;
     if (
@@ -1405,7 +1433,7 @@ export class Router<
 
     this.#register(
       path ?? "(.*)",
-      middleware as RouterMiddleware<string>[],
+      middleware as RouterMiddlewareOrMiddlewareObject<string>[],
       [],
       { end: false, ignoreCaptures: !path, ignorePrefix: !path },
     );

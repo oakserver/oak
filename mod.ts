@@ -123,15 +123,17 @@ export {
 } from "./middleware.ts";
 export { Request } from "./request.ts";
 export { REDIRECT_BACK, Response } from "./response.ts";
-export {
-  type Route,
-  type RouteParams,
-  Router,
-  type RouterAllowedMethodsOptions,
-  type RouterContext,
-  type RouterMiddleware,
-  type RouterOptions,
-  type RouterParamMiddleware,
+export { Router } from "./router.ts";
+export type {
+  Route,
+  RouteParams,
+  RouterAllowedMethodsOptions,
+  RouterContext,
+  RouterMiddleware,
+  RouterMiddlewareObject,
+  RouterMiddlewareOrMiddlewareObject,
+  RouterOptions,
+  RouterParamMiddleware,
 } from "./router.ts";
 export { send, type SendOptions } from "./send.ts";
 /** Utilities for making testing oak servers easier. */
