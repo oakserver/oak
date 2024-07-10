@@ -13,7 +13,7 @@ import { errors, Status } from "./deps.ts";
 import { Router, RouterContext } from "./router.ts";
 
 function createMockApp<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
+  S extends Record<PropertyKey, any> = Record<string, any>,
 >(
   state = {} as S,
 ): Application<S> {
@@ -27,7 +27,7 @@ function createMockApp<
 }
 
 function createMockContext<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
+  S extends Record<PropertyKey, any> = Record<string, any>,
 >(
   app: Application<S>,
   path = "/",
@@ -58,7 +58,7 @@ function createMockNext() {
 }
 
 function setup<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
+  S extends Record<PropertyKey, any> = Record<string, any>,
 >(
   path = "/",
   method = "GET",
