@@ -338,7 +338,7 @@ interface RequestState {
 /** The base type of state which is associated with an application or
  * context. */
 // deno-lint-ignore no-explicit-any
-export type State = Record<string | number | symbol, any>;
+export type State = Record<PropertyKey, any>;
 
 const ADDR_REGEXP = /^\[?([^\]]*)\]?:([0-9]{1,5})$/;
 
