@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 // deno-lint-ignore-file no-explicit-any
 
@@ -10,17 +10,21 @@
  */
 
 import type { Application, State } from "./application.ts";
-import { accepts, createHttpError, SecureCookieMap } from "./deps.ts";
+import {
+  accepts,
+  createHttpError,
+  type ErrorStatus,
+  SecureCookieMap,
+} from "./deps.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
-import type { ErrorStatus } from "./types.d.ts";
-import { Request } from "./request.ts";
+import type { Request } from "./request.ts";
 import { Response } from "./response.ts";
 
 /** Creates a mock of `Application`. */
 export function createMockApp<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
+  S extends Record<PropertyKey, any> = Record<string, any>,
 >(
-  state = {} as S,
+  state: S = {} as S,
 ): Application<S> {
   const app = {
     state,
@@ -87,10 +91,16 @@ export function createMockContext<
     app = createMockApp(state),
     headers: requestHeaders,
   }: MockContextOptions<R> = {},
-) {
+): RouterContext<R, P, S> {
   function createMockRequest(): Request {
     const headers = new Headers(requestHeaders);
     return {
+      get source(): globalThis.Request | undefined {
+        return new globalThis.Request(new URL(path, "http://localhost/"), {
+          method,
+          headers,
+        });
+      },
       accepts(...types: string[]) {
         if (!headers.has("Accept")) {
           return;
@@ -174,6 +184,6 @@ export function createMockContext<
 
 /** Creates a mock `next()` function which can be used when calling
  * middleware. */
-export function createMockNext() {
+export function createMockNext(): () => Promise<void> {
   return async function next() {};
 }

@@ -1,37 +1,46 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { contentType, Status, STATUS_TEXT } from "./deps.ts";
+/**
+ * Contains the {@linkcode Response} abstraction used by oak.
+ *
+ * Most end users would not need to directly access this module.
+ *
+ * @module
+ */
+
+import { contentType, isRedirectStatus, Status, STATUS_TEXT } from "./deps.ts";
 import { DomResponse } from "./http_server_native_request.ts";
 import type { Request } from "./request.ts";
+import { isAsyncIterable, isHtml, isReader } from "./utils/type_guards.ts";
+import { BODY_TYPES } from "./utils/consts.ts";
+import { encodeUrl } from "./utils/encode_url.ts";
 import {
-  BODY_TYPES,
-  encodeUrl,
-  isAsyncIterable,
-  isHtml,
-  isReader,
-  isRedirectStatus,
   readableStreamFromAsyncIterable,
   readableStreamFromReader,
   Uint8ArrayTransformStream,
-} from "./util.ts";
+} from "./utils/streams.ts";
 
+/** The various types of bodies supported when setting the value of `.body`
+ * on a {@linkcode Response} */
 export type ResponseBody =
   | string
   | number
   | bigint
   | boolean
   | symbol
-  // deno-lint-ignore ban-types
   | object
   | undefined
   | null;
+
+/** A function that when invoked returns or resolves to a
+ * {@linkcode ResponseBody}. */
 export type ResponseBodyFunction = () => ResponseBody | Promise<ResponseBody>;
 
 /** A symbol that indicates to `response.redirect()` to attempt to redirect
  * back to the request referrer.  For example:
  *
  * ```ts
- * import { Application, REDIRECT_BACK } from "https://deno.land/x/oak/mod.ts";
+ * import { Application, REDIRECT_BACK } from "jsr:@oak/oak/";
  *
  * const app = new Application();
  *
@@ -46,7 +55,7 @@ export type ResponseBodyFunction = () => ResponseBody | Promise<ResponseBody>;
  */
 export const REDIRECT_BACK = Symbol("redirect backwards");
 
-export async function convertBodyToBodyInit(
+async function convertBodyToBodyInit(
   body: ResponseBody | ResponseBodyFunction,
   type?: string,
   jsonBodyReplacer?: (key: string, value: unknown) => unknown,
@@ -67,7 +76,7 @@ export async function convertBodyToBodyInit(
     result = body.pipeThrough(new Uint8ArrayTransformStream());
   } else if (body instanceof FormData) {
     result = body;
-    type = "multipart/form-data";
+    type = undefined;
   } else if (isAsyncIterable(body)) {
     result = readableStreamFromAsyncIterable(body);
   } else if (body && typeof body === "object") {
@@ -90,7 +99,7 @@ export async function convertBodyToBodyInit(
  * ### Example
  *
  * ```ts
- * import { Application, Status } from "https://deno.land/x/oak/mod.ts";
+ * import { Application, Status } from "jsr:@oak/oak/";
  *
  * const app = new Application();
  *
@@ -108,7 +117,7 @@ export class Response {
   #headers = new Headers();
   #jsonBodyReplacer?: (key: string, value: unknown) => unknown;
   #request: Request;
-  #resources: number[] = [];
+  #resources: { close(): void }[] = [];
   #status?: Status;
   #type?: string;
   #writable = true;
@@ -225,8 +234,8 @@ export class Response {
 
   /** Add a resource to the list of resources that will be closed when the
    * request is destroyed. */
-  addResource(rid: number): void {
-    this.#resources.push(rid);
+  addResource(resource: { close(): void }): void {
+    this.#resources.push(resource);
   }
 
   /** Release any resources that are being tracked by the response.
@@ -238,9 +247,9 @@ export class Response {
     this.#body = undefined;
     this.#domResponse = undefined;
     if (closeResources) {
-      for (const rid of this.#resources) {
+      for (const resource of this.#resources) {
         try {
-          Deno.close(rid);
+          resource.close();
         } catch {
           // we don't care about errors here
         }
@@ -325,7 +334,47 @@ export class Response {
     return this.#domResponse = new DomResponse(bodyInit, responseInit);
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  /** Instead of responding based on the values of the response, explicitly set
+   * the response with a Fetch API `Response`.
+   *
+   * If the response is already finalized, this will throw. You can check
+   * the `.writable` property to determine the state if you are unsure.
+   *
+   * > [!NOTE]
+   * > This will ignore/override values set in the response like the body,
+   * > headers and status, meaning things like cookie management and automatic
+   * > body typing will be ignored.
+   */
+  with(response: globalThis.Response): void;
+  /** Instead of responding based on the values of the response, explicitly set
+   * the response by providing the initialization to create a Fetch API
+   * `Response`.
+   *
+   * If the response is already finalized, this will throw. You can check
+   * the `.writable` property to determine the state if you are unsure.
+   *
+   * > [!NOTE]
+   * > This will ignore/override values set in the response like the body,
+   * > headers and status, meaning things like cookie management and automatic
+   * > body typing will be ignored.
+   */
+  with(body?: BodyInit | null, init?: ResponseInit): void;
+  with(
+    responseOrBody?: globalThis.Response | BodyInit | null,
+    init?: ResponseInit,
+  ): void {
+    if (this.#domResponse || !this.#writable) {
+      throw new Error("A response has already been finalized.");
+    }
+    this.#writable = false;
+    this.#domResponse = responseOrBody instanceof DomResponse
+      ? responseOrBody
+      : new DomResponse(responseOrBody, init);
+  }
+
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     const { body, headers, status, type, writable } = this;
     return `${this.constructor.name} ${
       inspect({ body, headers, status, type, writable })
@@ -337,7 +386,8 @@ export class Response {
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }

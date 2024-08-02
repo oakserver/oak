@@ -3,16 +3,11 @@
  */
 
 // Importing some console colors
-import {
-  bold,
-  cyan,
-  green,
-  yellow,
-} from "https://deno.land/std@0.183.0/fmt/colors.ts";
+import { bold, cyan, green, yellow } from "jsr:@std/fmt@0.223/colors";
 
 import {
   Application,
-  Context,
+  type Context,
   isHttpError,
   Router,
   ServerSentEvent,
@@ -43,13 +38,13 @@ router
   })
   // for any clients that request the `/sse` endpoint, we will send a message
   // every 2 seconds.
-  .get("/sse", (ctx: Context) => {
+  .get("/sse", async (ctx: Context) => {
     ctx.assert(
       ctx.request.accepts("text/event-stream"),
       Status.UnsupportedMediaType,
     );
     const connection = ctx.request.ip;
-    const target = ctx.sendEvents();
+    const sse = await ctx.sendEvents();
     console.log(`${green("SSE connect")} ${cyan(connection)}`);
     let counter = 0;
     const id = setInterval(() => {
@@ -57,10 +52,11 @@ router
         "message",
         { data: { hello: "world" }, id: counter++ },
       );
-      target.dispatchEvent(evt);
+      sse.dispatchEvent(evt);
       console.log("dispatched");
     }, 2000);
-    target.addEventListener("close", () => {
+    sse.dispatchMessage({ hello: "world" });
+    sse.addEventListener("close", () => {
       console.log(`${green("SSE disconnect")} ${cyan(connection)}`);
       clearInterval(id);
     });

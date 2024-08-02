@@ -1,0 +1,44 @@
+{
+  "name": "@oak/oak",
+  "version": "16.1.0",
+  "exports": {
+    ".": "./mod.ts",
+    "./application": "./application.ts",
+    "./body": "./body.ts",
+    "./context": "./context.ts",
+    "./etag": "./middleware/etag.ts",
+    "./http_server_bun": "./http_server_bun.ts",
+    "./http_server_native": "./http_server_native.ts",
+    "./http_server_node": "./http_server_node.ts",
+    "./middleware": "./middleware.ts",
+    "./proxy": "./middleware/proxy.ts",
+    "./request": "./request.ts",
+    "./response": "./response.ts",
+    "./router": "./router.ts",
+    "./send": "./send.ts",
+    "./serve": "./middleware/serve.ts",
+    "./testing": "./testing.ts"
+  },
+  "publish": {
+    "exclude": [
+      ".devcontainer",
+      ".github",
+      ".vscode",
+      "examples",
+      "fixtures",
+      "docs",
+      "**/*.test.ts",
+      "test_deps.ts"
+    ]
+  },
+  "tasks": {
+    "coverage": "deno coverage --lcov ./cov",
+    "example": "deno run --allow-net examples/echoServer.ts",
+    "test": "deno test --allow-read --allow-write --allow-net --parallel --ignore=npm",
+    "test:coverage": "deno test --coverage=./cov --allow-read --allow-write --allow-net --cert ./examples/tls/RootCA.crt --parallel --ignore=npm"
+  },
+  "fmt": {
+    "exclude": ["README.md"]
+  },
+  "lock": false
+}

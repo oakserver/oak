@@ -1,14 +1,5 @@
 {
   "deno.enable": true,
   "deno.unstable": true,
-  "deno.lint": true,
-  "deno.importMap": "./import-map.json",
-  "deno.codeLens.testArgs": [
-    "--allow-net",
-    "--allow-read",
-    "--allow-write"
-  ],
-  "deno.suggest.imports.hosts": {
-    "https://deno.land": true
-  }
+  "deno.lint": true
 }

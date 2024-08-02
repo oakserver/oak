@@ -1,24 +1,31 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
+
+/**
+ * Contains the {@linkcode Context} class which is the context that is provided
+ * to middleware.
+ *
+ * Typically this is not used directly by end users except when creating
+ * re-usable middleware.
+ *
+ * @module
+ */
 
 import type { Application, State } from "./application.ts";
 import {
   createHttpError,
-  KeyStack,
+  type ErrorStatus,
+  type HttpErrorOptions,
+  type KeyStack,
   SecureCookieMap,
-  ServerSentEventStreamTarget,
   type ServerSentEventTarget,
   type ServerSentEventTargetOptions,
 } from "./deps.ts";
 import { Request } from "./request.ts";
 import { Response } from "./response.ts";
-import { send, SendOptions } from "./send.ts";
-import type {
-  ErrorStatus,
-  ServerRequest,
-  UpgradeWebSocketOptions,
-} from "./types.d.ts";
-import { assert } from "./util.ts";
+import { send, type SendOptions } from "./send.ts";
+import type { ServerRequest, UpgradeWebSocketOptions } from "./types.ts";
 
+/** Options that can be supplied when creating a {@linkcode Context} */
 export interface ContextOptions<
   S extends AS = State,
   // deno-lint-ignore no-explicit-any
@@ -37,6 +44,7 @@ export interface ContextOptions<
   secure?: boolean;
 }
 
+/** Options that can be supplied when using the `.send()` method. */
 export interface ContextSendOptions extends SendOptions {
   /** The filename to send, which will be resolved based on the other options.
    * If this property is omitted, the current context's `.request.url.pathname`
@@ -54,7 +62,7 @@ export interface ContextSendOptions extends SendOptions {
  * ### Example
  *
  * ```ts
- * import { Application, Context } from "https://deno.land/x/oak/mod.ts";
+ * import { Application, Context } from "jsr:@oak/oak/";
  *
  * const app = new Application();
  *
@@ -202,7 +210,7 @@ export class Context<
    * ### Example
    *
    * ```ts
-   * import { Context, Status } from "https://deno.land/x/oak/mod.ts";
+   * import { Context, Status } from "jsr:@oak/oak/";
    *
    * export function mw(ctx: Context) {
    *   const body = ctx.request.body();
@@ -212,16 +220,26 @@ export class Context<
    * ```
    */
   assert(
-    // deno-lint-ignore no-explicit-any
-    condition: any,
+    condition: unknown,
     errorStatus: ErrorStatus = 500,
     message?: string,
-    props?: Record<string, unknown>,
+    props?: Record<string, unknown> & Omit<HttpErrorOptions, "status">,
   ): asserts condition {
     if (condition) {
       return;
     }
-    const err = createHttpError(errorStatus, message);
+    const httpErrorOptions: HttpErrorOptions = {};
+    if (typeof props === "object") {
+      if ("headers" in props) {
+        httpErrorOptions.headers = props.headers;
+        delete props.headers;
+      }
+      if ("expose" in props) {
+        httpErrorOptions.expose = props.expose;
+        delete props.expose;
+      }
+    }
+    const err = createHttpError(errorStatus, message, httpErrorOptions);
     if (props) {
       Object.assign(err, props);
     }
@@ -240,30 +258,24 @@ export class Context<
     return send(this, path, sendOptions);
   }
 
-  /** Convert the connection to stream events, returning an event target for
-   * sending server sent events.  Events dispatched on the returned target will
-   * be sent to the client and be available in the client's `EventSource` that
-   * initiated the connection.
+  /** Convert the connection to stream events, resolving with an event target
+   * for sending server sent events.  Events dispatched on the returned target
+   * will be sent to the client and be available in the client's `EventSource`
+   * that initiated the connection.
    *
-   * **Note** the body needs to be returned to the client to be able to
-   * dispatch events, so dispatching events within the middleware will delay
-   * sending the body back to the client.
-   *
-   * This will set the response body and update response headers to support
-   * sending SSE events. Additional middleware should not modify the body.
+   * Invoking this will cause the a response to be sent to the client
+   * immediately to initialize the stream of events, and therefore any further
+   * changes to the response, like headers will not reach the client.
    */
-  sendEvents(options?: ServerSentEventTargetOptions): ServerSentEventTarget {
+  async sendEvents(
+    options?: ServerSentEventTargetOptions,
+  ): Promise<ServerSentEventTarget> {
     if (!this.#sse) {
-      assert(this.response.writable, "The response is not writable.");
-      const sse = this.#sse = new ServerSentEventStreamTarget(options);
-      this.app.addEventListener("close", () => sse.close());
-      const [bodyInit, { headers }] = sse.asResponseInit({
+      const sse = this.#sse = await this.request.sendEvents(options, {
         headers: this.response.headers,
       });
-      this.response.body = bodyInit;
-      if (headers instanceof Headers) {
-        this.response.headers = headers;
-      }
+      this.app.addEventListener("close", () => sse.close());
+      this.respond = false;
     }
     return this.#sse;
   }
@@ -289,21 +301,17 @@ export class Context<
    * the a web standard `WebSocket` object. This will set `.respond` to
    * `false`.  If the socket cannot be upgraded, this method will throw. */
   upgrade(options?: UpgradeWebSocketOptions): WebSocket {
-    if (this.#socket) {
-      return this.#socket;
+    if (!this.#socket) {
+      const socket = this.#socket = this.request.upgrade(options);
+      this.app.addEventListener("close", () => socket.close());
+      this.respond = false;
     }
-    if (!this.request.originalRequest.upgrade) {
-      throw new TypeError(
-        "Web socket upgrades not currently supported for this type of server.",
-      );
-    }
-    this.#socket = this.request.originalRequest.upgrade(options);
-    this.app.addEventListener("close", () => this.#socket?.close());
-    this.respond = false;
     return this.#socket;
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     const {
       app,
       cookies,
@@ -333,7 +341,8 @@ export class Context<
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }

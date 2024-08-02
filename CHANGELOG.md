@@ -1,5 +1,311 @@
 # oak Change Log
 
+## Version 16.1.0
+
+- feat: support authority pseudo header for request (0c8b8da)
+- chore: create jekyll-gh-pages.yml (e1bceb9)
+- chore: redirect root github pages (4e4f5cd)
+- chore: migrate to commons 0.11 (cbf6ac1)
+
+## Version 16.0.0
+
+- feat: remove helpers module (3cd8bf5)
+
+  **BREAKING CHANGE** the helpers module was removed, it only provided a single
+  function which was of little value.
+
+- fix: bun and node server respect abort signal (662d1fe)
+- refactor: break apart util, move form_data to commons (ba0ecaf)
+- refactor: move etag to middleware/etag and remove re-exports from std
+  (70e4cbf)
+
+  **BREAKING CHANGE** The following APIs were being re-exported from etag, but
+  have been present in Deno @std/http/etag for an extended period of time and
+  the re-exports have been removed:
+
+  - `calculate`
+  - `type ETagOptions`
+  - `type FileInfo`
+  - `ifMatch`
+  - `ifNoneMatch`
+
+- chore: fix linting issues (785867e)
+- chore: publish more modules for documentation purposes (90db374)
+- chore: update to std 0.223 (7a766dc)
+- chore: add copyright header (9f6263e)
+- chore: additional infrastructure cleanup (3e875c9)
+- chore: more cleanup of unused fixtures (bbd2111)
+
+## Version 15.0.0
+
+- feat: migrate to @oak/commons/range (de1026f)
+
+  **BREAKING CHANGE** The migration to @oak/commons/range was a total rewrite of
+  the range logic that was implemented in oak, and the previous exported APIs
+  were no longer compatible, and therefore are no longer available in the
+  `mod.ts`. If you are looking for lower level range support, see
+  [@oak/commons/range](https://jsr.io/@oak/commons/doc/range/~)
+
+- chore: add publish workflow (c8e535f)
+- chore: update to std 0.222 and commons 0.8 (1265cde)
+- chore: fix linting in examples (c8ac46a)
+- chore: remove unused config file (f2df0ee)
+- chore: add publish exclusions (d2057e)
+- docs: fix typo in README (dd9cbda)
+
+## Version 14.2.0
+
+- chore: update codecov config (fcc7c96)
+- chore: update codecov config (af33378)
+- chore: update CI config (7a000b1)
+- chore: more CI changes (b6bfa86)
+- chore: merge in jsr changes (5e80e65)
+- chore: migrate to @oak/commmons 0.7.0 (8293071)
+- chore: remove npm build (1345298)
+- chore: move examples to use jsr, update inline docs (a746485)
+- docs: update README badges (b057920)
+- docs: update main export inline docs (98f4261)
+
+## Version 14.1.1
+
+- chore: update to std 0.218.2 (298bc6f)
+- docs: update router module doc (6a41fff)
+
+## Version 14.1.0
+
+- feat: add support for Bun (c7d6ae3)
+
+  oak natively supports the built in Bun HTTP server.
+
+- feat: initial Cloudflare Worker support (a7f87e5)
+
+  The oak application provides a Fetch Handler for Cloudflare Workers.
+
+- tests: ignore specific bun test (f3dc3d5)
+- chore: cleanup on http_server_native_request (27cf442)
+- docs: improve inline documentation (928d9f0)
+- docs: update readme (b46ee42)
+
+## Version 14.0.0
+
+- feat: send events immediately sends response to client (a3f0076)
+
+  **BREAKING CHANGE** Previous versions of oak would return a
+  `ServerSentEventTarget` when calling `.sendEvents()` on the context, but would
+  not send the response to the client until all the middleware completed
+  processing. Now, the response is sent back to the client immediately (like the
+  websocket `.upgrade()` method) which results in the `ServerSentEventTarget`
+  being returned in a promise and also preventing any further changes to
+  response by other middleware.
+
+  This has the benefit of meaning any events dispatched from within the main
+  flow of the current middleware are sent to the client straight away instead of
+  appearing to be buffered.
+
+- fix: http_server_native when closing with signal abort event (#639)
+- chore: update to std 0.217.0 (bc88315)
+
+## Version 13.2.5
+
+- fix: wrong file dynamically imported (#638)
+- fix: tag server constructors (120a024)
+- refactor: move to std assert (f8ab89e)
+- chore: update to std 0.215.0 (5b45806)
+- chore: update oak commons (151c6bd)
+
+## Version 13.2.4
+
+- fix: more global namespace fixes for node (f1b7d46)
+
+## Version 13.2.3
+
+- fix: shim more globals for node (d879951)
+
+## Version 13.2.2
+
+- fix: handle accessing Deno namespace better (4150b36)
+
+## Version 13.2.1
+
+- fix: don't access Deno namespace unguarded (5b49419)
+
+## Version 13.2.0
+
+- feat: use dynamic imports for node compat (db116d1)
+
+  Instead of depending on dnt to swap out modules for Node compatibility, there
+  is a single codebase which dynamically imports modules based on runtime
+  detection of the environment.
+
+- fix: fast check fixes (c6db0ac)
+- docs: update README badges (aafc571)
+- docs: fix typo in README badge (af7dc72)
+- chore: update https server example (#637)
+- chore: update github actions (44ddcbf)
+
+## Version 13.1.0
+
+- feat: make interop with Fetch API easier (4d4034b)
+
+  For code designed to work with the Fetch API's `Request` and `Response` (like
+  `Deno.serve()`) there are now several features that make interop easier. There
+  is now the `serve()` and `route()` middleware which will wrap a handler
+  function to operate with oak.
+
+- fix: don't set content-type on body FormData (2e2f5da)
+
+  This was causing the boundary to not be set when responding with a `FormData`
+  body and therefore making the browser unable to decode the body.
+
+- refactor: migrate to oak commons for media type utils (b075f2e)
+- refactor: migrate from .d.ts to .ts for type information (e3fcbcb)
+- tests: bulk refactor (81c81fe)
+- chore: update copyright dates (436577a)
+- chore: integrate import map into deno config (3d328cf)
+- docs: fix typo in README (567245e)
+
+## Version 13.0.1
+
+- fix: explicit typings for body (43bcd82)
+- fix: add type to body blob (b74b374)
+- chore: update to oak commons 0.5.2 (25d82e1)
+- docs: document body API in README (43de84a)
+
+## Version 13.0.0
+
+- feat: align request body better to Fetch API (bb996fe)
+
+  **BREAKING CHANGE** Previous versions of oak had a request body API that was
+  fairly convoluted as oak evolved from the early days of Deno where there
+  wasn't a built in APIs for handling HTTP requests. The Fetch API `Request` and
+  `Response` have become the standard almost everywhere and make it easy to get
+  ahold of a request body in many forms.
+
+  Inspired by this the `ctx.request.body` aligns to this API for the most part,
+  but also still retains some of the advantages that oak provided like providing
+  a `ctx.request.body.type` to help figure out what sort of body you are looking
+  at as well as support for `ctx.request.body.form()`.
+
+  This also leverages native Fetch API where possible which resolved a lot of
+  issues with decoding multi-part forms. This does mean files that are uploaded
+  to oak become web standard `File`s that are entries in `FormData`. This means
+  `multipart.ts` has been removed from oak and the
+
+- refactor: use Deno.serve() instead of Deno.serveHttp() (bbae544)
+
+  **BREAKING CHANGE** As of Deno 1.40.0, `Deno.serveHttp()` is deprecated and
+  will be removed in Deno 2.0. The Deno implementation of oak finally migrates
+  to `Deno.serve()`. While this should be transparent in most cases, it has
+  changed some of the options that can be used when using `app.listen()` to
+  align to the `Deno.serve()` options. Also, unlike unstable `Deno.serverHttp()`
+  `Deno.serve()` doesn't support HTTP/2, therefore it isn't currently possible
+  to support HTTP/2 in oak.
+
+- fix: remove deprecated API, work around Deno bug (71a1d92)
+
+  There were a few other APIs that were deprecated in Deno 1.40.0 that did not
+  impact the oak APIs, as well as a regression that has been fixed in patch
+  releases that was worked around.
+
+- fix: issues in current versions of node (43733a0)
+
+  Current versions of Node.js had some issues that were not present in Node.js
+  16. These were resolved.
+
+- fix: application errors dispatched after default logic (f37796b)
+
+  Resolved #630
+
+- tests: add descriptions to some tests (9fb56b3)
+- chore: rework exports (4bb93fb)
+- chore: fix exports (6e2d9b3)
+- chore: remove unused dep (ebe6801)
+- chore: migrate to oak commons 0.5.0 (d5752e6)
+- chore: remove unstable tests (9dc5ca7)
+- chore: remove unused import (09fd336)
+- chore: update to std 0.212.0 (a854c72)
+- chore: fix exports (d416773)
+
+## Version 12.6.3
+
+- chore: add jsr metadata (6c30bdf)
+- chore: rename deno.jsonc to deno.json (681da74)
+- docs: fix typo in index.md (#600)
+
+## Version 12.6.2
+
+- chore: update to std 0.211.0, commons 0.4.0, dnt 0.39.0 (494aa7b)
+- chore: remove deno bundle ci task (8db4394)
+
+## Version 12.6.1
+
+- fix: untrack http conns when closed (da6d30d)
+- chore: remove unused lint pragma (614df5e)
+- chore: update to std 0.200.0 and dnt 0.38.1 (eb51995)
+- chore: fix type checking issue in build script (5ca2870)
+
+## Version 12.6.0
+
+- feat: add userAgent to request (e292470)
+
+  `ctx.request` now contains an object representing the user agent in a property
+  called `.userAgent`.
+
+  See
+  [std/http/user_agent#UserAgent](https://deno.land/std@0.193.0/http/user_agent.ts?s=UserAgent)
+  for more information. Inspired by #603.
+
+- chore: update to std 0.190.0 (4bf071d)
+- chore: update to dnt 0.36.0 (2f394bf)
+- chore: update dnt 0.37.0, std 0.193.0 (c052b2b)
+- docs: remove outdated comment (f0ad28b)
+
+## Version 12.5.0
+
+- feat: body parsing throws HTTP errors. (79349d7)
+
+  Now when parsing the body of a request, when an error is encountered, an HTTP
+  error is thrown instead of a SyntaxError or TypeError. This makes it easier to
+  respond to "bad requests" without additional error handling in middleware.
+
+- fix: allow setting headers and expose on `Context.prototype.assert()` (#605)
+
+  After migrating to HTTP errors from Deno std library, there were some
+  regressions in functionality when passing options. This restores this lost
+  functionality.
+
+- chore: update to std 0.188.0 (1534696)
+- chore: update to dnt 0.35.0 (02612c9)
+- chore: revert CI to stable (635af06)
+- chore: revert format change (91bf20f)
+- chore: migrate to std for method, `ErrorStatus`, `RedirectStatus` (4870970)
+- chore: update copyright years (022d50e)
+- docs: remove extra words in FAQ.md (#606)
+
+## Version 12.4.0
+
+- feat: add context to fetch for proxy (b025488)
+
+  When providing a `fetch()` method on proxy middleware init options, the method
+  will be called with an init of `{ context }` which includes the current
+  context. This allows advanced usage cases where the context impacts how the
+  fetch is handled (e.g. like setting upstream request headers, etc.).
+
+- chore: update to std 0.185.0 (07a011a)
+- chore: update to dnt 0.34.0 (5064a71)
+- chore: update to Deno 1.33 (e564135)
+- chore: move CI to deno canary (811f531)
+
+## Version 12.3.1
+
+- **SECURITY** fix: avoid parse middleware DDOS (03c6b74)
+
+  The parse middleware was using an exponentially complex regular expression to
+  validate the `Forwarded` header on requests, making it trivial to create a
+  request that would cause CPU exhaustion. This is now fixed.
+
+- chore: reduce `50MB.zip` size (#487)
+
 ## Version 12.3.0
 
 - feat: add `MiddlewareObject` (#589)

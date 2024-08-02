@@ -3,13 +3,6 @@
  * respond back with information about the request.
  */
 
-import {
-  bold,
-  cyan,
-  green,
-  yellow,
-} from "https://deno.land/std@0.183.0/fmt/colors.ts";
-
 import { Application } from "../mod.ts";
 
 const app = new Application();
@@ -19,12 +12,18 @@ app.use(async (ctx, next) => {
   await next();
   const rt = ctx.response.headers.get("X-Response-Time");
   console.log(
-    `${green(ctx.request.method)} ${cyan(ctx.request.url.pathname)} - ${
-      bold(
-        String(rt),
-      )
-    }`,
+    `%c${ctx.request.method} %c${ctx.request.url.pathname}%c - %c${rt}`,
+    "color:green",
+    "color:cyan",
+    "color:none",
+    "font-weight:bold",
   );
+  const ua = ctx.request.userAgent;
+  console.log(
+    `  ${ua.browser.name}@${ua.browser.major} %c(${ua.os.name}@${ua.os.version})`,
+    "color:grey",
+  );
+  console.log(ua.ua);
 });
 
 app.use(async (ctx, next) => {
@@ -38,41 +37,56 @@ const decoder = new TextDecoder();
 
 app.use(async (ctx) => {
   if (ctx.request.hasBody) {
-    const body = ctx.request.body();
+    const body = ctx.request.body;
     ctx.response.body = `<!DOCTYPE html><html><body>
-          <h1>Body type: "${body.type}"</h1>`;
-    switch (body.type) {
+          <h1>Body type: "${body.type()}"</h1>`;
+    switch (body.type()) {
       case "form":
         ctx.response.body +=
           `<table><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody>`;
-        for (const [key, value] of await body.value) {
+        for (const [key, value] of await body.form()) {
           ctx.response.body += `<tr><td>${key}</td><td>${value}</td></tr>`;
         }
         ctx.response.body += `</tbody></table>`;
         break;
       case "form-data": {
-        const { fields } = await body.value.read();
+        const formData = await body.formData();
         ctx.response.body +=
           `<table><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody>`;
-        for (const [key, value] of Object.entries(fields)) {
-          ctx.response.body += `<tr><td>${key}</td><td>${value}</td></tr>`;
+        for (const [key, value] of formData) {
+          ctx.response.body += `<tr><td>${key}</td><td>${
+            typeof value === "string"
+              ? value
+              : `file: ${value.name}<br/>size: ${value.size}<br/>type: ${value.type}`
+          }</td></tr>`;
+          if (value instanceof File) {
+            console.log(await value.arrayBuffer());
+          }
         }
         ctx.response.body += `</tbody></table>`;
         break;
       }
       case "text":
-        ctx.response.body += `<pre>${body.value}</pre>`;
+        ctx.response.body += `<pre>${await body.text()}</pre>`;
         break;
       case "json":
         ctx.response.body += `<pre>${
-          JSON.stringify(await body.value, undefined, "  ")
+          JSON.stringify(await body.json(), undefined, "  ")
         }</pre>`;
         break;
-      case "bytes":
+      case "binary":
         ctx.response.body += `<h2>Content Type: "${
           ctx.request.headers.get("content-type")
         }"</h2>`;
-        ctx.response.body += `<pre>${decoder.decode(await body.value)}</pre>`;
+        ctx.response.body += `<pre>${
+          decoder.decode(await body.arrayBuffer())
+        }</pre>`;
+        break;
+      case "unknown":
+        ctx.response.body +=
+          `<div>Unable to determine body type.</div><h2>Content Type: "${
+            ctx.request.headers.get("content-type")
+          }"</h2>`;
         break;
       default:
         ctx.response.body += `<p><strong>Body is Undefined</strong></p>`;
@@ -86,10 +100,16 @@ app.use(async (ctx) => {
 
 app.addEventListener("listen", ({ hostname, port, serverType }) => {
   console.log(
-    bold("Start listening on ") + yellow(`${hostname}:${port}`),
+    `%cStart listening on %c${hostname}:${port}`,
+    "font-weight:bold",
+    "color:yellow;font-weight:normal",
   );
-  console.log(bold("  using HTTP server: " + yellow(serverType)));
+  console.log(
+    `  %cusing HTTP server: %c${serverType}`,
+    "font-weight:bold",
+    "color:yellow; font-weight:normal",
+  );
 });
 
 await app.listen({ hostname: "127.0.0.1", port: 8000 });
-console.log(bold("Finished."));
+console.log("%cFinished.", "font-weight:bold");

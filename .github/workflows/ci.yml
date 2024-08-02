@@ -7,12 +7,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: clone repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: install deno
         uses: denoland/setup-deno@v1
         with:
-          deno-version: 1.x
+          deno-version: 1.X
 
       - name: check format
         run: deno fmt --check
@@ -20,25 +20,14 @@ jobs:
       - name: check linting
         run: deno lint
 
-      - name: generate bundle
-        run: deno task test:bundle
-
-      - name: run tests
-        run: deno task test
-      
-      - name: run tests no check
-        run: deno task test:no-check
-
-      - name: run tests unstable
-        run: deno task test:unstable
-
-      - name: test build for Node.js
-        run: deno task build
+      - name: run tests generating coverage
+        run: deno task test:coverage
 
       - name: generate lcov
         run: deno task coverage > cov.lcov
 
       - name: upload coverage
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v4
         with:
-          files: cov.lcov
+          files: ./cov.lcov
+          token: ${{ secrets.CODECOV_TOKEN }}

@@ -1,39 +1,50 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
+
+/** Middleware for oak that allows back-to-back proxies of requests to be
+ * used.
+ *
+ * @module
+ */
 
 import type { State } from "../application.ts";
 import type { Context } from "../context.ts";
+import { parseForwarded } from "../deps.ts";
 import type { Middleware } from "../middleware.ts";
 import type {
   RouteParams,
   RouterContext,
   RouterMiddleware,
 } from "../router.ts";
-import { isRouterContext } from "../util.ts";
+import { isRouterContext } from "../utils/type_guards.ts";
 
-export type Fetch = (input: Request) => Promise<Response>;
+type Fetch = (
+  input: Request,
+  init: { context: Context },
+) => Promise<Response>;
 
-export type ProxyMatchFunction<
+type ProxyMatchFunction<
   R extends string,
   P extends RouteParams<R> = RouteParams<R>,
   // deno-lint-ignore no-explicit-any
   S extends State = Record<string, any>,
 > = (ctx: Context<S> | RouterContext<R, P, S>) => boolean;
 
-export type ProxyMapFunction<R extends string, P extends RouteParams<R>> = (
+type ProxyMapFunction<R extends string, P extends RouteParams<R>> = (
   path: R,
   params?: P,
 ) => R;
 
-export type ProxyHeadersFunction<S extends State> = (
+type ProxyHeadersFunction<S extends State> = (
   ctx: Context<S>,
 ) => HeadersInit | Promise<HeadersInit>;
 
-export type ProxyRouterHeadersFunction<
+type ProxyRouterHeadersFunction<
   R extends string,
   P extends RouteParams<R>,
   S extends State,
 > = (ctx: RouterContext<R, P, S>) => HeadersInit | Promise<HeadersInit>;
 
+/** Options which can be specified on the {@linkcode proxy} middleware. */
 export interface ProxyOptions<
   R extends string,
   P extends RouteParams<R> = RouteParams<R>,
@@ -49,7 +60,12 @@ export interface ProxyOptions<
     contentType?: string,
   ): Promise<string | undefined> | string | undefined;
   /** The fetch function to use to proxy the request. This defaults to the
-   * global `fetch` function. This is designed for test mocking purposes. */
+   * global {@linkcode fetch} function. It will always be called with a
+   * second argument which contains an object of `{ context }` which the
+   * `context` property will be an instance of {@linkcode RouterContext}.
+   *
+   * This is designed for mocking purposes or implementing a `fetch()`
+   * callback that needs access the current context when it is called. */
   fetch?: Fetch;
   /** Additional headers that should be set in the response. The value can
    * be a headers init value or a function that returns or resolves with a
@@ -84,9 +100,6 @@ export interface ProxyOptions<
    * is received to allow the native `Response` to be modified or replaced. */
   response?(res: Response): Response | Promise<Response>;
 }
-
-const FORWARDED_RE =
-  /^(,[ \\t]*)*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*([ \\t]*,([ \\t]*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*)?)*$/;
 
 function createMatcher<
   R extends string,
@@ -155,7 +168,7 @@ async function createRequest<
       ? `"${ctx.request.ip}"`
       : ctx.request.ip;
     const host = headers.get("host");
-    if (maybeForwarded && FORWARDED_RE.test(maybeForwarded)) {
+    if (maybeForwarded && parseForwarded(maybeForwarded)) {
       let value = `for=${ip}`;
       if (host) {
         value += `;host=${host}`;
@@ -192,7 +205,7 @@ function getBodyInit<
   if (!ctx.request.hasBody) {
     return null;
   }
-  return ctx.request.body({ type: "stream" }).value;
+  return ctx.request.body.stream;
 }
 
 function iterableHeaders(
@@ -260,14 +273,14 @@ export function proxy<
   options: ProxyOptions<R, P, S> = {},
 ): RouterMiddleware<R, P, S> {
   const matches = createMatcher(options);
-  return async function proxy(ctx, next) {
-    if (!matches(ctx)) {
+  return async function proxy(context, next) {
+    if (!matches(context)) {
       return next();
     }
-    const request = await createRequest(target, ctx, options);
+    const request = await createRequest(target, context, options);
     const { fetch = globalThis.fetch } = options;
-    const response = await fetch(request);
-    await processResponse(response, ctx, options);
+    const response = await fetch(request, { context });
+    await processResponse(response, context, options);
     return next();
   };
 }

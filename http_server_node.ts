@@ -1,7 +1,19 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import type { Listener, Server, ServerRequest } from "./types.d.ts";
-import * as http from "http";
+/** The abstraction that oak uses when dealing with requests and responses
+ * within the Node.js runtime.
+ *
+ * @module
+ */
+
+import type {
+  Listener,
+  OakServer,
+  ServeOptions,
+  ServerRequest,
+  ServeTlsOptions,
+} from "./types.ts";
+import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 
 // There are quite a few differences between Deno's `std/node/http` and the
 // typings for Node.js for `"http"`. Since we develop everything in Deno, but
@@ -44,17 +56,6 @@ interface ReadableStreamDefaultController<R = any> {
   enqueue(chunk: R): void;
   // deno-lint-ignore no-explicit-any
   error(error?: any): void;
-}
-
-function createDeferred<T>() {
-  let resolve!: (value: T | PromiseLike<T>) => void;
-  // deno-lint-ignore no-explicit-any
-  let reject!: (reason?: any) => void;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
 }
 
 export class NodeRequest implements ServerRequest {
@@ -101,7 +102,7 @@ export class NodeRequest implements ServerRequest {
     this.#responded = true;
   }
 
-  getBody() {
+  getBody(): ReadableStream<Uint8Array> | null {
     let body: ReadableStream<Uint8Array> | null;
     if (this.method === "GET" || this.method === "HEAD") {
       body = null;
@@ -120,29 +121,7 @@ export class NodeRequest implements ServerRequest {
         },
       });
     }
-    return {
-      body,
-      async readBody() {
-        if (!body) {
-          return new Uint8Array();
-        }
-        const chunks: Uint8Array[] = [];
-        for await (const chunk of body) {
-          chunks.push(chunk);
-        }
-        const totalLength = chunks.reduce(
-          (acc, value) => acc + value.length,
-          0,
-        );
-        const result = new Uint8Array(totalLength);
-        let length = 0;
-        for (const chunk of chunks) {
-          result.set(chunk, length);
-          length += chunk.length;
-        }
-        return result;
-      },
-    };
+    return body;
   }
 
   async respond(response: Response) {
@@ -155,7 +134,7 @@ export class NodeRequest implements ServerRequest {
     this.#response.writeHead(response.status, response.statusText);
     if (response.body) {
       for await (const chunk of response.body) {
-        const { promise, resolve, reject } = createDeferred<void>();
+        const { promise, resolve, reject } = createPromiseWithResolvers<void>();
         // deno-lint-ignore no-explicit-any
         this.#response.write(chunk, (err: any) => {
           if (err) {
@@ -167,43 +146,51 @@ export class NodeRequest implements ServerRequest {
         await promise;
       }
     }
-    const { promise, resolve } = createDeferred<void>();
+    const { promise, resolve } = createPromiseWithResolvers<void>();
     this.#response.end(resolve);
     await promise;
     this.#responded = true;
   }
 }
 
-export class HttpServer implements Server<NodeRequest> {
+export class Server implements OakServer<NodeRequest> {
   #abortController = new AbortController();
   #host: string;
   #port: number;
-  #requestStream: ReadableStream<NodeRequest>;
-  #server!: NodeHttpServer;
+  #requestStream: ReadableStream<NodeRequest> | undefined;
 
   constructor(
     _app: unknown,
-    options: Deno.ListenOptions | Deno.ListenTlsOptions,
+    options: ServeOptions | ServeTlsOptions,
   ) {
     this.#host = options.hostname ?? "127.0.0.1";
-    this.#port = options.port;
-    const start: ReadableStreamDefaultControllerCallback<NodeRequest> = (
-      controller,
-    ) => {
-      const handler = (req: IncomingMessage, res: ServerResponse) =>
-        controller.enqueue(new NodeRequest(req, res));
-      // deno-lint-ignore no-explicit-any
-      this.#server = http.createServer(handler as any);
-    };
-    this.#requestStream = new ReadableStream({ start });
+    this.#port = options.port ?? 80;
+    options.signal?.addEventListener("abort", () => {
+      this.close();
+    }, { once: true });
   }
 
   close(): void {
     this.#abortController.abort();
   }
 
-  listen(): Listener {
-    this.#server.listen({
+  async listen(): Promise<Listener> {
+    const { createServer } = await import("node:http");
+    let server: NodeHttpServer;
+    this.#requestStream = new ReadableStream({
+      start: (controller) => {
+        server = createServer((req, res) => {
+          // deno-lint-ignore no-explicit-any
+          controller.enqueue(new NodeRequest(req as any, res as any));
+        });
+        this.#abortController.signal.addEventListener(
+          "abort",
+          () => controller.close(),
+          { once: true },
+        );
+      },
+    });
+    server!.listen({
       port: this.#port,
       host: this.#host,
       signal: this.#abortController.signal,
@@ -217,6 +204,11 @@ export class HttpServer implements Server<NodeRequest> {
   }
 
   [Symbol.asyncIterator](): AsyncIterableIterator<NodeRequest> {
+    if (!this.#requestStream) {
+      throw new TypeError("stream not properly initialized");
+    }
     return this.#requestStream[Symbol.asyncIterator]();
   }
+
+  static type: "node" = "node";
 }

@@ -1,6 +1,6 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-export class ErrorEvent extends Event {
+class ErrorEvent extends Event {
   #message: string;
   #filename: string;
   #lineno: number;
@@ -35,4 +35,33 @@ export class ErrorEvent extends Event {
     this.#colno = colno;
     this.#error = error;
   }
+}
+
+if (!("ErrorEvent" in globalThis)) {
+  Object.defineProperty(globalThis, "ErrorEvent", {
+    value: ErrorEvent,
+    writable: true,
+    enumerable: false,
+    configurable: true,
+  });
+}
+
+if (!("ReadableStream" in globalThis) || !("TransformStream" in globalThis)) {
+  (async () => {
+    const { ReadableStream, TransformStream } = await import("node:stream/web");
+    Object.defineProperties(globalThis, {
+      "ReadableStream": {
+        value: ReadableStream,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      "TransformStream": {
+        value: TransformStream,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+    });
+  })();
 }

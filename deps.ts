@@ -1,67 +1,31 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
 // This file contains the external dependencies that oak depends upon
 
-// `std` dependencies
+// jsr dependencies
 
-export {
-  type Deferred,
-  deferred,
-} from "https://deno.land/std@0.183.0/async/deferred.ts";
-export {
-  concat,
-  copy as copyBytes,
-  equals,
-} from "https://deno.land/std@0.183.0/bytes/mod.ts";
-export { timingSafeEqual } from "https://deno.land/std@0.183.0/crypto/timing_safe_equal.ts";
-export { KeyStack } from "https://deno.land/std@0.183.0/crypto/keystack.ts";
-export * as base64 from "https://deno.land/std@0.183.0/encoding/base64.ts";
-export {
-  mergeHeaders,
-  SecureCookieMap,
-  type SecureCookieMapGetOptions,
-  type SecureCookieMapSetDeleteOptions,
-} from "https://deno.land/std@0.183.0/http/cookie_map.ts";
-export {
-  createHttpError,
-  errors,
-  HttpError,
-  isHttpError,
-} from "https://deno.land/std@0.183.0/http/http_errors.ts";
-export {
-  Status,
-  STATUS_TEXT,
-} from "https://deno.land/std@0.183.0/http/http_status.ts";
+export { assert } from "jsr:@std/assert@0.223/assert";
+export { concat } from "jsr:@std/bytes@0.223/concat";
+export { copy as copyBytes } from "jsr:@std/bytes@0.223/copy";
+export { timingSafeEqual } from "jsr:@std/crypto@0.223/timing-safe-equal";
+export { KeyStack } from "jsr:@std/crypto@0.223/unstable-keystack";
 export {
   calculate,
   type ETagOptions,
   type FileInfo,
   ifMatch,
   ifNoneMatch,
-} from "https://deno.land/std@0.183.0/http/etag.ts";
+} from "jsr:@std/http@0.223/etag";
 export {
   accepts,
   acceptsEncodings,
   acceptsLanguages,
-} from "https://deno.land/std@0.183.0/http/negotiation.ts";
-export {
-  ServerSentEvent,
-  type ServerSentEventInit,
-  ServerSentEventStreamTarget,
-  type ServerSentEventTarget,
-  type ServerSentEventTargetOptions,
-} from "https://deno.land/std@0.183.0/http/server_sent_event.ts";
-export { LimitedReader } from "https://deno.land/std@0.183.0/io/mod.ts";
-export {
-  contentType,
-  extension,
-  typeByExtension,
-} from "https://deno.land/std@0.183.0/media_types/mod.ts";
-export {
-  readAll,
-  readerFromStreamReader,
-  writeAll,
-} from "https://deno.land/std@0.183.0/streams/mod.ts";
+} from "jsr:@std/http@0.223/negotiation";
+export { UserAgent } from "jsr:@std/http@0.223/user-agent";
+export { LimitedReader } from "jsr:@std/io@0.223/limited-reader";
+export { readAll } from "jsr:@std/io@0.223/read-all";
+export { contentType } from "jsr:@std/media-types@0.223/content-type";
+export { typeByExtension } from "jsr:@std/media-types@0.223/type-by-extension";
 export {
   basename,
   extname,
@@ -69,10 +33,48 @@ export {
   join,
   normalize,
   parse,
-  sep,
-} from "https://deno.land/std@0.183.0/path/mod.ts";
+  SEPARATOR,
+} from "jsr:@std/path@0.223/";
 
 // 3rd party dependencies
+
+export {
+  mergeHeaders,
+  SecureCookieMap,
+  type SecureCookieMapGetOptions,
+  type SecureCookieMapSetDeleteOptions,
+} from "jsr:@oak/commons@0.11/cookie_map";
+export { parse as parseFormData } from "jsr:@oak/commons@0.11/form_data";
+export { parse as parseForwarded } from "jsr:@oak/commons@0.11/forwarded";
+export {
+  createHttpError,
+  errors,
+  HttpError,
+  type HttpErrorOptions,
+  isHttpError,
+} from "jsr:@oak/commons@0.11/http_errors";
+export { matches } from "jsr:@oak/commons@0.11/media_types";
+export { type HttpMethod as HTTPMethods } from "jsr:@oak/commons@0.11/method";
+export {
+  type ByteRange,
+  range,
+  responseRange,
+} from "jsr:@oak/commons@0.11/range";
+export {
+  ServerSentEvent,
+  type ServerSentEventInit,
+  ServerSentEventStreamTarget,
+  type ServerSentEventTarget,
+  type ServerSentEventTargetOptions,
+} from "jsr:@oak/commons@0.11/server_sent_event";
+export {
+  type ErrorStatus,
+  isErrorStatus,
+  isRedirectStatus,
+  type RedirectStatus,
+  Status,
+  STATUS_TEXT,
+} from "jsr:@oak/commons@0.11/status";
 
 export {
   compile,
@@ -82,4 +84,4 @@ export {
   type ParseOptions,
   pathToRegexp,
   type TokensToRegexpOptions,
-} from "https://deno.land/x/path_to_regexp@v6.2.1/index.ts";
+} from "npm:path-to-regexp@6.2.1";

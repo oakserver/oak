@@ -1,21 +1,27 @@
-// Copyright 2018-2022 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import type {
-  Body,
-  BodyBytes,
-  BodyForm,
-  BodyFormData,
-  BodyJson,
-  BodyOptions,
-  BodyReader,
-  BodyStream,
-  BodyText,
-} from "./body.ts";
-import { RequestBody } from "./body.ts";
-import { accepts, acceptsEncodings, acceptsLanguages } from "./deps.ts";
-import type { HTTPMethods, ServerRequest } from "./types.d.ts";
+/**
+ * Contains the {@linkcode Request} abstraction used by oak.
+ *
+ * Most end users would not need to directly access this module.
+ *
+ * @module
+ */
 
-export interface OakRequestOptions {
+import { Body } from "./body.ts";
+import { ServerSentEventStreamTarget } from "./deps.ts";
+import {
+  accepts,
+  acceptsEncodings,
+  acceptsLanguages,
+  type HTTPMethods,
+  type ServerSentEventTarget,
+  type ServerSentEventTargetOptions,
+  UserAgent,
+} from "./deps.ts";
+import type { ServerRequest, UpgradeWebSocketOptions } from "./types.ts";
+
+interface OakRequestOptions {
   jsonBodyReviver?: (key: string, value: unknown) => unknown;
   proxy?: boolean;
   secure?: boolean;
@@ -30,14 +36,22 @@ export interface OakRequestOptions {
  * the ability to decode a request body.
  */
 export class Request {
-  #body: RequestBody;
+  #body: Body;
   #proxy: boolean;
   #secure: boolean;
   #serverRequest: ServerRequest;
   #url?: URL;
+  #userAgent: UserAgent;
 
   #getRemoteAddr(): string {
     return this.#serverRequest.remoteAddr ?? "";
+  }
+
+  /** An interface to access the body of the request. This provides an API that
+   * aligned to the **Fetch Request** API, but in a dedicated API.
+   */
+  get body(): Body {
+    return this.#body;
   }
 
   /** Is `true` if the request might have a body, otherwise `false`.
@@ -49,7 +63,7 @@ export class Request {
    * determine if a request has a body or not is to attempt to read the body.
    */
   get hasBody(): boolean {
-    return this.#body.has();
+    return this.#body.has;
   }
 
   /** The `Headers` supplied in the request. */
@@ -84,9 +98,22 @@ export class Request {
     return this.#secure;
   }
 
-  /** Set to the value of the _original_ Deno server request. */
+  /** Set to the value of the low level oak server request abstraction.
+   *
+   * @deprecated this will be removed in future versions of oak. Accessing this
+   * abstraction is not useful to end users and is now a bit of a misnomer.
+   */
   get originalRequest(): ServerRequest {
     return this.#serverRequest;
+  }
+
+  /** Returns the original Fetch API `Request` if available.
+   *
+   * This should be set with requests on Deno, but will not be set when running
+   * on Node.js.
+   */
+  get source(): globalThis.Request | undefined {
+    return this.#serverRequest.request;
   }
 
   /** A parsed URL for the request which complies with the browser standards.
@@ -96,41 +123,53 @@ export class Request {
   get url(): URL {
     if (!this.#url) {
       const serverRequest = this.#serverRequest;
-      if (!this.#proxy) {
-        // between 1.9.0 and 1.9.1 the request.url of the native HTTP started
-        // returning the full URL, where previously it only returned the path
-        // so we will try to use that URL here, but default back to old logic
-        // if the URL isn't valid.
-        try {
-          if (serverRequest.rawUrl) {
-            this.#url = new URL(serverRequest.rawUrl);
-            return this.#url;
-          }
-        } catch {
-          // we don't care about errors here
-        }
-      }
-      let proto: string;
-      let host: string;
-      if (this.#proxy) {
-        proto = serverRequest
-          .headers.get("x-forwarded-proto")?.split(/\s*,\s*/, 1)[0] ??
-          "http";
-        host = serverRequest.headers.get("x-forwarded-host") ??
-          serverRequest.headers.get("host") ?? "";
-      } else {
-        proto = this.#secure ? "https" : "http";
-        host = serverRequest.headers.get("host") ?? "";
-      }
+      // between Deno 1.9.0 and 1.9.1 the request.url of the native HTTP started
+      // returning the full URL, where previously it only returned the path
+      // so we will try to use that URL here, but default back to old logic
+      // if the URL isn't valid.
       try {
-        this.#url = new URL(`${proto}://${host}${serverRequest.url}`);
+        if (serverRequest.rawUrl) {
+          this.#url = new URL(serverRequest.rawUrl);
+        }
       } catch {
-        throw new TypeError(
-          `The server request URL of "${proto}://${host}${serverRequest.url}" is invalid.`,
-        );
+        // we don't care about errors here
+      }
+      if (this.#proxy || !this.#url) {
+        let proto: string;
+        let host: string;
+        if (this.#proxy) {
+          proto = serverRequest
+            .headers.get("x-forwarded-proto")?.split(/\s*,\s*/, 1)[0] ??
+            "http";
+          host = serverRequest.headers.get("x-forwarded-host") ??
+            this.#url?.hostname ??
+            serverRequest.headers.get("host") ??
+            serverRequest.headers.get(":authority") ?? "";
+        } else {
+          proto = this.#secure ? "https" : "http";
+          host = serverRequest.headers.get("host") ??
+            serverRequest.headers.get(":authority") ?? "";
+        }
+        try {
+          this.#url = new URL(`${proto}://${host}${serverRequest.url}`);
+        } catch {
+          throw new TypeError(
+            `The server request URL of "${proto}://${host}${serverRequest.url}" is invalid.`,
+          );
+        }
       }
     }
     return this.#url;
+  }
+
+  /** An object representing the requesting user agent. If the `User-Agent`
+   * header isn't defined in the request, all the properties will be undefined.
+   *
+   * See [std/http/user_agent#UserAgent](https://deno.land/std@0.223/http/user_agent.ts?s=UserAgent)
+   * for more information.
+   */
+  get userAgent(): UserAgent {
+    return this.#userAgent;
   }
 
   constructor(
@@ -140,11 +179,8 @@ export class Request {
     this.#proxy = proxy;
     this.#secure = secure;
     this.#serverRequest = serverRequest;
-    this.#body = new RequestBody(
-      serverRequest.getBody(),
-      serverRequest.headers,
-      jsonBodyReviver,
-    );
+    this.#body = new Body(serverRequest, jsonBodyReviver);
+    this.#userAgent = new UserAgent(serverRequest.headers.get("user-agent"));
   }
 
   /** Returns an array of media types, accepted by the requestor, in order of
@@ -210,25 +246,48 @@ export class Request {
     return acceptsLanguages(this.#serverRequest);
   }
 
-  body(options: BodyOptions<"bytes">): BodyBytes;
-  body(options: BodyOptions<"form">): BodyForm;
-  body(options: BodyOptions<"form-data">): BodyFormData;
-  body(options: BodyOptions<"json">): BodyJson;
-  body(options: BodyOptions<"reader">): BodyReader;
-  body(options: BodyOptions<"stream">): BodyStream;
-  body(options: BodyOptions<"text">): BodyText;
-  body(options?: BodyOptions): Body;
-  /** Access the body of the request. This is a method, because there are
-   * several options which can be provided which can influence how the body is
-   * handled. */
-  body(options: BodyOptions = {}): Body | BodyReader | BodyStream {
-    return this.#body.get(options);
+  /** Take the current request and initiate server sent event connection.
+   *
+   * > ![WARNING]
+   * > This is not intended for direct use, as it will not manage the target in
+   * > the overall context or ensure that additional middleware does not attempt
+   * > to respond to the request.
+   */
+  async sendEvents(
+    options?: ServerSentEventTargetOptions,
+    init?: RequestInit,
+  ): Promise<ServerSentEventTarget> {
+    const sse = new ServerSentEventStreamTarget(options);
+    await this.#serverRequest.respond(sse.asResponse(init));
+    return sse;
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
-    const { hasBody, headers, ip, ips, method, secure, url } = this;
+  /** Take the current request and upgrade it to a web socket, returning a web
+   * standard `WebSocket` object.
+   *
+   * If the underlying server abstraction does not support upgrades, this will
+   * throw.
+   *
+   * > ![WARNING]
+   * > This is not intended for direct use, as it will not manage the websocket
+   * > in the overall context or ensure that additional middleware does not
+   * > attempt to respond to the request.
+   */
+  upgrade(options?: UpgradeWebSocketOptions): WebSocket {
+    if (!this.#serverRequest.upgrade) {
+      throw new TypeError("Web sockets upgrade not supported in this runtime.");
+    }
+    return this.#serverRequest.upgrade(options);
+  }
+
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
+    const { body, hasBody, headers, ip, ips, method, secure, url, userAgent } =
+      this;
     return `${this.constructor.name} ${
       inspect({
+        body,
         hasBody,
         headers,
         ip,
@@ -236,6 +295,7 @@ export class Request {
         method,
         secure,
         url: url.toString(),
+        userAgent,
       })
     }`;
   }
@@ -245,7 +305,8 @@ export class Request {
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }
@@ -253,10 +314,11 @@ export class Request {
     const newOptions = Object.assign({}, options, {
       depth: options.depth === null ? null : options.depth - 1,
     });
-    const { hasBody, headers, ip, ips, method, secure, url } = this;
+    const { body, hasBody, headers, ip, ips, method, secure, url, userAgent } =
+      this;
     return `${options.stylize(this.constructor.name, "special")} ${
       inspect(
-        { hasBody, headers, ip, ips, method, secure, url },
+        { body, hasBody, headers, ip, ips, method, secure, url, userAgent },
         newOptions,
       )
     }`;

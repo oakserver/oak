@@ -1,4 +1,30 @@
 /**
+ * Contains the router of oak. Typical usage is the creation of an application
+ * instance, the creation of a router instance, registration of route
+ * middleware, registration of router with the application, and then starting to
+ * listen for requests.
+ *
+ * # Example
+ *
+ * ```ts
+ * import { Application } from "jsr:@oak/oak@14/application";
+ * import { Router } from "jsr:@oak/oak@14/router";
+ *
+ * const app = new Application();
+ * const router = new Router();
+ * router.get("/", (ctx) => {
+ *   ctx.response.body = "hello world!";
+ * });
+ * app.use(router.routes());
+ * app.use(router.allowedMethods());
+ *
+ * app.listen();
+ * ```
+ *
+ * @module
+ */
+
+/**
  * Adapted directly from @koa/router at
  * https://github.com/koajs/router/ which is licensed as:
  *
@@ -28,18 +54,20 @@
 import type { State } from "./application.ts";
 import type { Context } from "./context.ts";
 import {
+  assert,
   compile,
   errors,
-  Key,
-  ParseOptions,
+  type HTTPMethods,
+  type Key,
+  type ParseOptions,
   pathParse,
   pathToRegexp,
+  type RedirectStatus,
   Status,
-  TokensToRegexpOptions,
+  type TokensToRegexpOptions,
 } from "./deps.ts";
-import { compose, Middleware } from "./middleware.ts";
-import type { HTTPMethods, RedirectStatus } from "./types.d.ts";
-import { assert, decodeComponent } from "./util.ts";
+import { compose, type Middleware } from "./middleware.ts";
+import { decodeComponent } from "./utils/decode_component.ts";
 
 interface Matches<R extends string> {
   path: Layer<R>[];
@@ -48,6 +76,8 @@ interface Matches<R extends string> {
   name?: string;
 }
 
+/** Options which can be specified when calling the `.allowedMethods()` method
+ * on a {@linkcode Router} instance. */
 export interface RouterAllowedMethodsOptions {
   /** Use the value returned from this function instead of an HTTP error
    * `MethodNotAllowed`. */
@@ -64,6 +94,7 @@ export interface RouterAllowedMethodsOptions {
   throw?: boolean;
 }
 
+/** The internal abstraction of a route used by the oak {@linkcode Router}. */
 export interface Route<
   R extends string,
   P extends RouteParams<R> = RouteParams<R>,
@@ -123,6 +154,7 @@ export interface RouterContext<
   routerPath?: string;
 }
 
+/** The interface that {@linkcode Router} middleware should adhere to. */
 export interface RouterMiddleware<
   R extends string,
   P extends RouteParams<R> = RouteParams<R>,
@@ -139,6 +171,8 @@ export interface RouterMiddleware<
   router?: Router<any>;
 }
 
+/** Options which can be specified when creating a new instance of a
+ * {@linkcode Router}. */
 export interface RouterOptions {
   /** Override the default set of methods supported by the router. */
   methods?: HTTPMethods[];
@@ -188,10 +222,12 @@ type GetRouteParams<S extends string> = RemoveTail<
   `.${string}`
 >;
 
+/** A dynamic type which attempts to determine the route params based on
+ * matching the route string. */
 export type RouteParams<Route extends string> = string extends Route
   ? ParamsDictionary
   : Route extends `${string}(${string}` ? ParamsDictionary
-  : Route extends `${string}:${infer Rest}` ? 
+  : Route extends `${string}:${infer Rest}` ?
       & (
         GetRouteParams<Rest> extends never ? ParamsDictionary
           : GetRouteParams<Rest> extends `${infer ParamName}?`
@@ -252,7 +288,9 @@ function toUrl<R extends string>(
   return replaced;
 }
 
-class Layer<
+/** An internal class used to group together middleware when using multiple
+ * middlewares with a router. */
+export class Layer<
   R extends string,
   P extends RouteParams<R> = RouteParams<R>,
   // deno-lint-ignore no-explicit-any
@@ -299,7 +337,7 @@ class Layer<
 
   params(
     captures: string[],
-    existingParams = {} as RouteParams<R>,
+    existingParams: RouteParams<R> = {} as RouteParams<R>,
   ): RouteParams<R> {
     const params = existingParams;
     for (let i = 0; i < captures.length; i++) {
@@ -319,7 +357,7 @@ class Layer<
   }
 
   url(
-    params = {} as RouteParams<R>,
+    params: RouteParams<R> = {} as RouteParams<R>,
     options?: UrlOptions,
   ): string {
     const url = this.path.replace(/\(\.\*\)/g, "");
@@ -330,7 +368,7 @@ class Layer<
     param: string,
     // deno-lint-ignore no-explicit-any
     fn: RouterParamMiddleware<any, any, any>,
-  ) {
+  ): this {
     const stack = this.stack;
     const params = this.#paramNames;
     const middleware: RouterMiddleware<R> = function (
@@ -382,7 +420,9 @@ class Layer<
     };
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     return `${this.constructor.name} ${
       inspect({
         methods: this.methods,
@@ -400,7 +440,8 @@ class Layer<
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }
@@ -431,7 +472,7 @@ class Layer<
  * ### Basic example
  *
  * ```ts
- * import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+ * import { Application, Router } from "jsr:@oak/oak/";
  *
  * const router = new Router();
  * router.get("/", (ctx, next) => {
@@ -1231,7 +1272,7 @@ export class Router<
    * has been configured to handle.  Typical usage would be something like this:
    *
    * ```ts
-   * import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+   * import { Application, Router } from "jsr:@oak/oak/";
    *
    * const app = new Application();
    * const router = new Router();
@@ -1399,7 +1440,9 @@ export class Router<
     return toUrl(path, params, options);
   }
 
-  [Symbol.for("Deno.customInspect")](inspect: (value: unknown) => string) {
+  [Symbol.for("Deno.customInspect")](
+    inspect: (value: unknown) => string,
+  ): string {
     return `${this.constructor.name} ${
       inspect({ "#params": this.#params, "#stack": this.#stack })
     }`;
@@ -1410,7 +1453,8 @@ export class Router<
     // deno-lint-ignore no-explicit-any
     options: any,
     inspect: (value: unknown, options?: unknown) => string,
-  ) {
+    // deno-lint-ignore no-explicit-any
+  ): any {
     if (depth < 0) {
       return options.stylize(`[${this.constructor.name}]`, "special");
     }
