@@ -2,11 +2,11 @@
 
 [![jsr.io/@oak/oak](https://jsr.io/badges/@oak/oak)](https://jsr.io/@oak/oak)
 [![jsr.io/@oak/oak score](https://jsr.io/badges/@oak/oak/score)](https://jsr.io/@oak/oak)
-[![deno.land/x/oak](https://deno.land/badge/oak/version)](https://deno.land/x/oak)
-[![npm Version](https://img.shields.io/npm/v/@oakserver/oak)](https://www.npmjs.com/package/@oakserver/oak)
-
-[![oak ci](https://github.com/oakserver/oak/workflows/ci/badge.svg)](https://github.com/oakserver/oak)
-[![codecov](https://codecov.io/gh/oakserver/oak/branch/main/graph/badge.svg?token=KEKZ52NXGP)](https://codecov.io/gh/oakserver/oak)
+[![deno.land/x/oak](https://deno.land/badge/oak/version?logoColor=000&labelColor=fff)](https://deno.land/x/oak)
+[![npm Version](https://img.shields.io/npm/v/@oakserver/oak?logo=npm&logoColor=fff&labelColor=CB3837)](https://www.npmjs.com/package/@oakserver/oak)
+<br/>
+[![oak ci](https://img.shields.io/github/actions/workflow/status/oakserver/oak/ci.yml?branch=main&logo=deno&logoColor=000&label=Deno&labelColor=fff)](https://github.com/oakserver/oak)
+[![codecov](https://img.shields.io/codecov/c/gh/oakserver/oak?token=KEKZ52NXGP&logo=codecov&logoColor=fff&label=codecov&labelColor=F01F7A)](https://codecov.io/gh/oakserver/oak)
 
 A middleware framework for Deno's native HTTP server,
 [Deno Deploy](https://deno.com/deploy), Node.js 16.5 and later,
