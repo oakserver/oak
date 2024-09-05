@@ -1,5 +1,36 @@
 # oak Change Log
 
+## Version 17.0.0
+
+Releasing as a major release out of the abundance of caution in that the ability
+to re-read the body request is a breaking change (in a good way), but the update
+to oak/commons v1 and deno/std v1 introduced a couple of knock on minor breaking
+changes that might change some behaviors in unexpected ways.
+
+There were no changes to support Deno v2 release candidate, but this is the
+first release to be tested against Deno v2.
+
+- feat: ability to re-read the body of the request (e099557)
+
+  When the body API was re-aligned to the Fetch Request API in v13, it also
+  followed that the body can only be consumed a single time. This is unexpected
+  for those using a middleware framework, where people generally expect to be
+  able to read the body several times as they process the request.
+
+  This feature memoizes the body based on the type it was originally read as and
+  then can be subsequently read as a compatible type.
+
+  If you read it first as one type and then switch to an incompatible type, the
+  method will throw (for example, reading as an array buffer but then attempting
+  to read as text).
+
+- refactor: use PropertyKey instead of key list (#662)
+- chore: run CI on canary (#672)
+- chore: migrate to std and commons v1 (d6f9d38)
+
+  There were some minor behavioral changes with media-types and HTTP errors that
+  have impacted the behavior of oak.
+
 ## Version 16.1.0
 
 - feat: support authority pseudo header for request (0c8b8da)
