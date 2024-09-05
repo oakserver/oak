@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   oak:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ["v1.x", canary]
     steps:
       - name: clone repository
         uses: actions/checkout@v4
@@ -12,7 +15,7 @@ jobs:
       - name: install deno
         uses: denoland/setup-deno@v1
         with:
-          deno-version: 1.X
+          deno-version: ${{ matrix.version }}
 
       - name: check format
         run: deno fmt --check
