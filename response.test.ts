@@ -224,7 +224,7 @@ Deno.test({
     assertEquals(nativeResponse.status, 200);
     assertEquals(
       nativeResponse.headers.get("content-type"),
-      "application/javascript; charset=UTF-8",
+      "text/javascript; charset=UTF-8",
     );
     assertEquals(Array.from(nativeResponse.headers.entries()).length, 1);
   },

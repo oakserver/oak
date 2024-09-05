@@ -230,10 +230,6 @@ export class Context<
     }
     const httpErrorOptions: HttpErrorOptions = {};
     if (typeof props === "object") {
-      if ("headers" in props) {
-        httpErrorOptions.headers = props.headers;
-        delete props.headers;
-      }
       if ("expose" in props) {
         httpErrorOptions.expose = props.expose;
         delete props.expose;
