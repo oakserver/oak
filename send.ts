@@ -16,9 +16,9 @@ import type { Context } from "./context.ts";
 import {
   basename,
   type ByteRange,
-  calculate,
   contentType,
   createHttpError,
+  eTag,
   extname,
   type FileInfo,
   ifNoneMatch,
@@ -284,7 +284,7 @@ export async function send(
       maxbuffer,
       response,
     );
-    const etag = await calculate(entity);
+    const etag = await eTag(entity as FileInfo);
     if (
       etag && (!ifNoneMatch(request.headers.get("If-None-Match")!, etag))
     ) {
@@ -328,7 +328,7 @@ export async function send(
   }
 
   if (!response.headers.has("ETag")) {
-    const etag = await calculate(entity);
+    const etag = await eTag(entity as FileInfo);
     if (etag) {
       response.headers.set("ETag", etag);
     }
@@ -337,7 +337,7 @@ export async function send(
   if (returnRanges && size) {
     response.with(
       responseRange(body, size, returnRanges, { headers: response.headers }, {
-        type: contentType(response.type),
+        type: response.type ? contentType(response.type) : "",
       }),
     );
   } else {

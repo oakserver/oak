@@ -162,6 +162,60 @@ Deno.test({
 });
 
 Deno.test({
+  name: "body - json - native request - reread does not throw",
+  async fn() {
+    const rBody = JSON.stringify({ hello: "world" });
+    const body = new Body(
+      nativeToServer(
+        new Request(
+          "http://localhost/index.html",
+          {
+            body: rBody,
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              "content-length": String(rBody.length),
+            },
+          },
+        ),
+      ),
+    );
+    assert(body.has);
+    assertEquals(body.type(), "json");
+    assertEquals(await body.json(), { hello: "world" });
+    assertEquals(body.used, true);
+    assertEquals(await body.json(), { hello: "world" });
+  },
+});
+
+Deno.test({
+  name: "body - json - native request - read as text first",
+  async fn() {
+    const rBody = JSON.stringify({ hello: "world" });
+    const body = new Body(
+      nativeToServer(
+        new Request(
+          "http://localhost/index.html",
+          {
+            body: rBody,
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              "content-length": String(rBody.length),
+            },
+          },
+        ),
+      ),
+    );
+    assert(body.has);
+    assertEquals(body.type(), "json");
+    assertEquals(await body.text(), rBody);
+    assertEquals(body.used, true);
+    assertEquals(await body.json(), { hello: "world" });
+  },
+});
+
+Deno.test({
   name: "body - json - node request",
   async fn() {
     const rBody = JSON.stringify({ hello: "world" });
@@ -176,6 +230,48 @@ Deno.test({
     );
     assert(body.has);
     assertEquals(body.type(), "json");
+    assertEquals(await body.json(), { hello: "world" });
+  },
+});
+
+Deno.test({
+  name: "body - json - node request - reread body does not throw",
+  async fn() {
+    const rBody = JSON.stringify({ hello: "world" });
+    const body = new Body(
+      nodeToServer(
+        {
+          "content-type": "application/json",
+          "content-length": String(rBody.length),
+        },
+        rBody,
+      ),
+    );
+    assert(body.has);
+    assertEquals(body.type(), "json");
+    assertEquals(await body.json(), { hello: "world" });
+    assertEquals(body.used, true);
+    assertEquals(await body.json(), { hello: "world" });
+  },
+});
+
+Deno.test({
+  name: "body - json - node request - read as text first then json",
+  async fn() {
+    const rBody = JSON.stringify({ hello: "world" });
+    const body = new Body(
+      nodeToServer(
+        {
+          "content-type": "application/json",
+          "content-length": String(rBody.length),
+        },
+        rBody,
+      ),
+    );
+    assert(body.has);
+    assertEquals(body.type(), "json");
+    assertEquals(await body.text(), rBody);
+    assertEquals(body.used, true);
     assertEquals(await body.json(), { hello: "world" });
   },
 });

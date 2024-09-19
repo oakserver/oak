@@ -8,7 +8,7 @@
 
 import type { State } from "../application.ts";
 import type { Context } from "../context.ts";
-import { calculate, type ETagOptions } from "../deps.ts";
+import { eTag, type ETagOptions } from "../deps.ts";
 import type { Middleware } from "../middleware.ts";
 import { BODY_TYPES } from "../utils/consts.ts";
 import { isAsyncIterable, isReader } from "../utils/type_guards.ts";
@@ -64,7 +64,8 @@ export function factory<S extends State = Record<string, any>>(
     if (!context.response.headers.has("ETag")) {
       const entity = await getEntity(context);
       if (entity) {
-        const etag = await calculate(entity, options);
+        // @ts-ignore the overloads aren't quite right in the upstream library
+        const etag = await eTag(entity, options);
         if (etag) {
           context.response.headers.set("ETag", etag);
         }

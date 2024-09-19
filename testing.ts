@@ -22,7 +22,7 @@ import { Response } from "./response.ts";
 
 /** Creates a mock of `Application`. */
 export function createMockApp<
-  S extends Record<string | number | symbol, any> = Record<string, any>,
+  S extends Record<PropertyKey, any> = Record<string, any>,
 >(
   state: S = {} as S,
 ): Application<S> {

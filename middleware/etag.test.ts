@@ -16,7 +16,7 @@ import { factory } from "./etag.ts";
 
 function setup<
   // deno-lint-ignore no-explicit-any
-  S extends Record<string | number | symbol, any> = Record<string, any>,
+  S extends Record<PropertyKey, any> = Record<string, any>,
 >(
   path = "/",
   method = "GET",

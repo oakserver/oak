@@ -9,14 +9,14 @@ import {
 
 import type { Application } from "./application.ts";
 import type { Context } from "./context.ts";
-import { assert, calculate, errors } from "./deps.ts";
+import { assert, errors, eTag } from "./deps.ts";
 import type { RouteParams } from "./router.ts";
 import { send } from "./send.ts";
 import { isNode } from "./utils/type_guards.ts";
 
 function setup<
   // deno-lint-ignore no-explicit-any
-  S extends Record<string | number | symbol, any> = Record<string, any>,
+  S extends Record<PropertyKey, any> = Record<string, any>,
 >(
   path = "/",
   method = "GET",
@@ -322,7 +322,7 @@ Deno.test({
     assertEquals(context.response.type, ".json");
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     const etagHeader = context.response.headers.get("etag");
-    assertEquals(etagHeader, await calculate(fixture));
+    assertEquals(etagHeader, await eTag(fixture));
   },
 });
 
@@ -351,7 +351,7 @@ Deno.test({
   async fn() {
     const { context } = setup("/test.jpg");
     const fixture = await Deno.readFile("./fixtures/test.jpg");
-    const ifNoneMatch = await calculate(fixture);
+    const ifNoneMatch = await eTag(fixture);
     assert(ifNoneMatch);
     context.request.headers.set("If-None-Match", ifNoneMatch);
     await send(context, context.request.url.pathname, { root: "./fixtures" });
@@ -359,7 +359,7 @@ Deno.test({
     assertEquals(nativeResponse.status, 304);
     assertEquals(
       context.response.headers.get("etag"),
-      await calculate(fixture),
+      await eTag(fixture),
     );
   },
 });
@@ -380,7 +380,7 @@ Deno.test({
     assertStrictEquals(context.response.headers.get("content-encoding"), null);
     assertEquals(
       context.response.headers.get("etag"),
-      await calculate(fixture),
+      await eTag(fixture),
     );
   },
 });

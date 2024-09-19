@@ -46,6 +46,8 @@ async function readBlob(
 /** An object which encapsulates information around a request body. */
 export class Body {
   #body?: ReadableStream<Uint8Array> | null;
+  #memo: Promise<ArrayBuffer | Blob | FormData | string> | null = null;
+  #memoType: "arrayBuffer" | "blob" | "formData" | "text" | null = null;
   #headers?: Headers;
   #request?: Request;
   #reviver?: JsonReviver;
@@ -84,27 +86,42 @@ export class Body {
 
   /** Returns `true` if the body has been consumed yet, otherwise `false`. */
   get used(): boolean {
-    return this.#request?.bodyUsed ?? this.#used;
+    return this.#request?.bodyUsed ?? !!this.#used;
   }
 
   /** Reads a body to the end and resolves with the value as an
    * {@linkcode ArrayBuffer} */
   async arrayBuffer(): Promise<ArrayBuffer> {
+    if (this.#memoType === "arrayBuffer") {
+      return this.#memo as Promise<ArrayBuffer>;
+    } else if (this.#memoType) {
+      throw new TypeError("Body already used as a different type.");
+    }
+    this.#memoType = "arrayBuffer";
     if (this.#request) {
-      return this.#request.arrayBuffer();
+      return this.#memo = this.#request.arrayBuffer();
     }
     this.#used = true;
-    return (await readBlob(this.#body)).arrayBuffer();
+    return this.#memo = (await readBlob(this.#body)).arrayBuffer();
   }
 
   /** Reads a body to the end and resolves with the value as a
    * {@linkcode Blob}. */
   blob(): Promise<Blob> {
+    if (this.#memoType === "blob") {
+      return this.#memo as Promise<Blob>;
+    } else if (this.#memoType) {
+      throw new TypeError("Body already used as a different type.");
+    }
+    this.#memoType = "blob";
     if (this.#request) {
-      return this.#request.blob();
+      return this.#memo = this.#request.blob();
     }
     this.#used = true;
-    return readBlob(this.#body, this.#headers?.get("content-type"));
+    return this.#memo = readBlob(
+      this.#body,
+      this.#headers?.get("content-type"),
+    );
   }
 
   /** Reads a body as a URL encoded form, resolving the value as
@@ -117,14 +134,20 @@ export class Body {
   /** Reads a body to the end attempting to parse the body as a set of
    * {@linkcode FormData}. */
   formData(): Promise<FormData> {
+    if (this.#memoType === "formData") {
+      return this.#memo as Promise<FormData>;
+    } else if (this.#memoType) {
+      throw new TypeError("Body already used as a different type.");
+    }
+    this.#memoType = "formData";
     if (this.#request) {
-      return this.#request.formData();
+      return this.#memo = this.#request.formData();
     }
     this.#used = true;
     if (this.#body && this.#headers) {
       const contentType = this.#headers.get("content-type");
       if (contentType) {
-        return parseFormData(contentType, this.#body);
+        return this.#memo = parseFormData(contentType, this.#body);
       }
     }
     throw createHttpError(Status.BadRequest, "Missing content type.");
@@ -137,16 +160,7 @@ export class Body {
   // deno-lint-ignore no-explicit-any
   async json(): Promise<any> {
     try {
-      if (this.#reviver) {
-        const text = await this.text();
-        return JSON.parse(text, this.#reviver);
-      } else if (this.#request) {
-        const value = await this.#request.json();
-        return value;
-      } else {
-        this.#used = true;
-        return JSON.parse(await (await readBlob(this.#body)).text());
-      }
+      return JSON.parse(await this.text(), this.#reviver);
     } catch (err) {
       if (err instanceof Error) {
         throw createHttpError(Status.BadRequest, err.message);
@@ -157,11 +171,17 @@ export class Body {
 
   /** Reads the body to the end resolving with a string. */
   async text(): Promise<string> {
+    if (this.#memoType === "text") {
+      return this.#memo as Promise<string>;
+    } else if (this.#memoType) {
+      throw new TypeError("Body already used as a different type.");
+    }
+    this.#memoType = "text";
     if (this.#request) {
-      return this.#request.text();
+      return this.#memo = this.#request.text();
     }
     this.#used = true;
-    return (await readBlob(this.#body)).text();
+    return this.#memo = (await readBlob(this.#body)).text();
   }
 
   /** Attempts to determine what type of the body is to help determine how best
