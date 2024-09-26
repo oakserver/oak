@@ -33,8 +33,8 @@ resources.
 > deploy a workload. You would want to "pin" to a particular version which is
 > compatible with the version of Deno you are using and has a fixed set of APIs
 > you would expect. `https://deno.land/x/` supports using git tags in the URL to
-> direct you at a particular version. So to use version 13.0.0 of oak, you would
-> want to import `https://deno.land/x/oak@v13.0.0/mod.ts`.
+> direct you at a particular version. So to use version 17.0.0 of oak, you would
+> want to import `https://deno.land/x/oak@v17.0.0/mod.ts`.
 
 ## Usage
 
@@ -60,7 +60,7 @@ oak is available for Node.js on both
 [JSR](https://jsr.io/@oak/oak). To use from npm, install the package:
 
 ```
-npm i @oakserver/oak@14
+npm i @oakserver/oak@17
 ```
 
 And then import into a module:
@@ -72,7 +72,7 @@ import { Application } from "@oakserver/oak";
 To use from JSR, install the package:
 
 ```
-npx jsr i @oak/oak@14
+npx jsr i @oak/oak@17
 ```
 
 And then import into a module:
@@ -95,7 +95,7 @@ oak is available for [Cloudflare Workers](https://workers.cloudflare.com/) on
 project:
 
 ```
-npx jsr add @oak/oak@14
+npx jsr add @oak/oak@17
 ```
 
 And then import into a module:
@@ -128,7 +128,7 @@ oak is available for Bun on [JSR](https://jsr.io/@oak/oak). To use install the
 package:
 
 ```
-bunx jsr i @oak/oak@14
+bunx jsr i @oak/oak@17
 ```
 
 And then import into a module:
