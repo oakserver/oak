@@ -1,5 +1,9 @@
 # oak Change Log
 
+## Version 17.1.0
+
+- fix: updates to support Deno 2 (de20780)
+
 ## Version 17.0.0
 
 Releasing as a major release out of the abundance of caution in that the ability
