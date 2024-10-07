@@ -44,10 +44,9 @@ export function isNode(): boolean {
     !("Bun" in globalThis) && !("WebSocketPair" in globalThis);
 }
 
-/** Guard for `Deno.Reader`. */
-export function isReader(value: unknown): value is Deno.Reader {
-  return typeof value === "object" && value !== null && "read" in value &&
-    typeof (value as Record<string, unknown>).read === "function";
+export function isFsFile(value: unknown): value is Deno.FsFile {
+  return !!(value && typeof value === "object" && "stat" in value &&
+    typeof value.stat === "function");
 }
 
 export function isRouterContext<

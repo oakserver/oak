@@ -11,12 +11,11 @@
 import { contentType, isRedirectStatus, Status, STATUS_TEXT } from "./deps.ts";
 import { DomResponse } from "./http_server_native_request.ts";
 import type { Request } from "./request.ts";
-import { isAsyncIterable, isHtml, isReader } from "./utils/type_guards.ts";
+import { isAsyncIterable, isFsFile, isHtml } from "./utils/type_guards.ts";
 import { BODY_TYPES } from "./utils/consts.ts";
 import { encodeUrl } from "./utils/encode_url.ts";
 import {
   readableStreamFromAsyncIterable,
-  readableStreamFromReader,
   Uint8ArrayTransformStream,
 } from "./utils/streams.ts";
 
@@ -64,8 +63,8 @@ async function convertBodyToBodyInit(
   if (BODY_TYPES.includes(typeof body)) {
     result = String(body);
     type = type ?? (isHtml(result) ? "html" : "text/plain");
-  } else if (isReader(body)) {
-    result = readableStreamFromReader(body);
+  } else if (isFsFile(body)) {
+    result = body.readable;
   } else if (
     ArrayBuffer.isView(body) || body instanceof ArrayBuffer ||
     body instanceof Blob || body instanceof URLSearchParams

@@ -179,7 +179,7 @@ export async function send(
     root,
   } = options;
   const trailingSlash = path[path.length - 1] === "/";
-  path = decodeComponent(path.substr(parse(path).root.length));
+  path = decodeComponent(path.substring(parse(path).root.length));
   if (index && trailingSlash) {
     path += index;
   }

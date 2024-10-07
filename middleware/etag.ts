@@ -11,14 +11,7 @@ import type { Context } from "../context.ts";
 import { eTag, type ETagOptions } from "../deps.ts";
 import type { Middleware } from "../middleware.ts";
 import { BODY_TYPES } from "../utils/consts.ts";
-import { isAsyncIterable, isReader } from "../utils/type_guards.ts";
-
-// This is to work around issue introduced in Deno 1.40
-// See: https://github.com/denoland/deno/issues/22115
-function isFsFile(value: unknown): value is Deno.FsFile {
-  return !!(value && typeof value === "object" && "stat" in value &&
-    typeof value.stat === "function");
-}
+import { isAsyncIterable, isFsFile } from "../utils/type_guards.ts";
 
 /** For a given Context, try to determine the response body entity that an ETag
  * can be calculated from. */
@@ -36,7 +29,7 @@ export function getEntity<S extends State = Record<string, any>>(
   if (BODY_TYPES.includes(typeof body)) {
     return Promise.resolve(String(body));
   }
-  if (isAsyncIterable(body) || isReader(body)) {
+  if (isAsyncIterable(body)) {
     return Promise.resolve(undefined);
   }
   if (typeof body === "object" && body !== null) {

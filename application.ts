@@ -643,7 +643,7 @@ export class Application<AS extends State = Record<string, any>>
 
   /** Add an event listener for a `"close"` event which occurs when the
    * application is closed and no longer listening or handling requests. */
-  addEventListener<S extends AS>(
+  override addEventListener<S extends AS>(
     type: "close",
     listener: ApplicationCloseEventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
@@ -651,21 +651,21 @@ export class Application<AS extends State = Record<string, any>>
   /** Add an event listener for an `"error"` event which occurs when an
    * un-caught error occurs when processing the middleware or during processing
    * of the response. */
-  addEventListener<S extends AS>(
+  override addEventListener<S extends AS>(
     type: "error",
     listener: ApplicationErrorEventListenerOrEventListenerObject<S, AS> | null,
     options?: boolean | AddEventListenerOptions,
   ): void;
   /** Add an event listener for a `"listen"` event which occurs when the server
    * has successfully opened but before any requests start being processed. */
-  addEventListener(
+  override addEventListener(
     type: "listen",
     listener: ApplicationListenEventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
   ): void;
   /** Add an event listener for an event.  Currently valid event types are
    * `"error"` and `"listen"`. */
-  addEventListener(
+  override addEventListener(
     type: "close" | "error" | "listen",
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
