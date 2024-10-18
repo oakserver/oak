@@ -16,6 +16,7 @@ import {
   type ErrorStatus,
   SecureCookieMap,
 } from "./deps.ts";
+import { Body } from "./body.ts";
 import type { RouteParams, RouterContext } from "./router.ts";
 import type { Request } from "./request.ts";
 import { Response } from "./response.ts";
@@ -67,6 +68,7 @@ export interface MockContextOptions<
   path?: string;
   state?: S;
   headers?: [string, string][];
+  body?: ReadableStream;
 }
 
 /** Allows external parties to modify the context state. */
@@ -90,6 +92,7 @@ export function createMockContext<
     state,
     app = createMockApp(state),
     headers: requestHeaders,
+    body = undefined,
   }: MockContextOptions<R> = {},
 ): RouterContext<R, P, S> {
   function createMockRequest(): Request {
@@ -120,6 +123,8 @@ export function createMockContext<
       search: undefined,
       searchParams: new URLSearchParams(),
       url: new URL(path, "http://localhost/"),
+      hasBody: !!body,
+      body: body ? new Body({ headers, getBody: () => body }) : undefined,
     } as any;
   }
 

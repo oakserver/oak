@@ -89,6 +89,14 @@ export class Body {
     return this.#request?.bodyUsed ?? !!this.#used;
   }
 
+  /** Return the body to be reused as BodyInit. */
+  async init(): Promise<BodyInit | null> {
+    if (!this.has) {
+      return null;
+    }
+    return await this.#memo ?? this.stream;
+  }
+
   /** Reads a body to the end and resolves with the value as an
    * {@linkcode ArrayBuffer} */
   async arrayBuffer(): Promise<ArrayBuffer> {
