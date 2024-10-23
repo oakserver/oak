@@ -1,5 +1,9 @@
 # oak Change Log
 
+## Version 17.1.1
+
+- fix: properly handle invalid URLs in router (05ab3b5)
+
 ## Version 17.1.0
 
 - fix: updates to support Deno 2 (de20780)
