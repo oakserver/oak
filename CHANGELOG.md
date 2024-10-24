@@ -1,5 +1,11 @@
 # oak Change Log
 
+## Version 17.1.2
+
+- fix: allow proxy middleware to reuse body from memo (#679)
+
+  Thanks @bodograumann
+
 ## Version 17.1.1
 
 - fix: properly handle invalid URLs in router (05ab3b5)
