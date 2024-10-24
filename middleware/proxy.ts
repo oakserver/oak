@@ -152,7 +152,7 @@ async function createRequest<
   }
   url.search = ctx.request.url.search;
 
-  const body = getBodyInit(ctx);
+  const body = await ctx.request.body?.init() ?? null;
   const headers = new Headers(ctx.request.headers);
   if (optHeaders) {
     if (typeof optHeaders === "function") {
@@ -193,19 +193,6 @@ async function createRequest<
     request = await reqFn(request);
   }
   return request;
-}
-
-function getBodyInit<
-  R extends string,
-  P extends RouteParams<R>,
-  S extends State,
->(
-  ctx: Context<S> | RouterContext<R, P, S>,
-): BodyInit | null {
-  if (!ctx.request.hasBody) {
-    return null;
-  }
-  return ctx.request.body.stream;
 }
 
 function iterableHeaders(

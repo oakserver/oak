@@ -467,3 +467,19 @@ Deno.test({
     assert(timingSafeEqual(actual, expected));
   },
 });
+
+Deno.test({
+  name: "body - empty",
+  async fn() {
+    const body = new Body(nativeToServer(
+      new Request(
+        "http://localhost/index.html",
+        {
+          method: "GET",
+        },
+      ),
+    ));
+    assert(!body.has);
+    assertEquals(await body.init(), null);
+  },
+});

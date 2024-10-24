@@ -266,3 +266,28 @@ Deno.test({
     await mw(ctx, next);
   },
 });
+
+Deno.test({
+  name: "proxy - consumed body",
+  async fn() {
+    async function fetch(request: Request): Promise<Response> {
+      const body = await request.text();
+      assertEquals(body, "hello world");
+      return new Response(body);
+    }
+
+    const mw = proxy("https://oakserver.github.io/", { fetch });
+    const stream = ReadableStream.from([
+      new TextEncoder().encode("hello world"),
+    ]);
+    const ctx = createMockContext({
+      method: "POST",
+      path: "/oak/FAQ",
+      body: stream,
+    });
+    const next = createMockNext();
+
+    assertEquals(await ctx.request.body.text(), "hello world");
+    await mw(ctx, next);
+  },
+});
