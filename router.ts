@@ -67,6 +67,7 @@ import {
   type TokensToRegexpOptions,
 } from "./deps.ts";
 import { compose, type Middleware } from "./middleware.ts";
+import { decode } from "./utils/decode.ts";
 import { decodeComponent } from "./utils/decode_component.ts";
 
 interface Matches<R extends string> {
@@ -1299,8 +1300,7 @@ export class Router<
       } catch (e) {
         return Promise.reject(e);
       }
-      const path = this.#opts.routerPath ?? ctx.routerPath ??
-        decodeURI(pathname);
+      const path = this.#opts.routerPath ?? ctx.routerPath ?? decode(pathname);
       const matches = this.#match(path, method);
 
       if (ctx.matched) {
