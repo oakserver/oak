@@ -1,5 +1,9 @@
 # oak Change Log
 
+## Version 17.1.3
+
+- fix: decode path to avoid bypassing security checks (4b2f27e)
+
 ## Version 17.1.2
 
 - fix: allow proxy middleware to reuse body from memo (#679)
