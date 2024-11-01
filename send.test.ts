@@ -1,6 +1,10 @@
 // Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
 
-import { assertEquals, assertStrictEquals } from "./deps_test.ts";
+import {
+  assertEquals,
+  assertRejects,
+  assertStrictEquals,
+} from "./deps_test.ts";
 import {
   createMockApp,
   createMockContext,
@@ -13,6 +17,7 @@ import { assert, errors, eTag } from "./deps.ts";
 import type { RouteParams } from "./router.ts";
 import { send } from "./send.ts";
 import { isNode } from "./utils/type_guards.ts";
+import { httpErrors } from "./mod.ts";
 
 function setup<
   // deno-lint-ignore no-explicit-any
@@ -480,5 +485,18 @@ Deno.test({
     assert(context.response.headers.get("last-modified") != null);
     assertEquals(context.response.headers.get("cache-control"), "max-age=0");
     context.response.destroy();
+  },
+});
+
+Deno.test({
+  name: "send - security - decoding paths to subvert checks",
+  async fn() {
+    const { context } = setup("/poc%2f../.test.json");
+    await assertRejects(async () => {
+      await send(context, context.request.url.pathname, {
+        root: "./fixtures",
+        hidden: false,
+      });
+    }, httpErrors.NotFound);
   },
 });

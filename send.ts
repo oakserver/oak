@@ -30,7 +30,7 @@ import {
 } from "./deps.ts";
 import type { Response } from "./response.ts";
 import { isNode } from "./utils/type_guards.ts";
-import { decodeComponent } from "./utils/decode_component.ts";
+import { decode } from "./utils/decode.ts";
 import { resolvePath } from "./utils/resolve_path.ts";
 
 if (isNode()) {
@@ -179,7 +179,7 @@ export async function send(
     root,
   } = options;
   const trailingSlash = path[path.length - 1] === "/";
-  path = decodeComponent(path.substring(parse(path).root.length));
+  path = decode(path.substring(parse(path).root.length));
   if (index && trailingSlash) {
     path += index;
   }
