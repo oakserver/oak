@@ -8,7 +8,7 @@
  * # Example
  *
  * ```ts
- * import { Application } from "jsr:@oak/oak@14/application";
+ * import { Application } from "jsr:@oak/oak@17/application";
  *
  * const app = new Application();
  * app.use((ctx) => {
