@@ -24,7 +24,6 @@ import {
   ifNoneMatch,
   parse,
   range,
-  readAll,
   responseRange,
   Status,
 } from "./deps.ts";
@@ -142,12 +141,11 @@ async function getEntity(
   let body: Uint8Array | Deno.FsFile;
   let entity: Uint8Array | FileInfo;
   const fileInfo = { mtime: new Date(mtime), size: stats.size };
-  const file = await Deno.open(path, { read: true });
   if (stats.size < maxbuffer) {
-    const buffer = await readAll(file);
-    file.close();
+    const buffer = await Deno.readFile(path);
     body = entity = buffer;
   } else {
+    const file = await Deno.open(path, { read: true });
     response.addResource(file);
     body = file;
     entity = fileInfo;

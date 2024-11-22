@@ -22,7 +22,6 @@ export {
 } from "jsr:@std/http@^1.0/negotiation";
 export { UserAgent } from "jsr:@std/http@^1.0/user-agent";
 export { LimitedReader } from "jsr:@std/io@0.224/limited-reader";
-export { readAll } from "jsr:@std/io@0.224/read-all";
 export { contentType } from "jsr:@std/media-types@^1.0/content-type";
 export { typeByExtension } from "jsr:@std/media-types@^1.0/type-by-extension";
 export {
