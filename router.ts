@@ -7,8 +7,8 @@
  * # Example
  *
  * ```ts
- * import { Application } from "jsr:@oak/oak@14/application";
- * import { Router } from "jsr:@oak/oak@14/router";
+ * import { Application } from "jsr:@oak/oak/application";
+ * import { Router } from "jsr:@oak/oak/router";
  *
  * const app = new Application();
  * const router = new Router();

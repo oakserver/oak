@@ -50,7 +50,13 @@ import { Application } from "https://deno.land/x/oak/mod.ts";
 To use from JSR, import into a module:
 
 ```ts
-import { Application } from "jsr:@oak/oak@14";
+import { Application } from "jsr:@oak/oak";
+```
+
+Or use the Deno CLI to add it to your project:
+
+```
+deno add jsr:@oak/oak
 ```
 
 ### Node.js
@@ -60,7 +66,7 @@ oak is available for Node.js on both
 [JSR](https://jsr.io/@oak/oak). To use from npm, install the package:
 
 ```
-npm i @oakserver/oak@14
+npm i @oakserver/oak
 ```
 
 And then import into a module:
@@ -72,7 +78,7 @@ import { Application } from "@oakserver/oak";
 To use from JSR, install the package:
 
 ```
-npx jsr i @oak/oak@14
+npx jsr i @oak/oak
 ```
 
 And then import into a module:
@@ -95,7 +101,7 @@ oak is available for [Cloudflare Workers](https://workers.cloudflare.com/) on
 project:
 
 ```
-npx jsr add @oak/oak@14
+npx jsr add @oak/oak
 ```
 
 And then import into a module:
@@ -128,7 +134,7 @@ oak is available for Bun on [JSR](https://jsr.io/@oak/oak). To use install the
 package:
 
 ```
-bunx jsr i @oak/oak@14
+bunx jsr i @oak/oak
 ```
 
 And then import into a module:
@@ -234,19 +240,10 @@ app.use((ctx) => {
   ctx.response.body = "Hello World!";
 });
 
-const listener = Deno.listen({ hostname: "localhost", port: 8000 });
-
-for await (const conn of listener) {
-  (async () => {
-    const requests = Deno.serveHttp(conn);
-    for await (const { request, respondWith } of requests) {
-      const response = await app.handle(request, conn);
-      if (response) {
-        respondWith(response);
-      }
-    }
-  });
-}
+Deno.serve(async (request, info) => {
+  const res = await app.handle(request, info.remoteAddr);
+  return res ?? Response.error();
+});
 ```
 
 An instance of application has some properties as well:

@@ -8,7 +8,7 @@
  * # Example
  *
  * ```ts
- * import { Application } from "jsr:@oak/oak@14/application";
+ * import { Application } from "jsr:@oak/oak/application";
  *
  * const app = new Application();
  * app.use((ctx) => {
@@ -731,8 +731,7 @@ export class Application<AS extends State = Record<string, any>>
    * is similar to `.listen()`, but opening the connection and retrieving
    * requests are not the responsibility of the application.  If the generated
    * context gets set to not to respond, then the method resolves with
-   * `undefined`, otherwise it resolves with a request that is compatible with
-   * `std/http/server`. */
+   * `undefined`, otherwise it resolves with a standard {@linkcode Response}. */
   handle: HandleMethod = (async (
     request: Request,
     secureOrAddr: NetAddr | boolean | undefined,
