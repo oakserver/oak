@@ -83,4 +83,4 @@ export {
   type ParseOptions,
   pathToRegexp,
   type TokensToRegexpOptions,
-} from "npm:path-to-regexp@6.2.1";
+} from "npm:path-to-regexp@^6.3.0";
