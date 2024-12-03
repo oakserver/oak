@@ -81,7 +81,9 @@ export class Server<AS extends State = Record<string, any>>
     const { promise, resolve } = createPromiseWithResolvers<Listener>();
     if (signal?.aborted) {
       // if user somehow aborted before `listen` is invoked, we throw
-      return Promise.reject(new Error("aborted prematurely before 'listen' event"));
+      return Promise.reject(
+        new Error("aborted prematurely before 'listen' event"),
+      );
     }
     this.#stream = new ReadableStream<NativeRequest>({
       start: (controller) => {
@@ -102,7 +104,9 @@ export class Server<AS extends State = Record<string, any>>
         });
         // closinng stream, so that the Application listen promise can resolve itself
         // https://developer.mozilla.org/en-US/docs/Web/API/ReadableStreamDefaultController/close
-        signal?.addEventListener("abort", () => controller.close(), { once: true });
+        signal?.addEventListener("abort", () => controller.close(), {
+          once: true,
+        });
       },
     });
 

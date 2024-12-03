@@ -1116,7 +1116,10 @@ Deno.test({
     const { signal } = controller;
     const p = app.listen({ signal });
     controller.abort();
-    assertRejects(async () => await p, "aborted prematurely before 'listen' event");
+    assertRejects(
+      async () => await p,
+      "aborted prematurely before 'listen' event",
+    );
     teardown();
   },
 });
@@ -1130,10 +1133,27 @@ Deno.test({
       ctx.response.body = "hello world";
     });
     const { signal } = controller;
-    app.addEventListener("listen", () => controller.abort())
     const p = app.listen({ signal });
-    await p;
-    teardown();
+    app.addEventListener("listen", async () => controller.abort());
+    const GRACEFUL_TIME = 1000;
+    let timer: number | undefined;
+    const raceResult = await Promise.race([
+      new Promise(async (resolve) => {
+        await p;
+        clearTimeout(timer);
+        resolve("resolved cleanly");
+      }),
+      new Promise((resolve) =>
+        timer = setTimeout(
+          () => resolve("likely forever pending"),
+          GRACEFUL_TIME,
+        )
+      ),
+    ]);
+    assert(
+      raceResult === "resolved cleanly",
+      `'listen promise' should resolve before ${GRACEFUL_TIME} ms`,
+    );
   },
 });
 
