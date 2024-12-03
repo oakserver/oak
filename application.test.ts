@@ -1105,10 +1105,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "Application.listen() - no options",
+  name: "Application.listen() - no options - aborted before onListen",
   // ignore: isNode(),
-  ignore: true, // there is a challenge with serve and the abort controller that
-  // needs to be isolated
   async fn() {
     const controller = new AbortController();
     const app = new Application();
@@ -1118,6 +1116,22 @@ Deno.test({
     const { signal } = controller;
     const p = app.listen({ signal });
     controller.abort();
+    assertRejects(async () => await p, "aborted prematurely before 'listen' event");
+    teardown();
+  },
+});
+
+Deno.test({
+  name: "Application.listen() - no options - aborted after onListen",
+  async fn() {
+    const controller = new AbortController();
+    const app = new Application();
+    app.use((ctx) => {
+      ctx.response.body = "hello world";
+    });
+    const { signal } = controller;
+    app.addEventListener("listen", () => controller.abort())
+    const p = app.listen({ signal });
     await p;
     teardown();
   },
