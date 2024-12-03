@@ -79,6 +79,10 @@ export class Server<AS extends State = Record<string, any>>
     const { signal } = this.#options;
     const { onListen, ...options } = this.#options;
     const { promise, resolve } = createPromiseWithResolvers<Listener>();
+    if (signal?.aborted) {
+      // if user somehow aborted before `listen` is invoked, we throw
+      return Promise.reject(new Error("aborted prematurely before 'listen' event"));
+    }
     this.#stream = new ReadableStream<NativeRequest>({
       start: (controller) => {
         this.#httpServer = serve?.({
