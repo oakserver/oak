@@ -96,6 +96,9 @@ export class Server<AS extends State = Record<string, any>>
           signal,
           ...options,
         });
+        // closinng stream, so that the Application listen promise can resolve itself
+        // https://developer.mozilla.org/en-US/docs/Web/API/ReadableStreamDefaultController/close
+        signal?.addEventListener("abort", () => controller.close(), { once: true });
       },
     });
 
