@@ -1,4 +1,4 @@
-// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2025 the oak authors. All rights reserved. MIT license.
 
 export { assertEquals } from "jsr:@std/assert@^1.0/equals";
 export { assertInstanceOf } from "jsr:@std/assert@^1.0/instance-of";
