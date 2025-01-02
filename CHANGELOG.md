@@ -1,5 +1,14 @@
 # oak Change Log
 
+## Version 17.1.4
+
+- fix: close file on readAll exception (#682)
+- chore: update vulnerable path-to-regexp version (#684)
+- chore: make it clear that the npm package is deprecated (3dfcbaf)
+- chore: cleanup dependencies (d982240)
+- chore: update copyright year (a98f613)
+- docs: update info around `.handle()` method (26ae6bd)
+
 ## Version 17.1.3
 
 - fix: decode path to avoid bypassing security checks (4b2f27e)
