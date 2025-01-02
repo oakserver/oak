@@ -1,5 +1,10 @@
 # Node.js
 
+> [!NOTE]
+> The version of oak published to npm is obsolete and no longer supported.
+> Node.js compatability is accomplished via a couple of light-weight shims and
+> hosting the package on JSR.
+
 oak 10.3 introduces experimental support for Node.js 16.5 and later.
 
 The package is available on npm as

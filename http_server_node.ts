@@ -46,18 +46,6 @@ export type ServerResponse = {
   writeHead(status: number, statusText?: string): void;
 };
 
-interface ReadableStreamDefaultControllerCallback<R> {
-  (controller: ReadableStreamDefaultController<R>): void | PromiseLike<void>;
-}
-// deno-lint-ignore no-explicit-any
-interface ReadableStreamDefaultController<R = any> {
-  readonly desiredSize: number | null;
-  close(): void;
-  enqueue(chunk: R): void;
-  // deno-lint-ignore no-explicit-any
-  error(error?: any): void;
-}
-
 export class NodeRequest implements ServerRequest {
   #request: IncomingMessage;
   #response: ServerResponse;

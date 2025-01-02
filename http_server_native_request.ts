@@ -56,10 +56,7 @@ export class NativeRequest implements ServerRequest {
   }
 
   get body(): ReadableStream<Uint8Array> | null {
-    // when shimming with undici under Node.js, this is a
-    // `ControlledAsyncIterable`
-    // deno-lint-ignore no-explicit-any
-    return this.#request.body as any;
+    return this.#request.body;
   }
 
   get headers(): Headers {
