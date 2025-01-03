@@ -1,4 +1,4 @@
-// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2025 the oak authors. All rights reserved. MIT license.
 
 /**
  * Safely decode a URI component, where if it fails, instead of throwing,

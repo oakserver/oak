@@ -1,4 +1,4 @@
-// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2025 the oak authors. All rights reserved. MIT license.
 
 /** The abstraction that oak uses when dealing with requests and responses
  * within the Bun runtime that leverages the built in HTTP server.

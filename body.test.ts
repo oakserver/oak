@@ -1,12 +1,6 @@
 import { Body } from "./body.ts";
-import {
-  assert,
-  concat,
-  isHttpError,
-  Status,
-  timingSafeEqual,
-} from "./deps.ts";
-import { assertEquals, assertRejects } from "./deps_test.ts";
+import { assert, concat, isHttpError, Status } from "./deps.ts";
+import { assertEquals, assertRejects, timingSafeEqual } from "./deps_test.ts";
 import type { ServerRequest } from "./types.ts";
 
 const MULTIPART_BODY_FIXTURE =

@@ -1,4 +1,4 @@
-// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2025 the oak authors. All rights reserved. MIT license.
 
 /** The abstraction that oak uses when dealing with requests and responses
  * within the Node.js runtime.
@@ -45,18 +45,6 @@ export type ServerResponse = {
   write(chunk: unknown, callback?: (err: Error | null) => void): void;
   writeHead(status: number, statusText?: string): void;
 };
-
-interface ReadableStreamDefaultControllerCallback<R> {
-  (controller: ReadableStreamDefaultController<R>): void | PromiseLike<void>;
-}
-// deno-lint-ignore no-explicit-any
-interface ReadableStreamDefaultController<R = any> {
-  readonly desiredSize: number | null;
-  close(): void;
-  enqueue(chunk: R): void;
-  // deno-lint-ignore no-explicit-any
-  error(error?: any): void;
-}
 
 export class NodeRequest implements ServerRequest {
   #request: IncomingMessage;

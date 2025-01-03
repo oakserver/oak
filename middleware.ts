@@ -1,4 +1,4 @@
-// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2025 the oak authors. All rights reserved. MIT license.
 
 /**
  * The internal middleware interfaces and abstractions used by oak.

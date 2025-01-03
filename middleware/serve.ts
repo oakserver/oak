@@ -1,4 +1,4 @@
-// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2025 the oak authors. All rights reserved. MIT license.
 
 /** Middleware that converts the oak specific context to a Fetch API standard
  * {@linkcode Request} and {@linkcode Response} along with a modified context

@@ -1,4 +1,4 @@
-// Copyright 2018-2024 the oak authors. All rights reserved. MIT license.
+// Copyright 2018-2025 the oak authors. All rights reserved. MIT license.
 
 // This file contains the external dependencies that oak depends upon
 
@@ -6,13 +6,10 @@
 
 export { assert } from "jsr:@std/assert@^1.0/assert";
 export { concat } from "jsr:@std/bytes@^1.0/concat";
-export { copy as copyBytes } from "jsr:@std/bytes@^1.0/copy";
-export { timingSafeEqual } from "jsr:@std/crypto@^1.0/timing-safe-equal";
 export {
   eTag,
   type ETagOptions,
   type FileInfo,
-  ifMatch,
   ifNoneMatch,
 } from "jsr:@std/http@^1.0/etag";
 export {
@@ -21,9 +18,7 @@ export {
   acceptsLanguages,
 } from "jsr:@std/http@^1.0/negotiation";
 export { UserAgent } from "jsr:@std/http@^1.0/user-agent";
-export { LimitedReader } from "jsr:@std/io@0.224/limited-reader";
 export { contentType } from "jsr:@std/media-types@^1.0/content-type";
-export { typeByExtension } from "jsr:@std/media-types@^1.0/type-by-extension";
 export {
   basename,
   extname,
@@ -37,7 +32,6 @@ export {
 // 3rd party dependencies
 
 export {
-  mergeHeaders,
   SecureCookieMap,
   type SecureCookieMapGetOptions,
   type SecureCookieMapSetDeleteOptions,
@@ -78,7 +72,6 @@ export {
 export {
   compile,
   type Key,
-  match as pathMatch,
   parse as pathParse,
   type ParseOptions,
   pathToRegexp,
