@@ -1105,10 +1105,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "Application.listen() - no options",
+  name: "Application.listen() - no options - aborted before onListen",
   // ignore: isNode(),
-  ignore: true, // there is a challenge with serve and the abort controller that
-  // needs to be isolated
   async fn() {
     const controller = new AbortController();
     const app = new Application();
@@ -1118,8 +1116,44 @@ Deno.test({
     const { signal } = controller;
     const p = app.listen({ signal });
     controller.abort();
-    await p;
+    assertRejects(
+      async () => await p,
+      "aborted prematurely before 'listen' event",
+    );
     teardown();
+  },
+});
+
+Deno.test({
+  name: "Application.listen() - no options - aborted after onListen",
+  async fn() {
+    const controller = new AbortController();
+    const app = new Application();
+    app.use((ctx) => {
+      ctx.response.body = "hello world";
+    });
+    const { signal } = controller;
+    const p = app.listen({ signal });
+    app.addEventListener("listen", async () => controller.abort());
+    const GRACEFUL_TIME = 1000;
+    let timer: number | undefined;
+    const raceResult = await Promise.race([
+      new Promise(async (resolve) => {
+        await p;
+        clearTimeout(timer);
+        resolve("resolved cleanly");
+      }),
+      new Promise((resolve) =>
+        timer = setTimeout(
+          () => resolve("likely forever pending"),
+          GRACEFUL_TIME,
+        )
+      ),
+    ]);
+    assert(
+      raceResult === "resolved cleanly",
+      `'listen promise' should resolve before ${GRACEFUL_TIME} ms`,
+    );
   },
 });
 
