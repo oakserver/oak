@@ -35,7 +35,7 @@
     "coverage": "deno coverage --lcov ./cov",
     "example": "deno run --allow-net examples/echoServer.ts",
     "test": "deno test --allow-read --allow-write --allow-net --parallel --ignore=npm",
-    "test:coverage": "deno test --coverage=./cov --allow-read --allow-write --allow-net --cert ./examples/tls/RootCA.crt --parallel --ignore=npm"
+    "test:coverage": "deno test --coverage=./cov --junit-path=junit.xml --allow-read --allow-write --allow-net --cert ./examples/tls/RootCA.crt --parallel --ignore=npm"
   },
   "fmt": {
     "exclude": ["README.md"]

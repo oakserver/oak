@@ -26,6 +26,11 @@ jobs:
       - name: run tests generating coverage
         run: deno task test:coverage
 
+      - name: upload test results
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: generate lcov
         run: deno task coverage > cov.lcov
 
