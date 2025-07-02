@@ -41,7 +41,8 @@ export function isNetAddr(value: unknown): value is NetAddr {
 
 export function isNode(): boolean {
   return "process" in globalThis && "global" in globalThis &&
-    !("Bun" in globalThis) && !("WebSocketPair" in globalThis);
+    !("Bun" in globalThis) && !("WebSocketPair" in globalThis) &&
+    !("Deno" in globalThis);
 }
 
 export function isFsFile(value: unknown): value is Deno.FsFile {
