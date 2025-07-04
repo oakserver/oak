@@ -1,5 +1,10 @@
 # oak Change Log
 
+## Version 17.1.5
+
+- fix: don't return true for isNode() under Deno (#695)
+- tests: add uploading test results to CI (baa38fa)
+
 ## Version 17.1.4
 
 - fix: close file on readAll exception (#682)
