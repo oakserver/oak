@@ -1,5 +1,11 @@
 # oak Change Log
 
+## Version 17.1.6
+
+- fix: address ReDoS vulnerability in headers (#700)
+- chore: remove v1.x deno from ci (3e4bf17)
+- chore: ignore two CI failing inspect tests (babb9c5)
+
 ## Version 17.1.5
 
 - fix: don't return true for isNode() under Deno (#695)
