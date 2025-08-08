@@ -310,7 +310,9 @@ Deno.test({
 Deno.test({
   name: "request.x-forwarded-for - caps entries and is performant",
   fn() {
-    const manyIps = Array.from({ length: 1000 }, (_, i) => `10.0.0.${i}`).join(", ");
+    const manyIps = Array.from({ length: 1000 }, (_, i) => `10.0.0.${i}`).join(
+      ", ",
+    );
     const request = new Request(
       createMockNativeRequest("https://example.com/index.html", {
         headers: {

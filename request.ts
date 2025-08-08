@@ -84,13 +84,14 @@ export class Request {
   get ips(): string[] {
     return this.#proxy
       ? (() => {
-          const raw = this.#serverRequest.headers.get("x-forwarded-for") ?? this.#getRemoteAddr();
-          const bounded = raw.length > 4096 ? raw.slice(0, 4096) : raw;
-          return bounded
-            .split(",", 100)
-            .map((part) => part.trim())
-            .filter((part) => part.length > 0);
-        })()
+        const raw = this.#serverRequest.headers.get("x-forwarded-for") ??
+          this.#getRemoteAddr();
+        const bounded = raw.length > 4096 ? raw.slice(0, 4096) : raw;
+        return bounded
+          .split(",", 100)
+          .map((part) => part.trim())
+          .filter((part) => part.length > 0);
+      })()
       : [];
   }
 
@@ -144,7 +145,9 @@ export class Request {
         let proto: string;
         let host: string;
         if (this.#proxy) {
-          const xForwardedProto = serverRequest.headers.get("x-forwarded-proto");
+          const xForwardedProto = serverRequest.headers.get(
+            "x-forwarded-proto",
+          );
           let maybeProto = xForwardedProto
             ? xForwardedProto.split(",", 1)[0].trim().toLowerCase()
             : undefined;
