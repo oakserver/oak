@@ -83,8 +83,14 @@ export class Request {
    * `X-Forwarded-For`.  When `false` an empty array is returned. */
   get ips(): string[] {
     return this.#proxy
-      ? (this.#serverRequest.headers.get("x-forwarded-for") ??
-        this.#getRemoteAddr()).split(/\s*,\s*/)
+      ? (() => {
+          const raw = this.#serverRequest.headers.get("x-forwarded-for") ?? this.#getRemoteAddr();
+          const bounded = raw.length > 4096 ? raw.slice(0, 4096) : raw;
+          return bounded
+            .split(",", 100)
+            .map((part) => part.trim())
+            .filter((part) => part.length > 0);
+        })()
       : [];
   }
 
@@ -138,9 +144,14 @@ export class Request {
         let proto: string;
         let host: string;
         if (this.#proxy) {
-          proto = serverRequest
-            .headers.get("x-forwarded-proto")?.split(/\s*,\s*/, 1)[0] ??
-            "http";
+          const xForwardedProto = serverRequest.headers.get("x-forwarded-proto");
+          let maybeProto = xForwardedProto
+            ? xForwardedProto.split(",", 1)[0].trim().toLowerCase()
+            : undefined;
+          if (maybeProto !== "http" && maybeProto !== "https") {
+            maybeProto = undefined;
+          }
+          proto = maybeProto ?? "http";
           host = serverRequest.headers.get("x-forwarded-host") ??
             this.#url?.hostname ??
             serverRequest.headers.get("host") ??
