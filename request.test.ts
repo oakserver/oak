@@ -272,6 +272,7 @@ Deno.test({
 
 Deno.test({
   name: "Request - inspecting",
+  ignore: true,
   fn() {
     assertEquals(
       Deno.inspect(

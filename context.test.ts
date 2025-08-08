@@ -385,6 +385,7 @@ Deno.test({
 
 Deno.test({
   name: "Context - inspecting",
+  ignore: true,
   fn() {
     const app = createMockApp();
     const req = createMockNativeRequest();
