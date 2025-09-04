@@ -43,6 +43,7 @@ export type Key = string | number[] | ArrayBuffer | Uint8Array;
 
 export interface UpgradeWebSocketOptions {
   protocol?: string;
+  idleTimeout?: number;
 }
 
 export type UpgradeWebSocketFn = (
