@@ -13,6 +13,7 @@ import type {
   ServeOptions,
   ServerRequest,
   ServeTlsOptions,
+  Uint8ArrayArrayBuffer,
 } from "./types.ts";
 import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 
@@ -94,7 +95,7 @@ class BunRequest implements ServerRequest {
   #resolved = false;
   #promise: Promise<Response>;
 
-  get body(): ReadableStream<Uint8Array<ArrayBuffer>> | null {
+  get body(): ReadableStream<Uint8ArrayArrayBuffer> | null {
     return this.#request.body;
   }
 
@@ -150,7 +151,7 @@ class BunRequest implements ServerRequest {
     this.#reject(reason);
   }
 
-  getBody(): ReadableStream<Uint8Array<ArrayBuffer>> | null {
+  getBody(): ReadableStream<Uint8ArrayArrayBuffer> | null {
     return this.#request.body;
   }
 

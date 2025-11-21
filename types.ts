@@ -21,7 +21,7 @@ export interface ServerRequest {
   readonly url: string;
   // deno-lint-ignore no-explicit-any
   error(reason?: any): void;
-  getBody(): ReadableStream<Uint8Array<ArrayBuffer>> | null;
+  getBody(): ReadableStream<Uint8ArrayArrayBuffer> | null;
   respond(response: Response): void | Promise<void>;
   upgrade?(options?: UpgradeWebSocketOptions): WebSocket;
 }
@@ -38,8 +38,11 @@ export interface ServerConstructor<T extends ServerRequest> {
   type?: "native" | "node" | "bun";
 }
 
-export type Data = string | number[] | ArrayBuffer | Uint8Array<ArrayBuffer>;
-export type Key = string | number[] | ArrayBuffer | Uint8Array<ArrayBuffer>;
+/** Type for backwards compatibility. Resolves to `Uint8Array<ArrayBuffer>` in
+ * TypeScript 5.7+ and `Uint8Array` in older versions. */
+export type Uint8ArrayArrayBuffer = ReturnType<Uint8Array["slice"]>;
+export type Data = string | number[] | ArrayBuffer | Uint8ArrayArrayBuffer;
+export type Key = string | number[] | ArrayBuffer | Uint8ArrayArrayBuffer;
 
 export interface UpgradeWebSocketOptions {
   protocol?: string;

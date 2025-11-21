@@ -9,7 +9,7 @@
  */
 
 import { createHttpError, matches, parseFormData, Status } from "./deps.ts";
-import type { ServerRequest } from "./types.ts";
+import type { ServerRequest, Uint8ArrayArrayBuffer } from "./types.ts";
 
 type JsonReviver = (key: string, value: unknown) => unknown;
 
@@ -30,13 +30,13 @@ const KNOWN_BODY_TYPES: [bodyType: BodyType, knownMediaTypes: string[]][] = [
 ];
 
 async function readBlob(
-  body?: ReadableStream<Uint8Array<ArrayBuffer>> | null,
+  body?: ReadableStream<Uint8ArrayArrayBuffer> | null,
   type?: string | null,
 ): Promise<Blob> {
   if (!body) {
     return new Blob(undefined, type ? { type } : undefined);
   }
-  const chunks: Uint8Array<ArrayBuffer>[] = [];
+  const chunks: Uint8ArrayArrayBuffer[] = [];
   for await (const chunk of body) {
     chunks.push(chunk);
   }
@@ -45,7 +45,7 @@ async function readBlob(
 
 /** An object which encapsulates information around a request body. */
 export class Body {
-  #body?: ReadableStream<Uint8Array<ArrayBuffer>> | null;
+  #body?: ReadableStream<Uint8ArrayArrayBuffer> | null;
   #memo: Promise<ArrayBuffer | Blob | FormData | string> | null = null;
   #memoType: "arrayBuffer" | "blob" | "formData" | "text" | null = null;
   #headers?: Headers;
@@ -80,7 +80,7 @@ export class Body {
   }
 
   /** Exposes the "raw" `ReadableStream` of the body. */
-  get stream(): ReadableStream<Uint8Array<ArrayBuffer>> | null {
+  get stream(): ReadableStream<Uint8ArrayArrayBuffer> | null {
     return this.#request ? this.#request.body : this.#body!;
   }
 
