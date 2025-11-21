@@ -55,7 +55,7 @@ export class NativeRequest implements ServerRequest {
     this.#response = promise;
   }
 
-  get body(): ReadableStream<Uint8Array> | null {
+  get body(): ReadableStream<Uint8Array<ArrayBuffer>> | null {
     return this.#request.body;
   }
 
@@ -102,7 +102,7 @@ export class NativeRequest implements ServerRequest {
     this.#resolved = true;
   }
 
-  getBody(): ReadableStream<Uint8Array> | null {
+  getBody(): ReadableStream<Uint8Array<ArrayBuffer>> | null {
     return this.#request.body;
   }
 

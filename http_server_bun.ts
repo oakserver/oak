@@ -94,7 +94,7 @@ class BunRequest implements ServerRequest {
   #resolved = false;
   #promise: Promise<Response>;
 
-  get body(): ReadableStream<Uint8Array> | null {
+  get body(): ReadableStream<Uint8Array<ArrayBuffer>> | null {
     return this.#request.body;
   }
 
@@ -150,7 +150,7 @@ class BunRequest implements ServerRequest {
     this.#reject(reason);
   }
 
-  getBody(): ReadableStream<Uint8Array> | null {
+  getBody(): ReadableStream<Uint8Array<ArrayBuffer>> | null {
     return this.#request.body;
   }
 
