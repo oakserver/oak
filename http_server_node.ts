@@ -12,6 +12,7 @@ import type {
   ServeOptions,
   ServerRequest,
   ServeTlsOptions,
+  Uint8ArrayArrayBuffer,
 } from "./types.ts";
 import { createPromiseWithResolvers } from "./utils/create_promise_with_resolvers.ts";
 
@@ -90,15 +91,15 @@ export class NodeRequest implements ServerRequest {
     this.#responded = true;
   }
 
-  getBody(): ReadableStream<Uint8Array> | null {
-    let body: ReadableStream<Uint8Array> | null;
+  getBody(): ReadableStream<Uint8ArrayArrayBuffer> | null {
+    let body: ReadableStream<Uint8ArrayArrayBuffer> | null;
     if (this.method === "GET" || this.method === "HEAD") {
       body = null;
     } else {
-      body = new ReadableStream<Uint8Array>({
+      body = new ReadableStream<Uint8ArrayArrayBuffer>({
         start: (controller) => {
-          this.#request.on("data", (chunk: Uint8Array) => {
-            controller.enqueue(chunk);
+          this.#request.on("data", (chunk) => {
+            controller.enqueue(chunk as Uint8ArrayArrayBuffer);
           });
           this.#request.on("error", (err: Error) => {
             controller.error(err);

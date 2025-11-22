@@ -31,6 +31,7 @@ import type { Response } from "./response.ts";
 import { isNode } from "./utils/type_guards.ts";
 import { decode } from "./utils/decode.ts";
 import { resolvePath } from "./utils/resolve_path.ts";
+import type { Uint8ArrayArrayBuffer } from "./types.ts";
 
 if (isNode()) {
   console.warn("oak send() does not work under Node.js.");
@@ -137,9 +138,15 @@ async function getEntity(
   stats: Deno.FileInfo,
   maxbuffer: number,
   response: Response,
-): Promise<[Uint8Array | Deno.FsFile, Uint8Array | FileInfo, FileInfo]> {
-  let body: Uint8Array | Deno.FsFile;
-  let entity: Uint8Array | FileInfo;
+): Promise<
+  [
+    Uint8ArrayArrayBuffer | Deno.FsFile,
+    Uint8ArrayArrayBuffer | FileInfo,
+    FileInfo,
+  ]
+> {
+  let body: Uint8ArrayArrayBuffer | Deno.FsFile;
+  let entity: Uint8ArrayArrayBuffer | FileInfo;
   const fileInfo = { mtime: new Date(mtime), size: stats.size };
   if (stats.size < maxbuffer) {
     const buffer = await Deno.readFile(path);
@@ -270,8 +277,8 @@ export async function send(
       : contentTypes[extname(path)] ?? extname(path);
   }
 
-  let entity: Uint8Array | FileInfo | null = null;
-  let body: Uint8Array | Deno.FsFile | null = null;
+  let entity: Uint8ArrayArrayBuffer | FileInfo | null = null;
+  let body: Uint8ArrayArrayBuffer | Deno.FsFile | null = null;
   let fileInfo: FileInfo | null = null;
 
   if (request.headers.has("If-None-Match") && mtime) {
