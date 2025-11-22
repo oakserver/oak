@@ -47,17 +47,18 @@ oak is available on both [deno.land/x](https://deno.land/x/oak/) and
 import { Application } from "https://deno.land/x/oak/mod.ts";
 ```
 
-To use from JSR, import into a module:
-
-```ts
-import { Application } from "jsr:@oak/oak";
-```
-
-Or use the Deno CLI to add it to your project:
+To use from JSR, add it to your project:
 
 ```
 deno add jsr:@oak/oak
 ```
+
+Then import into a module:
+
+```ts
+import { Application } from "@oak/oak";
+```
+
 
 ### Node.js
 
@@ -157,7 +158,7 @@ processing requests with the registered middleware.
 A basic usage, responding to every request with _Hello World!_:
 
 ```ts
-import { Application } from "jsr:@oak/oak/application";
+import { Application } from "@oak/oak/application";
 
 const app = new Application();
 
@@ -184,7 +185,7 @@ context and reference to the "next" method in the stack.
 A more complex example:
 
 ```ts
-import { Application } from "jsr:@oak/oak/application";
+import { Application } from "@oak/oak/application";
 
 const app = new Application();
 
@@ -232,7 +233,7 @@ or `undefined` if the `ctx.respond === true`.
 An example:
 
 ```ts
-import { Application } from "jsr:@oak/oak/application";
+import { Application } from "@oak/oak/application";
 
 const app = new Application();
 
@@ -649,7 +650,7 @@ will fire a `"listen"` event, which can be listened for via the
 `.addEventListener()` method. For example:
 
 ```ts
-import { Application } from "jsr:@oak/oak/application";
+import { Application } from "@oak/oak/application";
 
 const app = new Application();
 
@@ -673,7 +674,7 @@ If you want to close the application, the application supports the option of an
 Here is an example of using the signal:
 
 ```ts
-import { Application } from "jsr:@oak/oak/application";
+import { Application } from "@oak/oak/application";
 
 const app = new Application();
 
@@ -700,9 +701,9 @@ handling middleware that provides a well managed response to errors would work
 like this:
 
 ```ts
-import { Application } from "jsr:@oak/oak/application";
-import { isHttpError } from "jsr:@oak/commons/http_errors";
-import { Status } from "jsr:@oak/commons/status";
+import { Application } from "@oak/oak/application";
+import { isHttpError } from "@oak/commons/http_errors";
+import { Status } from "@oak/commons/status";
 
 const app = new Application();
 
@@ -733,7 +734,7 @@ application. To listen for these errors, you would add an event handler to the
 application instance:
 
 ```ts
-import { Application } from "jsr:@oak/oak/application";
+import { Application } from "@oak/oak/application";
 
 const app = new Application();
 
@@ -762,8 +763,8 @@ The following example serves up a _RESTful_ service of a map of books, where
 `http://localhost:8000/book/1` would return the book with ID `"1"`:
 
 ```ts
-import { Application } from "jsr:@oak/oak/application";
-import { Router } from "jsr:@oak/oak/router";
+import { Application } from "@oak/oak/application";
+import { Router } from "@oak/oak/router";
 
 const books = new Map<string, any>();
 books.set("1", {
@@ -814,8 +815,8 @@ Nesting routers is supported. The following example responds to
 `http://localhost:8000/forums/oak/posts/nested-routers`.
 
 ```typescript
-import { Application } from "jsr:@oak/oak/application";
-import { Router } from "jsr:@oak/oak/router";
+import { Application } from "@oak/oak/application";
+import { Router } from "@oak/oak/router";
 
 const posts = new Router()
   .get("/", (ctx) => {
@@ -845,7 +846,7 @@ system relative to the root from the requested path.
 A basic usage would look something like this:
 
 ```ts
-import { Application } from "jsr:@oak/oak/application";
+import { Application } from "@oak/oak/application";
 
 const app = new Application();
 
@@ -881,8 +882,8 @@ determines if it can create an `ETag` header for that body type, and if so sets
 the `ETag` header on the response. Basic usage would look something like this:
 
 ```ts
-import { Application } from "jsr:@oak/oak/application";
-import { factory } from "jsr:@oak/oak/etag";
+import { Application } from "@oak/oak/application";
+import { factory } from "@oak/oak/etag";
 
 const app = new Application();
 
@@ -893,12 +894,12 @@ app.use(factory());
 
 There is also a function which retrieves an entity for a given context based on
 what it logical to read into memory which can be passed to the etag calculate
-that is part of the Deno std library:
+that is part of the Deno std library (`deno add jsr:@std/http`):
 
 ```ts
-import { Application } from "jsr:@oak/oak/application";
-import { getEntity } from "jsr:@oak/oak/etag";
-import { calculate } from "jsr:@std/http/etag";
+import { Application } from "@oak/oak/application";
+import { getEntity } from "@oak/oak/etag";
+import { calculate } from "@std/http/etag";
 
 const app = new Application();
 
@@ -938,8 +939,8 @@ the handler to resolve with a Fetch API `Response`.
 An example of using `serve()` with `Application.prototype.use()`:
 
 ```ts
-import { Application } from "jsr:@oak/oak/application";
-import { serve } from "jsr:@oak/oak/serve";
+import { Application } from "@oak/oak/application";
+import { serve } from "@oak/oak/serve";
 
 const app = new Application();
 
@@ -955,9 +956,9 @@ And a similar solution works with `route()` where the context contains the
 information about the router, like the params:
 
 ```ts
-import { Application } from "jsr:@oak/oak/application";
-import { Router } from "jsr:@oak/oak/router";
-import { route } from "jsr:@oak/oak/serve";
+import { Application } from "@oak/oak/application";
+import { Router } from "@oak/oak/router";
+import { route } from "@oak/oak/serve";
 
 const app = new Application;
 
