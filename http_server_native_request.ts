@@ -3,6 +3,7 @@
 import type {
   NetAddr,
   ServerRequest,
+  Uint8ArrayArrayBuffer,
   UpgradeWebSocketFn,
   UpgradeWebSocketOptions,
 } from "./types.ts";
@@ -55,7 +56,7 @@ export class NativeRequest implements ServerRequest {
     this.#response = promise;
   }
 
-  get body(): ReadableStream<Uint8Array> | null {
+  get body(): ReadableStream<Uint8ArrayArrayBuffer> | null {
     return this.#request.body;
   }
 
@@ -102,7 +103,7 @@ export class NativeRequest implements ServerRequest {
     this.#resolved = true;
   }
 
-  getBody(): ReadableStream<Uint8Array> | null {
+  getBody(): ReadableStream<Uint8ArrayArrayBuffer> | null {
     return this.#request.body;
   }
 
