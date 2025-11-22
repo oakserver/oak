@@ -40,5 +40,10 @@
   "fmt": {
     "exclude": ["README.md"]
   },
+  "lint": {
+    "rules": {
+      "exclude": ["no-import-prefix"]
+    }
+  },
   "lock": false
 }
