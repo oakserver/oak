@@ -1,5 +1,12 @@
 # oak Change Log
 
+## Version 17.2.0
+
+- feat: add idleTimeout for websocket (#702)
+- fix: update for Uint8Array being generic (#705)
+- chore: fix publish workflow (#706)
+- docs: prefer bare specifiers (#704)
+
 ## Version 17.1.6
 
 - fix: address ReDoS vulnerability in headers (#700)
