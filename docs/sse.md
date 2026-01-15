@@ -20,8 +20,8 @@ import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 const app = new Application();
 const router = new Router();
 
-router.get("/sse", (ctx) => {
-  const target = ctx.sendEvents();
+router.get("/sse", async (ctx) => {
+  const target = await ctx.sendEvents();
   target.dispatchMessage({ hello: "world" });
 });
 
@@ -33,8 +33,8 @@ The far end can close the connection, which can be detected by the `close` event
 on the target:
 
 ```ts
-router.get("/sse", (ctx) => {
-  const target = ctx.sendEvents();
+router.get("/sse", async (ctx) => {
+  const target = await ctx.sendEvents();
   target.addEventListener("close", (evt) => {
     // perform some cleanup activities
   });
@@ -46,7 +46,7 @@ The server side can also close the connection:
 
 ```ts
 router.get("/sse", async (ctx) => {
-  const target = ctx.sendEvents();
+  const target = await ctx.sendEvents();
   target.dispatchMessage({ hello: "world" });
   await target.close();
 });
@@ -65,7 +65,7 @@ server and dispatched via the `ServerSentEventTarget` will be raised as a
 
 ```ts
 router.get("/sse", async (ctx: Context) => {
-  const target = ctx.sendEvents();
+  const target = await ctx.sendEvents();
   const event = new ServerSentEvent("ping", { hello: "world" });
   target.dispatchEvent(event);
 });
@@ -123,7 +123,7 @@ when calling `.sendEvents()`:
 ```ts
 router.get("/sse", async (ctx: Context) => {
   const headers = new Headers([["X-Custom-Header", "custom value"]]);
-  const target = ctx.sendEvents({ headers });
+  const target = await ctx.sendEvents({ headers });
   const event = new ServerSentEvent("ping", { hello: "world" });
   target.dispatchEvent(event);
 });
