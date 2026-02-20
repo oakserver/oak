@@ -27,6 +27,47 @@ interface OakRequestOptions {
   secure?: boolean;
 }
 
+/** A parsed entry from the RFC 7239 `Forwarded` header. */
+interface ForwardedEntry {
+  for?: string;
+  proto?: string;
+  host?: string;
+  by?: string;
+}
+
+/**
+ * Parse the value of a `Forwarded` header per RFC 7239.
+ *
+ * Each forwarded-element is comma-separated; within each element,
+ * forwarded-pairs are semicolon-separated as `key=value`.  Values may be
+ * optionally quoted.
+ */
+function parseForwarded(value: string): ForwardedEntry[] {
+  const bounded = value.length > 4096 ? value.slice(0, 4096) : value;
+  const result: ForwardedEntry[] = [];
+  for (const element of bounded.split(",")) {
+    const entry: ForwardedEntry = {};
+    for (const pair of element.split(";")) {
+      const eqIdx = pair.indexOf("=");
+      if (eqIdx < 0) continue;
+      const key = pair.slice(0, eqIdx).trim().toLowerCase();
+      let val = pair.slice(eqIdx + 1).trim();
+      if (val.length >= 2 && val[0] === '"' && val[val.length - 1] === '"') {
+        // RFC 7230 §3.2.6 quoted-string unescaping: remove the surrounding
+        // quotes and replace any backslash-escaped character with the character
+        // itself (e.g. `\"` → `"`, `\\` → `\`).
+        val = val.slice(1, -1).replace(/\\(.)/g, "$1");
+      }
+      if (key === "for" || key === "proto" || key === "host" || key === "by") {
+        entry[key as keyof ForwardedEntry] = val;
+      }
+    }
+    result.push(entry);
+    if (result.length >= 100) break;
+  }
+  return result;
+}
+
 /** An interface which provides information about the current request. The
  * instance related to the current request is available on the
  * {@linkcode Context}'s `.request` property.
@@ -37,6 +78,7 @@ interface OakRequestOptions {
  */
 export class Request {
   #body: Body;
+  #forwarded?: ForwardedEntry[] | null;
   #proxy: boolean;
   #secure: boolean;
   #serverRequest: ServerRequest;
@@ -45,6 +87,14 @@ export class Request {
 
   #getRemoteAddr(): string {
     return this.#serverRequest.remoteAddr ?? "";
+  }
+
+  #getForwarded(): ForwardedEntry[] | null {
+    if (this.#forwarded === undefined) {
+      const value = this.#serverRequest.headers.get("forwarded");
+      this.#forwarded = value ? parseForwarded(value) : null;
+    }
+    return this.#forwarded;
   }
 
   /** An interface to access the body of the request. This provides an API that
@@ -72,7 +122,8 @@ export class Request {
   }
 
   /** Request remote address. When the application's `.proxy` is true, the
-   * `X-Forwarded-For` will be used to determine the requesting remote address.
+   * `Forwarded` header (RFC 7239) will be checked first, falling back to
+   * `X-Forwarded-For`, to determine the requesting remote address.
    */
   get ip(): string {
     return (this.#proxy ? this.ips[0] : this.#getRemoteAddr()) ?? "";
@@ -80,19 +131,23 @@ export class Request {
 
   /** When the application's `.proxy` is `true`, this will be set to an array of
    * IPs, ordered from upstream to downstream, based on the value of the header
-   * `X-Forwarded-For`.  When `false` an empty array is returned. */
+   * `Forwarded` (RFC 7239) if present, otherwise `X-Forwarded-For`.  When
+   * `false` an empty array is returned. */
   get ips(): string[] {
-    return this.#proxy
-      ? (() => {
-        const raw = this.#serverRequest.headers.get("x-forwarded-for") ??
-          this.#getRemoteAddr();
-        const bounded = raw.length > 4096 ? raw.slice(0, 4096) : raw;
-        return bounded
-          .split(",", 100)
-          .map((part) => part.trim())
-          .filter((part) => part.length > 0);
-      })()
-      : [];
+    if (!this.#proxy) return [];
+    const forwarded = this.#getForwarded();
+    if (forwarded) {
+      return forwarded
+        .map((e) => e.for)
+        .filter((f): f is string => f !== undefined && f.length > 0);
+    }
+    const raw = this.#serverRequest.headers.get("x-forwarded-for") ??
+      this.#getRemoteAddr();
+    const bounded = raw.length > 4096 ? raw.slice(0, 4096) : raw;
+    return bounded
+      .split(",", 100)
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0);
   }
 
   /** The HTTP Method used by the request. */
@@ -125,7 +180,8 @@ export class Request {
 
   /** A parsed URL for the request which complies with the browser standards.
    * When the application's `.proxy` is `true`, this value will be based off of
-   * the `X-Forwarded-Proto` and `X-Forwarded-Host` header values if present in
+   * the `Forwarded` header (RFC 7239) if present, otherwise the
+   * `X-Forwarded-Proto` and `X-Forwarded-Host` header values if present in
    * the request. */
   get url(): URL {
     if (!this.#url) {
@@ -145,17 +201,29 @@ export class Request {
         let proto: string;
         let host: string;
         if (this.#proxy) {
-          const xForwardedProto = serverRequest.headers.get(
-            "x-forwarded-proto",
-          );
-          let maybeProto = xForwardedProto
-            ? xForwardedProto.split(",", 1)[0].trim().toLowerCase()
-            : undefined;
+          const forwarded = this.#getForwarded();
+          const firstForwarded = forwarded?.[0];
+          let maybeProto: string | undefined;
+          if (firstForwarded?.proto) {
+            maybeProto = firstForwarded.proto.toLowerCase();
+          } else {
+            const xForwardedProto = serverRequest.headers.get(
+              "x-forwarded-proto",
+            );
+            maybeProto = xForwardedProto
+              ? xForwardedProto.split(",", 1)[0].trim().toLowerCase()
+              : undefined;
+          }
           if (maybeProto !== "http" && maybeProto !== "https") {
             maybeProto = undefined;
           }
           proto = maybeProto ?? "http";
-          host = serverRequest.headers.get("x-forwarded-host") ??
+          // The `host` value from the `Forwarded` header is used as-is, just
+          // like the legacy `X-Forwarded-Host`.  Both require `proxy: true`,
+          // meaning the operator has declared that the upstream proxy is
+          // trusted to set these headers correctly.
+          host = firstForwarded?.host ??
+            serverRequest.headers.get("x-forwarded-host") ??
             this.#url?.hostname ??
             serverRequest.headers.get("host") ??
             serverRequest.headers.get(":authority") ?? "";
