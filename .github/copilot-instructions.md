@@ -7,7 +7,7 @@ oak is a middleware framework for Deno's native HTTP server,
 [Cloudflare Workers](https://workers.cloudflare.com/). It is inspired by
 [Koa](https://github.com/koajs/koa/) and includes a middleware router inspired
 by [@koa/router](https://github.com/koajs/router/). The package is distributed
-via [JSR](https://jsr.io/@oak/oak) and [npm](https://www.npmjs.com/package/@oakserver/oak).
+via [JSR](https://jsr.io/@oak/oak).
 
 ## Repository Structure
 
@@ -52,4 +52,5 @@ All commands use the [Deno](https://deno.com/) toolchain (no `npm` or build step
 - **Tests**: Co-located `*.test.ts` files. Use `assertEquals`, `assertStrictEquals`, and
   `assertRejects` from `deps_test.ts`. Mock helpers are defined locally within test files.
 - **Error handling**: Use the `errors` object from `deps.ts` for HTTP error classes.
-- **Exports**: All public symbols are re-exported from `mod.ts`.
+- **Exports**: All public symbols are re-exported from `mod.ts`. The `deno.json`
+  `exports` field also defines the package entry points for JSR publishing.
