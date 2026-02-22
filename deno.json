@@ -38,7 +38,7 @@
     "test:coverage": "deno test --coverage=./cov --junit-path=junit.xml --allow-read --allow-write --allow-net --cert ./examples/tls/RootCA.crt --parallel --ignore=npm"
   },
   "fmt": {
-    "exclude": ["README.md"]
+    "exclude": ["README.md", ".github/copilot-instructions.md"]
   },
   "lint": {
     "rules": {
