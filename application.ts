@@ -718,6 +718,10 @@ export class Application<AS extends State = Record<string, any>>
     );
     try {
       await this.#getComposed()(context);
+      if (context.respond === false) {
+        context.response.destroy();
+        return contextRequest.response;
+      }
       const response = await context.response.toDomResponse();
       context.response.destroy(false);
       return response;

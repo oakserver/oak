@@ -998,6 +998,52 @@ Deno.test({
   },
 });
 
+Deno.test({
+  name: "application .fetch() websocket upgrade",
+  ignore: isNode(),
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() {
+    const app = new Application();
+    let wsReceived = "";
+    app.use((ctx) => {
+      const ws = ctx.upgrade();
+      ws.onmessage = (event) => {
+        wsReceived = event.data;
+        ws.send("pong");
+        ws.close();
+      };
+    });
+
+    const controller = new AbortController();
+    let port = 0;
+    const { promise: listeningPromise, resolve: listeningResolve } =
+      createPromiseWithResolvers<void>();
+    const server = Deno.serve({
+      signal: controller.signal,
+      port: 0,
+      handler: app.fetch as (req: Request) => Promise<Response>,
+      onListen({ port: p }) {
+        port = p;
+        listeningResolve();
+      },
+    });
+    await listeningPromise;
+
+    const { promise, resolve, reject } = createPromiseWithResolvers<string>();
+    const ws = new WebSocket(`ws://localhost:${port}/`);
+    ws.onopen = () => ws.send("ping");
+    ws.onmessage = (event) => resolve(event.data);
+    ws.onerror = () => reject(new Error("WebSocket error"));
+    const reply = await promise;
+    assertEquals(reply, "pong");
+    assertEquals(wsReceived, "ping");
+    controller.abort();
+    await server.finished;
+    teardown();
+  },
+});
+
 function isBigInitValue(value: unknown): value is { __bigint: string } {
   return value != null && typeof value === "object" && "__bigint" in value &&
     typeof (value as any).__bigint === "string";
