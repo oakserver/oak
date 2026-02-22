@@ -134,7 +134,9 @@ export class Request {
    * `Forwarded` (RFC 7239) if present, otherwise `X-Forwarded-For`.  When
    * `false` an empty array is returned. */
   get ips(): string[] {
-    if (!this.#proxy) return [];
+    if (!this.#proxy) {
+      return [];
+    }
     const forwarded = this.#getForwarded();
     if (forwarded) {
       return forwarded
