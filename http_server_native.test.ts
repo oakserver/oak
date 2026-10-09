@@ -64,6 +64,37 @@ Deno.test({
 
 Deno.test({
   name:
+    "HttpServer allows in-flight requests to complete after an abort signal fires",
+  ignore: isNode(),
+  async fn() {
+    const abortController = new AbortController();
+    const app = new Application();
+    const listenOptions = { port: 4507, signal: abortController.signal };
+
+    const server = new Server(app, listenOptions);
+    await server.listen();
+
+    const expectedBody = "slow-response";
+
+    (async () => {
+      for await (const nativeRequest of server) {
+        // Abort partway through handling, before responding, to simulate a
+        // shutdown signal arriving while a request is still in flight.
+        abortController.abort();
+        await new Promise((r) => setTimeout(r, 200));
+        nativeRequest.respond(new Response(expectedBody));
+      }
+    })();
+
+    const response = await fetch(`http://localhost:${listenOptions.port}`);
+    assertEquals(await response.text(), expectedBody);
+
+    await server.close();
+  },
+});
+
+Deno.test({
+  name:
     "HttpServer manages errors from mis-use in the application handler gracefully",
   ignore: isNode(),
   async fn() {
