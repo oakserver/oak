@@ -1,5 +1,15 @@
 # oak Change Log
 
+## Version 17.2.1
+
+- fix: WebSocket upgrade failure when using `app.fetch` with `deno serve` (#710)
+- docs: update links of path-to-regexp to 6.x (#707)
+- docs: declare oak unmaintained ahead of archiving (ce7a04d)
+- chore: add Copilot coding agent instructions (#712)
+
+This is the final release of oak. The project is unmaintained and the
+repository is being archived.
+
 ## Version 17.2.0
 
 - feat: add idleTimeout for websocket (#702)
