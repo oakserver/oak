@@ -1,5 +1,16 @@
 # oak
 
+> [!WARNING]
+> **oak is unmaintained and will be archived.**
+>
+> Following the retirement of Deno, this project is no longer maintained. The
+> repository will be archived and there will be no further releases, bug fixes
+> or security patches. Existing releases remain available on
+> [JSR](https://jsr.io/@oak/oak), [deno.land/x](https://deno.land/x/oak) and
+> [npm](https://www.npmjs.com/package/@oakserver/oak) for current consumers, but
+> oak should not be used in new projects. The documentation below is retained
+> for reference. Thank you to everyone who contributed to and used oak.
+
 [![jsr.io/@oak/oak](https://jsr.io/badges/@oak/oak)](https://jsr.io/@oak/oak)
 [![jsr.io/@oak/oak score](https://jsr.io/badges/@oak/oak/score)](https://jsr.io/@oak/oak)
 [![deno.land/x/oak](https://deno.land/badge/oak/version)](https://deno.land/x/oak)
