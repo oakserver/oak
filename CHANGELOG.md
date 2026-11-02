@@ -1,5 +1,14 @@
 # oak Change Log
 
+## Version 17.2.2
+
+- docs: surface the unmaintained/archived notice in the generated module
+  documentation so the JSR package page and editor hovers display it
+- chore: apply `deno fmt` to embedded example formatting
+
+This is the final release of oak. The project is unmaintained and the repository
+is being archived.
+
 ## Version 17.2.1
 
 - fix: WebSocket upgrade failure when using `app.fetch` with `deno serve` (#710)
@@ -7,8 +16,7 @@
 - docs: declare oak unmaintained ahead of archiving (ce7a04d)
 - chore: add Copilot coding agent instructions (#712)
 
-This is the final release of oak. The project is unmaintained and the
-repository is being archived.
+The project is unmaintained and the repository is being archived.
 
 ## Version 17.2.0
 
