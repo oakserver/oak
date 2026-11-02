@@ -1,6 +1,18 @@
 // Copyright 2018-2025 the oak authors. All rights reserved. MIT license.
 
 /**
+ * > [!WARNING]
+ * > **oak is unmaintained and will be archived.**
+ * >
+ * > Following the retirement of Deno, this project is no longer maintained. The
+ * > repository will be archived and there will be no further releases, bug fixes
+ * > or security patches. Existing releases remain available on
+ * > [JSR](https://jsr.io/@oak/oak), [deno.land/x](https://deno.land/x/oak) and
+ * > [npm](https://www.npmjs.com/package/@oakserver/oak) for current consumers,
+ * > but oak should not be used in new projects. The documentation below is
+ * > retained for reference. Thank you to everyone who contributed to and used
+ * > oak.
+ *
  * A middleware framework for handling HTTP with [Deno CLI](https://deno.land),
  * [Deno Deploy](https://deno.com/deploy),
  * [Cloudflare Workers](https://workers.cloudflare.com/),
