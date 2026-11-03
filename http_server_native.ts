@@ -76,8 +76,7 @@ export class Server<AS extends State = Record<string, any>>
     if (this.#httpServer) {
       throw new Error("Server already listening.");
     }
-    const { signal } = this.#options;
-    const { onListen, ...options } = this.#options;
+    const { onListen, signal: _signal, ...options } = this.#options;
     const { promise, resolve } = createPromiseWithResolvers<Listener>();
     this.#stream = new ReadableStream<NativeRequest>({
       start: (controller) => {
@@ -93,13 +92,32 @@ export class Server<AS extends State = Record<string, any>>
             }
             resolve({ addr: { hostname, port } });
           },
-          signal,
+          // Intentionally not passing `signal` here. Deno's native server
+          // treats an aborted signal as a hard stop, tearing down in-flight
+          // connections immediately rather than letting them finish. oak's
+          // own `Application#listen()` already tracks in-flight requests
+          // and calls `Server#close()` (which calls `shutdown()` below)
+          // only once they've drained, so handling the abort ourselves
+          // (instead of handing `signal` to `serve()`) lets in-flight
+          // requests complete normally before the server actually stops.
           ...options,
+        });
+        this.#httpServer?.finished.then(() => {
+          try {
+            controller.close();
+          } catch {
+            // The controller may already be closed or errored; ignore.
+          }
         });
       },
     });
 
-    signal?.addEventListener("abort", () => this.close(), { once: true });
+    // Note: we deliberately do not close the server here when `signal`
+    // aborts. `Application#listen()` already listens for `signal`'s abort
+    // event itself and calls `Server#close()` only after all in-flight
+    // requests (tracked in its own `state.handling`) have finished. Closing
+    // the server immediately on abort here would race that drain and cut
+    // off in-flight requests, which is the behavior this is meant to avoid.
     return promise;
   }
 
